@@ -12,8 +12,8 @@ android {
         applicationId = "com.marcorx6.library"
         minSdk = 23
         targetSdk = 35
-        versionCode = 3
-        versionName = "4.0"
+        versionCode = 4
+        versionName = "4.1"
     }
 
     signingConfigs {
@@ -42,4 +42,9 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+}
+
+dependencies {
+    implementation("androidx.core:core-ktx:1.15.0")
+    implementation("androidx.work:work-runtime-ktx:2.10.0")
 }
