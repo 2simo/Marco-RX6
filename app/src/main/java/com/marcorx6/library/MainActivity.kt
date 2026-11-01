@@ -13,13 +13,13 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
-import android.view.View
-import android.view.WindowInsets
 import android.widget.*
 import android.text.Editable
 import android.text.TextWatcher
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
+import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -28,7 +28,8 @@ data class Game(
     val platform: String,
     val description: String,
     val url: String,
-    val coverUrl: String = ""
+    val coverUrl: String = "",
+    val coverLocalPath: String = ""
 )
 
 class MainActivity : Activity() {
@@ -52,6 +53,11 @@ class MainActivity : Activity() {
     private var selected = "ALL"
 
     private val mainHandler = Handler(Looper.getMainLooper())
+
+    private val PICK_IMAGE_REQUEST = 1001
+    private var pendingCoverLocalPath = ""
+    private var coverPreview: ImageView? = null
+    private var coverUrlField: EditText? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -105,7 +111,7 @@ class MainActivity : Activity() {
             setBackgroundColor(bg)
         }
 
-        // FIX STATUS BAR AND PHONE INSETS
+        @Suppress("DEPRECATION")
         root.setOnApplyWindowInsetsListener { view, insets ->
             val top = insets.systemWindowInsetTop
             val bottom = insets.systemWindowInsetBottom
@@ -116,11 +122,9 @@ class MainActivity : Activity() {
                 dp(18),
                 dp(12) + bottom
             )
-
             insets
         }
 
-        // HEADER
         val header = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -130,10 +134,7 @@ class MainActivity : Activity() {
             orientation = LinearLayout.VERTICAL
         }
 
-        brand.addView(
-            makeText("MARCO RX6", 25f, white, true)
-        )
-
+        brand.addView(makeText("MARCO RX6", 25f, white, true))
         brand.addView(
             makeText("ULTIMATE GAMING LIBRARY", 10f, red, true)
         )
@@ -157,26 +158,16 @@ class MainActivity : Activity() {
         header.addView(addButton)
         root.addView(header)
 
-        // HERO
         val hero = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             background = rounded(panel, 20)
             setPadding(dp(18), dp(18), dp(18), dp(18))
         }
 
+        hero.addView(makeText("WELCOME TO MARCO RX6", 10f, red, true))
         hero.addView(
-            makeText("WELCOME TO MARCO RX6", 10f, red, true)
+            makeText("YOUR GAME.\nYOUR WORLD.", 27f, white, true)
         )
-
-        hero.addView(
-            makeText(
-                "YOUR GAME.\nYOUR WORLD.",
-                27f,
-                white,
-                true
-            )
-        )
-
         hero.addView(
             makeText(
                 "Discover your PlayStation collection.",
@@ -192,7 +183,6 @@ class MainActivity : Activity() {
             }
         )
 
-        // SEARCH
         search = EditText(this).apply {
             hint = "Search games..."
             textSize = 14f
@@ -210,7 +200,6 @@ class MainActivity : Activity() {
             }
         )
 
-        // FILTERS
         val filterScroll = HorizontalScrollView(this).apply {
             isHorizontalScrollBarEnabled = false
         }
@@ -253,7 +242,6 @@ class MainActivity : Activity() {
             }
         )
 
-        // LIBRARY TITLE
         val titleRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -266,10 +254,8 @@ class MainActivity : Activity() {
 
         countText = makeText("0 GAMES", 10f, red, true)
         titleRow.addView(countText)
-
         root.addView(titleRow)
 
-        // GAME LIST
         val scroll = ScrollView(this)
 
         gameList = LinearLayout(this).apply {
@@ -296,7 +282,6 @@ class MainActivity : Activity() {
         )
 
         setContentView(root)
-
         root.requestApplyInsets()
 
         search.addTextChangedListener(object : TextWatcher {
@@ -318,38 +303,115 @@ class MainActivity : Activity() {
         renderGames()
     }
 
-    // IMAGE LOADER
-    private fun loadCover(image: ImageView, imageUrl: String) {
+    // IMAGE LOADER: LOCAL OR INTERNET
+    private fun loadCover(
+        image: ImageView,
+        localPath: String,
+        imageUrl: String
+    ) {
+        val key = localPath.ifBlank { imageUrl }
+        image.tag = key
 
-        if (imageUrl.isBlank()) return
+        image.setImageResource(android.R.drawable.ic_menu_gallery)
 
-        image.tag = imageUrl
+        if (key.isBlank()) return
 
         Thread {
             try {
-                val connection =
-                    URL(imageUrl).openConnection() as HttpURLConnection
+                val bitmap = if (localPath.isNotBlank()) {
+                    BitmapFactory.decodeFile(localPath)
+                } else {
+                    val connection =
+                        URL(imageUrl).openConnection() as HttpURLConnection
 
-                connection.connectTimeout = 8000
-                connection.readTimeout = 8000
-                connection.instanceFollowRedirects = true
-                connection.connect()
+                    connection.connectTimeout = 10000
+                    connection.readTimeout = 10000
+                    connection.instanceFollowRedirects = true
 
-                val bitmap = connection.inputStream.use {
-                    BitmapFactory.decodeStream(it)
+                    try {
+                        connection.connect()
+                        connection.inputStream.use {
+                            BitmapFactory.decodeStream(it)
+                        }
+                    } finally {
+                        connection.disconnect()
+                    }
                 }
-
-                connection.disconnect()
 
                 if (bitmap != null) {
                     mainHandler.post {
-                        if (image.tag == imageUrl) {
+                        if (image.tag == key) {
                             image.setImageBitmap(bitmap)
                         }
                     }
                 }
+            } catch (_: Exception) {
+            }
+        }.start()
+    }
+
+    // IMAGE PICKER
+    private fun chooseCover() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "image/*"
+        }
+
+        startActivityForResult(intent, PICK_IMAGE_REQUEST)
+    }
+
+    @Deprecated("Using activity result for compatibility")
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?
+    ) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode != PICK_IMAGE_REQUEST ||
+            resultCode != RESULT_OK
+        ) return
+
+        val uri: Uri = data?.data ?: return
+
+        Thread {
+            try {
+                val folder = File(filesDir, "covers")
+                if (!folder.exists()) folder.mkdirs()
+
+                val destination = File(
+                    folder,
+                    "cover_${System.currentTimeMillis()}.img"
+                )
+
+                contentResolver.openInputStream(uri).use { input ->
+                    if (input == null) throw Exception("Cannot read image")
+                    FileOutputStream(destination).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+
+                mainHandler.post {
+                    pendingCoverLocalPath = destination.absolutePath
+                    coverUrlField?.setText("")
+                    coverPreview?.let {
+                        loadCover(it, pendingCoverLocalPath, "")
+                    }
+                    Toast.makeText(
+                        this,
+                        "Cover image selected",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
 
             } catch (_: Exception) {
+                mainHandler.post {
+                    Toast.makeText(
+                        this,
+                        "Could not load this image",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
         }.start()
     }
@@ -360,7 +422,6 @@ class MainActivity : Activity() {
         gameList.removeAllViews()
 
         for (i in 0 until filters.childCount) {
-
             val chip = filters.getChildAt(i) as TextView
             val active = chip.text.toString() == selected
 
@@ -369,21 +430,19 @@ class MainActivity : Activity() {
                 15
             )
 
-            chip.setTextColor(
-                if (active) white else gray
-            )
+            chip.setTextColor(if (active) white else gray)
         }
 
         val query = search.text.toString().lowercase().trim()
 
         val results = games.filter {
-
             val platformMatch =
                 selected == "ALL" || it.platform == selected
 
             val searchMatch =
                 it.name.lowercase().contains(query) ||
-                it.platform.lowercase().contains(query)
+                it.platform.lowercase().contains(query) ||
+                it.description.lowercase().contains(query)
 
             platformMatch && searchMatch
         }
@@ -391,7 +450,6 @@ class MainActivity : Activity() {
         countText.text = "${results.size} GAMES"
 
         if (results.isEmpty()) {
-
             gameList.addView(
                 makeText(
                     "NO GAMES FOUND\n\nAdd your first game using + ADD",
@@ -402,7 +460,6 @@ class MainActivity : Activity() {
                     setPadding(dp(10), dp(45), dp(10), dp(45))
                 }
             )
-
             return
         }
 
@@ -416,7 +473,6 @@ class MainActivity : Activity() {
                 setOnClickListener { showDetails(game) }
             }
 
-            // COVER
             val cover = ImageView(this).apply {
                 scaleType = ImageView.ScaleType.CENTER_CROP
                 background = GradientDrawable(
@@ -433,18 +489,14 @@ class MainActivity : Activity() {
                 LinearLayout.LayoutParams(dp(82), dp(95))
             )
 
-            if (game.coverUrl.isNotBlank()) {
-                loadCover(cover, game.coverUrl)
-            }
+            loadCover(cover, game.coverLocalPath, game.coverUrl)
 
             val info = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 setPadding(dp(12), 0, 0, 0)
             }
 
-            info.addView(
-                makeText(game.name, 15f, white, true)
-            )
+            info.addView(makeText(game.name, 15f, white, true))
 
             info.addView(
                 makeText(
@@ -459,7 +511,9 @@ class MainActivity : Activity() {
 
             info.addView(
                 makeText(
-                    game.description.ifBlank { "Tap to view details" },
+                    game.description.ifBlank {
+                        "Tap to view details"
+                    },
                     11f,
                     gray
                 )
@@ -504,7 +558,7 @@ class MainActivity : Activity() {
             LinearLayout.LayoutParams(dp(150), dp(175))
         )
 
-        loadCover(cover, game.coverUrl)
+        loadCover(cover, game.coverLocalPath, game.coverUrl)
 
         box.addView(
             makeText(game.name, 21f, white, true).apply {
@@ -513,13 +567,13 @@ class MainActivity : Activity() {
             }
         )
 
-        box.addView(
-            makeText(game.platform, 13f, red, true)
-        )
+        box.addView(makeText(game.platform, 13f, red, true))
 
         box.addView(
             makeText(
-                game.description.ifBlank { "No description available." },
+                game.description.ifBlank {
+                    "No description available."
+                },
                 13f,
                 gray
             ).apply {
@@ -533,7 +587,7 @@ class MainActivity : Activity() {
             .setView(box)
             .setPositiveButton("OPEN LINK", null)
             .setNeutralButton("EDIT", null)
-            .setNegativeButton("CLOSE", null)
+            .setNegativeButton("DELETE", null)
             .create()
 
         dialog.setOnShowListener {
@@ -548,6 +602,12 @@ class MainActivity : Activity() {
                     dialog.dismiss()
                     showGameDialog(game)
                 }
+
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+                .setOnClickListener {
+                    dialog.dismiss()
+                    deleteGame(game)
+                }
         }
 
         dialog.show()
@@ -555,6 +615,8 @@ class MainActivity : Activity() {
 
     // ADD OR EDIT GAME
     private fun showGameDialog(existing: Game? = null) {
+
+        pendingCoverLocalPath = existing?.coverLocalPath ?: ""
 
         val box = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -564,14 +626,15 @@ class MainActivity : Activity() {
         val name = makeInput("Game name")
         val description = makeInput("Description")
         val link = makeInput("HTTPS game link")
-        val cover = makeInput("Cover image URL (optional)")
+        val coverUrl = makeInput("Cover image URL (optional)")
 
         name.setSingleLine(true)
         link.setSingleLine(true)
-        cover.setSingleLine(true)
+        coverUrl.setSingleLine(true)
+
+        coverUrlField = coverUrl
 
         val platform = Spinner(this)
-
         platform.adapter = ArrayAdapter(
             this,
             android.R.layout.simple_spinner_dropdown_item,
@@ -582,7 +645,7 @@ class MainActivity : Activity() {
             name.setText(existing.name)
             description.setText(existing.description)
             link.setText(existing.url)
-            cover.setText(existing.coverUrl)
+            coverUrl.setText(existing.coverUrl)
 
             val position = platforms.drop(1)
                 .indexOf(existing.platform)
@@ -592,15 +655,72 @@ class MainActivity : Activity() {
             }
         }
 
+        val preview = ImageView(this).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            background = rounded(panel, 14)
+        }
+
+        coverPreview = preview
+
+        box.addView(
+            preview,
+            LinearLayout.LayoutParams(-1, dp(150)).apply {
+                bottomMargin = dp(10)
+            }
+        )
+
+        loadCover(
+            preview,
+            pendingCoverLocalPath,
+            existing?.coverUrl ?: ""
+        )
+
+        val chooseButton = Button(this).apply {
+            text = "CHOOSE IMAGE FROM PHONE"
+            setTextColor(white)
+            background = rounded(red, 12)
+            setOnClickListener { chooseCover() }
+        }
+
+        box.addView(
+            chooseButton,
+            LinearLayout.LayoutParams(-1, -2).apply {
+                bottomMargin = dp(6)
+            }
+        )
+
+        val removeButton = TextView(this).apply {
+            text = "REMOVE COVER IMAGE"
+            textSize = 12f
+            gravity = Gravity.CENTER
+            setTextColor(red)
+            setPadding(dp(8), dp(8), dp(8), dp(8))
+
+            setOnClickListener {
+                pendingCoverLocalPath = ""
+                coverUrl.setText("")
+                preview.setImageResource(
+                    android.R.drawable.ic_menu_gallery
+                )
+            }
+        }
+
+        box.addView(removeButton)
         box.addView(name)
         box.addView(platform)
         box.addView(description)
         box.addView(link)
-        box.addView(cover)
+        box.addView(coverUrl)
+
+        val scroll = ScrollView(this)
+        scroll.addView(box)
 
         val dialog = AlertDialog.Builder(this)
-            .setTitle(if (existing == null) "ADD NEW GAME" else "EDIT GAME")
-            .setView(box)
+            .setTitle(
+                if (existing == null) "ADD NEW GAME"
+                else "EDIT GAME"
+            )
+            .setView(scroll)
             .setNegativeButton("CANCEL", null)
             .setPositiveButton("SAVE", null)
             .create()
@@ -612,7 +732,7 @@ class MainActivity : Activity() {
 
                     val gameName = name.text.toString().trim()
                     val gameLink = link.text.toString().trim()
-                    val coverLink = cover.text.toString().trim()
+                    val coverLink = coverUrl.text.toString().trim()
 
                     if (gameName.isBlank()) {
                         name.error = "Enter game name"
@@ -628,16 +748,21 @@ class MainActivity : Activity() {
                         coverLink.isNotBlank() &&
                         !coverLink.startsWith("https://")
                     ) {
-                        cover.error = "Use an HTTPS image link"
+                        coverUrl.error = "Use an HTTPS image link"
                         return@setOnClickListener
                     }
+
+                    val localPath =
+                        if (coverLink.isNotBlank()) ""
+                        else pendingCoverLocalPath
 
                     val newGame = Game(
                         gameName,
                         platform.selectedItem.toString(),
                         description.text.toString().trim(),
                         gameLink,
-                        coverLink
+                        coverLink,
+                        localPath
                     )
 
                     if (existing == null) {
@@ -646,6 +771,13 @@ class MainActivity : Activity() {
                         val index = games.indexOf(existing)
                         if (index >= 0) {
                             games[index] = newGame
+
+                            if (
+                                existing.coverLocalPath.isNotBlank() &&
+                                existing.coverLocalPath != localPath
+                            ) {
+                                File(existing.coverLocalPath).delete()
+                            }
                         }
                     }
 
@@ -668,6 +800,11 @@ class MainActivity : Activity() {
             .setPositiveButton("DELETE") { _, _ ->
 
                 games.remove(game)
+
+                if (game.coverLocalPath.isNotBlank()) {
+                    File(game.coverLocalPath).delete()
+                }
+
                 saveGames()
                 renderGames()
 
@@ -711,7 +848,6 @@ class MainActivity : Activity() {
         val array = JSONArray()
 
         games.forEach { game ->
-
             array.put(
                 JSONObject()
                     .put("name", game.name)
@@ -719,6 +855,7 @@ class MainActivity : Activity() {
                     .put("description", game.description)
                     .put("url", game.url)
                     .put("coverUrl", game.coverUrl)
+                    .put("coverLocalPath", game.coverLocalPath)
             )
         }
 
@@ -730,7 +867,7 @@ class MainActivity : Activity() {
             .apply()
     }
 
-    // LOAD GAMES
+    // LOAD GAMES - OLD DATA IS SUPPORTED
     private fun loadGames() {
 
         val saved = getSharedPreferences(
@@ -739,11 +876,9 @@ class MainActivity : Activity() {
         ).getString("games", null) ?: return
 
         try {
-
             val array = JSONArray(saved)
 
             for (i in 0 until array.length()) {
-
                 val item = array.getJSONObject(i)
 
                 games.add(
@@ -752,11 +887,11 @@ class MainActivity : Activity() {
                         item.optString("platform"),
                         item.optString("description"),
                         item.optString("url"),
-                        item.optString("coverUrl", "")
+                        item.optString("coverUrl", ""),
+                        item.optString("coverLocalPath", "")
                     )
                 )
             }
-
         } catch (_: Exception) {
             games.clear()
         }
