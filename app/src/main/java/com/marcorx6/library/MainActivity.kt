@@ -36,7 +36,8 @@ data class Game(
     val sourcePostUrl: String = "",
     val downloadLinks: String = "",
     val blogImported: Boolean = false,
-    val platformManuallyCorrected: Boolean = false
+    val platformManuallyCorrected: Boolean = false,
+    val isFavorite: Boolean = false
 )
 
 class MainActivity : Activity() {
@@ -232,7 +233,7 @@ class MainActivity : Activity() {
             gravity = Gravity.CENTER_VERTICAL
         }
 
-        platforms.forEach { platform ->
+        (listOf("ALL", "FAVORITES") + platforms.drop(1)).forEach { platform ->
 
             val chip = TextView(this).apply {
                 text = platform
@@ -435,7 +436,8 @@ class MainActivity : Activity() {
                         old.coverUrl else incoming.coverUrl,
                     platform = if (old.platformManuallyCorrected)
                         old.platform else incoming.platform,
-                    platformManuallyCorrected = old.platformManuallyCorrected
+                    platformManuallyCorrected = old.platformManuallyCorrected,
+                    isFavorite = old.isFavorite
                 )
 
                 updated++
@@ -843,8 +845,11 @@ class MainActivity : Activity() {
 
         val results = games.filter {
 
-            val platformMatch =
-                selected == "ALL" || it.platform == selected
+            val platformMatch = when (selected) {
+                "ALL" -> true
+                "FAVORITES" -> it.isFavorite
+                else -> it.platform == selected
+            }
 
             val searchMatch =
                 it.name.lowercase(Locale.ROOT).contains(query) ||
@@ -983,6 +988,34 @@ class MainActivity : Activity() {
             makeText(game.platform, 13f, red, true)
         )
 
+        lateinit var detailsDialog: AlertDialog
+        val favoriteButton = TextView(this).apply {
+            text = if (game.isFavorite) "★  REMOVE FROM FAVORITES" else "☆  ADD TO FAVORITES"
+            textSize = 12f
+            setTextColor(if (game.isFavorite) red else white)
+            setTypeface(null, Typeface.BOLD)
+            gravity = Gravity.CENTER
+            background = rounded(panel, 12)
+            setPadding(dp(16), dp(12), dp(16), dp(12))
+            setOnClickListener {
+                val index = games.indexOfFirst { it.name == game.name && it.url == game.url }
+                if (index >= 0) {
+                    games[index] = games[index].copy(isFavorite = !games[index].isFavorite)
+                    saveGames()
+                    Toast.makeText(
+                        this@MainActivity,
+                        if (games[index].isFavorite) "Added to favorites" else "Removed from favorites",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    detailsDialog.dismiss()
+                    renderGames()
+                }
+            }
+        }
+        box.addView(favoriteButton, LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(10)
+        })
+
         box.addView(
             makeText(
                 game.description.ifBlank {
@@ -1066,7 +1099,7 @@ class MainActivity : Activity() {
             }
         }
 
-        val dialog = AlertDialog.Builder(this)
+        detailsDialog = AlertDialog.Builder(this)
             .setTitle(
                 if (game.blogImported)
                     "BLOG GAME DETAILS"
@@ -1083,6 +1116,7 @@ class MainActivity : Activity() {
             .setNegativeButton("DELETE", null)
             .create()
 
+        val dialog = detailsDialog
         dialog.setOnShowListener {
 
             dialog.getButton(
@@ -1277,7 +1311,8 @@ class MainActivity : Activity() {
                     downloadLinks = existing?.downloadLinks ?: "",
                     blogImported = existing?.blogImported ?: false,
                     platformManuallyCorrected =
-                        existing?.platformManuallyCorrected ?: false
+                        existing?.platformManuallyCorrected ?: false,
+                    isFavorite = existing?.isFavorite ?: false
                 )
 
                 if (existing == null) {
@@ -1383,6 +1418,7 @@ class MainActivity : Activity() {
                         "platformManuallyCorrected",
                         game.platformManuallyCorrected
                     )
+                    .put("isFavorite", game.isFavorite)
             )
         }
 
@@ -1423,7 +1459,8 @@ class MainActivity : Activity() {
                         item.optBoolean(
                             "platformManuallyCorrected",
                             false
-                        )
+                        ),
+                        item.optBoolean("isFavorite", false)
                     )
                 )
             }
