@@ -1,14 +1,19 @@
 
 package com.marcorx6.library
 
+import android.Manifest
 import android.app.Activity
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.AlertDialog
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -25,6 +30,12 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Locale
 import java.util.regex.Pattern
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import java.util.concurrent.TimeUnit
 
 data class Game(
     val name: String,
@@ -75,9 +86,76 @@ class MainActivity : Activity() {
         @Suppress("DEPRECATION")
         window.decorView.systemUiVisibility = 0
 
+        createNotificationChannel()
         loadGames()
         createInterface()
+        if (notificationPreferences().getBoolean("enabled", true)) {
+            scheduleBlogNotifications()
+            requestNotificationPermissionIfNeeded()
+        }
         syncFromBlog(showResult = false)
+    }
+
+
+    private fun notificationPreferences() =
+        getSharedPreferences("notification_settings", MODE_PRIVATE)
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                BlogNotificationWorker.CHANNEL_ID,
+                "New MARCO RX6 posts",
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = "Alerts when a new post is published on the MARCO RX6 blog"
+            }
+            getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+        }
+    }
+
+    private fun scheduleBlogNotifications() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+        val request = PeriodicWorkRequestBuilder<BlogNotificationWorker>(15, TimeUnit.MINUTES)
+            .setConstraints(constraints)
+            .build()
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            BlogNotificationWorker.WORK_NAME,
+            ExistingPeriodicWorkPolicy.UPDATE,
+            request
+        )
+    }
+
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= 33 &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 2002)
+        }
+    }
+
+    private fun showNotificationSettings() {
+        val enabled = notificationPreferences().getBoolean("enabled", true)
+        AlertDialog.Builder(this)
+            .setTitle("NEW POST NOTIFICATIONS")
+            .setMessage(if (enabled)
+                "Notifications are enabled. MARCO RX6 checks your Blogger feed periodically and alerts you when a new post is published."
+            else
+                "Notifications are disabled. Enable them to receive an alert when a new post is published.")
+            .setPositiveButton(if (enabled) "KEEP ENABLED" else "ENABLE") { _, _ ->
+                notificationPreferences().edit().putBoolean("enabled", true).apply()
+                scheduleBlogNotifications()
+                requestNotificationPermissionIfNeeded()
+                Toast.makeText(this, "New post alerts enabled", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("TURN OFF") { _, _ ->
+                notificationPreferences().edit().putBoolean("enabled", false).apply()
+                WorkManager.getInstance(this).cancelUniqueWork(BlogNotificationWorker.WORK_NAME)
+                Toast.makeText(this, "New post alerts disabled", Toast.LENGTH_SHORT).show()
+            }
+            .setNeutralButton("CLOSE", null)
+            .show()
     }
 
     private fun dp(v: Int): Int =
@@ -161,6 +239,19 @@ class MainActivity : Activity() {
         }
 
         header.addView(syncButton)
+
+        val notificationButton = TextView(this).apply {
+            text = "🔔"
+            textSize = 17f
+            gravity = Gravity.CENTER
+            setTextColor(white)
+            background = rounded(Color.rgb(48, 53, 70), 13)
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            setOnClickListener { showNotificationSettings() }
+        }
+        header.addView(notificationButton, LinearLayout.LayoutParams(-2, -2).apply {
+            leftMargin = dp(7)
+        })
 
         val addButton = TextView(this).apply {
             text = "+ ADD"
@@ -821,127 +912,74 @@ class MainActivity : Activity() {
         }.start()
     }
 
-    // NEW DESIGN: COVERS ONLY, THREE COLUMNS
+    // MODERN GAME LIBRARY: TWO-COLUMN GAME CARDS
     private fun renderGames() {
-
         gameList.removeAllViews()
-
         for (i in 0 until filters.childCount) {
-
             val chip = filters.getChildAt(i) as TextView
             val active = chip.text.toString() == selected
-
-            chip.background = rounded(
-                if (active) red else panel,
-                15
-            )
-
+            chip.background = rounded(if (active) red else panel, 15)
             chip.setTextColor(if (active) white else gray)
         }
-
-        val query = search.text.toString()
-            .lowercase(Locale.ROOT)
-            .trim()
-
+        val query = search.text.toString().lowercase(Locale.ROOT).trim()
         val results = games.filter {
-
             val platformMatch = when (selected) {
                 "ALL" -> true
                 "FAVORITES" -> it.isFavorite
                 else -> it.platform == selected
             }
-
-            val searchMatch =
-                it.name.lowercase(Locale.ROOT).contains(query) ||
+            val searchMatch = it.name.lowercase(Locale.ROOT).contains(query) ||
                 it.platform.lowercase(Locale.ROOT).contains(query) ||
                 it.description.lowercase(Locale.ROOT).contains(query)
-
             platformMatch && searchMatch
         }
-
-        countText.text = "${results.size} GAMES"
-
+        countText.text = "\${results.size} GAMES"
         if (results.isEmpty()) {
-
-            gameList.addView(
-                makeText("NO GAMES FOUND", 14f, gray).apply {
-                    gravity = Gravity.CENTER
-                    setPadding(
-                        dp(10),
-                        dp(45),
-                        dp(10),
-                        dp(45)
-                    )
-                }
-            )
-
+            gameList.addView(makeText("NO GAMES FOUND", 14f, gray).apply {
+                gravity = Gravity.CENTER
+                setPadding(dp(10), dp(45), dp(10), dp(45))
+            })
             return
         }
-
-        results.chunked(3).forEach { group ->
-
+        results.chunked(2).forEach { group ->
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.TOP
             }
-
             group.forEach { game ->
-
-                val cell = LinearLayout(this).apply {
+                val card = LinearLayout(this).apply {
                     orientation = LinearLayout.VERTICAL
-                    setPadding(
-                        dp(4),
-                        dp(4),
-                        dp(4),
-                        dp(4)
-                    )
-
-                    setOnClickListener {
-                        showDetails(game)
-                    }
+                    background = rounded(panel, 16)
+                    setPadding(dp(6), dp(6), dp(6), dp(10))
+                    setOnClickListener { showDetails(game) }
                 }
-
                 val cover = ImageView(this).apply {
                     scaleType = ImageView.ScaleType.CENTER_CROP
-                    background = rounded(panel, 12)
-                    contentDescription = "${game.name} cover"
+                    background = rounded(Color.rgb(38, 41, 54), 12)
+                    contentDescription = "\${game.name} cover"
                     clipToOutline = true
                 }
-
-                cell.addView(
-                    cover,
-                    LinearLayout.LayoutParams(
-                        -1,
-                        dp(155)
-                    )
-                )
-
-                loadCover(
-                    cover,
-                    game.coverLocalPath,
-                    game.coverUrl
-                )
-
-                row.addView(
-                    cell,
-                    LinearLayout.LayoutParams(0, -2, 1f).apply {
-                        bottomMargin = dp(8)
-                    }
-                )
+                card.addView(cover, LinearLayout.LayoutParams(-1, dp(178)))
+                loadCover(cover, game.coverLocalPath, game.coverUrl)
+                card.addView(makeText(game.name, 13f, white, true).apply {
+                    maxLines = 2
+                    ellipsize = android.text.TextUtils.TruncateAt.END
+                    setPadding(dp(4), dp(9), dp(4), dp(3))
+                })
+                card.addView(makeText(
+                    (if (game.isFavorite) "★  " else "") + game.platform,
+                    10f, red, true
+                ).apply { setPadding(dp(4), dp(2), dp(4), 0) })
+                row.addView(card, LinearLayout.LayoutParams(0, -2, 1f).apply {
+                    leftMargin = dp(4)
+                    rightMargin = dp(4)
+                    bottomMargin = dp(12)
+                })
             }
-
-            // Fill the last row if it has fewer than 3 covers
-            repeat(3 - group.size) {
-                row.addView(
-                    Space(this),
-                    LinearLayout.LayoutParams(0, dp(155), 1f)
-                )
+            if (group.size == 1) {
+                row.addView(Space(this), LinearLayout.LayoutParams(0, dp(220), 1f))
             }
-
-            gameList.addView(
-                row,
-                LinearLayout.LayoutParams(-1, -2)
-            )
+            gameList.addView(row, LinearLayout.LayoutParams(-1, -2))
         }
     }
 
