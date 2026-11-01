@@ -155,7 +155,8 @@ class MainActivity : Activity() {
         search = EditText(this).apply {
             hint = "Search games..."
             textSize = 14f
-            singleLine = true
+            setSingleLine(true)
+            inputType = android.text.InputType.TYPE_CLASS_TEXT
             setTextColor(Color.WHITE)
             setHintTextColor(Color.GRAY)
             background = rounded(panel, 14)
