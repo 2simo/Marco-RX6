@@ -67,6 +67,7 @@ class MainActivity : Activity() {
     private lateinit var countText: TextView
 
     private var selected = "ALL"
+    private var sortMode = "LATEST"
     private val mainHandler = Handler(Looper.getMainLooper())
     private val PICK_IMAGE_REQUEST = 1001
     private var pendingCoverLocalPath = ""
@@ -369,6 +370,23 @@ class MainActivity : Activity() {
 
         countText = makeText("0 GAMES", 10f, red, true)
         titleRow.addView(countText)
+        val sortButton = makeText("SORT: LATEST  ↕", 10f, white, true).apply {
+            gravity = Gravity.CENTER
+            background = rounded(panel, 10)
+            setPadding(dp(10), dp(9), dp(10), dp(9))
+            setOnClickListener {
+                sortMode = when (sortMode) {
+                    "LATEST" -> "A-Z"
+                    "A-Z" -> "FAVORITES"
+                    else -> "LATEST"
+                }
+                text = "SORT: $sortMode  ↕"
+                renderGames()
+            }
+        }
+        titleRow.addView(sortButton, LinearLayout.LayoutParams(-2, -2).apply {
+            leftMargin = dp(8)
+        })
         root.addView(titleRow)
 
         val scroll = ScrollView(this)
@@ -922,7 +940,7 @@ class MainActivity : Activity() {
             chip.setTextColor(if (active) white else gray)
         }
         val query = search.text.toString().lowercase(Locale.ROOT).trim()
-        val results = games.filter {
+        val filtered = games.filter {
             val platformMatch = when (selected) {
                 "ALL" -> true
                 "FAVORITES" -> it.isFavorite
@@ -933,7 +951,12 @@ class MainActivity : Activity() {
                 it.description.lowercase(Locale.ROOT).contains(query)
             platformMatch && searchMatch
         }
-        countText.text = "\${results.size} GAMES"
+        val results = when (sortMode) {
+            "A-Z" -> filtered.sortedBy { it.name.lowercase(Locale.ROOT) }
+            "FAVORITES" -> filtered.sortedByDescending { it.isFavorite }
+            else -> filtered
+        }
+        countText.text = "${results.size} GAMES"
         if (results.isEmpty()) {
             gameList.addView(makeText("NO GAMES FOUND", 14f, gray).apply {
                 gravity = Gravity.CENTER
@@ -941,6 +964,43 @@ class MainActivity : Activity() {
             })
             return
         }
+        if (selected == "ALL" && query.isBlank() && sortMode == "LATEST") {
+            val featured = results.first()
+            gameList.addView(makeText("FEATURED RELEASE", 11f, red, true).apply {
+                setPadding(dp(4), dp(2), dp(4), dp(9))
+            })
+            val featureCard = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                background = rounded(panel, 18)
+                setPadding(dp(10), dp(10), dp(12), dp(10))
+                setOnClickListener { showDetails(featured) }
+            }
+            val featureCover = ImageView(this).apply {
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                background = rounded(Color.rgb(38, 41, 54), 12)
+                clipToOutline = true
+                contentDescription = "${featured.name} featured cover"
+            }
+            featureCard.addView(featureCover, LinearLayout.LayoutParams(dp(92), dp(112)))
+            loadCover(featureCover, featured.coverLocalPath, featured.coverUrl)
+            val featureInfo = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(12), 0, 0, 0)
+            }
+            featureInfo.addView(makeText(featured.platform + " • LATEST ON THE BLOG", 9f, red, true))
+            featureInfo.addView(makeText(featured.name, 16f, white, true).apply {
+                maxLines = 3
+                ellipsize = android.text.TextUtils.TruncateAt.END
+                setPadding(0, dp(7), 0, dp(7))
+            })
+            featureInfo.addView(makeText("TAP TO VIEW DETAILS  →", 10f, gray, true))
+            featureCard.addView(featureInfo, LinearLayout.LayoutParams(0, -2, 1f))
+            gameList.addView(featureCard, LinearLayout.LayoutParams(-1, -2).apply {
+                bottomMargin = dp(16)
+            })
+        }
+
         results.chunked(2).forEach { group ->
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
