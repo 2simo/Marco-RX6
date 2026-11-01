@@ -45,7 +45,16 @@ class BlogNotificationWorker(context: Context, params: WorkerParameters) : Worke
                 return Result.success()
             }
             if (postId != previousId) {
-                showNotification(title)
+                // Notify for every newly published post still present in the feed.
+                for (index in 0 until entries.length()) {
+                    val entry = entries.optJSONObject(index) ?: continue
+                    val currentId = entry.optJSONObject("id")?.optString("\$t").orEmpty()
+                    if (currentId.isBlank() || currentId == previousId) break
+                    val currentTitle = entry.optJSONObject("title")?.optString("\$t").orEmpty()
+                    if (currentTitle.isNotBlank()) {
+                        showNotification(currentTitle, findPostUrl(entry))
+                    }
+                }
                 prefs.edit().putString("last_seen_post_id", postId).apply()
             }
             Result.success()
@@ -54,7 +63,19 @@ class BlogNotificationWorker(context: Context, params: WorkerParameters) : Worke
         }
     }
 
-    private fun showNotification(postTitle: String) {
+    private fun findPostUrl(entry: org.json.JSONObject): String {
+        val links = entry.optJSONArray("link") ?: return ""
+        for (index in 0 until links.length()) {
+            val item = links.optJSONObject(index) ?: continue
+            if (item.optString("rel") == "alternate") {
+                val href = item.optString("href", "")
+                if (href.startsWith("https://")) return href
+            }
+        }
+        return ""
+    }
+
+    private fun showNotification(postTitle: String, postUrl: String) {
         if (Build.VERSION.SDK_INT >= 33 &&
             ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.POST_NOTIFICATIONS) !=
             PackageManager.PERMISSION_GRANTED
@@ -63,11 +84,18 @@ class BlogNotificationWorker(context: Context, params: WorkerParameters) : Worke
             val channel = NotificationChannel(CHANNEL_ID, "New MARCO RX6 posts", NotificationManager.IMPORTANCE_DEFAULT)
             applicationContext.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         }
-        val openApp = Intent(applicationContext, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        val openTarget = if (postUrl.startsWith("https://")) {
+            Intent(Intent.ACTION_VIEW, android.net.Uri.parse(postUrl)).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+        } else {
+            Intent(applicationContext, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
         }
+        val notificationId = postUrl.hashCode().let { if (it == 0) 4106 else it }
         val pendingIntent = PendingIntent.getActivity(
-            applicationContext, 4106, openApp,
+            applicationContext, notificationId, openTarget,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
@@ -79,7 +107,11 @@ class BlogNotificationWorker(context: Context, params: WorkerParameters) : Worke
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .build()
-        NotificationManagerCompat.from(applicationContext).notify(4106, notification)
+        try {
+            NotificationManagerCompat.from(applicationContext).notify(notificationId, notification)
+        } catch (_: SecurityException) {
+            // Notification permission may have been revoked while the worker was running.
+        }
     }
 
     companion object {
