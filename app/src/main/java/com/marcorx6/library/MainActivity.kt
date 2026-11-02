@@ -433,10 +433,6 @@ class MainActivity : Activity() {
         }
         menuItem("✧", "لعبة اليوم", "اكتشف اختيار MARCO RX6 اليومي") { showGameOfTheDay() }
         menuItem("文", tr("إعدادات اللغة"), tr("اختر لغة التطبيق")) { showLanguagePicker() }
-        menuItem("☾", if (isDarkMode()) "الوضع النهاري" else "الوضع الليلي", "تبديل مظهر التطبيق وحفظ اختيارك") {
-            appearancePreferences().edit().putBoolean("dark_mode", !isDarkMode()).apply()
-            recreate()
-        }
         menuItem("✦", "ألوان وحركات الواجهة", "تخصيص اللون الرئيسي وتأثيرات الحركة") { showAppearanceSettings() }
         menuItem("Aa", "الخط وحجم النص", "تخصيص قراءة وواجهة التطبيق") { showTypographySettings() }
         menuItem("⇧", "نسخ احتياطي", "تصدير مكتبتك وإعداداتك إلى ملف") { exportBackup() }
@@ -729,6 +725,39 @@ class MainActivity : Activity() {
             contentDescription = "القائمة الجانبية"
             setOnClickListener { showSideMenu() }
         }
+        val themeToggle = TextView(this).apply {
+            text = if (isDarkMode()) "☾" else "☀"
+            textSize = 23f
+            gravity = Gravity.CENTER
+            setTextColor(if (isDarkMode()) Color.rgb(224, 231, 255) else Color.rgb(255, 177, 45))
+            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                if (isDarkMode()) intArrayOf(Color.rgb(75, 83, 105), Color.rgb(25, 30, 45))
+                else intArrayOf(Color.rgb(255, 246, 214), Color.rgb(255, 224, 155))).apply {
+                cornerRadius = dp(16).toFloat()
+                setStroke(dp(1), if (isDarkMode()) Color.rgb(111, 126, 157) else Color.rgb(235, 181, 83))
+            }
+            setPadding(dp(13), dp(9), dp(13), dp(9))
+            contentDescription = if (isDarkMode()) "التبديل إلى الوضع النهاري" else "التبديل إلى الوضع الليلي"
+            setOnClickListener {
+                val nextDarkMode = !isDarkMode()
+                isEnabled = false
+                animate().rotationBy(180f).scaleX(0.2f).scaleY(0.2f).setDuration(220L).withEndAction {
+                    text = if (nextDarkMode) "☾" else "☀"
+                    setTextColor(if (nextDarkMode) Color.rgb(224, 231, 255) else Color.rgb(255, 177, 45))
+                    background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                        if (nextDarkMode) intArrayOf(Color.rgb(75, 83, 105), Color.rgb(25, 30, 45))
+                        else intArrayOf(Color.rgb(255, 246, 214), Color.rgb(255, 224, 155))).apply {
+                        cornerRadius = dp(16).toFloat()
+                        setStroke(dp(1), if (nextDarkMode) Color.rgb(111, 126, 157) else Color.rgb(235, 181, 83))
+                    }
+                    appearancePreferences().edit().putBoolean("dark_mode", nextDarkMode).apply()
+                    animate().rotationBy(180f).scaleX(1f).scaleY(1f).setDuration(220L).withEndAction {
+                        recreate()
+                    }.start()
+                }.start()
+            }
+        }
+        header.addView(themeToggle, LinearLayout.LayoutParams(-2, -2).apply { marginEnd = dp(9) })
         header.addView(menu)
         root.addView(header)
 
