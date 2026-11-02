@@ -144,7 +144,8 @@ class MainActivity : Activity() {
         loadGames()
         restoreAdminSession()
         createInterface()
-        if (notificationPreferences().getBoolean("enabled", true)) {
+        showStartupExperience()
+        if (notificationPreferences().getBoolean("enabled", false)) {
             scheduleBlogNotifications()
             requestNotificationPermissionIfNeeded()
         }
@@ -232,7 +233,7 @@ class MainActivity : Activity() {
     }
 
     private fun showNotificationSettings() {
-        val enabled = notificationPreferences().getBoolean("enabled", true)
+        val enabled = notificationPreferences().getBoolean("enabled", false)
         AlertDialog.Builder(this)
             .setTitle("إشعارات المقالات الجديدة")
             .setMessage(if (enabled)
@@ -362,9 +363,9 @@ class MainActivity : Activity() {
     }
 
     private fun showSideMenu() {
-        val gold = Color.rgb(211, 220, 236)
-        val ink = Color.rgb(8, 11, 19)
-        val surface = Color.rgb(24, 30, 44)
+        val gold = red
+        val ink = bg
+        val surface = panel
         val drawer = Dialog(this)
         val panel = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -400,12 +401,10 @@ class MainActivity : Activity() {
                 isFocusable = true
                 setOnClickListener { drawer.dismiss(); action() }
             }
-            row.addView(makeText(icon, 21f, gold, true), LinearLayout.LayoutParams(dp(38), -2))
             val labels = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-            labels.addView(makeText(label, 13f, white, true))
-            if (detail.isNotBlank()) labels.addView(makeText(detail, 9f, Color.LTGRAY).apply { setPadding(0, dp(3), 0, 0) })
-            row.addView(labels, LinearLayout.LayoutParams(0, -2, 1f))
-            row.addView(makeText("‹", 20f, gold, true))
+            labels.addView(makeText(label, 14f, white, true))
+            if (detail.isNotBlank()) labels.addView(makeText(detail, 10f, gray).apply { setPadding(0, dp(4), 0, 0) })
+            row.addView(labels, LinearLayout.LayoutParams(-1, -2, 1f))
             panel.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(9) })
         }
         menuItem("♙", tr("حسابي"), tr("ملفي الشخصي")) { showProfile() }
@@ -431,12 +430,17 @@ class MainActivity : Activity() {
         menuItem("⇧", "نسخ احتياطي", "تصدير مكتبتك وإعداداتك إلى ملف") { exportBackup() }
         menuItem("⇩", "استعادة نسخة", "استيراد نسخة احتياطية محفوظة") { importBackup() }
         menuItem("Aa", "الخط وحجم النص", "تخصيص قراءة وواجهة التطبيق") { showTypographySettings() }
-        panel.addView(View(this), LinearLayout.LayoutParams(1, 0, 1f))
+        panel.addView(View(this), LinearLayout.LayoutParams(1, dp(12)))
         panel.addView(makeText("MARCO RX6  •  PREMIUM", 9f, Color.rgb(139, 151, 177), true).apply {
             gravity = Gravity.CENTER
             setPadding(0, dp(16), 0, dp(4))
         })
-        drawer.setContentView(panel)
+        val menuScroll = ScrollView(this).apply {
+            isFillViewport = true
+            isVerticalScrollBarEnabled = false
+            addView(panel, ViewGroup.LayoutParams(-1, -2))
+        }
+        drawer.setContentView(menuScroll)
         drawer.window?.let { w ->
             w.setBackgroundDrawableResource(android.R.color.transparent)
             w.addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
@@ -898,13 +902,17 @@ class MainActivity : Activity() {
                 setPadding(dp(8), dp(4), dp(8), dp(4))
                 setOnClickListener { action() }
             }
-            item.addView(makeText(icon, 19f, silver, true).apply { gravity = Gravity.CENTER })
-            item.addView(makeText(label, 8f, muted, true).apply { gravity = Gravity.CENTER })
+            item.addView(makeText(label, 11f, silver, true).apply {
+                gravity = Gravity.CENTER
+                maxLines = 1
+                setPadding(dp(2), dp(9), dp(2), dp(9))
+            })
             dock.addView(item, LinearLayout.LayoutParams(0, -2, 1f))
         }
-        dockItem("⌂", tr("الكل")) { selected = "ALL"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
-        dockItem("♡", tr("المفضلة")) { selected = "FAVORITES"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
-        dockItem("☰", tr("القائمة")) { showSideMenu() }
+        dockItem("", tr("الرئيسية")) { selected = "ALL"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
+        dockItem("", tr("المفضلة")) { selected = "FAVORITES"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
+        dockItem("", "متابعتي") { selected = "WANT_TO_PLAY"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
+        dockItem("", tr("حسابي")) { showProfile() }
         shell.addView(dock, FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply {
             leftMargin = dp(16); rightMargin = dp(16); bottomMargin = dp(12)
         })
@@ -1499,6 +1507,101 @@ class MainActivity : Activity() {
         }.start()
     }
 
+
+    private fun showStartupExperience() {
+        val splash = Dialog(this)
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(dp(30), dp(36), dp(30), dp(36))
+            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                intArrayOf(panel, bg, Color.rgb(39, 32, 65))).apply {
+                cornerRadius = dp(28).toFloat()
+                setStroke(dp(1), red)
+            }
+        }
+        content.addView(makeText("MARCO", 14f, gray, true).apply { letterSpacing = 0.28f; gravity = Gravity.CENTER })
+        content.addView(makeText("RX6", 46f, white, true).apply { gravity = Gravity.CENTER; setPadding(0, dp(3), 0, dp(3)) })
+        content.addView(makeText("LIQUID METAL EXPERIENCE", 9f, red, true).apply {
+            gravity = Gravity.CENTER; letterSpacing = 0.18f; setPadding(0, dp(8), 0, 0)
+        })
+        splash.setContentView(content)
+        splash.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        splash.setCancelable(false)
+        splash.show()
+        splash.window?.setLayout(dp(300), dp(230))
+        mainHandler.postDelayed({
+            if (!isFinishing) {
+                splash.dismiss()
+                if (!getSharedPreferences("app_settings", MODE_PRIVATE).getBoolean("setup_completed", false)) showFirstRunSetup()
+            }
+        }, 850L)
+    }
+
+    private fun showFirstRunSetup() {
+        val box = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(20), dp(8), dp(20), dp(6))
+        }
+        fun heading(value: String) {
+            box.addView(makeText(value, 12f, red, true).apply { setPadding(0, dp(12), 0, dp(5)) })
+        }
+        heading("لغة التطبيق")
+        val language = Spinner(this).apply {
+            adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
+                listOf("العربية", "English", "Français", "Español"))
+            setSelection(listOf("ar", "en", "fr", "es").indexOf(currentLanguage()).coerceAtLeast(0))
+        }
+        box.addView(language)
+        heading("المظهر")
+        val mode = Spinner(this).apply {
+            adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
+                listOf("الوضع الليلي", "الوضع النهاري"))
+            setSelection(if (isDarkMode()) 0 else 1)
+        }
+        box.addView(mode)
+        heading("لون واجهة MARCO RX6")
+        val themeKeys = listOf("violet", "blue", "green", "gold", "rose")
+        val theme = Spinner(this).apply {
+            adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
+                listOf("بنفسجي", "أزرق", "أخضر", "ذهبي", "وردي"))
+            setSelection(themeKeys.indexOf(appearancePreferences().getString("accent", "violet")).coerceAtLeast(0))
+        }
+        box.addView(theme)
+        heading("الإشعارات")
+        val notifications = CheckBox(this).apply {
+            text = "أريد استقبال إشعارات المقالات الجديدة"
+            setTextColor(white)
+            isChecked = false
+            buttonTintList = android.content.res.ColorStateList.valueOf(red)
+        }
+        box.addView(notifications)
+        AlertDialog.Builder(this)
+            .setTitle("مرحباً بك في MARCO RX6")
+            .setMessage("خصص تجربتك قبل البدء. يمكنك تغيير هذه الخيارات لاحقاً من القائمة.")
+            .setView(ScrollView(this).apply { addView(box) })
+            .setPositiveButton("حفظ وابدأ") { _, _ ->
+                val languageCode = listOf("ar", "en", "fr", "es")[language.selectedItemPosition]
+                getSharedPreferences("app_settings", MODE_PRIVATE).edit()
+                    .putString("language", languageCode).putBoolean("setup_completed", true).apply()
+                appearancePreferences().edit()
+                    .putBoolean("dark_mode", mode.selectedItemPosition == 0)
+                    .putString("accent", themeKeys[theme.selectedItemPosition]).apply()
+                notificationPreferences().edit().putBoolean("enabled", notifications.isChecked).apply()
+                if (notifications.isChecked) {
+                    scheduleBlogNotifications()
+                    requestNotificationPermissionIfNeeded()
+                } else {
+                    WorkManager.getInstance(this).cancelUniqueWork(BlogNotificationWorker.WORK_NAME)
+                }
+                recreate()
+            }
+            .setNegativeButton("لاحقاً") { _, _ ->
+                getSharedPreferences("app_settings", MODE_PRIVATE).edit().putBoolean("setup_completed", true).apply()
+            }
+            .setCancelable(false)
+            .show()
+    }
 
     private fun profilePreferences() = getSharedPreferences("user_profile", MODE_PRIVATE)
     private fun readerPreferences() = getSharedPreferences("reader_settings", MODE_PRIVATE)
