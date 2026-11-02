@@ -15,7 +15,9 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.LruCache
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -49,6 +51,8 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.Executors
+import java.security.MessageDigest
 
 data class Game(
     val name: String,
@@ -89,6 +93,10 @@ class MainActivity : Activity() {
     private val BACKUP_IMPORT_REQUEST = 1004
     private val platforms = listOf("الكل", "BLOG", "FAVORITES", "PSP", "PS1", "PS2", "PS3", "PS4")
     private val games = mutableListOf<Game>()
+    private val imageExecutor = Executors.newFixedThreadPool(3)
+    private val coverBitmapCache = object : LruCache<String, Bitmap>((Runtime.getRuntime().maxMemory() / 1024 / 8).toInt().coerceAtLeast(1024)) {
+        override fun sizeOf(key: String, value: Bitmap): Int = (value.byteCount / 1024).coerceAtLeast(1)
+    }
 
     private lateinit var gameList: LinearLayout
     private lateinit var search: EditText
@@ -1292,56 +1300,95 @@ class MainActivity : Activity() {
     }
 
     // IMAGE LOADER
+    private fun stableCacheName(value: String): String {
+        val digest = MessageDigest.getInstance("SHA-256").digest(value.toByteArray(Charsets.UTF_8))
+        return digest.joinToString("") { "%02x".format(it) }
+    }
+
+    private fun decodeCoverFile(file: File): Bitmap? {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(file.absolutePath, bounds)
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+        var sample = 1
+        while (bounds.outWidth / sample > 900 || bounds.outHeight / sample > 1100) sample *= 2
+        val options = BitmapFactory.Options().apply {
+            inSampleSize = sample
+            inPreferredConfig = Bitmap.Config.RGB_565
+        }
+        return BitmapFactory.decodeFile(file.absolutePath, options)
+    }
+
+    private fun downloadCoverToCache(imageUrl: String, destination: File) {
+        val connection = URL(imageUrl).openConnection() as HttpURLConnection
+        connection.connectTimeout = 8000
+        connection.readTimeout = 12000
+        connection.instanceFollowRedirects = true
+        connection.useCaches = true
+        val temporary = File(destination.parentFile, destination.name + ".tmp")
+        try {
+            connection.connect()
+            if (connection.responseCode !in 200..299) throw IllegalStateException("HTTP ${connection.responseCode}")
+            if (connection.contentLengthLong > 12L * 1024L * 1024L) throw IllegalStateException("Cover too large")
+            connection.inputStream.use { input ->
+                FileOutputStream(temporary).use { output ->
+                    val buffer = ByteArray(8192)
+                    var total = 0L
+                    while (true) {
+                        val count = input.read(buffer)
+                        if (count < 0) break
+                        total += count
+                        if (total > 12L * 1024L * 1024L) throw IllegalStateException("Cover too large")
+                        output.write(buffer, 0, count)
+                    }
+                }
+            }
+            if (destination.exists()) destination.delete()
+            if (!temporary.renameTo(destination)) throw IllegalStateException("Cache write failed")
+        } finally {
+            temporary.delete()
+            connection.disconnect()
+        }
+    }
+
     private fun loadCover(
         image: ImageView,
         localPath: String,
         imageUrl: String
     ) {
 
-        val key = localPath.ifBlank { imageUrl }
-
+        val localFile = localPath.takeIf { it.isNotBlank() && File(it).isFile }?.let(::File)
+        val key = if (localFile != null) "file:${localFile.absolutePath}" else "url:$imageUrl"
         image.tag = key
         image.setImageResource(android.R.drawable.ic_menu_gallery)
+        if (key == "url:") return
 
-        if (key.isBlank()) return
+        coverBitmapCache.get(key)?.let {
+            image.setImageBitmap(it)
+            return
+        }
 
-        Thread {
+        imageExecutor.execute {
             try {
-
-                val bitmap = if (localPath.isNotBlank()) {
-
-                    BitmapFactory.decodeFile(localPath)
-
+                val source = if (localFile != null) {
+                    localFile
                 } else {
-
-                    val connection =
-                        URL(imageUrl).openConnection() as HttpURLConnection
-
-                    connection.connectTimeout = 10000
-                    connection.readTimeout = 10000
-                    connection.instanceFollowRedirects = true
-
-                    try {
-                        connection.connect()
-                        connection.inputStream.use {
-                            BitmapFactory.decodeStream(it)
-                        }
-                    } finally {
-                        connection.disconnect()
-                    }
+                    val folder = File(cacheDir, "cover_cache").apply { mkdirs() }
+                    val cached = File(folder, stableCacheName(imageUrl) + ".img")
+                    val fresh = cached.isFile && System.currentTimeMillis() - cached.lastModified() < 7L * 24L * 60L * 60L * 1000L
+                    if (!fresh) downloadCoverToCache(imageUrl, cached)
+                    cached
                 }
-
+                val bitmap = decodeCoverFile(source)
                 if (bitmap != null) {
+                    coverBitmapCache.put(key, bitmap)
                     mainHandler.post {
-                        if (image.tag == key) {
-                            image.setImageBitmap(bitmap)
-                        }
+                        if (image.tag == key) image.setImageBitmap(bitmap)
                     }
                 }
-
             } catch (_: Exception) {
+                // Keep the lightweight placeholder when a cover is unavailable.
             }
-        }.start()
+        }
     }
 
     private fun chooseCover() {
@@ -1815,9 +1862,15 @@ class MainActivity : Activity() {
 
         val articleWebView = android.webkit.WebView(this).apply {
             setBackgroundColor(bg)
+            setLayerType(View.LAYER_TYPE_HARDWARE, null)
+            isVerticalScrollBarEnabled = false
             settings.javaScriptEnabled = false
             settings.domStorageEnabled = false
+            settings.cacheMode = android.webkit.WebSettings.LOAD_DEFAULT
             settings.loadsImagesAutomatically = true
+            settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW
+            settings.mediaPlaybackRequiresUserGesture = true
+            setDownloadListener { url, _, _, _, _ -> enqueueGameDownload(url, game.name) }
             val raw = if (game.bloggerHtml.isNotBlank()) game.bloggerHtml else
                 "<h2>${game.name}</h2><p>${game.description}</p>"
             val articleHtml = raw.replace(Regex("(?is)<script[^>]*>.*?</script>"), "")
@@ -1866,6 +1919,9 @@ class MainActivity : Activity() {
             root.addView(downloadScroll)
         }
 
+        val archiveFolder = File(filesDir, "reader_cache").apply { mkdirs() }
+        val archiveFile = File(archiveFolder, stableCacheName(game.url.ifBlank { game.name }) + ".mht")
+
         val bottom = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -1882,6 +1938,26 @@ class MainActivity : Activity() {
             setPadding(dp(12), dp(12), dp(12), dp(12))
             setOnClickListener { action() }
         }
+        val offline = readerAction(if (archiveFile.isFile) "قراءة دون إنترنت" else "حفظ دون إنترنت") {
+            if (archiveFile.isFile) {
+                articleWebView.settings.allowFileAccess = true
+                articleWebView.loadUrl(Uri.fromFile(archiveFile).toString())
+                Toast.makeText(this, "تم فتح النسخة المحفوظة", Toast.LENGTH_SHORT).show()
+            } else {
+                articleWebView.saveWebArchive(archiveFile.absolutePath, false) { savedPath ->
+                    mainHandler.post {
+                        if (!savedPath.isNullOrBlank() && File(savedPath).isFile) {
+                            offline.text = "قراءة دون إنترنت"
+                            Toast.makeText(this, "تم حفظ المقال للقراءة دون اتصال", Toast.LENGTH_LONG).show()
+                        } else {
+                            Toast.makeText(this, "تعذر حفظ المقال. انتظر اكتمال تحميل الصور ثم حاول مجدداً.", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+            }
+        }
+        bottom.addView(offline, LinearLayout.LayoutParams(0, -2, 1.2f).apply { rightMargin = dp(6) })
+
         val share = readerAction(tr("مشاركة")) {
             val send = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"; putExtra(Intent.EXTRA_SUBJECT, game.name)
@@ -1903,6 +1979,7 @@ class MainActivity : Activity() {
         reader.window?.setBackgroundDrawableResource(android.R.color.transparent)
         reader.show()
         reader.window?.setLayout(-1, -1)
+        reader.setOnDismissListener { articleWebView.stopLoading(); articleWebView.destroy() }
     }
 
     // BLOG POST COMPOSER: reusable article template published directly to Blogger
