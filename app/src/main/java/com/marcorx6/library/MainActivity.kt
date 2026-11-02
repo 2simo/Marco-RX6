@@ -25,6 +25,7 @@ import android.text.Editable
 import android.text.Html
 import android.text.TextWatcher
 import android.view.Gravity
+import android.view.View
 import android.widget.*
 import org.json.JSONArray
 import org.json.JSONObject
@@ -1138,7 +1139,7 @@ class MainActivity : Activity() {
                 </style>
             """.trimIndent()
             loadDataWithBaseURL(game.url.ifBlank { "https://marcorx6.blogspot.com/" },
-                "<!doctype html><html lang="ar" dir="rtl"><head>$style</head><body dir="rtl">$articleHtml</body></html>",
+                "<!doctype html><html lang=\"ar\" dir=\"rtl\"><head>$style</head><body dir=\"rtl\">$articleHtml</body></html>",
                 "text/html", "UTF-8", null)
         }
         root.addView(articleView, LinearLayout.LayoutParams(-1, 0, 1f))
