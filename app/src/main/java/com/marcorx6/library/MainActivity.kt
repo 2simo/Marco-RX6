@@ -37,6 +37,9 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Locale
 import java.util.regex.Pattern
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
@@ -100,6 +103,12 @@ class MainActivity : Activity() {
 
         @Suppress("DEPRECATION")
         window.decorView.systemUiVisibility = 0
+
+        // Hide the top status bar (clock, battery and status icons) to prevent overlap.
+        WindowInsetsControllerCompat(window, window.decorView).apply {
+            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            hide(WindowInsetsCompat.Type.statusBars())
+        }
 
         createNotificationChannel()
         configureGoogleSignIn()
@@ -318,9 +327,9 @@ class MainActivity : Activity() {
     }
 
     private fun showSideMenu() {
-        val gold = Color.rgb(211, 177, 112)
-        val ink = Color.rgb(10, 11, 15)
-        val surface = Color.rgb(24, 25, 31)
+        val gold = Color.rgb(211, 220, 236)
+        val ink = Color.rgb(8, 11, 19)
+        val surface = Color.rgb(24, 30, 44)
         val drawer = Dialog(this)
         val panel = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -330,7 +339,7 @@ class MainActivity : Activity() {
                 setColor(ink)
                 cornerRadii = floatArrayOf(0f, 0f, dp(24).toFloat(), dp(24).toFloat(),
                     dp(24).toFloat(), dp(24).toFloat(), 0f, 0f)
-                setStroke(dp(1), Color.rgb(89, 73, 49))
+                setStroke(dp(1), Color.rgb(99, 113, 141))
             })
         }
         val top = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
@@ -379,7 +388,7 @@ class MainActivity : Activity() {
         }
         menuItem("Aa", "الخط وحجم النص", "تخصيص قراءة وواجهة التطبيق") { showTypographySettings() }
         panel.addView(View(this), LinearLayout.LayoutParams(1, 0, 1f))
-        panel.addView(makeText("MARCO RX6  •  PREMIUM", 9f, Color.rgb(130, 119, 99), true).apply {
+        panel.addView(makeText("MARCO RX6  •  PREMIUM", 9f, Color.rgb(139, 151, 177), true).apply {
             gravity = Gravity.CENTER
             setPadding(0, dp(16), 0, dp(4))
         })
@@ -448,122 +457,133 @@ class MainActivity : Activity() {
     }
 
     private fun createInterface() {
-        // MARCO RX6 Premium: luxury editorial layout; all existing actions remain connected.
-        val gold = Color.rgb(139, 92, 246)
-        val mutedGold = Color.rgb(99, 102, 241)
-        val ink = Color.rgb(9, 10, 22)
-        val surface = Color.rgb(20, 22, 40)
-        val soft = Color.rgb(31, 35, 60)
+        // LIQUID METAL redesign: premium chrome surfaces, clear hierarchy and quick navigation.
+        val silver = Color.rgb(226, 232, 242)
+        val muted = Color.rgb(150, 162, 181)
+        val violet = Color.rgb(151, 112, 255)
+        val ink = Color.rgb(7, 9, 17)
+        val glass = Color.rgb(19, 23, 36)
         val root = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
             layoutDirection = if (currentLanguage() == "ar") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
             textDirection = if (currentLanguage() == "ar") View.TEXT_DIRECTION_RTL else View.TEXT_DIRECTION_LTR
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(13), dp(20), dp(10))
+            setPadding(dp(18), dp(12), dp(18), dp(96))
             setBackgroundColor(ink)
         }
-        @Suppress("DEPRECATION")
-        root.setOnApplyWindowInsetsListener { view, insets ->
-            view.setPadding(dp(20), dp(13) + insets.systemWindowInsetTop,
-                dp(20), dp(10) + insets.systemWindowInsetBottom)
+        ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(dp(18), dp(12) + bars.top, dp(18), dp(96) + bars.bottom)
             insets
         }
 
         val header = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, dp(5), 0, dp(15))
+            setPadding(dp(2), dp(3), dp(2), dp(17))
         }
-        val logo = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        logo.addView(makeText("MARCO", 10f, gold, true))
-        logo.addView(makeText("RX6", 30f, white, true))
-        header.addView(logo, LinearLayout.LayoutParams(0, -2, 1f))
-        fun headerAction(label: String, action: () -> Unit) = TextView(this).apply {
-            text = label
-            textSize = 10f
-            setTextColor(if (label == "文") gold else white)
+        val brand = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        brand.addView(makeText("MARCO RX6", 10f, muted, true))
+        brand.addView(makeText("LIQUID  /  PLAY", 20f, silver, true).apply {
+            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+            letterSpacing = 0.06f
+        })
+        header.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
+        val menu = TextView(this).apply {
+            text = "☰"
+            textSize = 22f
             gravity = Gravity.CENTER
-            background = rounded(surface, 13)
-            setPadding(dp(13), dp(12), dp(13), dp(12))
-            setOnClickListener { action() }
-        }
-        val menuButton = headerAction("☰") { showSideMenu() }.apply {
-            textSize = 23f
-            setTextColor(gold)
+            setTextColor(silver)
+            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Color.rgb(75, 83, 105), Color.rgb(25, 30, 45), Color.rgb(11, 14, 24))).apply {
+                cornerRadius = dp(17).toFloat()
+                setStroke(dp(1), Color.rgb(93, 105, 130))
+            }
+            setPadding(dp(15), dp(10), dp(15), dp(10))
             contentDescription = "القائمة الجانبية"
-            minWidth = dp(52)
+            setOnClickListener { showSideMenu() }
         }
-        header.addView(menuButton)
+        header.addView(menu)
         root.addView(header)
 
         val hero = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            background = GradientDrawable(
-                GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(63, 38, 115), Color.rgb(35, 39, 91), Color.rgb(16, 20, 43))
-            ).apply {
-                cornerRadius = dp(25).toFloat()
-                setStroke(dp(1), Color.rgb(91, 76, 160))
+            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Color.rgb(105, 115, 139), Color.rgb(44, 52, 73), Color.rgb(17, 22, 36), Color.rgb(49, 35, 83))).apply {
+                cornerRadius = dp(27).toFloat()
+                setStroke(dp(1), Color.rgb(130, 143, 170))
             }
-            setPadding(dp(21), dp(21), dp(21), dp(20))
-            elevation = dp(2).toFloat()
+            elevation = dp(5).toFloat()
+            setPadding(dp(20), dp(19), dp(20), dp(18))
         }
-        hero.addView(makeText("✦  MARCO RX6 • PREMIUM", 9f, gold, true))
-        hero.addView(makeText(tr("اكتشف. العب.\nاستمتع أكثر."), 28f, white, true).apply {
-            setPadding(0, dp(11), 0, dp(7))
+        hero.addView(makeText("✧  PREMIUM GAME LIBRARY", 9f, silver, true).apply { letterSpacing = 0.12f })
+        hero.addView(makeText(tr("اكتشف. العب.\nاستمتع أكثر."), 27f, Color.WHITE, true).apply {
+            typeface = Typeface.create("sans-serif", Typeface.BOLD)
+            setPadding(0, dp(10), 0, dp(5))
         })
         hero.addView(makeText(tr("ألعاب وشروحات وآخر الإصدارات، كلّها في مكان واحد."), 11f,
-            Color.rgb(205, 205, 226)))
-        val heroStats = LinearLayout(this).apply {
+            Color.rgb(218, 222, 235)))
+        val stats = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, dp(17), 0, 0)
+            setPadding(0, dp(14), 0, 0)
         }
-        heroStats.addView(makeText("✦  ${games.size} مقال", 10f, gold, true))
-        heroStats.addView(makeText("     •     " + tr("المدونة محدّثة"), 10f, Color.rgb(190, 183, 255), true))
-        hero.addView(heroStats)
-        root.addView(hero, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(2) })
+        stats.addView(makeText("◈  ${games.size} " + tr("مقال"), 10f, silver, true))
+        stats.addView(makeText("   •   " + tr("المدونة محدّثة"), 10f, Color.rgb(197, 184, 255), true))
+        hero.addView(stats)
+        root.addView(hero, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(15) })
+
         val lastRead = games.filter { isRecentlyViewed(it) }.maxByOrNull { lastViewedAt(it) }
         if (lastRead != null) {
             val resume = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
-                background = rounded(surface, 14)
-                setPadding(dp(13), dp(10), dp(13), dp(10))
+                background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
+                    intArrayOf(Color.rgb(33, 39, 55), Color.rgb(18, 22, 34))).apply {
+                    cornerRadius = dp(16).toFloat()
+                    setStroke(dp(1), Color.rgb(66, 78, 105))
+                }
+                setPadding(dp(14), dp(11), dp(14), dp(11))
                 setOnClickListener { showDetails(lastRead) }
             }
-            val resumeText = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-            resumeText.addView(makeText("تابع القراءة", 9f, gold, true))
-            resumeText.addView(makeText(lastRead.name, 12f, white, true).apply {
+            val resumeLabels = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+            resumeLabels.addView(makeText("CONTINUE", 8f, violet, true))
+            resumeLabels.addView(makeText(lastRead.name, 12f, silver, true).apply {
                 maxLines = 1
                 ellipsize = android.text.TextUtils.TruncateAt.END
             })
-            resume.addView(resumeText, LinearLayout.LayoutParams(0, -2, 1f))
-            resume.addView(makeText("متابعة  ↗", 10f, gold, true))
-            root.addView(resume, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
+            resume.addView(resumeLabels, LinearLayout.LayoutParams(0, -2, 1f))
+            resume.addView(makeText("↗", 20f, silver, true))
+            root.addView(resume, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(14) })
         }
 
         val searchWrap = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            background = rounded(surface, 15)
+            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Color.rgb(39, 46, 63), Color.rgb(17, 21, 33))).apply {
+                cornerRadius = dp(17).toFloat()
+                setStroke(dp(1), Color.rgb(75, 87, 112))
+            }
             setPadding(dp(14), 0, dp(14), 0)
         }
-        searchWrap.addView(makeText("⌕", 25f, gold, true))
+        searchWrap.addView(makeText("⌕", 26f, silver, true))
         search = EditText(this).apply {
             hint = tr("ابحث عن الألعاب والمقالات...")
             textSize = 13f
+            typeface = Typeface.create("sans-serif", Typeface.NORMAL)
             setSingleLine(true)
-            setTextColor(white)
-            setHintTextColor(Color.rgb(145, 148, 178))
+            setTextColor(Color.WHITE)
+            setHintTextColor(Color.rgb(139, 149, 170))
             background = null
             setPadding(dp(10), 0, dp(6), 0)
         }
-        searchWrap.addView(search, LinearLayout.LayoutParams(0, dp(53), 1f))
-        root.addView(searchWrap, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(16) })
+        searchWrap.addView(search, LinearLayout.LayoutParams(0, dp(52), 1f))
+        root.addView(searchWrap, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(13) })
 
         val filterScroll = HorizontalScrollView(this).apply {
             isHorizontalScrollBarEnabled = false
             clipToPadding = false
+            overScrollMode = View.OVER_SCROLL_NEVER
         }
         filters = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -581,49 +601,50 @@ class MainActivity : Activity() {
                 }
                 tag = category
                 textSize = 10f
+                typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
                 gravity = Gravity.CENTER
-                setTypeface(null, Typeface.BOLD)
-                setPadding(dp(15), dp(11), dp(15), dp(11))
+                setPadding(dp(16), dp(10), dp(16), dp(10))
+                background = rounded(glass, 18)
+                setTextColor(muted)
                 setOnClickListener { selected = category; renderGames() }
             }
             filters.addView(chip, LinearLayout.LayoutParams(-2, -2).apply { marginEnd = dp(7) })
         }
         filterScroll.addView(filters)
-        root.addView(filterScroll, LinearLayout.LayoutParams(-1, -2).apply {
-            topMargin = dp(15)
-            bottomMargin = dp(17)
-        })
+        root.addView(filterScroll, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(17) })
 
         val section = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        val sectionTitles = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        sectionTitles.addView(makeText(tr("استكشف"), 9f, gold, true))
-        sectionTitles.addView(makeText(tr("أحدث المقالات"), 20f, white, true))
-        section.addView(sectionTitles, LinearLayout.LayoutParams(0, -2, 1f))
-        countText = makeText("0 مقال", 10f, gold, true)
+        val titles = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        titles.addView(makeText("DISCOVER", 8f, violet, true).apply { letterSpacing = 0.14f })
+        titles.addView(makeText(tr("أحدث المقالات"), 20f, silver, true))
+        section.addView(titles, LinearLayout.LayoutParams(0, -2, 1f))
+        countText = makeText("0 " + tr("مقال"), 10f, muted, true)
         section.addView(countText)
-        val sortButton = TextView(this).apply {
-            text = "↕"
+        val sort = TextView(this).apply {
+            text = "⇅"
             textSize = 19f
-            setTextColor(gold)
             gravity = Gravity.CENTER
-            background = rounded(surface, 12)
+            setTextColor(silver)
+            background = rounded(glass, 13)
             setPadding(dp(12), dp(7), dp(12), dp(7))
             contentDescription = tr("ترتيب المقالات")
             setOnClickListener {
                 sortMode = when (sortMode) { "LATEST" -> "POPULAR"; "POPULAR" -> "A-Z"; "A-Z" -> "FAVORITES"; else -> "LATEST" }
                 renderGames()
-                Toast.makeText(this@MainActivity, tr("الترتيب") + ": " + when (sortMode) { "LATEST" -> tr("الأحدث"); "POPULAR" -> tr("الأكثر مشاهدة"); "A-Z" -> tr("أبجدياً"); else -> tr("المفضلة") }, Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, tr("الترتيب") + ": " + when (sortMode) {
+                    "LATEST" -> tr("الأحدث"); "POPULAR" -> tr("الأكثر مشاهدة"); "A-Z" -> tr("أبجدياً"); else -> tr("المفضلة")
+                }, Toast.LENGTH_SHORT).show()
             }
         }
-        section.addView(sortButton, LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(9) })
+        section.addView(sort, LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(9) })
         root.addView(section, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
 
         gameList = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(0, dp(9), 0, dp(18))
+            setPadding(0, dp(4), 0, dp(18))
         }
         root.addView(gameList, LinearLayout.LayoutParams(-1, -2))
 
@@ -631,10 +652,13 @@ class MainActivity : Activity() {
             val publish = TextView(this).apply {
                 text = tr("＋  نشر")
                 textSize = 11f
-                setTextColor(ink)
-                setTypeface(null, Typeface.BOLD)
+                setTextColor(Color.WHITE)
+                typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
                 gravity = Gravity.CENTER
-                background = rounded(gold, 14)
+                background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
+                    intArrayOf(Color.rgb(118, 127, 151), Color.rgb(100, 77, 157))).apply {
+                    cornerRadius = dp(15).toFloat()
+                }
                 setPadding(dp(18), dp(13), dp(18), dp(13))
                 setOnClickListener { showGameDialog() }
             }
@@ -648,7 +672,40 @@ class MainActivity : Activity() {
             clipToPadding = false
             addView(root, ViewGroup.LayoutParams(-1, -2))
         }
-        setContentView(pageScroll)
+        val shell = FrameLayout(this).apply {
+            setBackgroundColor(ink)
+            addView(pageScroll, FrameLayout.LayoutParams(-1, -1))
+        }
+        val dock = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Color.rgb(74, 83, 105), Color.rgb(27, 33, 48), Color.rgb(13, 17, 28))).apply {
+                cornerRadius = dp(23).toFloat()
+                setStroke(dp(1), Color.rgb(100, 113, 140))
+            }
+            elevation = dp(14).toFloat()
+            setPadding(dp(7), dp(7), dp(7), dp(7))
+        }
+        fun dockItem(icon: String, label: String, action: () -> Unit) {
+            val item = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER
+                setPadding(dp(8), dp(4), dp(8), dp(4))
+                setOnClickListener { action() }
+            }
+            item.addView(makeText(icon, 19f, silver, true).apply { gravity = Gravity.CENTER })
+            item.addView(makeText(label, 8f, muted, true).apply { gravity = Gravity.CENTER })
+            dock.addView(item, LinearLayout.LayoutParams(0, -2, 1f))
+        }
+        dockItem("⌂", tr("الكل")) { selected = "ALL"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
+        dockItem("♡", tr("المفضلة")) { selected = "FAVORITES"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
+        dockItem("◷", tr("شوهدت مؤخراً")) { selected = "RECENT"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
+        dockItem("☰", tr("القائمة")) { showSideMenu() }
+        shell.addView(dock, FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply {
+            leftMargin = dp(16); rightMargin = dp(16); bottomMargin = dp(12)
+        })
+        setContentView(shell)
         root.requestApplyInsets()
         search.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -1178,6 +1235,14 @@ class MainActivity : Activity() {
     private fun historyPreferences() = getSharedPreferences("article_activity", MODE_PRIVATE)
     private fun articleKey(game: Game): String = (game.url.ifBlank { game.name }).hashCode().toString()
     private fun viewCount(game: Game): Int = historyPreferences().getInt("views_" + articleKey(game), 0)
+    private fun ratingCount(game: Game): Int =
+        if (historyPreferences().getInt("rating_" + articleKey(game), 0) > 0) 1 else 0
+
+    private fun compactMetric(value: Int): String = when {
+        value >= 1_000_000 -> String.format(Locale.ROOT, "%.1fM", value / 1_000_000f)
+        value >= 1_000 -> String.format(Locale.ROOT, "%.1fK", value / 1_000f)
+        else -> value.toString()
+    }
     private fun lastViewedAt(game: Game): Long = historyPreferences().getLong("time_" + articleKey(game), 0L)
     private fun isRecentlyViewed(game: Game): Boolean = lastViewedAt(game) > 0L
     private fun recordArticleView(game: Game) {
@@ -1258,7 +1323,7 @@ class MainActivity : Activity() {
         dialog.show()
     }
 
-    // PREMIUM ARTICLE CARDS: image, title, category, reading count and quick favorite.
+    // PLAYSTATION LIBRARY: image-only horizontal shelves for every category.
     private fun renderGames() {
         gameList.removeAllViews()
         for (i in 0 until filters.childCount) {
@@ -1267,6 +1332,7 @@ class MainActivity : Activity() {
             chip.background = rounded(if (active) red else panel, 15)
             chip.setTextColor(if (active) bg else gray)
         }
+
         val query = search.text.toString().lowercase(Locale.ROOT).trim()
         val filtered = games.filter { item ->
             val categoryMatch = when (selected) {
@@ -1282,14 +1348,14 @@ class MainActivity : Activity() {
                 item.description.lowercase(Locale.ROOT).contains(query)
             categoryMatch && searchMatch
         }
-        val results = when (sortMode) {
+        val sorted = when (sortMode) {
             "A-Z" -> filtered.sortedBy { it.name.lowercase(Locale.ROOT) }
             "FAVORITES" -> filtered.sortedByDescending { it.isFavorite }
             "POPULAR" -> filtered.sortedByDescending { viewCount(it) }
             else -> if (selected == "RECENT") filtered.sortedByDescending { lastViewedAt(it) } else filtered
         }
-        countText.text = "${results.size} ${tr("مقال")}"
-        if (results.isEmpty()) {
+        countText.text = sorted.size.toString() + " " + tr("مقال")
+        if (sorted.isEmpty()) {
             gameList.addView(makeText(tr("لا توجد مقالات حالياً"), 15f, gray, true).apply {
                 gravity = Gravity.CENTER
                 setPadding(dp(10), dp(55), dp(10), dp(55))
@@ -1297,90 +1363,105 @@ class MainActivity : Activity() {
             return
         }
 
-        // Comfortable full-width editorial cards: one large, readable article per row.
-        results.forEach { post ->
-            val card = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                background = rounded(panel, 20)
-                clipToOutline = true
-                elevation = dp(3).toFloat()
-                setOnClickListener { showDetails(post) }
+        val shelves: List<Pair<String, List<Game>>> = if (selected == "ALL" && query.isBlank()) {
+            val order = listOf("PS4", "PS3", "PS2", "PS1", "PSP", "BLOG")
+            order.mapNotNull { platform ->
+                val items = sorted.filter { if (platform == "BLOG") it.platform == "BLOG" else it.platform == platform }
+                if (items.isEmpty()) null else platform to items
+            } + sorted.filter { it.platform !in order }.groupBy { it.platform }.map { it.key to it.value }
+        } else {
+            val title = when (selected) {
+                "ALL" -> "الكل"
+                "FAVORITES" -> tr("المفضلة")
+                "RECENT" -> tr("شوهدت مؤخراً")
+                "POPULAR" -> tr("الأكثر مشاهدة")
+                "BLOG" -> "BLOG"
+                else -> selected
             }
-            val imageFrame = FrameLayout(this)
-            val cover = ImageView(this).apply {
-                scaleType = ImageView.ScaleType.CENTER_CROP
-                setBackgroundColor(Color.rgb(29, 32, 58))
-                contentDescription = post.name
-            }
-            imageFrame.addView(cover, FrameLayout.LayoutParams(-1, dp(218)))
-            if (post.coverUrl.isNotBlank() || post.coverLocalPath.isNotBlank()) {
-                loadCover(cover, post.coverLocalPath, post.coverUrl)
-            } else {
-                cover.setImageResource(android.R.drawable.ic_menu_gallery)
-                cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
-            }
+            listOf(title to sorted)
+        }
 
-            val categoryBadge = TextView(this).apply {
-                text = post.platform
-                textSize = 10f
-                setTextColor(bg)
-                setTypeface(null, Typeface.BOLD)
-                background = rounded(red, 10)
-                setPadding(dp(10), dp(6), dp(10), dp(6))
-            }
-            imageFrame.addView(categoryBadge, FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.START).apply {
-                leftMargin = dp(13); topMargin = dp(13)
-            })
-
-            val favorite = TextView(this).apply {
-                text = if (post.isFavorite) "★" else "☆"
-                textSize = 23f
-                gravity = Gravity.CENTER
-                setTextColor(if (post.isFavorite) red else white)
-                background = rounded(Color.argb(205, 12, 13, 16), 24)
-                setOnClickListener {
-                    val idx = games.indexOfFirst { it.name == post.name && it.url == post.url }
-                    if (idx >= 0) {
-                        games[idx] = games[idx].copy(isFavorite = !games[idx].isFavorite)
-                        saveGames()
-                        renderGames()
-                    }
-                }
-            }
-            imageFrame.addView(favorite, FrameLayout.LayoutParams(dp(42), dp(42), Gravity.TOP or Gravity.END).apply {
-                rightMargin = dp(12); topMargin = dp(11)
-            })
-            card.addView(imageFrame)
-
-            val details = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                setPadding(dp(17), dp(14), dp(17), dp(15))
-            }
-            details.addView(makeText(post.name, 17f, white, true).apply {
-                maxLines = 2
-                minLines = 1
-                ellipsize = android.text.TextUtils.TruncateAt.END
-            })
-            if (post.description.isNotBlank()) {
-                details.addView(makeText(post.description, 12f, Color.rgb(184, 188, 216)).apply {
-                    maxLines = 2
-                    ellipsize = android.text.TextUtils.TruncateAt.END
-                    setPadding(0, dp(6), 0, 0)
-                })
-            }
-            val meta = LinearLayout(this).apply {
+        shelves.forEach { (title, posts) ->
+            val heading = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
-                setPadding(0, dp(12), 0, 0)
+                setPadding(dp(2), dp(9), dp(2), dp(10))
             }
-            meta.addView(makeText("◉  ${viewCount(post)} ${tr("مشاهدة")}", 10f, gray),
-                LinearLayout.LayoutParams(0, -2, 1f))
-            val date = if (lastViewedAt(post) > 0L) tr("شوهدت سابقاً") else tr("مقال")
-            meta.addView(makeText(date, 10f, Color.rgb(167, 139, 250), true))
-            details.addView(meta)
-            card.addView(details)
-            gameList.addView(card, LinearLayout.LayoutParams(-1, -2).apply {
-                bottomMargin = dp(16)
+            heading.addView(makeText(title, 17f, Color.rgb(226, 232, 242), true), LinearLayout.LayoutParams(0, -2, 1f))
+            heading.addView(makeText(posts.size.toString(), 10f, Color.rgb(169, 139, 255), true))
+            gameList.addView(heading, LinearLayout.LayoutParams(-1, -2))
+
+            val horizontal = HorizontalScrollView(this).apply {
+                isHorizontalScrollBarEnabled = false
+                clipToPadding = false
+                overScrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS
+                layoutDirection = View.LAYOUT_DIRECTION_LTR
+            }
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                setPadding(dp(2), dp(2), dp(2), dp(13))
+            }
+            posts.forEach { post ->
+                // Keep the original 142x190 cover intact; metadata sits below it.
+                val card = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    gravity = Gravity.CENTER_HORIZONTAL
+                    isClickable = true
+                    isFocusable = true
+                    setOnClickListener { showDetails(post) }
+                }
+                val frame = FrameLayout(this).apply {
+                    background = rounded(Color.rgb(198, 204, 218), 13)
+                    clipToOutline = true
+                    elevation = dp(4).toFloat()
+                    isClickable = true
+                    isFocusable = true
+                    setOnClickListener { showDetails(post) }
+                }
+                val cover = ImageView(this).apply {
+                    scaleType = ImageView.ScaleType.CENTER_CROP
+                    setBackgroundColor(Color.rgb(29, 32, 58))
+                    contentDescription = post.name
+                    isClickable = true
+                    setOnClickListener { showDetails(post) }
+                }
+                frame.addView(cover, FrameLayout.LayoutParams(-1, -1))
+                if (post.coverUrl.isNotBlank() || post.coverLocalPath.isNotBlank()) {
+                    loadCover(cover, post.coverLocalPath, post.coverUrl)
+                } else {
+                    cover.setImageResource(android.R.drawable.ic_menu_gallery)
+                    cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                }
+                card.addView(frame, LinearLayout.LayoutParams(dp(142), dp(190)))
+
+                val title = makeText(post.name, 11f, Color.rgb(238, 241, 248), true).apply {
+                    gravity = Gravity.CENTER
+                    maxLines = 1
+                    ellipsize = android.text.TextUtils.TruncateAt.END
+                    setPadding(dp(3), dp(7), dp(3), dp(3))
+                    isClickable = true
+                    setOnClickListener { showDetails(post) }
+                }
+                card.addView(title, LinearLayout.LayoutParams(dp(142), dp(27)))
+
+                val metrics = LinearLayout(this).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER
+                    setPadding(dp(2), 0, dp(2), 0)
+                }
+                val views = makeText("◉ " + compactMetric(viewCount(post)), 9f, Color.rgb(174, 184, 203))
+                val ratings = makeText("★ " + compactMetric(ratingCount(post)), 9f, Color.rgb(255, 197, 92), true)
+                metrics.addView(views)
+                metrics.addView(makeText("  ·  ", 9f, Color.rgb(112, 121, 143)))
+                metrics.addView(ratings)
+                card.addView(metrics, LinearLayout.LayoutParams(dp(142), dp(19)))
+                row.addView(card, LinearLayout.LayoutParams(dp(142), -2).apply {
+                    marginEnd = dp(11)
+                })
+            }
+            horizontal.addView(row)
+            gameList.addView(horizontal, LinearLayout.LayoutParams(-1, dp(250)).apply {
+                bottomMargin = dp(5)
             })
         }
     }
