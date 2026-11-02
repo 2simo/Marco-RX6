@@ -2504,7 +2504,7 @@ class MainActivity : Activity() {
         val safeCategories = escapeArticleHtml(categories)
         val safeGenre = escapeArticleHtml(genre)
         val safeYear = escapeArticleHtml(releaseYear)
-        val descriptionHtml = description.trim().split(Regex("\\n\\s*\\n")).filter { it.isNotBlank() }.joinToString("") { "<p style=\"margin:0 0 14px;\">${escapeArticleHtml(it).replace("\\n", "<br/>")}</p>" }
+        val descriptionHtml = description.trim().split(Regex("\\n\\s*\\n")).filter { it.isNotBlank() }.joinToString("") { "<p style=\"margin:0 0 14px;\">${escapeArticleHtml(it).replace("\n", "<br/>")}</p>" }
         val safeCover = escapeArticleHtml(normalizeBloggerImageUrl(coverUrl))
         val safeDownload = escapeArticleHtml(downloadUrl)
         val categoryBlock = if (safeCategories.isNotBlank()) "<p style=\"color:#a78bfa;font-size:13px;\">التصنيف: $safeCategories</p>" else ""
