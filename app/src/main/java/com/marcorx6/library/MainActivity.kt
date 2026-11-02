@@ -199,9 +199,18 @@ class MainActivity : Activity() {
         return if (body.isBlank()) JSONObject() else JSONObject(body)
     }
     private fun driveToken(): String {
-        val account = GoogleSignIn.getLastSignedInAccount(this) ?: throw IllegalStateException("يرجى تسجيل الدخول بحساب المسؤول")
-        val androidAccount = account.account ?: throw IllegalStateException("بيانات حساب Google غير متاحة")
-        return GoogleAuthUtil.getToken(applicationContext, androidAccount, "oauth2:https://www.googleapis.com/auth/drive.file")
+        val account = GoogleSignIn.getLastSignedInAccount(this)
+            ?: throw IllegalStateException("يرجى تسجيل الدخول بحساب المسؤول")
+        if (!account.email.equals(adminEmail, ignoreCase = true)) {
+            throw SecurityException("حساب Google غير مخوّل لرفع الأغلفة")
+        }
+        val androidAccount = account.account
+            ?: throw IllegalStateException("بيانات حساب Google غير متاحة")
+        return GoogleAuthUtil.getToken(
+            applicationContext,
+            androidAccount,
+            "oauth2:https://www.googleapis.com/auth/drive.file"
+        )
     }
 
     private fun uploadCoverToDrive(file: File): String {
