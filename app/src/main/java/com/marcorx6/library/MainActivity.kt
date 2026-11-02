@@ -7,6 +7,9 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.AlertDialog
 import android.content.Intent
+import com.google.android.gms.auth.GoogleAuthUtil
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.common.api.Scope
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.graphics.Color
@@ -48,7 +51,9 @@ data class Game(
     val downloadLinks: String = "",
     val blogImported: Boolean = false,
     val platformManuallyCorrected: Boolean = false,
-    val isFavorite: Boolean = false
+    val isFavorite: Boolean = false,
+    val bloggerPostId: String = "",
+    val bloggerHtml: String = ""
 )
 
 class MainActivity : Activity() {
@@ -74,6 +79,11 @@ class MainActivity : Activity() {
     private var coverPreview: ImageView? = null
     private var coverUrlField: EditText? = null
     private var isSyncing = false
+    private var isAdminSession = false
+    private var bloggerBlogId = ""
+    private var googleSignInClient: com.google.android.gms.auth.api.signin.GoogleSignInClient? = null
+    private val adminEmail = "xpangwan@gmail.com"
+    private val SIGN_IN_REQUEST = 1002
 
     private val bloggerFeedUrl =
         "https://marcorx6.blogspot.com/feeds/posts/default?alt=json&max-results=100"
@@ -88,8 +98,10 @@ class MainActivity : Activity() {
         window.decorView.systemUiVisibility = 0
 
         createNotificationChannel()
+        configureGoogleSignIn()
         loadGames()
         createInterface()
+        restoreAdminSession()
         if (notificationPreferences().getBoolean("enabled", true)) {
             scheduleBlogNotifications()
             requestNotificationPermissionIfNeeded()
@@ -97,6 +109,40 @@ class MainActivity : Activity() {
         syncFromBlog(showResult = false)
     }
 
+
+    private fun configureGoogleSignIn() {
+        val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail().requestScopes(Scope("https://www.googleapis.com/auth/blogger")).build()
+        googleSignInClient = GoogleSignIn.getClient(this, options)
+    }
+    private fun restoreAdminSession() {
+        val account = GoogleSignIn.getLastSignedInAccount(this)
+        isAdminSession = account?.email.equals(adminEmail, ignoreCase = true)
+    }
+    private fun startGoogleSignIn() { googleSignInClient?.let { startActivityForResult(it.signInIntent, SIGN_IN_REQUEST) } }
+    private fun signOutAdmin() {
+        googleSignInClient?.signOut()?.addOnCompleteListener { isAdminSession = false; createInterface() }
+    }
+    private fun adminToken(): String {
+        val account = GoogleSignIn.getLastSignedInAccount(this) ?: throw IllegalStateException("Please sign in as the blog admin")
+        if (!account.email.equals(adminEmail, ignoreCase = true)) throw SecurityException("Unauthorized Google account")
+        return GoogleAuthUtil.getToken(applicationContext, account, "oauth2:https://www.googleapis.com/auth/blogger")
+    }
+    private fun bloggerRequest(method: String, path: String, payload: JSONObject? = null): JSONObject {
+        val connection = URL("https://www.googleapis.com/blogger/v3/$path").openConnection() as HttpURLConnection
+        connection.requestMethod = method; connection.connectTimeout = 20000; connection.readTimeout = 25000
+        connection.setRequestProperty("Authorization", "Bearer ${adminToken()}"); connection.setRequestProperty("Accept", "application/json")
+        if (payload != null) { connection.doOutput = true; connection.setRequestProperty("Content-Type", "application/json; charset=utf-8"); connection.outputStream.use { it.write(payload.toString().toByteArray(Charsets.UTF_8)) } }
+        val code = connection.responseCode; val stream = if (code in 200..299) connection.inputStream else connection.errorStream
+        val body = stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty(); connection.disconnect()
+        if (code !in 200..299) { val message = try { JSONObject(body).optJSONObject("error")?.optString("message") ?: body } catch (_: Exception) { body }; throw IllegalStateException("Blogger API ($code): $message") }
+        return if (body.isBlank()) JSONObject() else JSONObject(body)
+    }
+    private fun bloggerHtml(game: Game): String {
+        val text = game.description.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>")
+        val image = if (game.coverUrl.isNotBlank()) "<p><img src=\"${game.coverUrl}\" /></p>" else ""
+        return "<div><p>$text</p>$image<p><a href=\"${game.url}\">تحميل اللعبة</a></p></div>"
+    }
 
     private fun notificationPreferences() =
         getSharedPreferences("notification_settings", MODE_PRIVATE)
@@ -254,6 +300,13 @@ class MainActivity : Activity() {
             leftMargin = dp(7)
         })
 
+        val adminButton = TextView(this).apply {
+            text = if (isAdminSession) "ADMIN ✓" else "ADMIN LOGIN"
+            textSize = 10f; setTextColor(white); setTypeface(null, Typeface.BOLD); gravity = Gravity.CENTER
+            background = rounded(Color.rgb(48, 53, 70), 13); setPadding(dp(9), dp(12), dp(9), dp(12))
+            setOnClickListener { if (isAdminSession) signOutAdmin() else startGoogleSignIn() }
+        }
+        header.addView(adminButton)
         val addButton = TextView(this).apply {
             text = "+ ADD"
             textSize = 13f
@@ -267,12 +320,7 @@ class MainActivity : Activity() {
             }
         }
 
-        header.addView(
-            addButton,
-            LinearLayout.LayoutParams(-2, -2).apply {
-                leftMargin = dp(8)
-            }
-        )
+        if (isAdminSession) header.addView(addButton, LinearLayout.LayoutParams(-2, -2).apply { leftMargin = dp(8) })
 
         root.addView(header)
 
@@ -476,6 +524,8 @@ class MainActivity : Activity() {
 
                 val feed = JSONObject(body).optJSONObject("feed")
                     ?: JSONObject()
+                val feedId = feed.optJSONObject("id")?.optString("$t", "").orEmpty()
+                Regex("blog-(\\d+)").find(feedId)?.groupValues?.getOrNull(1)?.let { bloggerBlogId = it }
 
                 val entries = feed.optJSONArray("entry")
                     ?: JSONArray()
@@ -546,7 +596,9 @@ class MainActivity : Activity() {
                     platform = if (old.platformManuallyCorrected)
                         old.platform else incoming.platform,
                     platformManuallyCorrected = old.platformManuallyCorrected,
-                    isFavorite = old.isFavorite
+                    isFavorite = old.isFavorite,
+                    bloggerPostId = incoming.bloggerPostId,
+                    bloggerHtml = incoming.bloggerHtml
                 )
 
                 updated++
@@ -667,7 +719,9 @@ class MainActivity : Activity() {
             coverUrl = image,
             sourcePostUrl = postUrl,
             downloadLinks = links,
-            blogImported = true
+            blogImported = true,
+            bloggerPostId = entry.optJSONObject("id")?.optString("$t", "")?.let { Regex("post-(\\d+)").find(it)?.groupValues?.getOrNull(1).orEmpty() } ?: "",
+            bloggerHtml = content
         )
     }
 
@@ -874,8 +928,17 @@ class MainActivity : Activity() {
 
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode != PICK_IMAGE_REQUEST ||
-            resultCode != RESULT_OK) return
+        if (requestCode == SIGN_IN_REQUEST && resultCode == RESULT_OK) {
+            try {
+                val account = GoogleSignIn.getSignedInAccountFromIntent(data).getResult(com.google.android.gms.common.api.ApiException::class.java)
+                isAdminSession = account.email.equals(adminEmail, ignoreCase = true)
+                if (!isAdminSession) googleSignInClient?.signOut()
+                createInterface()
+                Toast.makeText(this, if (isAdminSession) "Admin Google account connected" else "Only $adminEmail is allowed", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) { isAdminSession = false; createInterface(); Toast.makeText(this, "Google sign-in failed: ${e.message}", Toast.LENGTH_LONG).show() }
+            return
+        }
+        if (requestCode != PICK_IMAGE_REQUEST || resultCode != RESULT_OK) return
 
         val uri: Uri = data?.data ?: return
 
@@ -1210,8 +1273,7 @@ class MainActivity : Activity() {
                 }
             )
             .setPositiveButton("OPEN POST", null)
-            .setNeutralButton("EDIT", null)
-            .setNegativeButton("DELETE", null)
+            .apply { if (isAdminSession) { setNeutralButton("EDIT", null); setNegativeButton("DELETE", null) } }
             .create()
 
         val dialog = detailsDialog
@@ -1223,18 +1285,9 @@ class MainActivity : Activity() {
                 openGameLink(game.url)
             }
 
-            dialog.getButton(
-                AlertDialog.BUTTON_NEUTRAL
-            ).setOnClickListener {
-                dialog.dismiss()
-                showGameDialog(game)
-            }
-
-            dialog.getButton(
-                AlertDialog.BUTTON_NEGATIVE
-            ).setOnClickListener {
-                dialog.dismiss()
-                deleteGame(game)
+            if (isAdminSession) {
+                dialog.getButton(AlertDialog.BUTTON_NEUTRAL)?.setOnClickListener { dialog.dismiss(); showGameDialog(game) }
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.setOnClickListener { dialog.dismiss(); deleteGame(game) }
             }
         }
 
@@ -1410,32 +1463,28 @@ class MainActivity : Activity() {
                     blogImported = existing?.blogImported ?: false,
                     platformManuallyCorrected =
                         existing?.platformManuallyCorrected ?: false,
-                    isFavorite = existing?.isFavorite ?: false
+                    isFavorite = existing?.isFavorite ?: false,
+                    bloggerPostId = existing?.bloggerPostId ?: "",
+                    bloggerHtml = existing?.bloggerHtml ?: ""
                 )
 
-                if (existing == null) {
-
-                    games.add(newGame)
-
-                } else {
-
-                    val index = games.indexOf(existing)
-
-                    if (index >= 0) {
-
-                        games[index] = newGame
-
-                        if (existing.coverLocalPath.isNotBlank() &&
-                            existing.coverLocalPath != localPath
-                        ) {
-                            File(existing.coverLocalPath).delete()
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
+                Thread {
+                    try {
+                        if (!isAdminSession || bloggerBlogId.isBlank()) throw IllegalStateException("Admin login and blog sync are required")
+                        val payload = JSONObject().put("kind", "blogger#post").put("title", newGame.name).put("content", bloggerHtml(newGame)).put("labels", JSONArray().put(newGame.platform))
+                        val result = if (existing == null) bloggerRequest("POST", "blogs/$bloggerBlogId/posts/", payload) else {
+                            if (existing.bloggerPostId.isBlank()) throw IllegalStateException("No Blogger post ID is available for this item")
+                            bloggerRequest("PUT", "blogs/$bloggerBlogId/posts/${existing.bloggerPostId}", payload)
                         }
-                    }
-                }
-
-                saveGames()
-                renderGames()
-                dialog.dismiss()
+                        mainHandler.post {
+                            val saved = newGame.copy(bloggerPostId = result.optString("id", newGame.bloggerPostId), bloggerHtml = result.optString("content", newGame.bloggerHtml), url = result.optString("url", newGame.url), sourcePostUrl = result.optString("url", newGame.url), blogImported = true)
+                            val index = if (existing == null) -1 else games.indexOf(existing)
+                            if (index >= 0) games[index] = saved else games.add(0, saved)
+                            saveGames(); renderGames(); dialog.dismiss(); Toast.makeText(this, "Saved to Blogger", Toast.LENGTH_LONG).show()
+                        }
+                    } catch (e: Exception) { mainHandler.post { dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true; Toast.makeText(this, e.message ?: "Blogger write failed", Toast.LENGTH_LONG).show() } }
+                }.start()
             }
         }
 
@@ -1449,21 +1498,11 @@ class MainActivity : Activity() {
             .setMessage("Do you want to delete ${game.name}?")
             .setNegativeButton("CANCEL", null)
             .setPositiveButton("DELETE") { _, _ ->
-
-                games.remove(game)
-
-                if (game.coverLocalPath.isNotBlank()) {
-                    File(game.coverLocalPath).delete()
-                }
-
-                saveGames()
-                renderGames()
-
-                Toast.makeText(
-                    this,
-                    "Game deleted",
-                    Toast.LENGTH_SHORT
-                ).show()
+                if (!isAdminSession || bloggerBlogId.isBlank() || game.bloggerPostId.isBlank()) { Toast.makeText(this, "Admin session and Blogger post ID required", Toast.LENGTH_LONG).show(); return@setPositiveButton }
+                Thread { try {
+                    bloggerRequest("DELETE", "blogs/$bloggerBlogId/posts/${game.bloggerPostId}")
+                    mainHandler.post { games.remove(game); if (game.coverLocalPath.isNotBlank()) File(game.coverLocalPath).delete(); saveGames(); renderGames(); Toast.makeText(this, "Deleted from Blogger", Toast.LENGTH_SHORT).show() }
+                } catch (e: Exception) { mainHandler.post { Toast.makeText(this, e.message ?: "Blogger delete failed", Toast.LENGTH_LONG).show() } } }.start()
             }
             .show()
     }
@@ -1517,6 +1556,8 @@ class MainActivity : Activity() {
                         game.platformManuallyCorrected
                     )
                     .put("isFavorite", game.isFavorite)
+                    .put("bloggerPostId", game.bloggerPostId)
+                    .put("bloggerHtml", game.bloggerHtml)
             )
         }
 
@@ -1558,7 +1599,9 @@ class MainActivity : Activity() {
                             "platformManuallyCorrected",
                             false
                         ),
-                        item.optBoolean("isFavorite", false)
+                        item.optBoolean("isFavorite", false),
+                        item.optString("bloggerPostId", ""),
+                        item.optString("bloggerHtml", "")
                     )
                 )
             }
