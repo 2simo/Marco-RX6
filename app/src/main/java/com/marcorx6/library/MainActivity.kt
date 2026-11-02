@@ -23,6 +23,7 @@ import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.webkit.CookieManager
+import android.webkit.WebView
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -197,6 +198,25 @@ class MainActivity : Activity() {
         if (code !in 200..299) { val message = try { JSONObject(body).optJSONObject("error")?.optString("message") ?: body } catch (_: Exception) { body }; throw IllegalStateException("خطأ في Blogger API ($code): $message") }
         return if (body.isBlank()) JSONObject() else JSONObject(body)
     }
+    private fun fetchBlogLabels(): List<String> {
+        if (bloggerBlogId.isBlank()) throw IllegalStateException("زامن المدونة أولاً ثم حدّث التسميات.")
+        val labels = linkedSetOf<String>()
+        var pageToken = ""
+        var pages = 0
+        do {
+            val tokenPart = if (pageToken.isBlank()) "" else "&pageToken=" + Uri.encode(pageToken)
+            val response = bloggerRequest("GET", "blogs/$bloggerBlogId/posts?fetchBodies=false&maxResults=500$tokenPart")
+            val posts = response.optJSONArray("items") ?: JSONArray()
+            for (i in 0 until posts.length()) {
+                val postLabels = posts.optJSONObject(i)?.optJSONArray("labels") ?: continue
+                for (j in 0 until postLabels.length()) postLabels.optString(j).trim().takeIf { it.isNotBlank() }?.let { labels.add(it) }
+            }
+            pageToken = response.optString("nextPageToken", "")
+            pages++
+        } while (pageToken.isNotBlank() && pages < 10)
+        return labels.toList().sortedBy { it.lowercase(Locale.ROOT) }
+    }
+
     private fun bloggerHtml(game: Game): String {
         val text = game.description.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>")
         val image = if (game.coverUrl.isNotBlank()) "<p><img src=\"${game.coverUrl}\" /></p>" else ""
@@ -1859,24 +1879,8 @@ class MainActivity : Activity() {
         activeProfileDialog = dialog
         dialog.setOnDismissListener { if (activeProfileDialog === dialog) activeProfileDialog = null }
         dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
-                val raw = body.text.toString().trim()
-                val html = if (Regex("(?is)<\\s*(p|div|h[1-6]|ul|ol|li|a|img|table|br)\\b").containsMatchIn(raw)) raw else "<p>" + Html.escapeHtml(raw).toString().replace("\\n", "<br/>") + "</p>"
-                val image = coverUrl.text.toString().trim().takeIf { it.isNotBlank() }?.let { "<p><img src=\\"$it\\" style=\\"max-width:100%;height:auto;\\"/></p>" } ?: ""
-                val web = WebView(this).apply {
-                    setBackgroundColor(bg)
-                    settings.javaScriptEnabled = false
-                    val foreground = if (isDarkMode()) "#ffffff" else "#181d2a"
-                    val background = if (isDarkMode()) "#090a16" else "#f5f7fb"
-                    loadDataWithBaseURL("https://marcorx6.blogspot.com/", "<html dir=\\"rtl\\"><meta name=\\"viewport\\" content=\\"width=device-width,initial-scale=1\\"><body style=\\"background:$background;color:$foreground;font-family:sans-serif;padding:16px;line-height:1.8\\"><h2>" + Html.escapeHtml(title.text.toString()) + "</h2>" + image + html + "<style>img{max-width:100%;height:auto}a{color:#8b5cf6}</style></body></html>", "text/html", "UTF-8", null)
-                }
-                AlertDialog.Builder(this).setTitle("معاينة المقال").setView(web).setPositiveButton("عودة للتحرير", null).show().apply { window?.setLayout(-1, dp(620)) }
-            }
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                prefs.edit()
-                    .putString("nickname", input.text.toString().trim().ifBlank { "Player" })
-                    .putBoolean("profile_created", true)
-                    .apply()
+                prefs.edit().putString("nickname", input.text.toString().trim().ifBlank { "Player" }).putBoolean("profile_created", true).apply()
                 Toast.makeText(this, "تم حفظ الملف الشخصي", Toast.LENGTH_SHORT).show()
                 dialog.dismiss()
             }
@@ -2330,9 +2334,34 @@ class MainActivity : Activity() {
         intro.addView(makeText("جهّز الغلاف والتفاصيل والمحتوى، ثم عاين المقال قبل إرساله إلى Blogger.", 11f, gray).apply { setPadding(0, dp(5), 0, 0) })
         box.addView(intro, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
         val title = makeInput("عنوان المقال").apply { setSingleLine(true) }
-        val category = Spinner(this)
-        val categoryOptions = listOf("BLOG", "PSP", "PS1", "PS2", "PS3", "PS4")
-        category.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, categoryOptions)
+        val categoryButton = Button(this).apply { text = "تحميل تسميات المدونة..."; setTextColor(white); background = rounded(panel, 12) }
+        val selectedLabels = linkedSetOf<String>()
+        val availableLabels = mutableListOf<String>()
+        fun refreshLabelButton() {
+            categoryButton.text = if (selectedLabels.isEmpty()) "اختيار Labels من المدونة" else "الأقسام (${selectedLabels.size}): " + selectedLabels.joinToString("، ")
+        }
+        categoryButton.setOnClickListener {
+            if (availableLabels.isEmpty()) { Toast.makeText(this, "لم يتم تحميل تسميات المدونة بعد", Toast.LENGTH_SHORT).show(); return@setOnClickListener }
+            val checked = BooleanArray(availableLabels.size) { availableLabels[it] in selectedLabels }
+            AlertDialog.Builder(this).setTitle("اختر أقسام المقال من المدونة")
+                .setMultiChoiceItems(availableLabels.toTypedArray(), checked) { _, which, isChecked ->
+                    if (isChecked) selectedLabels.add(availableLabels[which]) else selectedLabels.remove(availableLabels[which])
+                    refreshLabelButton()
+                }.setPositiveButton("تم", null)
+                .setNeutralButton("تحديث التسميات") { _, _ ->
+                    Thread {
+                        try {
+                            val latest = fetchBlogLabels()
+                            mainHandler.post {
+                                availableLabels.clear(); availableLabels.addAll(latest)
+                                selectedLabels.retainAll(availableLabels.toSet()); refreshLabelButton()
+                                Toast.makeText(this, "تم تحديث ${latest.size} تسمية من المدونة", Toast.LENGTH_SHORT).show()
+                            }
+                        } catch (e: Exception) { mainHandler.post { Toast.makeText(this, e.message ?: "تعذر تحديث التسميات", Toast.LENGTH_LONG).show() } }
+                    }.start()
+                }.show()
+        }
+        if (existing != null && existing.platform.isNotBlank()) selectedLabels.add(existing.platform)
         val body = makeInput("اكتب محتوى المقال هنا — يدعم HTML").apply { minLines = 14; gravity = Gravity.TOP or Gravity.START; inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE or android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS; setPadding(dp(13), dp(12), dp(13), dp(12)) }
         val coverUrl = makeInput("رابط صورة الغلاف (اختياري)").apply { setSingleLine(true) }
         val link = makeInput("رابط التحميل أو رابط إضافي (اختياري)").apply { setSingleLine(true) }
@@ -2341,7 +2370,7 @@ class MainActivity : Activity() {
         coverUrlField = coverUrl
         if (existing != null) {
             title.setText(existing.name)
-            category.setSelection(categoryOptions.indexOf(existing.platform).coerceAtLeast(0))
+            if (existing.platform.isNotBlank()) selectedLabels.add(existing.platform)
             body.setText(if (existing.bloggerHtml.isNotBlank()) existing.bloggerHtml else existing.description)
             coverUrl.setText(existing.coverUrl)
             link.setText(existing.url.takeIf { it != existing.sourcePostUrl } ?: "")
@@ -2371,7 +2400,21 @@ class MainActivity : Activity() {
         box.addView(preview, LinearLayout.LayoutParams(-1, dp(165)).apply { bottomMargin = dp(8) })
         loadCover(preview, pendingCoverLocalPath, existing?.coverUrl ?: "")
         box.addView(Button(this).apply { text = "اختيار صورة الغلاف من الهاتف"; setTextColor(white); background = rounded(red, 12); setOnClickListener { chooseCover() } }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
-        box.addView(makeText("تصنيف المقال", 10f, red, true)); box.addView(category)
+        box.addView(makeText("أقسام المقال • Labels من المدونة", 10f, red, true)); box.addView(categoryButton)
+        Thread {
+            try {
+                val labels = fetchBlogLabels()
+                mainHandler.post {
+                    availableLabels.clear(); availableLabels.addAll(labels)
+                    if (existing == null && selectedLabels.isEmpty() && labels.isNotEmpty()) selectedLabels.add(labels.first())
+                    refreshLabelButton()
+                    categoryButton.isEnabled = labels.isNotEmpty()
+                    if (labels.isEmpty()) categoryButton.text = "لا توجد Labels في المقالات المنشورة"
+                }
+            } catch (e: Exception) {
+                mainHandler.post { categoryButton.text = "تعذر تحميل Labels • حاول التحديث"; categoryButton.isEnabled = true }
+            }
+        }.start()
         box.addView(genre); box.addView(releaseYear); box.addView(title)
         box.addView(makeText("03 • محتوى المقال", 12f, red, true).apply { setPadding(0, dp(12), 0, dp(5)) })
         box.addView(body, LinearLayout.LayoutParams(-1, dp(190))); box.addView(coverUrl); box.addView(link)
@@ -2379,7 +2422,8 @@ class MainActivity : Activity() {
         val dialog = AlertDialog.Builder(this).setTitle(if (existing == null) "إنشاء مقال جديد" else "تعديل المقال").setView(scroll).setNegativeButton("إغلاق", null).setNeutralButton("معاينة", null).setPositiveButton(if (existing == null) "نشر المقال" else "حفظ التعديلات", null).create()
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val postTitle = title.text.toString().trim(); val categoryName = category.selectedItem.toString(); val coverLink = coverUrl.text.toString().trim(); val relatedLink = link.text.toString().trim()
+                val postTitle = title.text.toString().trim(); val categoryName = selectedLabels.firstOrNull() ?: ""; val coverLink = coverUrl.text.toString().trim(); val relatedLink = link.text.toString().trim()
+                if (selectedLabels.isEmpty()) { Toast.makeText(this, "اختر Label واحداً على الأقل من المدونة", Toast.LENGTH_SHORT).show(); return@setOnClickListener }
                 if (postTitle.isBlank()) { title.error = "أدخل عنوان المقال"; return@setOnClickListener }
                 if (coverLink.isNotBlank() && !coverLink.startsWith("https://")) { coverUrl.error = "أدخل رابط صورة يبدأ بـ HTTPS"; return@setOnClickListener }
                 if (relatedLink.isNotBlank() && !relatedLink.startsWith("https://")) { link.error = "أدخل رابطاً يبدأ بـ HTTPS"; return@setOnClickListener }
@@ -2397,7 +2441,7 @@ class MainActivity : Activity() {
                 Thread {
                     try {
                         if (bloggerBlogId.isBlank()) throw IllegalStateException("زامن المدونة أولاً، ثم حاول النشر.")
-                        val payload = JSONObject().put("kind", "blogger#post").put("title", post.name).put("content", htmlContent).put("labels", JSONArray().put(categoryName))
+                        val payload = JSONObject().put("kind", "blogger#post").put("title", post.name).put("content", htmlContent).put("labels", JSONArray().apply { selectedLabels.forEach { put(it) } })
                         val result = if (existing == null) bloggerRequest("POST", "blogs/$bloggerBlogId/posts/", payload) else { if (existing.bloggerPostId.isBlank()) throw IllegalStateException("لا يملك هذا المقال معرّف Blogger. زامن المدونة ثم حاول مجدداً."); bloggerRequest("PUT", "blogs/$bloggerBlogId/posts/${existing.bloggerPostId}", payload) }
                         mainHandler.post {
                             val saved = post.copy(bloggerPostId = result.optString("id", post.bloggerPostId), bloggerHtml = result.optString("content", htmlContent), url = result.optString("url", post.url), sourcePostUrl = result.optString("url", post.sourcePostUrl), blogImported = true)
