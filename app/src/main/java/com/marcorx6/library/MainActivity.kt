@@ -449,6 +449,7 @@ class MainActivity : Activity() {
             isVerticalScrollBarEnabled = false
             addView(panel, ViewGroup.LayoutParams(-1, -2))
         }
+        applyMotionPreferences(menuScroll)
         drawer.setContentView(menuScroll)
         drawer.window?.let { w ->
             w.setBackgroundDrawableResource(android.R.color.transparent)
@@ -480,11 +481,24 @@ class MainActivity : Activity() {
         if (view is ViewGroup) for (i in 0 until view.childCount) applyTypography(view.getChildAt(i))
     }
     private fun applyMotionPreferences(view: View) {
+        val animationsEnabled = appearancePreferences().getBoolean("animations", true)
         if (view is ViewGroup) {
-            view.layoutTransition = if (appearancePreferences().getBoolean("animations", true)) {
-                LayoutTransition().apply { setDuration(150) }
-            } else null
+            view.layoutTransition = if (animationsEnabled) LayoutTransition().apply { setDuration(150) } else null
             for (i in 0 until view.childCount) applyMotionPreferences(view.getChildAt(i))
+        }
+        if (view.isClickable && view.tag != "marco_press_motion") {
+            view.tag = "marco_press_motion"
+            view.setOnTouchListener { target, event ->
+                if (!appearancePreferences().getBoolean("animations", true)) return@setOnTouchListener false
+                when (event.actionMasked) {
+                    android.view.MotionEvent.ACTION_DOWN -> target.animate().cancel().scaleX(0.96f)
+                        .scaleY(0.96f).alpha(0.88f).setDuration(90L).start()
+                    android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> target.animate()
+                        .scaleX(1f).scaleY(1f).alpha(1f).setDuration(170L)
+                        .setInterpolator(android.view.animation.OvershootInterpolator(1.35f)).start()
+                }
+                false
+            }
         }
     }
 
@@ -2274,6 +2288,7 @@ class MainActivity : Activity() {
             bottom.addView(delete, LinearLayout.LayoutParams(-2, -2).apply { leftMargin = dp(8) })
         }
         root.addView(bottom)
+        applyMotionPreferences(root)
         reader.setContentView(root)
         reader.window?.setBackgroundDrawableResource(android.R.color.transparent)
         reader.show()
