@@ -239,6 +239,75 @@ class MainActivity : Activity() {
             setPadding(dp(13), dp(10), dp(13), dp(10))
         }
 
+
+    private fun currentLanguage(): String =
+        getSharedPreferences("app_settings", MODE_PRIVATE).getString("language", "ar") ?: "ar"
+
+    private fun tr(ar: String): String {
+        val lang = currentLanguage()
+        if (lang == "ar") return ar
+        val translations = mapOf(
+            "حسابي" to listOf("My profile", "Mon profil", "Mi perfil"),
+            "دخول المسؤول  ↗" to listOf("Admin login  ↗", "Connexion admin  ↗", "Acceso admin  ↗"),
+            "● مسؤول" to listOf("● Admin", "● Admin", "● Admin"),
+            "عالمك للألعاب" to listOf("Your gaming world", "Votre univers gaming", "Tu mundo gamer"),
+            "اكتشف. العب.\nاستمتع أكثر." to listOf("Discover. Play.\nEnjoy more.", "Découvrez. Jouez.\nProfitez plus.", "Descubre. Juega.\nDisfruta más."),
+            "ألعاب وشروحات وآخر الإصدارات، كلّها في مكان واحد." to listOf("Games, guides and latest releases in one place.", "Jeux, guides et dernières sorties au même endroit.", "Juegos, guías y últimos lanzamientos en un solo lugar."),
+            "ابحث عن الألعاب والمقالات..." to listOf("Search games and articles...", "Rechercher jeux et articles...", "Buscar juegos y artículos..."),
+            "الكل" to listOf("All", "Tout", "Todo"),
+            "المدونة" to listOf("Blog", "Blog", "Blog"),
+            "المفضلة" to listOf("Favorites", "Favoris", "Favoritos"),
+            "الأخيرة" to listOf("Recent", "Récents", "Recientes"),
+            "الأكثر مشاهدة" to listOf("Most viewed", "Les plus vus", "Más vistos"),
+            "شوهدت مؤخراً" to listOf("Recently viewed", "Vus récemment", "Vistos recientemente"),
+            "استكشف" to listOf("Explore", "Explorer", "Explorar"),
+            "أحدث المقالات" to listOf("Latest articles", "Derniers articles", "Últimos artículos"),
+            "ترتيب المقالات" to listOf("Sort articles", "Trier les articles", "Ordenar artículos"),
+            "مقال" to listOf("articles", "articles", "artículos"),
+            "لا توجد مقالات حالياً" to listOf("No articles yet", "Aucun article pour le moment", "Aún no hay artículos"),
+            "⟳  مزامنة" to listOf("⟳  Sync", "⟳  Sync", "⟳  Sincronizar"),
+            "♧  التنبيهات" to listOf("♧  Notifications", "♧  Notifications", "♧  Avisos"),
+            "＋  نشر" to listOf("＋  Publish", "＋  Publier", "＋  Publicar"),
+            "إشعارات المقالات الجديدة" to listOf("New article notifications", "Notifications des nouveaux articles", "Avisos de nuevos artículos"),
+            "إغلاق" to listOf("Close", "Fermer", "Cerrar"),
+            "إعدادات اللغة" to listOf("Language settings", "Paramètres de langue", "Idioma"),
+            "اختر لغة التطبيق" to listOf("Choose app language", "Choisir la langue", "Elegir idioma"),
+            "العربية" to listOf("Arabic", "Arabe", "Árabe"),
+            "الإنجليزية" to listOf("English", "Anglais", "Inglés"),
+            "الفرنسية" to listOf("French", "Français", "Francés"),
+            "الإسبانية" to listOf("Spanish", "Espagnol", "Español"),
+            "تم حفظ اللغة" to listOf("Language saved", "Langue enregistrée", "Idioma guardado"),
+            "اسم العرض" to listOf("Display name", "Nom affiché", "Nombre para mostrar"),
+            "ملفي الشخصي" to listOf("My profile", "Mon profil", "Mi perfil"),
+            "ملف اللاعب على هذا الجهاز" to listOf("Player profile on this device", "Profil du joueur sur cet appareil", "Perfil del jugador en este dispositivo"),
+            "حفظ" to listOf("Save", "Enregistrer", "Guardar"),
+            "نشاطي" to listOf("My activity", "Mon activité", "Mi actividad"),
+            "مشاركة" to listOf("Share", "Partager", "Compartir"),
+            "التعليقات" to listOf("Comments", "Commentaires", "Comentarios"),
+            "قيّم هذا المقال" to listOf("Rate this article", "Évaluer cet article", "Valorar este artículo"),
+            "تحميل اللعبة" to listOf("Download game", "Télécharger le jeu", "Descargar juego")
+        )
+        val index = when (lang) { "en" -> 0; "fr" -> 1; "es" -> 2; else -> return ar }
+        return translations[ar]?.get(index) ?: ar
+    }
+
+    private fun showLanguagePicker() {
+        val codes = arrayOf("ar", "en", "fr", "es")
+        val labels = arrayOf(tr("العربية"), tr("الإنجليزية"), tr("الفرنسية"), tr("الإسبانية"))
+        val current = codes.indexOf(currentLanguage()).coerceAtLeast(0)
+        AlertDialog.Builder(this)
+            .setTitle(tr("اختر لغة التطبيق"))
+            .setSingleChoiceItems(labels, current) { dialog, which ->
+                getSharedPreferences("app_settings", MODE_PRIVATE).edit()
+                    .putString("language", codes[which]).apply()
+                dialog.dismiss()
+                createInterface()
+                Toast.makeText(this, tr("تم حفظ اللغة"), Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton(tr("إغلاق"), null)
+            .show()
+    }
+
     private fun createInterface() {
         // Fresh MARCO RX6 dashboard: editorial hero, compact controls and a clean image gallery.
         val root = LinearLayout(this).apply {
@@ -265,7 +334,7 @@ class MainActivity : Activity() {
         logo.addView(makeText("RX6", 29f, white, true))
         header.addView(logo, LinearLayout.LayoutParams(0, -2, 1f))
         val adminButton = TextView(this).apply {
-            text = if (isAdminSession) "● مسؤول" else "دخول المسؤول  ↗"
+            text = if (isAdminSession) tr("● مسؤول") else tr("دخول المسؤول  ↗")
             textSize = 10f
             setTextColor(white)
             setTypeface(null, Typeface.BOLD)
@@ -275,10 +344,19 @@ class MainActivity : Activity() {
             setOnClickListener { if (isAdminSession) signOutAdmin() else startGoogleSignIn() }
         }
         header.addView(TextView(this).apply {
-            text = "حسابي"; textSize = 10f; setTextColor(white); gravity = Gravity.CENTER
+            text = tr("حسابي"); textSize = 10f; setTextColor(white); gravity = Gravity.CENTER
             background = rounded(Color.rgb(31, 35, 49), 18)
             setPadding(dp(13), dp(11), dp(13), dp(11))
             setOnClickListener { showProfile() }
+        }, LinearLayout.LayoutParams(-2, -2).apply { rightMargin = dp(8) })
+        header.addView(TextView(this).apply {
+            text = "文"
+            textSize = 16f
+            setTextColor(white)
+            gravity = Gravity.CENTER
+            background = rounded(Color.rgb(31, 35, 49), 18)
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            setOnClickListener { showLanguagePicker() }
         }, LinearLayout.LayoutParams(-2, -2).apply { rightMargin = dp(8) })
         header.addView(adminButton)
         root.addView(header)
@@ -293,10 +371,10 @@ class MainActivity : Activity() {
             elevation = dp(3).toFloat()
         }
         hero.addView(makeText("عالمك للألعاب", 10f, Color.rgb(255, 156, 169), true))
-        hero.addView(makeText("اكتشف. العب.\nاستمتع أكثر.", 27f, white, true).apply {
+        hero.addView(makeText(tr("اكتشف. العب.\nاستمتع أكثر."), 27f, white, true).apply {
             setPadding(0, dp(7), 0, dp(5))
         })
-        hero.addView(makeText("ألعاب وشروحات وآخر الإصدارات، كلّها في مكان واحد.", 12f,
+        hero.addView(makeText(tr("ألعاب وشروحات وآخر الإصدارات، كلّها في مكان واحد."), 12f,
             Color.rgb(220, 220, 231)))
         val heroStats = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -316,7 +394,7 @@ class MainActivity : Activity() {
         }
         searchWrap.addView(makeText("⌕", 25f, Color.rgb(255, 83, 104), true))
         search = EditText(this).apply {
-            hint = "ابحث عن الألعاب والمقالات..."
+            hint = tr("ابحث عن الألعاب والمقالات...")
             textSize = 14f
             setSingleLine(true)
             setTextColor(white)
@@ -339,7 +417,7 @@ class MainActivity : Activity() {
         }
         (listOf("ALL", "BLOG", "FAVORITES", "الأخيرة", "الأكثر مشاهدة") + platforms.drop(3)).forEach { category ->
             val chip = TextView(this).apply {
-                text = when (category) { "ALL" -> "الكل"; "BLOG" -> "المدونة"; "FAVORITES" -> "المفضلة"; "RECENT" -> "شوهدت مؤخراً"; "POPULAR" -> "الأكثر مشاهدة"; else -> category }
+                text = when (category) { "ALL" -> tr("الكل"); "BLOG" -> tr("المدونة"); "FAVORITES" -> tr("المفضلة"); "RECENT" -> tr("شوهدت مؤخراً"); "POPULAR" -> tr("الأكثر مشاهدة"); else -> category }
                 tag = category
                 textSize = 11f
                 gravity = Gravity.CENTER
@@ -362,8 +440,8 @@ class MainActivity : Activity() {
             gravity = Gravity.CENTER_VERTICAL
         }
         val sectionTitles = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        sectionTitles.addView(makeText("استكشف", 10f, Color.rgb(255, 83, 104), true))
-        sectionTitles.addView(makeText("أحدث المقالات", 20f, white, true))
+        sectionTitles.addView(makeText(tr("استكشف"), 10f, Color.rgb(255, 83, 104), true))
+        sectionTitles.addView(makeText(tr("أحدث المقالات"), 20f, white, true))
         section.addView(sectionTitles, LinearLayout.LayoutParams(0, -2, 1f))
         countText = makeText("0 مقال", 10f, Color.rgb(255, 112, 130), true)
         section.addView(countText)
@@ -374,7 +452,7 @@ class MainActivity : Activity() {
             gravity = Gravity.CENTER
             background = rounded(Color.rgb(31, 35, 49), 12)
             setPadding(dp(12), dp(7), dp(12), dp(7))
-            contentDescription = "ترتيب المقالات"
+            contentDescription = tr("ترتيب المقالات")
             setOnClickListener {
                 sortMode = when (sortMode) { "LATEST" -> "POPULAR"; "POPULAR" -> "A-Z"; "A-Z" -> "FAVORITES"; else -> "LATEST" }
                 renderGames()
@@ -412,12 +490,12 @@ class MainActivity : Activity() {
                 setPadding(dp(10), dp(12), dp(10), dp(12))
                 setOnClickListener { action() }
             }
-        actions.addView(navAction("⟳  مزامنة") { syncFromBlog(showResult = true) },
+        actions.addView(navAction(tr("⟳  مزامنة")) { syncFromBlog(showResult = true) },
             LinearLayout.LayoutParams(0, -2, 1f))
-        actions.addView(navAction("♧  التنبيهات") { showNotificationSettings() },
+        actions.addView(navAction(tr("♧  التنبيهات")) { showNotificationSettings() },
             LinearLayout.LayoutParams(0, -2, 1f))
         if (isAdminSession) {
-            actions.addView(navAction("＋  نشر", true) { showGameDialog() },
+            actions.addView(navAction(tr("＋  نشر"), true) { showGameDialog() },
                 LinearLayout.LayoutParams(0, -2, 1f))
         }
         root.addView(actions, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
@@ -962,21 +1040,21 @@ class MainActivity : Activity() {
     }
     private fun showProfile() {
         val prefs = profilePreferences()
-        val input = makeInput("اسم العرض").apply {
+        val input = makeInput(tr("اسم العرض")).apply {
             setSingleLine(true)
             setText(prefs.getString("nickname", "Player") ?: "Player")
         }
         val summary = "المفضلة: " + games.count { it.isFavorite } +
             "\nشوهدت مؤخراً: " + games.count { isRecentlyViewed(it) }
-        AlertDialog.Builder(this).setTitle("ملفي الشخصي")
-            .setMessage("ملف اللاعب على هذا الجهاز\n\n" + summary)
+        AlertDialog.Builder(this).setTitle(tr("ملفي الشخصي"))
+            .setMessage(tr("ملف اللاعب على هذا الجهاز") + "\n\n" + summary)
             .setView(input)
-            .setPositiveButton("حفظ") { _, _ ->
+            .setPositiveButton(tr("حفظ")) { _, _ ->
                 prefs.edit().putString("nickname", input.text.toString().trim().ifBlank { "Player" }).apply()
                 Toast.makeText(this, "تم حفظ الملف الشخصي", Toast.LENGTH_SHORT).show()
             }
-            .setNeutralButton("نشاطي") { _, _ -> selected = "RECENT"; createInterface() }
-            .setNegativeButton("إغلاق", null).show()
+            .setNeutralButton(tr("نشاطي")) { _, _ -> selected = "RECENT"; createInterface() }
+            .setNegativeButton(tr("إغلاق"), null).show()
     }
 
     // BLOG-STYLE ARTICLE FEED
@@ -1010,9 +1088,9 @@ class MainActivity : Activity() {
             "POPULAR" -> filtered.sortedByDescending { viewCount(it) }
             else -> if (selected == "RECENT") filtered.sortedByDescending { lastViewedAt(it) } else filtered
         }
-        countText.text = "${results.size} مقال"
+        countText.text = "${results.size} ${tr("مقال")}"
         if (results.isEmpty()) {
-            gameList.addView(makeText("لا توجد مقالات حالياً", 15f, gray, true).apply {
+            gameList.addView(makeText(tr("لا توجد مقالات حالياً"), 15f, gray, true).apply {
                 gravity = Gravity.CENTER
                 setPadding(dp(10), dp(55), dp(10), dp(55))
             })
@@ -1169,7 +1247,7 @@ class MainActivity : Activity() {
             setPadding(dp(14), dp(7), dp(14), dp(7))
             setBackgroundColor(Color.rgb(18, 21, 31))
         }
-        ratingRow.addView(makeText("قيّم هذا المقال", 10f, gray, true),
+        ratingRow.addView(makeText(tr("قيّم هذا المقال"), 10f, gray, true),
             LinearLayout.LayoutParams(0, -2, 1f))
         val ratingPrefs = historyPreferences()
         val ratingKey = "rating_" + articleKey(game)
@@ -1212,7 +1290,7 @@ class MainActivity : Activity() {
             setPadding(dp(12), dp(12), dp(12), dp(12))
             setOnClickListener { action() }
         }
-        val share = readerAction("مشاركة") {
+        val share = readerAction(tr("مشاركة")) {
             val send = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"; putExtra(Intent.EXTRA_SUBJECT, game.name)
                 putExtra(Intent.EXTRA_TEXT, game.name + "\n" + game.url)
@@ -1220,7 +1298,7 @@ class MainActivity : Activity() {
             startActivity(Intent.createChooser(send, "مشاركة مقال من MARCO RX6"))
         }
         bottom.addView(share, LinearLayout.LayoutParams(0, -2, 1f))
-        val comments = readerAction("التعليقات") { if (game.url.isNotBlank()) openGameLink(game.url) }
+        val comments = readerAction(tr("التعليقات")) { if (game.url.isNotBlank()) openGameLink(game.url) }
         bottom.addView(comments, LinearLayout.LayoutParams(0, -2, 1f).apply { leftMargin = dp(6) })
         if (isAdminSession) {
             val edit = readerAction("تعديل") { reader.dismiss(); showGameDialog(game) }
