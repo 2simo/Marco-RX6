@@ -22,6 +22,7 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
+import android.webkit.CookieManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -1889,7 +1890,9 @@ class MainActivity : Activity() {
             settings.loadsImagesAutomatically = true
             settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW
             settings.mediaPlaybackRequiresUserGesture = true
-            setDownloadListener { url, _, _, _, _ -> enqueueGameDownload(url, game.name) }
+            setDownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
+                enqueueGameDownload(url, game.name, userAgent, contentDisposition, mimeType, game.url)
+            }
             val raw = if (game.bloggerHtml.isNotBlank()) game.bloggerHtml else
                 "<h2>${game.name}</h2><p>${game.description}</p>"
             val articleHtml = raw.replace(Regex("(?is)<script[^>]*>.*?</script>"), "")
@@ -2138,24 +2141,98 @@ class MainActivity : Activity() {
             .show()
     }
 
-    private fun enqueueGameDownload(link: String, title: String) {
+    private data class DownloadProbe(
+        val finalUrl: String,
+        val mimeType: String,
+        val contentDisposition: String
+    )
+
+    // Resolve redirects and verify the response is a file before handing it to Android DownloadManager.
+    private fun inspectDownloadUrl(
+        link: String,
+        userAgent: String,
+        hintedDisposition: String,
+        hintedMimeType: String
+    ): DownloadProbe {
+        val connection = (URL(link).openConnection() as HttpURLConnection).apply {
+            instanceFollowRedirects = true
+            connectTimeout = 12000
+            readTimeout = 12000
+            requestMethod = "GET"
+            setRequestProperty("Range", "bytes=0-0")
+            if (userAgent.isNotBlank()) setRequestProperty("User-Agent", userAgent)
+            CookieManager.getInstance().getCookie(link)?.takeIf { it.isNotBlank() }?.let {
+                setRequestProperty("Cookie", it)
+            }
+        }
+        try {
+            val code = connection.responseCode
+            val mime = (connection.contentType ?: hintedMimeType)
+                .substringBefore(';').trim().lowercase(Locale.ROOT)
+            val disposition = connection.getHeaderField("Content-Disposition")
+                ?: hintedDisposition
+            val finalUrl = connection.url.toString()
+            if (code !in 200..299) {
+                throw IllegalStateException("الخادم رفض رابط التنزيل (HTTP $code)")
+            }
+            if (mime == "text/html" || mime == "application/xhtml+xml") {
+                throw IllegalStateException("هذا الرابط يفتح صفحة HTML وليس ملفاً مباشراً. افتح صفحة التحميل وابحث عن رابط الملف نفسه.")
+            }
+            val path = Uri.parse(finalUrl).lastPathSegment.orEmpty().lowercase(Locale.ROOT)
+            val hasFileExtension = Regex("""\.(apk|zip|7z|rar|iso|pkg|bin|cue|chd|img|pbp|cso|nsp|xci|pdf|mp4|mp3)(?:$|\?)""")
+                .containsMatchIn(path)
+            val isAttachment = disposition.contains("attachment", ignoreCase = true)
+            val isBinary = mime == "application/octet-stream" ||
+                mime.startsWith("application/") ||
+                mime.startsWith("video/") || mime.startsWith("audio/")
+            if (!isAttachment && !isBinary && !hasFileExtension) {
+                throw IllegalStateException("لم يتمكن التطبيق من التأكد أن الرابط ملف قابل للتنزيل (نوع المحتوى: ${mime.ifBlank { "غير معروف" }}).")
+            }
+            return DownloadProbe(finalUrl, mime, disposition)
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    private fun enqueueGameDownload(
+        link: String,
+        title: String,
+        userAgent: String = "",
+        contentDisposition: String = "",
+        hintedMimeType: String = "",
+        referrer: String = ""
+    ) {
         if (!link.startsWith("https://") && !link.startsWith("http://")) {
             Toast.makeText(this, "رابط التنزيل غير صالح", Toast.LENGTH_SHORT).show()
             return
         }
-        try {
-            val request = DownloadManager.Request(Uri.parse(link))
-                .setTitle(title.ifBlank { "MARCO RX6" })
-                .setDescription("تنزيل عبر MARCO RX6")
-                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                .setAllowedOverMetered(true)
-                .setAllowedOverRoaming(false)
-            val manager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
-            manager.enqueue(request)
-            Toast.makeText(this, "أُضيف التنزيل إلى مدير التنزيلات", Toast.LENGTH_LONG).show()
-        } catch (e: Exception) {
-            Toast.makeText(this, "تعذر بدء التنزيل: ${e.message}", Toast.LENGTH_LONG).show()
-        }
+        Toast.makeText(this, "جارٍ التحقق من رابط الملف…", Toast.LENGTH_SHORT).show()
+        Thread {
+            try {
+                val probe = inspectDownloadUrl(link, userAgent, contentDisposition, hintedMimeType)
+                val request = DownloadManager.Request(Uri.parse(probe.finalUrl))
+                    .setTitle(title.ifBlank { "MARCO RX6" })
+                    .setDescription("تنزيل ملف عبر MARCO RX6")
+                    .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                    .setAllowedOverMetered(true)
+                    .setAllowedOverRoaming(false)
+                if (probe.mimeType.isNotBlank()) request.setMimeType(probe.mimeType)
+                if (userAgent.isNotBlank()) request.addRequestHeader("User-Agent", userAgent)
+                CookieManager.getInstance().getCookie(link)?.takeIf { it.isNotBlank() }?.let {
+                    request.addRequestHeader("Cookie", it)
+                }
+                if (referrer.isNotBlank()) request.addRequestHeader("Referer", referrer)
+                val manager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+                manager.enqueue(request)
+                mainHandler.post {
+                    Toast.makeText(this, "تم التحقق من الملف وإضافته إلى مدير التنزيلات", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                mainHandler.post {
+                    Toast.makeText(this, e.message ?: "تعذر بدء تنزيل الملف", Toast.LENGTH_LONG).show()
+                }
+            }
+        }.start()
     }
 
     private fun showDownloadManager() {
