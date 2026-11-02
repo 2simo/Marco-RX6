@@ -1879,23 +1879,6 @@ class MainActivity : Activity() {
         activeProfileDialog = dialog
         dialog.setOnDismissListener { if (activeProfileDialog === dialog) activeProfileDialog = null }
         dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
-                val previewTitle = title.text.toString().trim().ifBlank { "معاينة المقال" }
-                val previewBody = body.text.toString().trim()
-                val previewHasHtml = Regex("(?is)<\\s*(p|div|h[1-6]|ul|ol|li|a|img|table|br)\\b").containsMatchIn(previewBody)
-                val previewEscaped = previewBody.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\\n", "<br/>")
-                val previewArticle = if (previewHasHtml) previewBody else if (previewBody.isBlank()) "<p>أضف محتوى المقال لعرضه هنا.</p>" else "<p>$previewEscaped</p>"
-                val previewImage = coverUrl.text.toString().trim().takeIf { it.startsWith("https://") }?.let { "<p><img src=\\"$it\\" style=\\"max-width:100%;height:auto;border-radius:12px;\\"/></p>" } ?: ""
-                val previewLink = link.text.toString().trim().takeIf { it.startsWith("https://") }?.let { "<p><a href=\\"$it\\">تحميل / رابط إضافي</a></p>" } ?: ""
-                val previewHtml = "<html><meta name=\\"viewport\\" content=\\"width=device-width, initial-scale=1\\"><body style=\\"background:#111;color:#eee;font-family:sans-serif;padding:16px;line-height:1.7;\\"><h2>$previewTitle</h2>$previewImage$previewArticle$previewLink</body></html>"
-                val web = WebView(this).apply {
-                    setBackgroundColor(android.graphics.Color.rgb(17, 17, 17))
-                    settings.javaScriptEnabled = false
-                    loadDataWithBaseURL(null, previewHtml, "text/html", "UTF-8", null)
-                }
-                AlertDialog.Builder(this).setTitle("معاينة قبل النشر").setView(web)
-                    .setPositiveButton("إغلاق", null).show()
-            }
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 prefs.edit().putString("nickname", input.text.toString().trim().ifBlank { "Player" }).putBoolean("profile_created", true).apply()
                 Toast.makeText(this, "تم حفظ الملف الشخصي", Toast.LENGTH_SHORT).show()
@@ -2423,6 +2406,23 @@ class MainActivity : Activity() {
         val scroll = ScrollView(this).apply { addView(box) }
         val dialog = AlertDialog.Builder(this).setTitle(if (existing == null) "إنشاء مقال جديد" else "تعديل المقال").setView(scroll).setNegativeButton("إغلاق", null).setNeutralButton("معاينة", null).setPositiveButton(if (existing == null) "نشر المقال" else "حفظ التعديلات", null).create()
         dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
+                val previewTitle = title.text.toString().trim().ifBlank { "معاينة المقال" }
+                val previewBody = body.text.toString().trim()
+                val previewHasHtml = Regex("(?is)<\\s*(p|div|h[1-6]|ul|ol|li|a|img|table|br)\\b").containsMatchIn(previewBody)
+                val previewEscaped = previewBody.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>")
+                val previewArticle = if (previewHasHtml) previewBody else if (previewBody.isBlank()) "<p>أضف محتوى المقال لعرضه هنا.</p>" else "<p>$previewEscaped</p>"
+                val previewImage = coverUrl.text.toString().trim().takeIf { it.startsWith("https://") }?.let { "<p><img src=\"$it\" style=\"max-width:100%;height:auto;border-radius:12px;\"/></p>" } ?: ""
+                val previewLink = link.text.toString().trim().takeIf { it.startsWith("https://") }?.let { "<p><a href=\"$it\">تحميل / رابط إضافي</a></p>" } ?: ""
+                val previewHtml = "<html><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><body style=\"background:#111;color:#eee;font-family:sans-serif;padding:16px;line-height:1.7;\"><h2>$previewTitle</h2>$previewImage$previewArticle$previewLink</body></html>"
+                val web = WebView(this).apply {
+                    setBackgroundColor(android.graphics.Color.rgb(17, 17, 17))
+                    settings.javaScriptEnabled = false
+                    loadDataWithBaseURL(null, previewHtml, "text/html", "UTF-8", null)
+                }
+                AlertDialog.Builder(this).setTitle("معاينة قبل النشر").setView(web)
+                    .setPositiveButton("إغلاق", null).show()
+            }
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 val postTitle = title.text.toString().trim(); val categoryName = selectedLabels.firstOrNull() ?: ""; val coverLink = coverUrl.text.toString().trim(); val relatedLink = link.text.toString().trim()
                 if (selectedLabels.isEmpty()) { Toast.makeText(this, "اختر Label واحداً على الأقل من المدونة", Toast.LENGTH_SHORT).show(); return@setOnClickListener }
