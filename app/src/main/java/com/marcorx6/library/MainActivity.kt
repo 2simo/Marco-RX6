@@ -646,7 +646,7 @@ class MainActivity : Activity() {
             isFillViewport = true
             isVerticalScrollBarEnabled = false
             clipToPadding = false
-            addView(root, ScrollView.LayoutParams(-1, -2))
+            addView(root, ViewGroup.LayoutParams(-1, -2))
         }
         setContentView(pageScroll)
         root.requestApplyInsets()
