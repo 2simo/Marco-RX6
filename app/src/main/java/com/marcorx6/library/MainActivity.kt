@@ -2850,6 +2850,8 @@ class MainActivity : Activity() {
             }
         }
         dialog.show()
+        styleAlertDialog(dialog)
+        applyUnifiedSkin(box)
     }
     private fun deleteGame(game: Game) {
 
