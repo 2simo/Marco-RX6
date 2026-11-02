@@ -1178,21 +1178,13 @@ class MainActivity : Activity() {
             return
         }
 
-        val columns = 2
-        var row: LinearLayout? = null
-        results.forEachIndexed { index, post ->
-            if (index % columns == 0) {
-                row = LinearLayout(this).apply {
-                    orientation = LinearLayout.HORIZONTAL
-                    gravity = Gravity.TOP
-                }
-                gameList.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(11) })
-            }
+        // Comfortable full-width editorial cards: one large, readable article per row.
+        results.forEach { post ->
             val card = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
-                background = rounded(panel, 16)
+                background = rounded(panel, 20)
                 clipToOutline = true
-                elevation = dp(2).toFloat()
+                elevation = dp(3).toFloat()
                 setOnClickListener { showDetails(post) }
             }
             val imageFrame = FrameLayout(this)
@@ -1201,30 +1193,32 @@ class MainActivity : Activity() {
                 setBackgroundColor(Color.rgb(32, 33, 37))
                 contentDescription = post.name
             }
-            imageFrame.addView(cover, FrameLayout.LayoutParams(-1, dp(142)))
+            imageFrame.addView(cover, FrameLayout.LayoutParams(-1, dp(218)))
             if (post.coverUrl.isNotBlank() || post.coverLocalPath.isNotBlank()) {
                 loadCover(cover, post.coverLocalPath, post.coverUrl)
             } else {
                 cover.setImageResource(android.R.drawable.ic_menu_gallery)
                 cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
             }
+
             val categoryBadge = TextView(this).apply {
                 text = post.platform
-                textSize = 8f
+                textSize = 10f
                 setTextColor(bg)
                 setTypeface(null, Typeface.BOLD)
-                background = rounded(red, 8)
-                setPadding(dp(7), dp(4), dp(7), dp(4))
+                background = rounded(red, 10)
+                setPadding(dp(10), dp(6), dp(10), dp(6))
             }
             imageFrame.addView(categoryBadge, FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.START).apply {
-                leftMargin = dp(8); topMargin = dp(8)
+                leftMargin = dp(13); topMargin = dp(13)
             })
+
             val favorite = TextView(this).apply {
                 text = if (post.isFavorite) "★" else "☆"
-                textSize = 20f
+                textSize = 23f
                 gravity = Gravity.CENTER
                 setTextColor(if (post.isFavorite) red else white)
-                background = rounded(Color.argb(190, 12, 13, 16), 20)
+                background = rounded(Color.argb(205, 12, 13, 16), 24)
                 setOnClickListener {
                     val idx = games.indexOfFirst { it.name == post.name && it.url == post.url }
                     if (idx >= 0) {
@@ -1234,36 +1228,41 @@ class MainActivity : Activity() {
                     }
                 }
             }
-            imageFrame.addView(favorite, FrameLayout.LayoutParams(dp(34), dp(34), Gravity.TOP or Gravity.END).apply {
-                rightMargin = dp(8); topMargin = dp(7)
+            imageFrame.addView(favorite, FrameLayout.LayoutParams(dp(42), dp(42), Gravity.TOP or Gravity.END).apply {
+                rightMargin = dp(12); topMargin = dp(11)
             })
             card.addView(imageFrame)
 
             val details = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
-                setPadding(dp(10), dp(9), dp(10), dp(10))
+                setPadding(dp(17), dp(14), dp(17), dp(15))
             }
-            details.addView(makeText(post.name, 12f, white, true).apply {
+            details.addView(makeText(post.name, 17f, white, true).apply {
                 maxLines = 2
-                minLines = 2
+                minLines = 1
                 ellipsize = android.text.TextUtils.TruncateAt.END
             })
+            if (post.description.isNotBlank()) {
+                details.addView(makeText(post.description, 12f, Color.rgb(184, 184, 188)).apply {
+                    maxLines = 2
+                    ellipsize = android.text.TextUtils.TruncateAt.END
+                    setPadding(0, dp(6), 0, 0)
+                })
+            }
             val meta = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
-                setPadding(0, dp(7), 0, 0)
+                setPadding(0, dp(12), 0, 0)
             }
-            meta.addView(makeText("◉ ${viewCount(post)}", 9f, gray), LinearLayout.LayoutParams(0, -2, 1f))
-            val date = if (lastViewedAt(post) > 0L) "شوهدت" else "مقال"
-            meta.addView(makeText(date, 8f, Color.rgb(170, 151, 117)))
+            meta.addView(makeText("◉  ${viewCount(post)} ${tr("مشاهدة")}", 10f, gray),
+                LinearLayout.LayoutParams(0, -2, 1f))
+            val date = if (lastViewedAt(post) > 0L) tr("شوهدت سابقاً") else tr("مقال")
+            meta.addView(makeText(date, 10f, Color.rgb(190, 160, 105), true))
             details.addView(meta)
             card.addView(details)
-            row?.addView(card, LinearLayout.LayoutParams(0, -2, 1f).apply {
-                if (index % 2 == 0) marginEnd = dp(6) else marginStart = dp(6)
+            gameList.addView(card, LinearLayout.LayoutParams(-1, -2).apply {
+                bottomMargin = dp(16)
             })
-        }
-        if (results.size % columns != 0) {
-            row?.addView(View(this), LinearLayout.LayoutParams(0, dp(1), 1f).apply { marginStart = dp(6) })
         }
     }
 
