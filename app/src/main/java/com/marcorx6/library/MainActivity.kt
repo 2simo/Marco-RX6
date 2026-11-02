@@ -1289,7 +1289,7 @@ class MainActivity : Activity() {
             "POPULAR" -> filtered.sortedByDescending { viewCount(it) }
             else -> if (selected == "RECENT") filtered.sortedByDescending { lastViewedAt(it) } else filtered
         }
-        countText.text = "\${sorted.size} \${tr("مقال")}"
+        countText.text = sorted.size.toString() + " " + tr("مقال")
         if (sorted.isEmpty()) {
             gameList.addView(makeText(tr("لا توجد مقالات حالياً"), 15f, gray, true).apply {
                 gravity = Gravity.CENTER
