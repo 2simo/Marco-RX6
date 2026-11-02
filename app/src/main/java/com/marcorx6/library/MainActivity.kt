@@ -11,6 +11,7 @@ import android.content.Intent
 import com.google.android.gms.auth.GoogleAuthUtil
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
 import com.google.android.gms.common.api.Scope
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -144,7 +145,20 @@ class MainActivity : Activity() {
         val account = GoogleSignIn.getLastSignedInAccount(this)
         isAdminSession = account?.email.equals(adminEmail, ignoreCase = true)
     }
-    private fun startGoogleSignIn() { googleSignInClient?.let { startActivityForResult(it.signInIntent, SIGN_IN_REQUEST) } }
+    private fun startGoogleSignIn() {
+        try {
+            val client = googleSignInClient
+                ?: throw IllegalStateException("تعذر تهيئة خدمة تسجيل الدخول إلى Google")
+            startActivityForResult(client.signInIntent, SIGN_IN_REQUEST)
+        } catch (e: Exception) {
+            android.util.Log.e("MARCO_RX6_AUTH", "Unable to launch Google sign-in", e)
+            Toast.makeText(
+                this,
+                "تعذر فتح تسجيل الدخول إلى Google: ${e.message ?: e.javaClass.simpleName}",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
     private fun signOutAdmin() {
         googleSignInClient?.signOut()?.addOnCompleteListener { isAdminSession = false; createInterface() }
     }
@@ -1211,14 +1225,43 @@ class MainActivity : Activity() {
 
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode == SIGN_IN_REQUEST && resultCode == RESULT_OK) {
+        if (requestCode == SIGN_IN_REQUEST) {
             try {
-                val account = GoogleSignIn.getSignedInAccountFromIntent(data).getResult(com.google.android.gms.common.api.ApiException::class.java)
+                val account = GoogleSignIn.getSignedInAccountFromIntent(data)
+                    .getResult(com.google.android.gms.common.api.ApiException::class.java)
                 isAdminSession = account.email.equals(adminEmail, ignoreCase = true)
                 if (!isAdminSession) googleSignInClient?.signOut()
                 createInterface()
-                Toast.makeText(this, if (isAdminSession) "تم ربط حساب Google المسؤول" else "هذا الحساب لا يملك صلاحية المسؤول. يمكنك المتابعة كزائر.", Toast.LENGTH_LONG).show()
-            } catch (e: Exception) { isAdminSession = false; createInterface(); Toast.makeText(this, "فشل تسجيل الدخول إلى Google: ${e.message}", Toast.LENGTH_LONG).show() }
+                Toast.makeText(
+                    this,
+                    if (isAdminSession) "تم ربط حساب Google المسؤول"
+                    else "هذا الحساب لا يملك صلاحية المسؤول. يمكنك المتابعة كزائر.",
+                    Toast.LENGTH_LONG
+                ).show()
+            } catch (e: com.google.android.gms.common.api.ApiException) {
+                isAdminSession = false
+                createInterface()
+                val statusName = GoogleSignInStatusCodes.getStatusCodeString(e.statusCode)
+                android.util.Log.e(
+                    "MARCO_RX6_AUTH",
+                    "Google sign-in failed: statusCode=${e.statusCode}, status=$statusName",
+                    e
+                )
+                Toast.makeText(
+                    this,
+                    "فشل تسجيل الدخول إلى Google (رمز ${e.statusCode}: $statusName)",
+                    Toast.LENGTH_LONG
+                ).show()
+            } catch (e: Exception) {
+                isAdminSession = false
+                createInterface()
+                android.util.Log.e("MARCO_RX6_AUTH", "Unexpected Google sign-in error", e)
+                Toast.makeText(
+                    this,
+                    "فشل تسجيل الدخول إلى Google: ${e.message ?: e.javaClass.simpleName}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
             return
         }
         if (requestCode != PICK_IMAGE_REQUEST || resultCode != RESULT_OK) return
