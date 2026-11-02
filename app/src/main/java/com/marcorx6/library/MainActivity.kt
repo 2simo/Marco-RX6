@@ -126,6 +126,9 @@ class MainActivity : Activity() {
     private var searchRenderRunnable: Runnable? = null
     private val PICK_IMAGE_REQUEST = 1001
     private var pendingCoverLocalPath = ""
+    private var pendingCoverPublicUrl = ""
+    private var coverUploadInProgress = false
+    private var coverUploadFailed = false
     private var coverPreview: ImageView? = null
     private var coverUrlField: EditText? = null
     private var isSyncing = false
@@ -277,7 +280,34 @@ class MainActivity : Activity() {
             ?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
         permission.disconnect()
         if (permissionCode !in 200..299) throw IllegalStateException("تم رفع الصورة لكن تعذر جعلها متاحة للموقع ($permissionCode): $permissionBody")
-        return "https://drive.google.com/uc?export=view&id=$id"
+        val directImageUrl = "https://lh3.googleusercontent.com/d/$id"
+        verifyPublicImageUrl(directImageUrl)
+        return directImageUrl
+    }
+
+    private fun verifyPublicImageUrl(imageUrl: String) {
+        var lastFailure = "رابط الصورة لا يعيد ملف صورة مباشراً"
+        repeat(3) { attempt ->
+            val connection = URL(imageUrl).openConnection() as HttpURLConnection
+            try {
+                connection.requestMethod = "GET"
+                connection.connectTimeout = 12000
+                connection.readTimeout = 15000
+                connection.instanceFollowRedirects = true
+                connection.setRequestProperty("Range", "bytes=0-31")
+                connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/131.0.0.0 Mobile Safari/537.36")
+                val code = connection.responseCode
+                val mime = connection.contentType.orEmpty().substringBefore(";").lowercase(Locale.ROOT)
+                if (code in 200..299 && mime.startsWith("image/")) return
+                lastFailure = "تعذر التحقق من رابط الصورة (HTTP $code، النوع: ${mime.ifBlank { "غير معروف" }})"
+            } catch (e: Exception) {
+                lastFailure = e.message ?: lastFailure
+            } finally {
+                connection.disconnect()
+            }
+            if (attempt < 2) Thread.sleep(900L * (attempt + 1))
+        }
+        throw IllegalStateException(lastFailure)
     }
 
     private fun fetchBlogLabels(): List<String> {
@@ -1786,6 +1816,10 @@ class MainActivity : Activity() {
         if (requestCode != PICK_IMAGE_REQUEST || resultCode != RESULT_OK) return
 
         val uri: Uri = data?.data ?: return
+        coverUploadInProgress = true
+        coverUploadFailed = false
+        pendingCoverPublicUrl = ""
+        coverUrlField?.setText("")
 
         Thread {
             try {
@@ -1817,6 +1851,9 @@ class MainActivity : Activity() {
                 }
                 val publicImageUrl = uploadCoverToDrive(destination)
                 mainHandler.post {
+                    pendingCoverPublicUrl = publicImageUrl
+                    coverUploadInProgress = false
+                    coverUploadFailed = false
                     coverUrlField?.setText(publicImageUrl)
                     coverPreview?.let { loadCover(it, pendingCoverLocalPath, publicImageUrl) }
                     Toast.makeText(this, "تم رفع الغلاف بنجاح وأصبح جاهزاً للنشر", Toast.LENGTH_LONG).show()
@@ -1824,6 +1861,8 @@ class MainActivity : Activity() {
 
             } catch (e: Exception) {
                 mainHandler.post {
+                    coverUploadInProgress = false
+                    coverUploadFailed = true
                     val details = (e.message ?: e.javaClass.simpleName).ifBlank { "خطأ غير معروف" }
                     val detailsView = TextView(this).apply {
                         text = details
@@ -2518,7 +2557,7 @@ class MainActivity : Activity() {
     // BLOG POST COMPOSER: reusable article template published directly to Blogger
     private fun showGameDialog(existing: Game? = null) {
         if (!isAdminSession) { Toast.makeText(this, "يجب تسجيل الدخول بصلاحية المسؤول للنشر.", Toast.LENGTH_SHORT).show(); return }
-        pendingCoverLocalPath = existing?.coverLocalPath ?: ""
+        pendingCoverLocalPath = existing?.coverLocalPath ?: pendingCoverLocalPath
         val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(10), dp(16), dp(16)); background = rounded(bg, 18) }
         val intro = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(14), dp(13), dp(14), dp(13)); background = rounded(panel, 15) }
         intro.addView(makeText(if (existing == null) "استوديو النشر • MARCO RX6" else "استوديو التحرير • MARCO RX6", 17f, white, true))
@@ -2564,6 +2603,8 @@ class MainActivity : Activity() {
             if (existing.platform.isNotBlank()) selectedLabels.add(existing.platform)
             body.setText(existing.description)
             coverUrl.setText(existing.coverUrl)
+        } else if (pendingCoverPublicUrl.isNotBlank()) {
+            coverUrl.setText(pendingCoverPublicUrl)
             link.setText(existing.url.takeIf { it != existing.sourcePostUrl } ?: "")
             genre.setText(existing.genre)
             releaseYear.setText(existing.releaseYear)
@@ -2612,6 +2653,8 @@ class MainActivity : Activity() {
             }
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 val postTitle = title.text.toString().trim(); val categoryName = selectedLabels.firstOrNull() ?: ""; val coverLink = coverUrl.text.toString().trim(); val relatedLink = link.text.toString().trim()
+                if (coverUploadInProgress) { Toast.makeText(this, "انتظر حتى يكتمل رفع صورة الغلاف", Toast.LENGTH_LONG).show(); return@setOnClickListener }
+                if (pendingCoverLocalPath.isNotBlank() && coverUrl.text.toString().isBlank()) { Toast.makeText(this, "صورة الغلاف لم تكتمل عملية رفعها. أعد اختيار الصورة وانتظر رسالة نجاح الرفع.", Toast.LENGTH_LONG).show(); return@setOnClickListener }
                 if (selectedLabels.isEmpty()) { Toast.makeText(this, "اختر Label واحداً على الأقل من المدونة", Toast.LENGTH_SHORT).show(); return@setOnClickListener }
                 if (postTitle.isBlank()) { title.error = "أدخل عنوان المقال"; return@setOnClickListener }
                 if (coverLink.isNotBlank() && !coverLink.startsWith("https://")) { coverUrl.error = "أدخل رابط صورة يبدأ بـ HTTPS"; return@setOnClickListener }
@@ -2630,6 +2673,7 @@ class MainActivity : Activity() {
                         mainHandler.post {
                             val saved = post.copy(bloggerPostId = result.optString("id", post.bloggerPostId), bloggerHtml = result.optString("content", htmlContent), url = result.optString("url", post.url), sourcePostUrl = result.optString("url", post.sourcePostUrl), blogImported = true)
                             val idx = if (existing == null) -1 else games.indexOf(existing); if (idx >= 0) games[idx] = saved else games.add(0, saved)
+                            pendingCoverLocalPath = ""; pendingCoverPublicUrl = ""; coverUploadFailed = false
                             saveGames(); renderGames(); dialog.dismiss(); Toast.makeText(this, "تم نشر المقال على Blogger", Toast.LENGTH_LONG).show()
                         }
                     } catch (e: Exception) { mainHandler.post { dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true; Toast.makeText(this, e.message ?: "فشل نشر المقال", Toast.LENGTH_LONG).show() } }
