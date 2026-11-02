@@ -51,10 +51,6 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.Executors
-import java.security.MessageDigest
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
 
 data class Game(
     val name: String,
@@ -71,10 +67,6 @@ data class Game(
     val bloggerPostId: String = "",
     val bloggerHtml: String = ""
 )
-
-private data class GlobalArticleStats(val views: Long = 0L, val ratingSum: Long = 0L, val ratingCount: Long = 0L) {
-    val averageRating: Float get() = if (ratingCount > 0L) ratingSum.toFloat() / ratingCount else 0f
-}
 
 class MainActivity : Activity() {
 
@@ -109,11 +101,6 @@ class MainActivity : Activity() {
     private var bloggerBlogId = ""
     private var googleSignInClient: com.google.android.gms.auth.api.signin.GoogleSignInClient? = null
     private val adminEmail = "xpangwan@gmail.com"
-    private val firebaseAuth by lazy { FirebaseAuth.getInstance() }
-    private val firestore by lazy { FirebaseFirestore.getInstance() }
-    private val globalArticleStats = mutableMapOf<String, GlobalArticleStats>()
-    private var globalStatsListener: com.google.firebase.firestore.ListenerRegistration? = null
-    private var firebaseUserId: String? = null
     private val SIGN_IN_REQUEST = 1002
 
     private val bloggerFeedUrl =
@@ -134,10 +121,10 @@ class MainActivity : Activity() {
             hide(WindowInsetsCompat.Type.statusBars())
         }
 
-        initializeFirebase()
         createNotificationChannel()
         configureGoogleSignIn()
         loadGames()
+        clearLegacyEngagementData()
         restoreAdminSession()
         createInterface()
         if (notificationPreferences().getBoolean("enabled", true)) {
@@ -187,7 +174,6 @@ class MainActivity : Activity() {
         getSharedPreferences("notification_settings", MODE_PRIVATE)
 
     override fun onDestroy() {
-        globalStatsListener?.remove()
         super.onDestroy()
     }
 
@@ -299,7 +285,6 @@ class MainActivity : Activity() {
             "المدونة" to listOf("Blog", "Blog", "Blog"),
             "المفضلة" to listOf("Favorites", "Favoris", "Favoritos"),
             "الأخيرة" to listOf("Recent", "Récents", "Recientes"),
-            "الأكثر مشاهدة" to listOf("Most viewed", "Les plus vus", "Más vistos"),
             "شوهدت مؤخراً" to listOf("Recently viewed", "Vus récemment", "Vistos recientemente"),
             "استكشف" to listOf("Explore", "Explorer", "Explorar"),
             "أحدث المقالات" to listOf("Latest articles", "Derniers articles", "Últimos artículos"),
@@ -325,7 +310,6 @@ class MainActivity : Activity() {
             "نشاطي" to listOf("My activity", "Mon activité", "Mi actividad"),
             "مشاركة" to listOf("Share", "Partager", "Compartir"),
             "التعليقات" to listOf("Comments", "Commentaires", "Comentarios"),
-            "قيّم هذا المقال" to listOf("Rate this article", "Évaluer cet article", "Valorar este artículo"),
             "تحميل اللعبة" to listOf("Download game", "Télécharger le jeu", "Descargar juego"),
             "المدونة محدّثة" to listOf("Blog updated", "Blog à jour", "Blog actualizado"),
             "مقال" to listOf("article(s)", "article(s)", "artículo(s)"),
@@ -416,7 +400,6 @@ class MainActivity : Activity() {
         if (isAdminSession) {
             menuItem("＋", tr("＋  نشر"), "إضافة مقال جديد إلى المدونة") { showGameDialog() }
         }
-        if (isAdminSession) menuItem("◈", "إحصاءات المكتبة", "المشاهدات والتقييمات والألعاب الرائجة") { showAdminAnalytics() }
         menuItem("Aa", "الخط وحجم النص", "تخصيص قراءة وواجهة التطبيق") { showTypographySettings() }
         panel.addView(View(this), LinearLayout.LayoutParams(1, 0, 1f))
         panel.addView(makeText("MARCO RX6  •  PREMIUM", 9f, Color.rgb(139, 151, 177), true).apply {
@@ -626,14 +609,13 @@ class MainActivity : Activity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        (listOf("ALL", "BLOG", "FAVORITES", "RECENT", "POPULAR") + platforms.drop(3)).forEach { category ->
+        (listOf("ALL", "BLOG", "FAVORITES", "RECENT") + platforms.drop(3)).forEach { category ->
             val chip = TextView(this).apply {
                 text = when (category) {
                     "ALL" -> tr("الكل")
                     "BLOG" -> tr("المدونة")
                     "FAVORITES" -> tr("المفضلة")
                     "RECENT" -> tr("شوهدت مؤخراً")
-                    "POPULAR" -> tr("الأكثر مشاهدة")
                     else -> category
                 }
                 tag = category
@@ -669,10 +651,10 @@ class MainActivity : Activity() {
             setPadding(dp(12), dp(7), dp(12), dp(7))
             contentDescription = tr("ترتيب المقالات")
             setOnClickListener {
-                sortMode = when (sortMode) { "LATEST" -> "POPULAR"; "POPULAR" -> "RATING"; "RATING" -> "NEW"; "NEW" -> "A-Z"; "A-Z" -> "FAVORITES"; else -> "LATEST" }
+                sortMode = when (sortMode) { "LATEST" -> "NEW"; "NEW" -> "A-Z"; "A-Z" -> "FAVORITES"; else -> "LATEST" }
                 renderGames()
                 Toast.makeText(this@MainActivity, "الترتيب: " + when (sortMode) {
-                    "LATEST" -> "الأحدث"; "POPULAR" -> "الأكثر تفاعلاً"; "RATING" -> "الأعلى تقييماً"; "NEW" -> "المضاف حديثاً"; "A-Z" -> "أبجدياً"; else -> "المفضلة"
+                    "LATEST" -> "الأحدث"; "NEW" -> "المضاف حديثاً"; "A-Z" -> "أبجدياً"; else -> "المفضلة"
                 }, Toast.LENGTH_SHORT).show()
             }
         }
@@ -1295,177 +1277,26 @@ class MainActivity : Activity() {
     }
 
 
-    private fun initializeFirebase() {
-        val currentUser = firebaseAuth.currentUser
-        if (currentUser != null) {
-            firebaseUserId = currentUser.uid
-            listenToGlobalArticleStats()
-        } else {
-            firebaseAuth.signInAnonymously()
-                .addOnSuccessListener { result ->
-                    firebaseUserId = result.user?.uid
-                    listenToGlobalArticleStats()
-                }
-                .addOnFailureListener { error ->
-                    android.util.Log.w("MARCO_RX6_FIREBASE", "Anonymous sign-in failed", error)
-                }
-        }
-    }
-
-    private fun listenToGlobalArticleStats() {
-        globalStatsListener?.remove()
-        globalStatsListener = firestore.collection("articles")
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    android.util.Log.w("MARCO_RX6_FIREBASE", "Could not sync article statistics", error)
-                    return@addSnapshotListener
-                }
-                if (snapshot == null) return@addSnapshotListener
-                synchronized(globalArticleStats) {
-                    snapshot.documents.forEach { document ->
-                        globalArticleStats[document.id] = GlobalArticleStats(
-                            views = document.getLong("views") ?: 0L,
-                            ratingSum = document.getLong("ratingSum") ?: 0L,
-                            ratingCount = document.getLong("ratingCount") ?: 0L
-                        )
-                    }
-                }
-                if (!isFinishing) runOnUiThread {
-                    if (::gameList.isInitialized) renderGames()
-                }
-            }
-    }
-
-    private fun cloudArticleId(game: Game): String {
-        val identity = game.url.trim().ifBlank { game.name.trim().lowercase(Locale.ROOT) }
-        val digest = MessageDigest.getInstance("SHA-256").digest(identity.toByteArray(Charsets.UTF_8))
-        return digest.joinToString("") { "%02x".format(it) }
-    }
-
-    private fun submitGlobalRating(game: Game, score: Int) {
-        val uid = firebaseUserId ?: firebaseAuth.currentUser?.uid
-        if (uid == null) {
-            Toast.makeText(this, "جارٍ الاتصال بالخدمة، حاول بعد لحظات", Toast.LENGTH_SHORT).show()
-            return
-        }
-        val articleRef = firestore.collection("articles").document(cloudArticleId(game))
-        val ratingRef = articleRef.collection("ratings").document(uid)
-        firestore.runTransaction { transaction ->
-            val articleSnapshot = transaction.get(articleRef)
-            val ratingSnapshot = transaction.get(ratingRef)
-            val previous = ratingSnapshot.getLong("score") ?: 0L
-            val oldCount = articleSnapshot.getLong("ratingCount") ?: 0L
-            val oldSum = articleSnapshot.getLong("ratingSum") ?: 0L
-            val newCount = if (previous == 0L) oldCount + 1L else oldCount
-            val newSum = oldSum - previous + score.toLong()
-            transaction.set(ratingRef, mapOf("score" to score, "updatedAt" to System.currentTimeMillis()))
-            transaction.set(articleRef, mapOf(
-                "views" to (articleSnapshot.getLong("views") ?: 0L),
-                "name" to game.name,
-                "url" to game.url,
-                "ratingCount" to newCount,
-                "ratingSum" to newSum,
-                "updatedAt" to System.currentTimeMillis()
-            ), SetOptions.merge())
-            null
-        }.addOnFailureListener { error ->
-            android.util.Log.w("MARCO_RX6_FIREBASE", "Rating sync failed", error)
-            Toast.makeText(this, "تعذر مزامنة التقييم. سيبقى محفوظاً على الجهاز", Toast.LENGTH_LONG).show()
-        }
-    }
-
     private fun profilePreferences() = getSharedPreferences("user_profile", MODE_PRIVATE)
     private fun historyPreferences() = getSharedPreferences("article_activity", MODE_PRIVATE)
     private fun articleKey(game: Game): String = (game.url.ifBlank { game.name }).hashCode().toString()
-    private fun globalStats(game: Game): GlobalArticleStats? =
-        synchronized(globalArticleStats) { globalArticleStats[cloudArticleId(game)] }
-
-    private fun viewCount(game: Game): Int =
-        (globalStats(game)?.views ?: historyPreferences().getInt("views_" + articleKey(game), 0).toLong())
-            .coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
-
-    private fun ratingCount(game: Game): Int =
-        (globalStats(game)?.ratingCount
-            ?: if (historyPreferences().getInt("rating_" + articleKey(game), 0) > 0) 1L else 0L)
-            .coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
-
-    private fun averageRating(game: Game): Float {
-        val stats = globalStats(game)
-        if (stats != null) return stats.averageRating
-        val rating = historyPreferences().getInt("rating_" + articleKey(game), 0)
-        return if (rating > 0) rating.toFloat() else 0f
-    }
-    private fun popularityScore(game: Game): Int = viewCount(game) + ratingCount(game) * 5
-
-    private fun showAdminAnalytics() {
-        if (!isAdminSession) return
-        val sorted = games.sortedByDescending { popularityScore(it) }
-        val totalViews = games.sumOf { viewCount(it) }
-        val totalRatings = games.sumOf { ratingCount(it) }
-        val rated = games.filter { ratingCount(it) > 0 }
-        val average = if (rated.isEmpty()) 0f else rated.map { averageRating(it) }.average().toFloat()
-        val box = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(18), dp(8), dp(18), dp(8))
-        }
-        fun metric(value: String, label: String) = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            background = rounded(Color.rgb(25, 30, 46), 13)
-            setPadding(dp(9), dp(13), dp(9), dp(13))
-            addView(makeText(value, 22f, Color.rgb(210, 220, 239), true))
-            addView(makeText(label, 10f, Color.LTGRAY))
-        }
-        val summary = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        summary.addView(metric(compactMetric(totalViews), "مشاهدات عالمية"), LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
-        summary.addView(metric(compactMetric(totalRatings), "تقييمات عالمية"), LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
-        summary.addView(metric(String.format(Locale.ROOT, "%.1f", average), "متوسط التقييم"), LinearLayout.LayoutParams(0, -2, 1f))
-        box.addView(summary)
-        box.addView(makeText("الأكثر تفاعلاً", 14f, Color.rgb(180, 151, 255), true).apply { setPadding(0, dp(18), 0, dp(8)) })
-        sorted.take(8).forEachIndexed { index, game ->
-            val line = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(10), dp(9), dp(10), dp(9))
-                background = rounded(Color.rgb(19, 23, 36), 10)
-            }
-            line.addView(makeText((index + 1).toString() + ".", 12f, Color.rgb(180, 151, 255), true), LinearLayout.LayoutParams(dp(28), -2))
-            line.addView(makeText(game.name, 11f, white, true), LinearLayout.LayoutParams(0, -2, 1f))
-            line.addView(makeText("◉ " + compactMetric(viewCount(game)) + "  ★ " + ratingCount(game), 9f, gray))
-            box.addView(line, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(5) })
-        }
-        box.addView(makeText("تُحدّث هذه الإحصاءات من Firebase وتُشارك بين مستخدمي MARCO RX6.", 10f, Color.rgb(255, 190, 105)).apply {
-            setPadding(0, dp(12), 0, 0)
-        })
-        AlertDialog.Builder(this).setTitle("تحليلات MARCO RX6")
-            .setView(ScrollView(this).apply { addView(box) })
-            .setPositiveButton("إغلاق", null).show()
-    }
-
-    private fun compactMetric(value: Int): String = when {
-        value >= 1_000_000 -> String.format(Locale.ROOT, "%.1fM", value / 1_000_000f)
-        value >= 1_000 -> String.format(Locale.ROOT, "%.1fK", value / 1_000f)
-        else -> value.toString()
-    }
     private fun lastViewedAt(game: Game): Long = historyPreferences().getLong("time_" + articleKey(game), 0L)
     private fun isRecentlyViewed(game: Game): Boolean = lastViewedAt(game) > 0L
-    private fun recordArticleView(game: Game) {
+
+    private fun clearLegacyEngagementData() {
         val prefs = historyPreferences()
-        val key = articleKey(game)
-        prefs.edit().putInt("views_" + key, viewCount(game) + 1)
-            .putLong("time_" + key, System.currentTimeMillis()).apply()
-        if (firebaseUserId != null || firebaseAuth.currentUser != null) {
-            val articleRef = firestore.collection("articles").document(cloudArticleId(game))
-            articleRef.set(mapOf(
-                "views" to com.google.firebase.firestore.FieldValue.increment(1L),
-                "name" to game.name,
-                "url" to game.url,
-                "updatedAt" to System.currentTimeMillis()
-            ), SetOptions.merge()).addOnFailureListener { error ->
-                android.util.Log.w("MARCO_RX6_FIREBASE", "View sync failed", error)
-            }
-        }
+        val editor = prefs.edit()
+        prefs.all.keys.filter { it.startsWith("rating_") || it.startsWith("views_") }
+            .forEach { editor.remove(it) }
+        editor.apply()
     }
+
+    private fun recordRecentRead(game: Game) {
+        historyPreferences().edit()
+            .putLong("time_" + articleKey(game), System.currentTimeMillis())
+            .apply()
+    }
+
     private fun showProfile() {
         val prefs = profilePreferences()
         val settings = getSharedPreferences("app_settings", MODE_PRIVATE)
@@ -1554,7 +1385,6 @@ class MainActivity : Activity() {
                 "ALL" -> true
                 "FAVORITES" -> item.isFavorite
                 "RECENT" -> isRecentlyViewed(item)
-                "POPULAR" -> true
                 "BLOG" -> item.blogImported
                 else -> item.platform == selected
             }
@@ -1566,8 +1396,6 @@ class MainActivity : Activity() {
         val sorted = when (sortMode) {
             "A-Z" -> filtered.sortedBy { it.name.lowercase(Locale.ROOT) }
             "FAVORITES" -> filtered.sortedByDescending { it.isFavorite }
-            "POPULAR" -> filtered.sortedByDescending { popularityScore(it) }
-            "RATING" -> filtered.sortedByDescending { averageRating(it) }
             "NEW" -> filtered.reversed()
             else -> if (selected == "RECENT") filtered.sortedByDescending { lastViewedAt(it) } else filtered
         }
@@ -1591,7 +1419,6 @@ class MainActivity : Activity() {
                 "ALL" -> "الكل"
                 "FAVORITES" -> tr("المفضلة")
                 "RECENT" -> tr("شوهدت مؤخراً")
-                "POPULAR" -> tr("الأكثر مشاهدة")
                 "BLOG" -> "BLOG"
                 else -> selected
             }
@@ -1661,18 +1488,6 @@ class MainActivity : Activity() {
                 }
                 card.addView(title, LinearLayout.LayoutParams(dp(142), dp(27)))
 
-                val metrics = LinearLayout(this).apply {
-                    orientation = LinearLayout.HORIZONTAL
-                    gravity = Gravity.CENTER
-                    setPadding(dp(2), 0, dp(2), 0)
-                }
-                val views = makeText("◉ " + compactMetric(viewCount(post)), 9f, Color.rgb(174, 184, 203))
-                val ratingValue = if (ratingCount(post) > 0) String.format(Locale.ROOT, "%.1f", averageRating(post)) else "—"
-                val ratings = makeText("★ " + ratingValue + " (" + compactMetric(ratingCount(post)) + ")", 9f, Color.rgb(255, 197, 92), true)
-                metrics.addView(views)
-                metrics.addView(makeText("  ·  ", 9f, Color.rgb(112, 121, 143)))
-                metrics.addView(ratings)
-                card.addView(metrics, LinearLayout.LayoutParams(dp(142), dp(19)))
                 row.addView(card, LinearLayout.LayoutParams(dp(142), -2).apply {
                     marginEnd = dp(11)
                 })
@@ -1686,7 +1501,7 @@ class MainActivity : Activity() {
 
     // Dedicated immersive article reader; the WebView owns its scroll instead of nesting inside ScrollView.
     private fun showDetails(game: Game) {
-        recordArticleView(game)
+        recordRecentRead(game)
         val reader = android.app.Dialog(this)
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -1784,9 +1599,6 @@ class MainActivity : Activity() {
         val info = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(14), 0, 0, 0) }
         info.addView(makeText(game.name, 18f, white, true).apply { maxLines = 3; ellipsize = android.text.TextUtils.TruncateAt.END })
         info.addView(makeText(game.platform + "  •  MARCO RX6", 10f, Color.rgb(190, 174, 255), true).apply { setPadding(0, dp(6), 0, dp(12)) })
-        val avg = if (ratingCount(game) > 0) String.format(Locale.ROOT, "%.1f / 5", averageRating(game)) else "لا توجد تقييمات بعد"
-        info.addView(makeText("★  " + avg, 12f, Color.rgb(255, 197, 92), true))
-        info.addView(makeText("◉  " + compactMetric(viewCount(game)) + " مشاهدة   •   " + ratingCount(game) + " تقييم", 10f, Color.rgb(207, 215, 231)).apply { setPadding(0, dp(7), 0, 0) })
         identity.addView(info, LinearLayout.LayoutParams(0, -2, 1f))
         root.addView(identity, LinearLayout.LayoutParams(-1, -2).apply { setMargins(dp(12), dp(10), dp(12), dp(10)) })
 
@@ -1863,64 +1675,6 @@ class MainActivity : Activity() {
             }
             downloadScroll.addView(downloadRow)
             root.addView(downloadScroll)
-        }
-
-        val ratingRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(14), dp(7), dp(14), dp(7))
-            setBackgroundColor(Color.rgb(18, 21, 31))
-        }
-        ratingRow.addView(makeText(tr("قيّم هذا المقال"), 10f, gray, true),
-            LinearLayout.LayoutParams(0, -2, 1f))
-        val ratingPrefs = historyPreferences()
-        val ratingKey = "rating_" + articleKey(game)
-        val selectedRating = ratingPrefs.getInt(ratingKey, 0)
-        val ratingSummary = makeText(
-            if (ratingCount(game) > 0) "متوسط تقييمك على هذا الجهاز: " + String.format(Locale.ROOT, "%.1f / 5", averageRating(game))
-            else "قيّم اللعبة وسجّل رأيك على هذا الجهاز",
-            10f, Color.rgb(191, 199, 215)
-        ).apply { setPadding(dp(14), dp(3), dp(14), dp(9)) }
-        for (star in 1..5) {
-            ratingRow.addView(TextView(this).apply {
-                text = if (star <= selectedRating) "★" else "☆"
-                textSize = 22f
-                setTextColor(if (star <= selectedRating) Color.rgb(255, 190, 75) else gray)
-                setPadding(dp(3), dp(3), dp(3), dp(3))
-                setOnClickListener {
-                    ratingPrefs.edit().putInt(ratingKey, star).apply()
-                    submitGlobalRating(game, star)
-                    for (index in 0 until ratingRow.childCount) {
-                        val child = ratingRow.getChildAt(index)
-                        if (index > 0) {
-                            val score = index
-                            (child as TextView).text = if (score <= star) "★" else "☆"
-                            child.setTextColor(if (score <= star) Color.rgb(255, 190, 75) else gray)
-                        }
-                    }
-                    ratingSummary.text = "تقييمك: " + star + " / 5  •  جارٍ مزامنته عالمياً"
-                    renderGames()
-                    Toast.makeText(this@MainActivity, "تم حفظ تقييمك: " + star + " من 5", Toast.LENGTH_SHORT).show()
-                }
-            })
-        }
-        root.addView(ratingRow)
-        root.addView(ratingSummary)
-        firebaseUserId?.let { uid ->
-            firestore.collection("articles").document(cloudArticleId(game))
-                .collection("ratings").document(uid).get()
-                .addOnSuccessListener { document ->
-                    val remoteScore = (document.getLong("score") ?: 0L).toInt()
-                    if (remoteScore in 1..5 && !isFinishing) runOnUiThread {
-                        ratingPrefs.edit().putInt(ratingKey, remoteScore).apply()
-                        for (index in 1..5) {
-                            val starView = ratingRow.getChildAt(index) as? TextView ?: continue
-                            starView.text = if (index <= remoteScore) "★" else "☆"
-                            starView.setTextColor(if (index <= remoteScore) Color.rgb(255, 190, 75) else gray)
-                        }
-                        ratingSummary.text = "تقييمك السابق: " + remoteScore + " / 5"
-                    }
-                }
         }
 
         val bottom = LinearLayout(this).apply {
