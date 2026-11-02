@@ -524,7 +524,7 @@ class MainActivity : Activity() {
 
                 val feed = JSONObject(body).optJSONObject("feed")
                     ?: JSONObject()
-                val feedId = feed.optJSONObject("id")?.optString("$t", "").orEmpty()
+                val feedId = feed.optJSONObject("id")?.optString(36.toChar().toString() + "t", "").orEmpty()
                 Regex("blog-(\\d+)").find(feedId)?.groupValues?.getOrNull(1)?.let { bloggerBlogId = it }
 
                 val entries = feed.optJSONArray("entry")
@@ -720,7 +720,7 @@ class MainActivity : Activity() {
             sourcePostUrl = postUrl,
             downloadLinks = links,
             blogImported = true,
-            bloggerPostId = entry.optJSONObject("id")?.optString("$t", "")?.let { Regex("post-(\\d+)").find(it)?.groupValues?.getOrNull(1).orEmpty() } ?: "",
+            bloggerPostId = entry.optJSONObject("id")?.optString(36.toChar().toString() + "t", "")?.let { Regex("post-(\\d+)").find(it)?.groupValues?.getOrNull(1).orEmpty() } ?: "",
             bloggerHtml = content
         )
     }
