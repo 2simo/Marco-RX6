@@ -40,7 +40,26 @@ jobs:
         with:
           gradle-version: "8.9"
 
+      # Configure these repository Actions secrets to make every CI APK use
+      # the same signing identity:
+      # ANDROID_KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD.
+      - name: Prepare persistent CI signing key
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/marco-rx6-ci.jks"
+          echo "KEYSTORE_FILE=$RUNNER_TEMP/marco-rx6-ci.jks" >> "$GITHUB_ENV"
+
+      - name: Warn when persistent signing is not configured
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 == '' }}
+        run: echo "::warning::Persistent APK signing is not configured; this build will use the temporary runner debug key."
+
       - name: Build debug APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: gradle --no-daemon --stacktrace assembleDebug
 
       - name: Upload debug APK
