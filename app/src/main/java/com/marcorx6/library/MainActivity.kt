@@ -151,6 +151,12 @@ class MainActivity : Activity() {
     }
 
 
+    override fun onDestroy() {
+        searchRenderRunnable?.let { mainHandler.removeCallbacks(it) }
+        imageExecutor.shutdownNow()
+        super.onDestroy()
+    }
+
     private fun configureGoogleSignIn() {
         val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestEmail().requestScopes(Scope("https://www.googleapis.com/auth/blogger")).build()
@@ -1318,6 +1324,18 @@ class MainActivity : Activity() {
         return BitmapFactory.decodeFile(file.absolutePath, options)
     }
 
+    private fun trimCoverDiskCache(folder: File) {
+        val files = folder.listFiles()?.filter { it.isFile && !it.name.endsWith(".tmp") }
+            ?.sortedBy { it.lastModified() } ?: return
+        var total = files.sumOf { it.length() }
+        val limit = 64L * 1024L * 1024L
+        for (file in files) {
+            if (total <= limit) break
+            val length = file.length()
+            if (file.delete()) total -= length
+        }
+    }
+
     private fun downloadCoverToCache(imageUrl: String, destination: File) {
         val connection = URL(imageUrl).openConnection() as HttpURLConnection
         connection.connectTimeout = 8000
@@ -1344,6 +1362,7 @@ class MainActivity : Activity() {
             }
             if (destination.exists()) destination.delete()
             if (!temporary.renameTo(destination)) throw IllegalStateException("Cache write failed")
+            trimCoverDiskCache(destination.parentFile ?: cacheDir)
         } finally {
             temporary.delete()
             connection.disconnect()
