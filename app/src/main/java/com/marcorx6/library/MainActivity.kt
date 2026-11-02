@@ -2,6 +2,7 @@
 package com.marcorx6.library
 
 import android.Manifest
+import android.animation.LayoutTransition
 import android.app.Activity
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -441,6 +442,15 @@ class MainActivity : Activity() {
         }
         if (view is ViewGroup) for (i in 0 until view.childCount) applyTypography(view.getChildAt(i))
     }
+    private fun applyMotionPreferences(view: View) {
+        if (view is ViewGroup) {
+            view.layoutTransition = if (appearancePreferences().getBoolean("animations", true)) {
+                LayoutTransition().apply { setDuration(150) }
+            } else null
+            for (i in 0 until view.childCount) applyMotionPreferences(view.getChildAt(i))
+        }
+    }
+
     private fun showAppearanceSettings() {
         val choices = arrayOf("بنفسجي", "أزرق", "أخضر", "ذهبي", "وردي")
         val keys = arrayOf("violet", "blue", "green", "gold", "rose")
@@ -454,7 +464,8 @@ class MainActivity : Activity() {
             .setNeutralButton(if (appearancePreferences().getBoolean("animations", true)) "إيقاف الحركات" else "تفعيل الحركات") { _, _ ->
                 val enabled = !appearancePreferences().getBoolean("animations", true)
                 appearancePreferences().edit().putBoolean("animations", enabled).apply()
-                Toast.makeText(this, if (enabled) "تم تفعيل الحركات" else "تم إيقاف الحركات", Toast.LENGTH_SHORT).show()
+                applyMotionPreferences(window.decorView)
+                Toast.makeText(this, if (enabled) "تم تفعيل انتقالات الواجهة" else "تم إيقاف انتقالات الواجهة", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("إغلاق", null).show()
     }
@@ -503,12 +514,14 @@ class MainActivity : Activity() {
         return try {
             if (requestCode == BACKUP_EXPORT_REQUEST) {
                 contentResolver.openOutputStream(uri)?.bufferedWriter(Charsets.UTF_8)?.use { it.write(backupExportPayload) }
+                    ?: throw IllegalStateException("تعذر إنشاء ملف النسخة الاحتياطية")
                 Toast.makeText(this, "تم تصدير النسخة الاحتياطية", Toast.LENGTH_LONG).show()
             } else if (requestCode == BACKUP_IMPORT_REQUEST) {
                 val raw = contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
                     ?: throw IllegalStateException("تعذر قراءة الملف")
                 val backup = JSONObject(raw)
                 require(backup.optString("format") == "MARCO_RX6_BACKUP") { "ملف النسخة الاحتياطية غير صالح" }
+                require(backup.optInt("version", 0) == 1) { "إصدار النسخة الاحتياطية غير مدعوم" }
                 val array = backup.optJSONArray("games") ?: JSONArray()
                 val restored = mutableListOf<Game>()
                 for (i in 0 until array.length()) {
@@ -529,7 +542,8 @@ class MainActivity : Activity() {
                         backup.optJSONObject("appearance")?.let { a ->
                             appearancePreferences().edit()
                                 .putBoolean("dark_mode", a.optBoolean("darkMode", true))
-                                .putString("accent", a.optString("accent", "violet")).apply()
+                                .putString("accent", a.optString("accent", "violet"))
+                                .putBoolean("animations", a.optBoolean("animations", true)).apply()
                         }
                         recreate()
                         Toast.makeText(this, "تمت استعادة المكتبة", Toast.LENGTH_LONG).show()
@@ -592,11 +606,11 @@ class MainActivity : Activity() {
 
     private fun createInterface() {
         // LIQUID METAL redesign: premium chrome surfaces, clear hierarchy and quick navigation.
-        val silver = Color.rgb(226, 232, 242)
-        val muted = Color.rgb(150, 162, 181)
-        val violet = Color.rgb(151, 112, 255)
-        val ink = Color.rgb(7, 9, 17)
-        val glass = Color.rgb(19, 23, 36)
+        val silver = if (isDarkMode()) Color.rgb(226, 232, 242) else Color.rgb(43, 52, 68)
+        val muted = gray
+        val violet = red
+        val ink = bg
+        val glass = panel
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             layoutDirection = if (currentLanguage() == "ar") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
@@ -642,7 +656,7 @@ class MainActivity : Activity() {
         val hero = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(105, 115, 139), Color.rgb(44, 52, 73), Color.rgb(17, 22, 36), Color.rgb(49, 35, 83))).apply {
+                if (isDarkMode()) intArrayOf(Color.rgb(105, 115, 139), Color.rgb(44, 52, 73), Color.rgb(17, 22, 36), Color.rgb(49, 35, 83)) else intArrayOf(Color.rgb(225, 231, 241), Color.rgb(204, 214, 231), Color.rgb(239, 242, 249), Color.rgb(222, 211, 244))).apply {
                 cornerRadius = dp(27).toFloat()
                 setStroke(dp(1), Color.rgb(130, 143, 170))
             }
@@ -650,7 +664,7 @@ class MainActivity : Activity() {
             setPadding(dp(20), dp(19), dp(20), dp(18))
         }
         hero.addView(makeText("✧  PREMIUM GAME LIBRARY", 9f, silver, true).apply { letterSpacing = 0.12f })
-        hero.addView(makeText(tr("اكتشف. العب.\nاستمتع أكثر."), 27f, Color.WHITE, true).apply {
+        hero.addView(makeText(tr("اكتشف. العب.\nاستمتع أكثر."), 27f, white, true).apply {
             typeface = Typeface.create("sans-serif", Typeface.BOLD)
             setPadding(0, dp(10), 0, dp(5))
         })
@@ -683,8 +697,8 @@ class MainActivity : Activity() {
             typeface = Typeface.create("sans-serif", Typeface.NORMAL)
             setSingleLine(true)
             threshold = 1
-            setTextColor(Color.WHITE)
-            setHintTextColor(Color.rgb(139, 149, 170))
+            setTextColor(white)
+            setHintTextColor(gray)
             background = null
             setPadding(dp(10), 0, dp(6), 0)
             setAdapter(ArrayAdapter(this@MainActivity, android.R.layout.simple_dropdown_item_1line,
@@ -819,6 +833,7 @@ class MainActivity : Activity() {
             leftMargin = dp(16); rightMargin = dp(16); bottomMargin = dp(12)
         })
         setContentView(shell)
+        applyMotionPreferences(shell)
         requestHighRefreshRate()
         root.requestApplyInsets()
         search.addTextChangedListener(object : TextWatcher {
