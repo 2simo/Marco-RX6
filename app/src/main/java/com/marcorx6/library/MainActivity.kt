@@ -1323,7 +1323,7 @@ class MainActivity : Activity() {
                 setPadding(dp(2), dp(9), dp(2), dp(10))
             }
             heading.addView(makeText(title, 18f, white, true), LinearLayout.LayoutParams(0, -2, 1f))
-            heading.addView(makeText("\${posts.size}", 10f, red, true))
+            heading.addView(makeText(posts.size.toString(), 10f, red, true))
             gameList.addView(heading, LinearLayout.LayoutParams(-1, -2))
 
             val horizontal = HorizontalScrollView(this).apply {
