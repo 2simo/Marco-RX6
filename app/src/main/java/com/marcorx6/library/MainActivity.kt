@@ -386,6 +386,7 @@ class MainActivity : Activity() {
         if (isAdminSession) {
             menuItem("＋", tr("＋  نشر"), "إضافة مقال جديد إلى المدونة") { showGameDialog() }
         }
+        if (isAdminSession) menuItem("◈", "إحصاءات المكتبة", "المشاهدات والتقييمات والألعاب الرائجة") { showAdminAnalytics() }
         menuItem("Aa", "الخط وحجم النص", "تخصيص قراءة وواجهة التطبيق") { showTypographySettings() }
         panel.addView(View(this), LinearLayout.LayoutParams(1, 0, 1f))
         panel.addView(makeText("MARCO RX6  •  PREMIUM", 9f, Color.rgb(139, 151, 177), true).apply {
@@ -567,15 +568,21 @@ class MainActivity : Activity() {
             setPadding(dp(14), 0, dp(14), 0)
         }
         searchWrap.addView(makeText("⌕", 26f, silver, true))
-        search = EditText(this).apply {
+        search = AutoCompleteTextView(this).apply {
             hint = tr("ابحث عن الألعاب والمقالات...")
             textSize = 13f
             typeface = Typeface.create("sans-serif", Typeface.NORMAL)
             setSingleLine(true)
+            threshold = 1
             setTextColor(Color.WHITE)
             setHintTextColor(Color.rgb(139, 149, 170))
             background = null
             setPadding(dp(10), 0, dp(6), 0)
+            setAdapter(ArrayAdapter(this@MainActivity, android.R.layout.simple_dropdown_item_1line,
+                games.map { it.name }.distinct().take(80)))
+            setOnFocusChangeListener { _, focused ->
+                if (focused && text.isNotEmpty()) showDropDown()
+            }
         }
         searchWrap.addView(search, LinearLayout.LayoutParams(0, dp(52), 1f))
         root.addView(searchWrap, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(13) })
@@ -632,10 +639,10 @@ class MainActivity : Activity() {
             setPadding(dp(12), dp(7), dp(12), dp(7))
             contentDescription = tr("ترتيب المقالات")
             setOnClickListener {
-                sortMode = when (sortMode) { "LATEST" -> "POPULAR"; "POPULAR" -> "A-Z"; "A-Z" -> "FAVORITES"; else -> "LATEST" }
+                sortMode = when (sortMode) { "LATEST" -> "POPULAR"; "POPULAR" -> "RATING"; "RATING" -> "NEW"; "NEW" -> "A-Z"; "A-Z" -> "FAVORITES"; else -> "LATEST" }
                 renderGames()
-                Toast.makeText(this@MainActivity, tr("الترتيب") + ": " + when (sortMode) {
-                    "LATEST" -> tr("الأحدث"); "POPULAR" -> tr("الأكثر مشاهدة"); "A-Z" -> tr("أبجدياً"); else -> tr("المفضلة")
+                Toast.makeText(this@MainActivity, "الترتيب: " + when (sortMode) {
+                    "LATEST" -> "الأحدث"; "POPULAR" -> "الأكثر تفاعلاً"; "RATING" -> "الأعلى تقييماً"; "NEW" -> "المضاف حديثاً"; "A-Z" -> "أبجدياً"; else -> "المفضلة"
                 }, Toast.LENGTH_SHORT).show()
             }
         }
@@ -1237,6 +1244,56 @@ class MainActivity : Activity() {
     private fun viewCount(game: Game): Int = historyPreferences().getInt("views_" + articleKey(game), 0)
     private fun ratingCount(game: Game): Int =
         if (historyPreferences().getInt("rating_" + articleKey(game), 0) > 0) 1 else 0
+    private fun averageRating(game: Game): Float {
+        val rating = historyPreferences().getInt("rating_" + articleKey(game), 0)
+        return if (rating > 0) rating.toFloat() else 0f
+    }
+    private fun popularityScore(game: Game): Int = viewCount(game) + ratingCount(game) * 5
+
+    private fun showAdminAnalytics() {
+        if (!isAdminSession) return
+        val sorted = games.sortedByDescending { popularityScore(it) }
+        val totalViews = games.sumOf { viewCount(it) }
+        val totalRatings = games.sumOf { ratingCount(it) }
+        val rated = games.filter { ratingCount(it) > 0 }
+        val average = if (rated.isEmpty()) 0f else rated.map { averageRating(it) }.average().toFloat()
+        val box = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(18), dp(8), dp(18), dp(8))
+        }
+        fun metric(value: String, label: String) = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            background = rounded(Color.rgb(25, 30, 46), 13)
+            setPadding(dp(9), dp(13), dp(9), dp(13))
+            addView(makeText(value, 22f, Color.rgb(210, 220, 239), true))
+            addView(makeText(label, 10f, Color.LTGRAY))
+        }
+        val summary = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        summary.addView(metric(compactMetric(totalViews), "مشاهدات هذا الجهاز"), LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
+        summary.addView(metric(compactMetric(totalRatings), "تقييمات محلية"), LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
+        summary.addView(metric(String.format(Locale.ROOT, "%.1f", average), "متوسط التقييم"), LinearLayout.LayoutParams(0, -2, 1f))
+        box.addView(summary)
+        box.addView(makeText("الأكثر تفاعلاً", 14f, Color.rgb(180, 151, 255), true).apply { setPadding(0, dp(18), 0, dp(8)) })
+        sorted.take(8).forEachIndexed { index, game ->
+            val line = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(10), dp(9), dp(10), dp(9))
+                background = rounded(Color.rgb(19, 23, 36), 10)
+            }
+            line.addView(makeText((index + 1).toString() + ".", 12f, Color.rgb(180, 151, 255), true), LinearLayout.LayoutParams(dp(28), -2))
+            line.addView(makeText(game.name, 11f, white, true), LinearLayout.LayoutParams(0, -2, 1f))
+            line.addView(makeText("◉ " + compactMetric(viewCount(game)) + "  ★ " + ratingCount(game), 9f, gray))
+            box.addView(line, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(5) })
+        }
+        box.addView(makeText("تنبيه: هذه الأرقام محفوظة محلياً على هذا الجهاز وليست إحصاءات جميع المستخدمين.", 10f, Color.rgb(255, 190, 105)).apply {
+            setPadding(0, dp(12), 0, 0)
+        })
+        AlertDialog.Builder(this).setTitle("تحليلات MARCO RX6")
+            .setView(ScrollView(this).apply { addView(box) })
+            .setPositiveButton("إغلاق", null).show()
+    }
 
     private fun compactMetric(value: Int): String = when {
         value >= 1_000_000 -> String.format(Locale.ROOT, "%.1fM", value / 1_000_000f)
@@ -1351,7 +1408,9 @@ class MainActivity : Activity() {
         val sorted = when (sortMode) {
             "A-Z" -> filtered.sortedBy { it.name.lowercase(Locale.ROOT) }
             "FAVORITES" -> filtered.sortedByDescending { it.isFavorite }
-            "POPULAR" -> filtered.sortedByDescending { viewCount(it) }
+            "POPULAR" -> filtered.sortedByDescending { popularityScore(it) }
+            "RATING" -> filtered.sortedByDescending { averageRating(it) }
+            "NEW" -> filtered.reversed()
             else -> if (selected == "RECENT") filtered.sortedByDescending { lastViewedAt(it) } else filtered
         }
         countText.text = sorted.size.toString() + " " + tr("مقال")
@@ -1450,7 +1509,8 @@ class MainActivity : Activity() {
                     setPadding(dp(2), 0, dp(2), 0)
                 }
                 val views = makeText("◉ " + compactMetric(viewCount(post)), 9f, Color.rgb(174, 184, 203))
-                val ratings = makeText("★ " + compactMetric(ratingCount(post)), 9f, Color.rgb(255, 197, 92), true)
+                val ratingValue = if (ratingCount(post) > 0) String.format(Locale.ROOT, "%.1f", averageRating(post)) else "—"
+                val ratings = makeText("★ " + ratingValue + " (" + compactMetric(ratingCount(post)) + ")", 9f, Color.rgb(255, 197, 92), true)
                 metrics.addView(views)
                 metrics.addView(makeText("  ·  ", 9f, Color.rgb(112, 121, 143)))
                 metrics.addView(ratings)
@@ -1544,6 +1604,56 @@ class MainActivity : Activity() {
         })
         root.addView(topBar)
 
+        // Liquid Metal 2.0 identity panel. Keep portrait cover proportions intact.
+        val identity = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(15), dp(14), dp(15), dp(14))
+            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Color.rgb(66, 74, 96), Color.rgb(25, 30, 46), Color.rgb(35, 27, 58))).apply {
+                cornerRadius = dp(20).toFloat()
+                setStroke(dp(1), Color.rgb(91, 105, 133))
+            }
+        }
+        val cover = ImageView(this).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            background = rounded(Color.rgb(48, 54, 72), 12)
+            contentDescription = game.name
+        }
+        if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) loadCover(cover, game.coverLocalPath, game.coverUrl)
+        else cover.setImageResource(android.R.drawable.ic_menu_gallery)
+        identity.addView(cover, LinearLayout.LayoutParams(dp(104), dp(140)))
+        val info = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(14), 0, 0, 0) }
+        info.addView(makeText(game.name, 18f, white, true).apply { maxLines = 3; ellipsize = android.text.TextUtils.TruncateAt.END })
+        info.addView(makeText(game.platform + "  •  MARCO RX6", 10f, Color.rgb(190, 174, 255), true).apply { setPadding(0, dp(6), 0, dp(12)) })
+        val avg = if (ratingCount(game) > 0) String.format(Locale.ROOT, "%.1f / 5", averageRating(game)) else "لا توجد تقييمات بعد"
+        info.addView(makeText("★  " + avg, 12f, Color.rgb(255, 197, 92), true))
+        info.addView(makeText("◉  " + compactMetric(viewCount(game)) + " مشاهدة   •   " + ratingCount(game) + " تقييم", 10f, Color.rgb(207, 215, 231)).apply { setPadding(0, dp(7), 0, 0) })
+        identity.addView(info, LinearLayout.LayoutParams(0, -2, 1f))
+        root.addView(identity, LinearLayout.LayoutParams(-1, -2).apply { setMargins(dp(12), dp(10), dp(12), dp(10)) })
+
+        val similar = games.filter { it.name != game.name && (it.platform == game.platform || it.blogImported == game.blogImported) }.take(5)
+        if (similar.isNotEmpty()) {
+            val similarBox = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(14), dp(5), dp(14), dp(9)) }
+            similarBox.addView(makeText("قد يعجبك أيضاً", 12f, Color.rgb(190, 174, 255), true).apply { setPadding(0, 0, 0, dp(7)) })
+            val similarRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+            similar.forEach { item ->
+                similarRow.addView(TextView(this).apply {
+                    text = item.name
+                    textSize = 10f
+                    maxLines = 1
+                    ellipsize = android.text.TextUtils.TruncateAt.END
+                    setTextColor(white)
+                    background = rounded(Color.rgb(35, 40, 57), 10)
+                    setPadding(dp(10), dp(9), dp(10), dp(9))
+                    setOnClickListener { reader.dismiss(); showDetails(item) }
+                }, LinearLayout.LayoutParams(dp(118), -2).apply { marginEnd = dp(7) })
+            }
+            val scroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false; addView(similarRow) }
+            similarBox.addView(scroll)
+            root.addView(similarBox)
+        }
+
         val articleWebView = android.webkit.WebView(this).apply {
             setBackgroundColor(bg)
             settings.javaScriptEnabled = false
@@ -1608,6 +1718,11 @@ class MainActivity : Activity() {
         val ratingPrefs = historyPreferences()
         val ratingKey = "rating_" + articleKey(game)
         val selectedRating = ratingPrefs.getInt(ratingKey, 0)
+        val ratingSummary = makeText(
+            if (ratingCount(game) > 0) "متوسط تقييمك على هذا الجهاز: " + String.format(Locale.ROOT, "%.1f / 5", averageRating(game))
+            else "قيّم اللعبة وسجّل رأيك على هذا الجهاز",
+            10f, Color.rgb(191, 199, 215)
+        ).apply { setPadding(dp(14), dp(3), dp(14), dp(9)) }
         for (star in 1..5) {
             ratingRow.addView(TextView(this).apply {
                 text = if (star <= selectedRating) "★" else "☆"
@@ -1624,11 +1739,14 @@ class MainActivity : Activity() {
                             child.setTextColor(if (score <= star) Color.rgb(255, 190, 75) else gray)
                         }
                     }
-                    Toast.makeText(this@MainActivity, "تقييمك: $star من 5", Toast.LENGTH_SHORT).show()
+                    ratingSummary.text = "تقييمك: " + star + " / 5  •  التقييم محفوظ على هذا الجهاز"
+                    renderGames()
+                    Toast.makeText(this@MainActivity, "تم حفظ تقييمك: " + star + " من 5", Toast.LENGTH_SHORT).show()
                 }
             })
         }
         root.addView(ratingRow)
+        root.addView(ratingSummary)
 
         val bottom = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
