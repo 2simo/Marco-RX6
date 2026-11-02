@@ -1022,9 +1022,13 @@ class MainActivity : Activity() {
             return
         }
 
+        // BLOG is a pure cover gallery: one post = one image, with no text or metadata.
+        // Other platform filters keep the compact two-column artwork grid.
+        val blogGallery = selected == "BLOG"
         var row: LinearLayout? = null
         results.forEachIndexed { index, post ->
-            if (index % 2 == 0) {
+            val columns = if (blogGallery) 1 else 2
+            if (index % columns == 0) {
                 row = LinearLayout(this).apply {
                     orientation = LinearLayout.HORIZONTAL
                     gravity = Gravity.TOP
@@ -1044,16 +1048,19 @@ class MainActivity : Activity() {
                 setBackgroundColor(Color.rgb(32, 35, 47))
                 contentDescription = post.name
             }
-            tile.addView(cover, FrameLayout.LayoutParams(-1, dp(220)))
+            val imageHeight = if (blogGallery) 230 else 220
+            tile.addView(cover, FrameLayout.LayoutParams(-1, dp(imageHeight)))
             if (post.coverUrl.isNotBlank() || post.coverLocalPath.isNotBlank()) {
                 loadCover(cover, post.coverLocalPath, post.coverUrl)
             } else {
                 cover.setImageResource(android.R.drawable.ic_menu_gallery)
                 cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
             }
-            row?.addView(tile, LinearLayout.LayoutParams(0, dp(220), 1f).apply {
-                if (index % 2 == 0) rightMargin = dp(5) else leftMargin = dp(5)
-            })
+            val tileWidth = if (blogGallery) LinearLayout.LayoutParams(-1, dp(imageHeight))
+                else LinearLayout.LayoutParams(0, dp(imageHeight), 1f).apply {
+                    if (index % 2 == 0) rightMargin = dp(5) else leftMargin = dp(5)
+                }
+            row?.addView(tile, tileWidth)
         }
     }
 
