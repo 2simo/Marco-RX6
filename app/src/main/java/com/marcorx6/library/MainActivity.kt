@@ -1345,7 +1345,7 @@ class MainActivity : Activity() {
         })
         root.addView(topBar)
 
-        articleView = android.webkit.WebView(this).apply {
+        val articleWebView = android.webkit.WebView(this).apply {
             setBackgroundColor(bg)
             settings.javaScriptEnabled = false
             settings.domStorageEnabled = false
@@ -1376,7 +1376,8 @@ class MainActivity : Activity() {
                 "<!doctype html><html lang=\"ar\" dir=\"rtl\"><head>$style</head><body dir=\"rtl\">$articleHtml</body></html>",
                 "text/html", "UTF-8", null)
         }
-        root.addView(articleView, LinearLayout.LayoutParams(-1, 0, 1f))
+        articleView = articleWebView
+        root.addView(articleWebView, LinearLayout.LayoutParams(-1, 0, 1f))
         val downloads = try { JSONArray(game.downloadLinks) } catch (_: Exception) { JSONArray() }
         if (downloads.length() > 0) {
             val downloadScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false; setBackgroundColor(panel) }
