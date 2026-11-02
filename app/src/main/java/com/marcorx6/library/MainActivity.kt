@@ -454,15 +454,32 @@ class MainActivity : Activity() {
     }
 
     private fun styleAlertDialog(dialog: AlertDialog) {
-        dialog.window?.setBackgroundDrawable(rounded(if (isDarkMode()) Color.rgb(17, 21, 36) else Color.WHITE, 22))
+        dialog.window?.setBackgroundDrawable(GradientDrawable(GradientDrawable.Orientation.TL_BR,
+            if (isDarkMode()) intArrayOf(Color.rgb(28, 31, 54), Color.rgb(14, 19, 34))
+            else intArrayOf(Color.WHITE, Color.rgb(239, 243, 251))).apply {
+            cornerRadius = dp(24).toFloat()
+            setStroke(dp(1), if (isDarkMode()) Color.rgb(82, 75, 130) else Color.rgb(211, 219, 234))
+        })
         dialog.window?.let { window ->
             window.addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-            window.attributes = window.attributes.apply { dimAmount = 0.58f }
+            window.attributes = window.attributes.apply { dimAmount = 0.66f }
+        }
+        dialog.findViewById<TextView>(android.R.id.alertTitle)?.apply {
+            setTextColor(white)
+            typeface = Typeface.create("sans-serif", Typeface.BOLD)
+            textSize = 18f
+        }
+        dialog.findViewById<View>(android.R.id.message)?.let {
+            (it as? TextView)?.apply { setTextColor(gray); textSize = 14f; setLineSpacing(dp(3).toFloat(), 1f) }
         }
         dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.let { stylePrimaryButton(it, true) }
         dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.let { stylePrimaryButton(it) }
         dialog.getButton(AlertDialog.BUTTON_NEUTRAL)?.let { stylePrimaryButton(it) }
-        dialog.findViewById<View>(android.R.id.message)?.let { (it as? TextView)?.setTextColor(gray) }
+        dialog.listView?.let { list ->
+            list.divider = android.graphics.drawable.ColorDrawable(if (isDarkMode()) Color.rgb(48, 55, 78) else Color.rgb(226, 231, 241))
+            list.dividerHeight = dp(1)
+        }
+        dialog.window?.decorView?.let { applyUnifiedSkin(it) }
     }
 
     private fun makeInput(hintText: String): EditText =
@@ -1006,9 +1023,9 @@ class MainActivity : Activity() {
             setPadding(0, dp(8), 0, 0)
         })
         hero.addView(stats)
-        root.addView(hero, LinearLayout.LayoutParams(dp(292), dp(238)).apply {
+        root.addView(hero, LinearLayout.LayoutParams(-1, dp(226)).apply {
             gravity = Gravity.CENTER_HORIZONTAL
-            bottomMargin = dp(15)
+            bottomMargin = dp(18)
         })
 
         val searchWrap = LinearLayout(this).apply {
@@ -1956,13 +1973,13 @@ class MainActivity : Activity() {
         val contentCard = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            setPadding(dp(28), dp(30), dp(28), dp(26))
+            setPadding(dp(24), dp(34), dp(24), dp(34))
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(25, 22, 48), Color.rgb(10, 14, 30), Color.rgb(15, 11, 31))).apply {
-                cornerRadius = dp(30).toFloat()
-                setStroke(dp(1), Color.rgb(105, 75, 165))
+                intArrayOf(Color.rgb(22, 20, 47), Color.rgb(8, 12, 27), Color.rgb(18, 12, 39))).apply {
+                cornerRadius = dp(34).toFloat()
+                setStroke(dp(1), Color.rgb(93, 76, 155))
             }
-            elevation = dp(20).toFloat()
+            elevation = dp(28).toFloat()
         }
 
         val logo = ImageView(this).apply {
@@ -1979,7 +1996,7 @@ class MainActivity : Activity() {
             scaleX = 0.82f
             scaleY = 0.82f
         }
-        contentCard.addView(logo, LinearLayout.LayoutParams(dp(126), dp(126)).apply {
+        contentCard.addView(logo, LinearLayout.LayoutParams(dp(148), dp(148)).apply {
             bottomMargin = dp(18)
         })
 
@@ -2007,7 +2024,7 @@ class MainActivity : Activity() {
             ).apply { cornerRadius = dp(20).toFloat() }
         }
         progressTrack.addView(progressFill, FrameLayout.LayoutParams(0, -1, Gravity.START))
-        contentCard.addView(progressTrack, LinearLayout.LayoutParams(-1, dp(8)))
+        contentCard.addView(progressTrack, LinearLayout.LayoutParams(-1, dp(10)))
 
         val loadingText = makeText("جارٍ تجهيز تجربتك...", 11f, Color.rgb(190, 184, 210)).apply {
             gravity = Gravity.CENTER
