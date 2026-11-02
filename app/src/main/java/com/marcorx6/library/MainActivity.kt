@@ -1107,33 +1107,32 @@ class MainActivity : Activity() {
             return
         }
 
-        // BLOG is a pure cover gallery: one post = one image, with no text or metadata.
-        // Other platform filters keep the compact two-column artwork grid.
-        val blogGallery = selected == "BLOG"
+        // Compact two-column cover gallery across every category to show more posts above the fold.
+        val columns = 2
+        val imageHeight = 176
         var row: LinearLayout? = null
         results.forEachIndexed { index, post ->
-            val columns = if (blogGallery) 1 else 2
             if (index % columns == 0) {
                 row = LinearLayout(this).apply {
                     orientation = LinearLayout.HORIZONTAL
                     gravity = Gravity.TOP
                 }
                 gameList.addView(row, LinearLayout.LayoutParams(-1, -2).apply {
-                    bottomMargin = dp(10)
+                    bottomMargin = dp(9)
                 })
             }
             val tile = FrameLayout(this).apply {
-                background = rounded(panel, 14)
+                background = rounded(panel, 16)
                 clipToOutline = true
+                elevation = dp(1).toFloat()
                 setOnClickListener { showDetails(post) }
                 contentDescription = post.name
             }
             val cover = ImageView(this).apply {
                 scaleType = ImageView.ScaleType.CENTER_CROP
-                setBackgroundColor(Color.rgb(32, 35, 47))
+                setBackgroundColor(Color.rgb(32, 33, 37))
                 contentDescription = post.name
             }
-            val imageHeight = if (blogGallery) 230 else 220
             tile.addView(cover, FrameLayout.LayoutParams(-1, dp(imageHeight)))
             if (post.coverUrl.isNotBlank() || post.coverLocalPath.isNotBlank()) {
                 loadCover(cover, post.coverLocalPath, post.coverUrl)
@@ -1141,11 +1140,19 @@ class MainActivity : Activity() {
                 cover.setImageResource(android.R.drawable.ic_menu_gallery)
                 cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
             }
-            val tileWidth = if (blogGallery) LinearLayout.LayoutParams(-1, dp(imageHeight))
-                else LinearLayout.LayoutParams(0, dp(imageHeight), 1f).apply {
-                    if (index % 2 == 0) rightMargin = dp(5) else leftMargin = dp(5)
+            val tileWidth = LinearLayout.LayoutParams(0, dp(imageHeight), 1f).apply {
+                if (index % 2 == 0) {
+                    marginEnd = dp(5)
+                } else {
+                    marginStart = dp(5)
                 }
+            }
             row?.addView(tile, tileWidth)
+        }
+        if (results.size % columns != 0) {
+            row?.addView(View(this), LinearLayout.LayoutParams(0, dp(imageHeight), 1f).apply {
+                marginStart = dp(5)
+            })
         }
     }
 
