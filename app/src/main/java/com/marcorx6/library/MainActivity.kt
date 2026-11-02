@@ -171,7 +171,7 @@ class MainActivity : Activity() {
 
     private fun configureGoogleSignIn() {
         val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestEmail().requestScopes(Scope("https://www.googleapis.com/auth/blogger")).build()
+            .requestEmail().requestScopes(Scope("https://www.googleapis.com/auth/blogger"), Scope("https://www.googleapis.com/auth/drive.file")).build()
         googleSignInClient = GoogleSignIn.getClient(this, options)
     }
     private fun restoreAdminSession() {
@@ -198,6 +198,58 @@ class MainActivity : Activity() {
         if (code !in 200..299) { val message = try { JSONObject(body).optJSONObject("error")?.optString("message") ?: body } catch (_: Exception) { body }; throw IllegalStateException("خطأ في Blogger API ($code): $message") }
         return if (body.isBlank()) JSONObject() else JSONObject(body)
     }
+    private fun driveToken(): String {
+        val account = GoogleSignIn.getLastSignedInAccount(this) ?: throw IllegalStateException("يرجى تسجيل الدخول بحساب المسؤول")
+        val androidAccount = account.account ?: throw IllegalStateException("بيانات حساب Google غير متاحة")
+        return GoogleAuthUtil.getToken(applicationContext, androidAccount, "oauth2:https://www.googleapis.com/auth/drive.file")
+    }
+
+    private fun uploadCoverToDrive(file: File): String {
+        if (!file.exists() || file.length() == 0L) throw IllegalStateException("ملف الصورة فارغ أو غير موجود")
+        if (file.length() > 10L * 1024 * 1024) throw IllegalStateException("حجم صورة الغلاف يتجاوز 10 ميغابايت")
+        val mime = when ( file.extension.lowercase(Locale.ROOT) ) {
+            "png" -> "image/png"
+            "webp" -> "image/webp"
+            "gif" -> "image/gif"
+            else -> "image/jpeg"
+        }
+        val token = driveToken()
+        val boundary = "MarcoRX6" + System.currentTimeMillis().toString()
+        val metadata = JSONObject().put("name", "MARCO_RX6_" + file.nameWithoutExtension + "." + when (mime) {
+            "image/png" -> "png"; "image/webp" -> "webp"; "image/gif" -> "gif"; else -> "jpg"
+        })
+        val output = java.io.ByteArrayOutputStream()
+        output.write(("--$boundary\\r\\nContent-Type: application/json; charset=UTF-8\\r\\n\\r\\n").toByteArray(Charsets.UTF_8))
+        output.write(metadata.toString().toByteArray(Charsets.UTF_8))
+        output.write(("\\r\\n--$boundary\\r\\nContent-Type: $mime\\r\\n\\r\\n").toByteArray(Charsets.UTF_8))
+        file.inputStream().use { it.copyTo(output) }
+        output.write("\\r\\n--$boundary--\\r\\n".toByteArray(Charsets.UTF_8))
+        val connection = URL("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id").openConnection() as HttpURLConnection
+        connection.requestMethod = "POST"; connection.connectTimeout = 30000; connection.readTimeout = 30000
+        connection.doOutput = true
+        connection.setRequestProperty("Authorization", "Bearer $token")
+        connection.setRequestProperty("Content-Type", "multipart/related; boundary=$boundary")
+        connection.outputStream.use { it.write(output.toByteArray()) }
+        val code = connection.responseCode
+        val response = (if (code in 200..299) connection.inputStream else connection.errorStream)?.bufferedReader()?.use { it.readText() }.orEmpty()
+        connection.disconnect()
+        if (code !in 200..299) throw IllegalStateException("فشل رفع الصورة إلى Google Drive ($code): $response")
+        val id = JSONObject(response).optString("id")
+        if (id.isBlank()) throw IllegalStateException("لم يرجع Google Drive معرّف الصورة")
+        val permission = URL("https://www.googleapis.com/drive/v3/files/$id/permissions")
+            .openConnection() as HttpURLConnection
+        permission.requestMethod = "POST"; permission.connectTimeout = 20000; permission.readTimeout = 20000
+        permission.doOutput = true
+        permission.setRequestProperty("Authorization", "Bearer $token")
+        permission.setRequestProperty("Content-Type", "application/json; charset=utf-8")
+        permission.outputStream.use { it.write(JSONObject().put("type", "anyone").put("role", "reader").toString().toByteArray(Charsets.UTF_8)) }
+        val permissionCode = permission.responseCode
+        val permissionBody = (if (permissionCode in 200..299) permission.inputStream else permission.errorStream)?.bufferedReader()?.use { it.readText() }.orEmpty()
+        permission.disconnect()
+        if (permissionCode !in 200..299) throw IllegalStateException("تم رفع الصورة لكن تعذر جعلها متاحة للموقع ($permissionCode): $permissionBody")
+        return "https://drive.google.com/uc?export=view&id=$id"
+    }
+
     private fun fetchBlogLabels(): List<String> {
         if (bloggerBlogId.isBlank()) throw IllegalStateException("زامن المدونة أولاً ثم حدّث التسميات.")
         val labels = linkedSetOf<String>()
@@ -1654,29 +1706,21 @@ class MainActivity : Activity() {
                 }
 
                 mainHandler.post {
-
                     pendingCoverLocalPath = destination.absolutePath
                     coverUrlField?.setText("")
-
-                    coverPreview?.let {
-                        loadCover(it, pendingCoverLocalPath, "")
-                    }
-
-                    Toast.makeText(
-                        this,
-                        "تم اختيار صورة الغلاف",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    coverPreview?.let { loadCover(it, pendingCoverLocalPath, "") }
+                    Toast.makeText(this, "تم اختيار الصورة، جارٍ رفعها للموقع...", Toast.LENGTH_SHORT).show()
+                }
+                val publicImageUrl = uploadCoverToDrive(destination)
+                mainHandler.post {
+                    coverUrlField?.setText(publicImageUrl)
+                    coverPreview?.let { loadCover(it, pendingCoverLocalPath, publicImageUrl) }
+                    Toast.makeText(this, "تم رفع الغلاف بنجاح وأصبح جاهزاً للنشر", Toast.LENGTH_LONG).show()
                 }
 
-            } catch (_: Exception) {
-
+            } catch (e: Exception) {
                 mainHandler.post {
-                    Toast.makeText(
-                        this,
-                        "تعذر تحميل هذه الصورة",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(this, "فشل رفع الغلاف: ${e.message ?: "خطأ غير معروف"}", Toast.LENGTH_LONG).show()
                 }
             }
         }.start()
