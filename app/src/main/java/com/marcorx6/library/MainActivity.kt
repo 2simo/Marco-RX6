@@ -1179,7 +1179,7 @@ class MainActivity : Activity() {
             downloadLinks = links,
             blogImported = true,
             bloggerPostId = entry.optJSONObject("id")?.optString(36.toChar().toString() + "t", "")?.let { Regex("post-(\\d+)").find(it)?.groupValues?.getOrNull(1).orEmpty() } ?: "",
-            bloggerHtml = content
+            bloggerHtml = entry.optString("offlineHtml").ifBlank { content }
         )
     }
 
@@ -1398,7 +1398,7 @@ class MainActivity : Activity() {
     ) {
         val localFile = localPath.takeIf { it.isNotBlank() && File(it).isFile }?.let(::File)
         val bundledAsset = if (imageUrl.isNotBlank()) {
-            "offline_covers/${stableCacheName(imageUrl)}.webp"
+            "offline_images/${stableCacheName(imageUrl)}.webp"
         } else ""
         val hasBundledAsset = if (bundledAsset.isNotBlank()) {
             try {
