@@ -126,7 +126,8 @@ class MainActivity : Activity() {
     private fun adminToken(): String {
         val account = GoogleSignIn.getLastSignedInAccount(this) ?: throw IllegalStateException("Please sign in as the blog admin")
         if (!account.email.equals(adminEmail, ignoreCase = true)) throw SecurityException("Unauthorized Google account")
-        return GoogleAuthUtil.getToken(applicationContext, account, "oauth2:https://www.googleapis.com/auth/blogger")
+        val androidAccount = account.account ?: throw IllegalStateException("Google account data is unavailable")
+        return GoogleAuthUtil.getToken(applicationContext, androidAccount, "oauth2:https://www.googleapis.com/auth/blogger")
     }
     private fun bloggerRequest(method: String, path: String, payload: JSONObject? = null): JSONObject {
         val connection = URL("https://www.googleapis.com/blogger/v3/$path").openConnection() as HttpURLConnection
