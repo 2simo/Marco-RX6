@@ -4,6 +4,7 @@ package com.marcorx6.library
 import android.Manifest
 import android.animation.LayoutTransition
 import android.app.Activity
+import android.app.DownloadManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.AlertDialog
@@ -400,6 +401,7 @@ class MainActivity : Activity() {
         if (isAdminSession) {
             menuItem("＋", tr("＋  نشر"), "إضافة مقال جديد إلى المدونة") { showGameDialog() }
         }
+        menuItem("⬇", "مدير التنزيلات", "متابعة التنزيلات وحالاتها") { showDownloadManager() }
         menuItem("☾", if (isDarkMode()) "الوضع النهاري" else "الوضع الليلي", "تبديل مظهر التطبيق وحفظ اختيارك") {
             appearancePreferences().edit().putBoolean("dark_mode", !isDarkMode()).apply()
             recreate()
@@ -1794,7 +1796,7 @@ class MainActivity : Activity() {
                     textSize = 12f; setTextColor(white); gravity = Gravity.CENTER; setTypeface(null, Typeface.BOLD)
                     background = rounded(Color.rgb(190, 43, 68), 11)
                     setPadding(dp(13), dp(12), dp(13), dp(12))
-                    setOnClickListener { openGameLink(target) }
+                    setOnClickListener { enqueueGameDownload(target, item.optString("label").ifBlank { game.name }) }
                 }, LinearLayout.LayoutParams(-2, -2).apply { rightMargin = dp(8) })
             }
             downloadScroll.addView(downloadRow)
@@ -1934,6 +1936,83 @@ class MainActivity : Activity() {
                 } catch (e: Exception) { mainHandler.post { Toast.makeText(this, e.message ?: "تعذر حذف المقال من Blogger", Toast.LENGTH_LONG).show() } } }.start()
             }
             .show()
+    }
+
+    private fun enqueueGameDownload(link: String, title: String) {
+        if (!link.startsWith("https://") && !link.startsWith("http://")) {
+            Toast.makeText(this, "رابط التنزيل غير صالح", Toast.LENGTH_SHORT).show()
+            return
+        }
+        try {
+            val request = DownloadManager.Request(Uri.parse(link))
+                .setTitle(title.ifBlank { "MARCO RX6" })
+                .setDescription("تنزيل عبر MARCO RX6")
+                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                .setAllowedOverMetered(true)
+                .setAllowedOverRoaming(false)
+            val manager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+            manager.enqueue(request)
+            Toast.makeText(this, "أُضيف التنزيل إلى مدير التنزيلات", Toast.LENGTH_LONG).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "تعذر بدء التنزيل: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun showDownloadManager() {
+        val manager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+        val query = DownloadManager.Query().setFilterByStatus(
+            DownloadManager.STATUS_PENDING or DownloadManager.STATUS_RUNNING or
+                DownloadManager.STATUS_PAUSED or DownloadManager.STATUS_SUCCESSFUL or
+                DownloadManager.STATUS_FAILED
+        )
+        val entries = mutableListOf<String>()
+        try {
+            manager.query(query)?.use { cursor ->
+                while (cursor.moveToNext()) {
+                    val title = cursor.getString(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TITLE))
+                    val status = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
+                    val downloaded = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
+                    val total = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+                    val statusText = when (status) {
+                        DownloadManager.STATUS_PENDING -> "في الانتظار"
+                        DownloadManager.STATUS_RUNNING -> "قيد التنزيل"
+                        DownloadManager.STATUS_PAUSED -> "متوقف مؤقتاً"
+                        DownloadManager.STATUS_SUCCESSFUL -> "اكتمل"
+                        DownloadManager.STATUS_FAILED -> "فشل"
+                        else -> "غير معروف"
+                    }
+                    val progress = if (total > 0L) " • ${(downloaded * 100L / total).coerceIn(0L, 100L)}%" else ""
+                    entries.add("$title\n$statusText$progress")
+                }
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, "تعذر قراءة التنزيلات: ${e.message}", Toast.LENGTH_LONG).show()
+            return
+        }
+        val message = if (entries.isEmpty()) "لا توجد تنزيلات مسجلة حتى الآن. افتح تفاصيل لعبة واضغط على رابط التنزيل لإضافته هنا."
+            else entries.joinToString("\n\n")
+        AlertDialog.Builder(this)
+            .setTitle("مدير التنزيلات • ${entries.size}")
+            .setMessage(message)
+            .setPositiveButton("تحديث", null)
+            .setNeutralButton("فتح التنزيلات", null)
+            .setNegativeButton("إغلاق", null)
+            .create().apply {
+                setOnShowListener {
+                    getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                        dismiss()
+                        showDownloadManager()
+                    }
+                    getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
+                        try {
+                            startActivity(Intent(DownloadManager.ACTION_VIEW_DOWNLOADS))
+                        } catch (_: Exception) {
+                            Toast.makeText(this@MainActivity, "تعذر فتح مدير تنزيلات النظام", Toast.LENGTH_SHORT).show()
+                        }
+                        dismiss()
+                    }
+                }
+            }.show()
     }
 
     private fun openGameLink(link: String) {
