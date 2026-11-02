@@ -285,7 +285,14 @@ class MainActivity : Activity() {
             "مشاركة" to listOf("Share", "Partager", "Compartir"),
             "التعليقات" to listOf("Comments", "Commentaires", "Comentarios"),
             "قيّم هذا المقال" to listOf("Rate this article", "Évaluer cet article", "Valorar este artículo"),
-            "تحميل اللعبة" to listOf("Download game", "Télécharger le jeu", "Descargar juego")
+            "تحميل اللعبة" to listOf("Download game", "Télécharger le jeu", "Descargar juego"),
+            "المدونة محدّثة" to listOf("Blog updated", "Blog à jour", "Blog actualizado"),
+            "مقال" to listOf("article(s)", "article(s)", "artículo(s)"),
+            "ترتيب المقالات" to listOf("Sort articles", "Trier les articles", "Ordenar artículos"),
+            "الأحدث" to listOf("Latest", "Plus récents", "Más recientes"),
+            "أبجدياً" to listOf("A–Z", "A–Z", "A–Z"),
+            "المفضلة:" to listOf("Favorites:", "Favoris :", "Favoritos:"),
+            "شوهدت مؤخراً:" to listOf("Recently viewed:", "Vus récemment :", "Vistos recientemente:")
         )
         val index = when (lang) { "en" -> 0; "fr" -> 1; "es" -> 2; else -> return ar }
         return translations[ar]?.get(index) ?: ar
@@ -311,8 +318,8 @@ class MainActivity : Activity() {
     private fun createInterface() {
         // Fresh MARCO RX6 dashboard: editorial hero, compact controls and a clean image gallery.
         val root = LinearLayout(this).apply {
-            layoutDirection = View.LAYOUT_DIRECTION_RTL
-            textDirection = View.TEXT_DIRECTION_RTL
+            layoutDirection = if (currentLanguage() == "ar") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
+            textDirection = if (currentLanguage() == "ar") View.TEXT_DIRECTION_RTL else View.TEXT_DIRECTION_LTR
             orientation = LinearLayout.VERTICAL
             setPadding(dp(18), dp(14), dp(18), dp(10))
             setBackgroundColor(Color.rgb(8, 10, 17))
@@ -382,7 +389,7 @@ class MainActivity : Activity() {
             setPadding(0, dp(14), 0, 0)
         }
         heroStats.addView(makeText("✦  ${games.size} مقال", 10f, white, true))
-        heroStats.addView(makeText("     •     المدونة محدّثة", 10f, Color.rgb(255, 178, 190), true))
+        heroStats.addView(makeText("     •     " + tr("المدونة محدّثة"), 10f, Color.rgb(255, 178, 190), true))
         hero.addView(heroStats)
         root.addView(hero, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(9) })
 
@@ -456,7 +463,7 @@ class MainActivity : Activity() {
             setOnClickListener {
                 sortMode = when (sortMode) { "LATEST" -> "POPULAR"; "POPULAR" -> "A-Z"; "A-Z" -> "FAVORITES"; else -> "LATEST" }
                 renderGames()
-                Toast.makeText(this@MainActivity, "الترتيب: " + when (sortMode) { "LATEST" -> "الأحدث"; "POPULAR" -> "الأكثر مشاهدة"; "A-Z" -> "أبجدياً"; else -> "المفضلة" }, Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, tr("الترتيب") + ": " + when (sortMode) { "LATEST" -> tr("الأحدث"); "POPULAR" -> tr("الأكثر مشاهدة"); "A-Z" -> tr("أبجدياً"); else -> tr("المفضلة") }, Toast.LENGTH_SHORT).show()
             }
         }
         section.addView(sortButton, LinearLayout.LayoutParams(-2, -2).apply { leftMargin = dp(9) })
