@@ -1562,48 +1562,26 @@ class MainActivity : Activity() {
 
     private fun showStartupExperience() {
         val splash = Dialog(this)
-        val content = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            setPadding(dp(30), dp(34), dp(30), dp(30))
+        val logo = ImageView(this).apply {
+            setImageResource(R.drawable.marco_rx6_brand)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            contentDescription = "MARCO RX6"
+            setPadding(dp(8), dp(8), dp(8), dp(8))
             alpha = 0f
             scaleX = 0.94f
             scaleY = 0.94f
-            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(91, 101, 127), panel, bg, Color.rgb(39, 32, 65))).apply {
-                cornerRadius = dp(30).toFloat()
-                setStroke(dp(1), red)
+            background = GradientDrawable().apply {
+                setColor(Color.rgb(7, 2, 15))
+                cornerRadius = dp(26).toFloat()
+                setStroke(dp(1), Color.rgb(166, 76, 255))
             }
         }
-        content.addView(makeText("MARCO", 13f, gray, true).apply {
-            letterSpacing = 0.32f
-            gravity = Gravity.CENTER
-        })
-        content.addView(makeText("RX6", 52f, white, true).apply {
-            gravity = Gravity.CENTER
-            letterSpacing = 0.08f
-            setPadding(0, dp(1), 0, dp(1))
-        })
-        val divider = View(this).apply { background = rounded(red, 2) }
-        content.addView(divider, LinearLayout.LayoutParams(dp(58), dp(3)).apply {
-            topMargin = dp(8)
-            bottomMargin = dp(12)
-        })
-        content.addView(makeText("LIQUID METAL EXPERIENCE", 9f, red, true).apply {
-            gravity = Gravity.CENTER
-            letterSpacing = 0.18f
-        })
-        content.addView(makeText("DISCOVER  •  PLAY  •  REPEAT", 8f, gray, true).apply {
-            gravity = Gravity.CENTER
-            letterSpacing = 0.12f
-            setPadding(0, dp(17), 0, 0)
-        })
-        splash.setContentView(content)
+        splash.setContentView(logo)
         splash.window?.setBackgroundDrawableResource(android.R.color.transparent)
         splash.setCancelable(false)
         splash.show()
-        splash.window?.setLayout(dp(310), dp(250))
-        content.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(520L).start()
+        splash.window?.setLayout(dp(310), dp(310))
+        logo.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(520L).start()
         mainHandler.postDelayed({
             if (!isFinishing) {
                 splash.dismiss()
@@ -1615,7 +1593,7 @@ class MainActivity : Activity() {
                     showProfile()
                 }
             }
-        }, 1050L)
+        }, 1250L)
     }
 
 
