@@ -1473,6 +1473,18 @@ class MainActivity : Activity() {
         }
     }
 
+    private fun normalizeBloggerImageTags(html: String): String {
+        val imageTagPattern = Regex("(?is)<img\\b[^>]*>")
+        val sourcePattern = Regex("(?i)(\\b(?:src|data-src)\\s*=\\s*)([\"'])([^\"']+)([\"'])")
+        return imageTagPattern.replace(html) { tagMatch ->
+            sourcePattern.replace(tagMatch.value) { sourceMatch ->
+                val normalized = normalizeBloggerImageUrl(sourceMatch.groupValues[3])
+                sourceMatch.groupValues[1] + sourceMatch.groupValues[2] +
+                    normalized + sourceMatch.groupValues[4]
+            }
+        }
+    }
+
     private fun extractFeedThumbnail(entry: JSONObject): String {
         val mediaThumbnail = entry.optJSONObject("media\$thumbnail")?.optString("url").orEmpty()
         if (mediaThumbnail.isNotBlank()) return normalizeBloggerImageUrl(mediaThumbnail)
@@ -2593,10 +2605,12 @@ class MainActivity : Activity() {
                 val hasHtml = Regex("(?is)<\\s*(p|div|h[1-6]|ul|ol|li|a|img|table|br)\\b").containsMatchIn(contentText)
                 val escaped = contentText.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>")
                 val articleBody = if (hasHtml) contentText else "<p>$escaped</p>"
-                val imageHtml = if (coverLink.isNotBlank() && !articleBody.contains(coverLink)) "<p><img src=\"$coverLink\" style=\"max-width:100%;height:auto;\"/></p>" else ""
-                val relatedHtml = if (relatedLink.isNotBlank() && !articleBody.contains(relatedLink)) "<p><a href=\"$relatedLink\">تحميل / رابط إضافي</a></p>" else ""
-                val htmlContent = "<div class=\"marcorx6-post\">$imageHtml$articleBody$relatedHtml</div>"
-                val post = Game(name = postTitle, platform = categoryName, description = contentText, url = relatedLink.ifBlank { existing?.url ?: "" }, coverUrl = coverLink, coverLocalPath = if (coverLink.isBlank()) pendingCoverLocalPath else "", sourcePostUrl = existing?.sourcePostUrl ?: "", downloadLinks = existing?.downloadLinks ?: "", blogImported = true, isFavorite = existing?.isFavorite ?: false, bloggerPostId = existing?.bloggerPostId ?: "", bloggerHtml = htmlContent, playStatus = existing?.playStatus ?: "", genre = genre.text.toString().trim(), releaseYear = releaseYear.text.toString().trim())
+                val normalizedArticleBody = normalizeBloggerImageTags(articleBody)
+                val publishedCoverLink = normalizeBloggerImageUrl(coverLink)
+                val imageHtml = if (publishedCoverLink.isNotBlank() && !normalizedArticleBody.contains(publishedCoverLink)) "<p><img src=\"$publishedCoverLink\" style=\"max-width:100%;height:auto;\"/></p>" else ""
+                val relatedHtml = if (relatedLink.isNotBlank() && !normalizedArticleBody.contains(relatedLink)) "<p><a href=\"$relatedLink\">تحميل / رابط إضافي</a></p>" else ""
+                val htmlContent = "<div class=\"marcorx6-post\">$imageHtml$normalizedArticleBody$relatedHtml</div>"
+                val post = Game(name = postTitle, platform = categoryName, description = contentText, url = relatedLink.ifBlank { existing?.url ?: "" }, coverUrl = publishedCoverLink, coverLocalPath = if (coverLink.isBlank()) pendingCoverLocalPath else "", sourcePostUrl = existing?.sourcePostUrl ?: "", downloadLinks = existing?.downloadLinks ?: "", blogImported = true, isFavorite = existing?.isFavorite ?: false, bloggerPostId = existing?.bloggerPostId ?: "", bloggerHtml = htmlContent, playStatus = existing?.playStatus ?: "", genre = genre.text.toString().trim(), releaseYear = releaseYear.text.toString().trim())
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
                 Thread {
                     try {
