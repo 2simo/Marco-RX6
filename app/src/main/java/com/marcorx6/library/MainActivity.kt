@@ -1333,6 +1333,19 @@ class MainActivity : Activity() {
         return BitmapFactory.decodeFile(file.absolutePath, options)
     }
 
+    private fun decodeCoverAsset(assetPath: String): Bitmap? {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        assets.open(assetPath).use { BitmapFactory.decodeStream(it, null, bounds) }
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+        var sample = 1
+        while (bounds.outWidth / sample > 900 || bounds.outHeight / sample > 1100) sample *= 2
+        val options = BitmapFactory.Options().apply {
+            inSampleSize = sample
+            inPreferredConfig = Bitmap.Config.RGB_565
+        }
+        return assets.open(assetPath).use { BitmapFactory.decodeStream(it, null, options) }
+    }
+
     private fun trimCoverDiskCache(folder: File) {
         val files = folder.listFiles()?.filter { it.isFile && !it.name.endsWith(".tmp") }
             ?.sortedBy { it.lastModified() } ?: return
@@ -1383,9 +1396,23 @@ class MainActivity : Activity() {
         localPath: String,
         imageUrl: String
     ) {
-
         val localFile = localPath.takeIf { it.isNotBlank() && File(it).isFile }?.let(::File)
-        val key = if (localFile != null) "file:${localFile.absolutePath}" else "url:$imageUrl"
+        val bundledAsset = if (imageUrl.isNotBlank()) {
+            "offline_covers/${stableCacheName(imageUrl)}.webp"
+        } else ""
+        val hasBundledAsset = if (bundledAsset.isNotBlank()) {
+            try {
+                assets.open(bundledAsset).use { true }
+            } catch (_: Exception) {
+                false
+            }
+        } else false
+
+        val key = when {
+            localFile != null -> "file:${localFile.absolutePath}"
+            hasBundledAsset -> "asset:$bundledAsset"
+            else -> "url:$imageUrl"
+        }
         image.tag = key
         image.setImageResource(android.R.drawable.ic_menu_gallery)
         if (key == "url:") return
@@ -1397,16 +1424,18 @@ class MainActivity : Activity() {
 
         imageExecutor.execute {
             try {
-                val source = if (localFile != null) {
-                    localFile
-                } else {
-                    val folder = File(cacheDir, "cover_cache").apply { mkdirs() }
-                    val cached = File(folder, stableCacheName(imageUrl) + ".img")
-                    val fresh = cached.isFile && System.currentTimeMillis() - cached.lastModified() < 7L * 24L * 60L * 60L * 1000L
-                    if (!fresh) downloadCoverToCache(imageUrl, cached)
-                    cached
+                val bitmap = when {
+                    localFile != null -> decodeCoverFile(localFile)
+                    hasBundledAsset -> decodeCoverAsset(bundledAsset)
+                    else -> {
+                        val folder = File(cacheDir, "cover_cache").apply { mkdirs() }
+                        val cached = File(folder, stableCacheName(imageUrl) + ".img")
+                        val fresh = cached.isFile &&
+                            System.currentTimeMillis() - cached.lastModified() < 7L * 24L * 60L * 60L * 1000L
+                        if (!fresh) downloadCoverToCache(imageUrl, cached)
+                        decodeCoverFile(cached)
+                    }
                 }
-                val bitmap = decodeCoverFile(source)
                 if (bitmap != null) {
                     coverBitmapCache.put(key, bitmap)
                     mainHandler.post {
@@ -1414,10 +1443,11 @@ class MainActivity : Activity() {
                     }
                 }
             } catch (_: Exception) {
-                // Keep the lightweight placeholder when a cover is unavailable.
+                // Keep the lightweight placeholder when no valid local or remote cover exists.
             }
         }
     }
+
 
     private fun chooseCover() {
 
@@ -1535,23 +1565,45 @@ class MainActivity : Activity() {
         val content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            setPadding(dp(30), dp(36), dp(30), dp(36))
+            setPadding(dp(30), dp(34), dp(30), dp(30))
+            alpha = 0f
+            scaleX = 0.94f
+            scaleY = 0.94f
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(panel, bg, Color.rgb(39, 32, 65))).apply {
-                cornerRadius = dp(28).toFloat()
+                intArrayOf(Color.rgb(91, 101, 127), panel, bg, Color.rgb(39, 32, 65))).apply {
+                cornerRadius = dp(30).toFloat()
                 setStroke(dp(1), red)
             }
         }
-        content.addView(makeText("MARCO", 14f, gray, true).apply { letterSpacing = 0.28f; gravity = Gravity.CENTER })
-        content.addView(makeText("RX6", 46f, white, true).apply { gravity = Gravity.CENTER; setPadding(0, dp(3), 0, dp(3)) })
+        content.addView(makeText("MARCO", 13f, gray, true).apply {
+            letterSpacing = 0.32f
+            gravity = Gravity.CENTER
+        })
+        content.addView(makeText("RX6", 52f, white, true).apply {
+            gravity = Gravity.CENTER
+            letterSpacing = 0.08f
+            setPadding(0, dp(1), 0, dp(1))
+        })
+        val divider = View(this).apply { background = rounded(red, 2) }
+        content.addView(divider, LinearLayout.LayoutParams(dp(58), dp(3)).apply {
+            topMargin = dp(8)
+            bottomMargin = dp(12)
+        })
         content.addView(makeText("LIQUID METAL EXPERIENCE", 9f, red, true).apply {
-            gravity = Gravity.CENTER; letterSpacing = 0.18f; setPadding(0, dp(8), 0, 0)
+            gravity = Gravity.CENTER
+            letterSpacing = 0.18f
+        })
+        content.addView(makeText("DISCOVER  •  PLAY  •  REPEAT", 8f, gray, true).apply {
+            gravity = Gravity.CENTER
+            letterSpacing = 0.12f
+            setPadding(0, dp(17), 0, 0)
         })
         splash.setContentView(content)
         splash.window?.setBackgroundDrawableResource(android.R.color.transparent)
         splash.setCancelable(false)
         splash.show()
-        splash.window?.setLayout(dp(300), dp(230))
+        splash.window?.setLayout(dp(310), dp(250))
+        content.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(520L).start()
         mainHandler.postDelayed({
             if (!isFinishing) {
                 splash.dismiss()
@@ -1563,8 +1615,9 @@ class MainActivity : Activity() {
                     showProfile()
                 }
             }
-        }, 850L)
+        }, 1050L)
     }
+
 
     private fun showFirstRunSetup() {
         val box = LinearLayout(this).apply {
@@ -2541,20 +2594,24 @@ class MainActivity : Activity() {
     }
 
     private fun loadGames() {
-
-        val saved = getSharedPreferences(
-            "games_library",
-            MODE_PRIVATE
-        ).getString("games", null) ?: return
-
+        val preferences = getSharedPreferences("games_library", MODE_PRIVATE)
+        val saved = preferences.getString("games", null)
         try {
+            if (saved.isNullOrBlank()) {
+                val offlineCatalog = assets.open("offline_catalog.json")
+                    .bufferedReader(Charsets.UTF_8).use { it.readText() }
+                val entries = JSONArray(offlineCatalog)
+                for (i in 0 until entries.length()) {
+                    val entry = entries.optJSONObject(i) ?: continue
+                    parseBlogEntry(entry)?.let { games.add(it) }
+                }
+                if (games.isNotEmpty()) saveGames()
+                return
+            }
 
             val array = JSONArray(saved)
-
             for (i in 0 until array.length()) {
-
                 val item = array.getJSONObject(i)
-
                 games.add(
                     Game(
                         item.optString("name"),
@@ -2566,10 +2623,7 @@ class MainActivity : Activity() {
                         item.optString("sourcePostUrl", ""),
                         item.optString("downloadLinks", ""),
                         item.optBoolean("blogImported", false),
-                        item.optBoolean(
-                            "platformManuallyCorrected",
-                            false
-                        ),
+                        item.optBoolean("platformManuallyCorrected", false),
                         item.optBoolean("isFavorite", false),
                         item.optString("bloggerPostId", ""),
                         item.optString("bloggerHtml", ""),
@@ -2579,9 +2633,10 @@ class MainActivity : Activity() {
                     )
                 )
             }
-
         } catch (_: Exception) {
             games.clear()
         }
     }
+
+
 }
