@@ -721,42 +721,61 @@ class MainActivity : Activity() {
 
         val hero = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                if (isDarkMode()) intArrayOf(Color.rgb(105, 115, 139), Color.rgb(44, 52, 73), Color.rgb(17, 22, 36), Color.rgb(49, 35, 83)) else intArrayOf(Color.rgb(225, 231, 241), Color.rgb(204, 214, 231), Color.rgb(239, 242, 249), Color.rgb(222, 211, 244))).apply {
+                if (isDarkMode()) intArrayOf(Color.rgb(105, 115, 139), Color.rgb(44, 52, 73), Color.rgb(17, 22, 36), Color.rgb(49, 35, 83))
+                else intArrayOf(Color.rgb(250, 251, 255), Color.rgb(226, 234, 247), Color.rgb(246, 241, 255), Color.rgb(226, 215, 247))).apply {
                 cornerRadius = dp(27).toFloat()
-                setStroke(dp(1), Color.rgb(130, 143, 170))
+                setStroke(dp(1), if (isDarkMode()) Color.rgb(130, 143, 170) else Color.rgb(157, 166, 190))
             }
             elevation = dp(5).toFloat()
-            setPadding(dp(20), dp(19), dp(20), dp(18))
+            setPadding(dp(20), dp(22), dp(20), dp(22))
         }
-        hero.addView(makeText("✧  PREMIUM GAME LIBRARY", 9f, silver, true).apply { letterSpacing = 0.12f })
+        hero.addView(makeText("✧  PREMIUM GAME LIBRARY", 9f, if (isDarkMode()) silver else Color.rgb(62, 72, 94), true).apply {
+            letterSpacing = 0.12f
+            gravity = Gravity.CENTER
+        })
         hero.addView(makeText(tr("اكتشف. العب.\nاستمتع أكثر."), 27f, white, true).apply {
             typeface = Typeface.create("sans-serif", Typeface.BOLD)
-            setPadding(0, dp(10), 0, dp(5))
+            gravity = Gravity.CENTER
+            setPadding(0, dp(15), 0, dp(10))
         })
         hero.addView(makeText(tr("ألعاب وشروحات وآخر الإصدارات، كلّها في مكان واحد."), 11f,
-            Color.rgb(218, 222, 235)))
+            if (isDarkMode()) Color.rgb(218, 222, 235) else Color.rgb(75, 85, 105)).apply {
+            gravity = Gravity.CENTER
+        })
         val stats = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, dp(14), 0, 0)
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(0, dp(18), 0, 0)
         }
-        stats.addView(makeText("◈  ${games.size} " + tr("مقال"), 10f, silver, true))
-        stats.addView(makeText("   •   " + tr("المدونة محدّثة"), 10f, Color.rgb(197, 184, 255), true))
+        stats.addView(makeText("◈  ${games.size} " + tr("مقال"), 11f, if (isDarkMode()) silver else Color.rgb(49, 59, 80), true).apply {
+            gravity = Gravity.CENTER
+        })
+        stats.addView(makeText("•  " + tr("المدونة محدّثة"), 10f,
+            if (isDarkMode()) Color.rgb(197, 184, 255) else Color.rgb(112, 76, 174), true).apply {
+            gravity = Gravity.CENTER
+            setPadding(0, dp(8), 0, 0)
+        })
         hero.addView(stats)
-        root.addView(hero, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(15) })
+        root.addView(hero, LinearLayout.LayoutParams(dp(292), dp(238)).apply {
+            gravity = Gravity.CENTER_HORIZONTAL
+            bottomMargin = dp(15)
+        })
 
         val searchWrap = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(39, 46, 63), Color.rgb(17, 21, 33))).apply {
+                if (isDarkMode()) intArrayOf(Color.rgb(39, 46, 63), Color.rgb(17, 21, 33))
+                else intArrayOf(Color.rgb(255, 255, 255), Color.rgb(232, 237, 247))).apply {
                 cornerRadius = dp(17).toFloat()
-                setStroke(dp(1), Color.rgb(75, 87, 112))
+                setStroke(dp(1), if (isDarkMode()) Color.rgb(75, 87, 112) else Color.rgb(184, 193, 211))
             }
             setPadding(dp(14), 0, dp(14), 0)
+            elevation = if (isDarkMode()) 0f else dp(2).toFloat()
         }
-        searchWrap.addView(makeText("⌕", 26f, silver, true))
+        searchWrap.addView(makeText("⌕", 26f, if (isDarkMode()) silver else Color.rgb(73, 84, 105), true))
         search = AutoCompleteTextView(this).apply {
             hint = tr("ابحث عن الألعاب والمقالات...")
             textSize = 13f
@@ -764,7 +783,7 @@ class MainActivity : Activity() {
             setSingleLine(true)
             threshold = 1
             setTextColor(white)
-            setHintTextColor(gray)
+            setHintTextColor(if (isDarkMode()) gray else Color.rgb(105, 115, 134))
             background = null
             setPadding(dp(10), 0, dp(6), 0)
             setAdapter(ArrayAdapter(this@MainActivity, android.R.layout.simple_dropdown_item_1line,
