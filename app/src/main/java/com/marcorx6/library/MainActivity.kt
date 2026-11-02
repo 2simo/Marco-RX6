@@ -11,8 +11,10 @@ import android.content.Intent
 import com.google.android.gms.auth.GoogleAuthUtil
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
 import com.google.android.gms.common.api.Scope
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Typeface
@@ -25,6 +27,7 @@ import android.os.Looper
 import android.text.Editable
 import android.text.Html
 import android.text.TextWatcher
+import android.util.LruCache
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -33,6 +36,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Locale
@@ -46,6 +51,7 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.Executors
 
 data class Game(
     val name: String,
@@ -81,6 +87,12 @@ class MainActivity : Activity() {
     private var selected = "ALL"
     private var sortMode = "الأحدث"
     private val mainHandler = Handler(Looper.getMainLooper())
+    // Bound image work to a small pool and keep decoded thumbnails in memory.
+    private val coverExecutor = Executors.newFixedThreadPool(3)
+    private val coverCache = object : LruCache<String, Bitmap>((Runtime.getRuntime().maxMemory() / 8).toInt()) {
+        override fun sizeOf(key: String, value: Bitmap): Int = value.byteCount
+    }
+    private var searchRenderRunnable: Runnable? = null
     private val PICK_IMAGE_REQUEST = 1001
     private var pendingCoverLocalPath = ""
     private var coverPreview: ImageView? = null
@@ -113,6 +125,7 @@ class MainActivity : Activity() {
         createNotificationChannel()
         configureGoogleSignIn()
         loadGames()
+        clearLegacyEngagementData()
         restoreAdminSession()
         createInterface()
         if (notificationPreferences().getBoolean("enabled", true)) {
@@ -132,7 +145,20 @@ class MainActivity : Activity() {
         val account = GoogleSignIn.getLastSignedInAccount(this)
         isAdminSession = account?.email.equals(adminEmail, ignoreCase = true)
     }
-    private fun startGoogleSignIn() { googleSignInClient?.let { startActivityForResult(it.signInIntent, SIGN_IN_REQUEST) } }
+    private fun startGoogleSignIn() {
+        try {
+            val client = googleSignInClient
+                ?: throw IllegalStateException("تعذر تهيئة خدمة تسجيل الدخول إلى Google")
+            startActivityForResult(client.signInIntent, SIGN_IN_REQUEST)
+        } catch (e: Exception) {
+            android.util.Log.e("MARCO_RX6_AUTH", "Unable to launch Google sign-in", e)
+            Toast.makeText(
+                this,
+                "تعذر فتح تسجيل الدخول إلى Google: ${e.message ?: e.javaClass.simpleName}",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
     private fun signOutAdmin() {
         googleSignInClient?.signOut()?.addOnCompleteListener { isAdminSession = false; createInterface() }
     }
@@ -160,6 +186,10 @@ class MainActivity : Activity() {
 
     private fun notificationPreferences() =
         getSharedPreferences("notification_settings", MODE_PRIVATE)
+
+    override fun onDestroy() {
+        super.onDestroy()
+    }
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -269,7 +299,6 @@ class MainActivity : Activity() {
             "المدونة" to listOf("Blog", "Blog", "Blog"),
             "المفضلة" to listOf("Favorites", "Favoris", "Favoritos"),
             "الأخيرة" to listOf("Recent", "Récents", "Recientes"),
-            "الأكثر مشاهدة" to listOf("Most viewed", "Les plus vus", "Más vistos"),
             "شوهدت مؤخراً" to listOf("Recently viewed", "Vus récemment", "Vistos recientemente"),
             "استكشف" to listOf("Explore", "Explorer", "Explorar"),
             "أحدث المقالات" to listOf("Latest articles", "Derniers articles", "Últimos artículos"),
@@ -295,7 +324,6 @@ class MainActivity : Activity() {
             "نشاطي" to listOf("My activity", "Mon activité", "Mi actividad"),
             "مشاركة" to listOf("Share", "Partager", "Compartir"),
             "التعليقات" to listOf("Comments", "Commentaires", "Comentarios"),
-            "قيّم هذا المقال" to listOf("Rate this article", "Évaluer cet article", "Valorar este artículo"),
             "تحميل اللعبة" to listOf("Download game", "Télécharger le jeu", "Descargar juego"),
             "المدونة محدّثة" to listOf("Blog updated", "Blog à jour", "Blog actualizado"),
             "مقال" to listOf("article(s)", "article(s)", "artículo(s)"),
@@ -386,7 +414,6 @@ class MainActivity : Activity() {
         if (isAdminSession) {
             menuItem("＋", tr("＋  نشر"), "إضافة مقال جديد إلى المدونة") { showGameDialog() }
         }
-        if (isAdminSession) menuItem("◈", "إحصاءات المكتبة", "المشاهدات والتقييمات والألعاب الرائجة") { showAdminAnalytics() }
         menuItem("Aa", "الخط وحجم النص", "تخصيص قراءة وواجهة التطبيق") { showTypographySettings() }
         panel.addView(View(this), LinearLayout.LayoutParams(1, 0, 1f))
         panel.addView(makeText("MARCO RX6  •  PREMIUM", 9f, Color.rgb(139, 151, 177), true).apply {
@@ -596,14 +623,13 @@ class MainActivity : Activity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        (listOf("ALL", "BLOG", "FAVORITES", "RECENT", "POPULAR") + platforms.drop(3)).forEach { category ->
+        (listOf("ALL", "BLOG", "FAVORITES", "RECENT") + platforms.drop(3)).forEach { category ->
             val chip = TextView(this).apply {
                 text = when (category) {
                     "ALL" -> tr("الكل")
                     "BLOG" -> tr("المدونة")
                     "FAVORITES" -> tr("المفضلة")
                     "RECENT" -> tr("شوهدت مؤخراً")
-                    "POPULAR" -> tr("الأكثر مشاهدة")
                     else -> category
                 }
                 tag = category
@@ -639,10 +665,10 @@ class MainActivity : Activity() {
             setPadding(dp(12), dp(7), dp(12), dp(7))
             contentDescription = tr("ترتيب المقالات")
             setOnClickListener {
-                sortMode = when (sortMode) { "LATEST" -> "POPULAR"; "POPULAR" -> "RATING"; "RATING" -> "NEW"; "NEW" -> "A-Z"; "A-Z" -> "FAVORITES"; else -> "LATEST" }
+                sortMode = when (sortMode) { "LATEST" -> "NEW"; "NEW" -> "A-Z"; "A-Z" -> "FAVORITES"; else -> "LATEST" }
                 renderGames()
                 Toast.makeText(this@MainActivity, "الترتيب: " + when (sortMode) {
-                    "LATEST" -> "الأحدث"; "POPULAR" -> "الأكثر تفاعلاً"; "RATING" -> "الأعلى تقييماً"; "NEW" -> "المضاف حديثاً"; "A-Z" -> "أبجدياً"; else -> "المفضلة"
+                    "LATEST" -> "الأحدث"; "NEW" -> "المضاف حديثاً"; "A-Z" -> "أبجدياً"; else -> "المفضلة"
                 }, Toast.LENGTH_SHORT).show()
             }
         }
@@ -716,7 +742,13 @@ class MainActivity : Activity() {
         root.requestApplyInsets()
         search.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { renderGames() }
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                // Avoid rebuilding every shelf for every keystroke.
+                searchRenderRunnable?.let { mainHandler.removeCallbacks(it) }
+                searchRenderRunnable = Runnable { renderGames() }.also {
+                    mainHandler.postDelayed(it, 180L)
+                }
+            }
             override fun afterTextChanged(s: Editable?) {}
         })
         renderGames()
@@ -1100,57 +1132,78 @@ class MainActivity : Activity() {
             .trim()
     }
 
-    // IMAGE LOADER
+    // IMAGE LOADER: bounded background work, downsampled bitmaps and an LRU cache.
     private fun loadCover(
         image: ImageView,
         localPath: String,
         imageUrl: String
     ) {
-
         val key = localPath.ifBlank { imageUrl }
-
         image.tag = key
         image.setImageResource(android.R.drawable.ic_menu_gallery)
-
         if (key.isBlank()) return
 
-        Thread {
+        coverCache.get(key)?.let {
+            image.setImageBitmap(it)
+            return
+        }
+
+        coverExecutor.execute {
             try {
-
-                val bitmap = if (localPath.isNotBlank()) {
-
-                    BitmapFactory.decodeFile(localPath)
-
+                val bytes = if (localPath.isNotBlank()) {
+                    File(localPath).inputStream().use { readCoverBytes(it) }
                 } else {
-
-                    val connection =
-                        URL(imageUrl).openConnection() as HttpURLConnection
-
+                    val connection = URL(imageUrl).openConnection() as HttpURLConnection
                     connection.connectTimeout = 10000
                     connection.readTimeout = 10000
                     connection.instanceFollowRedirects = true
-
                     try {
-                        connection.connect()
-                        connection.inputStream.use {
-                            BitmapFactory.decodeStream(it)
-                        }
+                        connection.inputStream.use { readCoverBytes(it) }
                     } finally {
                         connection.disconnect()
                     }
                 }
 
-                if (bitmap != null) {
-                    mainHandler.post {
-                        if (image.tag == key) {
-                            image.setImageBitmap(bitmap)
-                        }
-                    }
+                val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+                if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return@execute
+
+                val targetWidth = dp(142) * 2
+                val targetHeight = dp(190) * 2
+                var sampleSize = 1
+                while (bounds.outWidth / (sampleSize * 2) >= targetWidth &&
+                    bounds.outHeight / (sampleSize * 2) >= targetHeight
+                ) {
+                    sampleSize *= 2
                 }
 
+                val options = BitmapFactory.Options().apply { inSampleSize = sampleSize }
+                val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
+                    ?: return@execute
+                coverCache.put(key, bitmap)
+
+                mainHandler.post {
+                    if (!isFinishing && image.tag == key) image.setImageBitmap(bitmap)
+                }
             } catch (_: Exception) {
+                // Keep the lightweight placeholder when an image is unavailable.
             }
-        }.start()
+        }
+    }
+
+    // Protect the UI from unusually large or malformed cover downloads.
+    private fun readCoverBytes(input: InputStream): ByteArray {
+        val output = ByteArrayOutputStream()
+        val buffer = ByteArray(8192)
+        var total = 0
+        while (true) {
+            val count = input.read(buffer)
+            if (count < 0) break
+            total += count
+            if (total > 12 * 1024 * 1024) throw IllegalStateException("Cover image is too large")
+            output.write(buffer, 0, count)
+        }
+        return output.toByteArray()
     }
 
     private fun chooseCover() {
@@ -1172,14 +1225,43 @@ class MainActivity : Activity() {
 
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode == SIGN_IN_REQUEST && resultCode == RESULT_OK) {
+        if (requestCode == SIGN_IN_REQUEST) {
             try {
-                val account = GoogleSignIn.getSignedInAccountFromIntent(data).getResult(com.google.android.gms.common.api.ApiException::class.java)
+                val account = GoogleSignIn.getSignedInAccountFromIntent(data)
+                    .getResult(com.google.android.gms.common.api.ApiException::class.java)
                 isAdminSession = account.email.equals(adminEmail, ignoreCase = true)
                 if (!isAdminSession) googleSignInClient?.signOut()
                 createInterface()
-                Toast.makeText(this, if (isAdminSession) "تم ربط حساب Google المسؤول" else "هذا الحساب لا يملك صلاحية المسؤول. يمكنك المتابعة كزائر.", Toast.LENGTH_LONG).show()
-            } catch (e: Exception) { isAdminSession = false; createInterface(); Toast.makeText(this, "فشل تسجيل الدخول إلى Google: ${e.message}", Toast.LENGTH_LONG).show() }
+                Toast.makeText(
+                    this,
+                    if (isAdminSession) "تم ربط حساب Google المسؤول"
+                    else "هذا الحساب لا يملك صلاحية المسؤول. يمكنك المتابعة كزائر.",
+                    Toast.LENGTH_LONG
+                ).show()
+            } catch (e: com.google.android.gms.common.api.ApiException) {
+                isAdminSession = false
+                createInterface()
+                val statusName = GoogleSignInStatusCodes.getStatusCodeString(e.statusCode)
+                android.util.Log.e(
+                    "MARCO_RX6_AUTH",
+                    "Google sign-in failed: statusCode=${e.statusCode}, status=$statusName",
+                    e
+                )
+                Toast.makeText(
+                    this,
+                    "فشل تسجيل الدخول إلى Google (رمز ${e.statusCode}: $statusName)",
+                    Toast.LENGTH_LONG
+                ).show()
+            } catch (e: Exception) {
+                isAdminSession = false
+                createInterface()
+                android.util.Log.e("MARCO_RX6_AUTH", "Unexpected Google sign-in error", e)
+                Toast.makeText(
+                    this,
+                    "فشل تسجيل الدخول إلى Google: ${e.message ?: e.javaClass.simpleName}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
             return
         }
         if (requestCode != PICK_IMAGE_REQUEST || resultCode != RESULT_OK) return
@@ -1241,73 +1323,23 @@ class MainActivity : Activity() {
     private fun profilePreferences() = getSharedPreferences("user_profile", MODE_PRIVATE)
     private fun historyPreferences() = getSharedPreferences("article_activity", MODE_PRIVATE)
     private fun articleKey(game: Game): String = (game.url.ifBlank { game.name }).hashCode().toString()
-    private fun viewCount(game: Game): Int = historyPreferences().getInt("views_" + articleKey(game), 0)
-    private fun ratingCount(game: Game): Int =
-        if (historyPreferences().getInt("rating_" + articleKey(game), 0) > 0) 1 else 0
-    private fun averageRating(game: Game): Float {
-        val rating = historyPreferences().getInt("rating_" + articleKey(game), 0)
-        return if (rating > 0) rating.toFloat() else 0f
-    }
-    private fun popularityScore(game: Game): Int = viewCount(game) + ratingCount(game) * 5
-
-    private fun showAdminAnalytics() {
-        if (!isAdminSession) return
-        val sorted = games.sortedByDescending { popularityScore(it) }
-        val totalViews = games.sumOf { viewCount(it) }
-        val totalRatings = games.sumOf { ratingCount(it) }
-        val rated = games.filter { ratingCount(it) > 0 }
-        val average = if (rated.isEmpty()) 0f else rated.map { averageRating(it) }.average().toFloat()
-        val box = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(18), dp(8), dp(18), dp(8))
-        }
-        fun metric(value: String, label: String) = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            background = rounded(Color.rgb(25, 30, 46), 13)
-            setPadding(dp(9), dp(13), dp(9), dp(13))
-            addView(makeText(value, 22f, Color.rgb(210, 220, 239), true))
-            addView(makeText(label, 10f, Color.LTGRAY))
-        }
-        val summary = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        summary.addView(metric(compactMetric(totalViews), "مشاهدات هذا الجهاز"), LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
-        summary.addView(metric(compactMetric(totalRatings), "تقييمات محلية"), LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
-        summary.addView(metric(String.format(Locale.ROOT, "%.1f", average), "متوسط التقييم"), LinearLayout.LayoutParams(0, -2, 1f))
-        box.addView(summary)
-        box.addView(makeText("الأكثر تفاعلاً", 14f, Color.rgb(180, 151, 255), true).apply { setPadding(0, dp(18), 0, dp(8)) })
-        sorted.take(8).forEachIndexed { index, game ->
-            val line = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(10), dp(9), dp(10), dp(9))
-                background = rounded(Color.rgb(19, 23, 36), 10)
-            }
-            line.addView(makeText((index + 1).toString() + ".", 12f, Color.rgb(180, 151, 255), true), LinearLayout.LayoutParams(dp(28), -2))
-            line.addView(makeText(game.name, 11f, white, true), LinearLayout.LayoutParams(0, -2, 1f))
-            line.addView(makeText("◉ " + compactMetric(viewCount(game)) + "  ★ " + ratingCount(game), 9f, gray))
-            box.addView(line, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(5) })
-        }
-        box.addView(makeText("تنبيه: هذه الأرقام محفوظة محلياً على هذا الجهاز وليست إحصاءات جميع المستخدمين.", 10f, Color.rgb(255, 190, 105)).apply {
-            setPadding(0, dp(12), 0, 0)
-        })
-        AlertDialog.Builder(this).setTitle("تحليلات MARCO RX6")
-            .setView(ScrollView(this).apply { addView(box) })
-            .setPositiveButton("إغلاق", null).show()
-    }
-
-    private fun compactMetric(value: Int): String = when {
-        value >= 1_000_000 -> String.format(Locale.ROOT, "%.1fM", value / 1_000_000f)
-        value >= 1_000 -> String.format(Locale.ROOT, "%.1fK", value / 1_000f)
-        else -> value.toString()
-    }
     private fun lastViewedAt(game: Game): Long = historyPreferences().getLong("time_" + articleKey(game), 0L)
     private fun isRecentlyViewed(game: Game): Boolean = lastViewedAt(game) > 0L
-    private fun recordArticleView(game: Game) {
+
+    private fun clearLegacyEngagementData() {
         val prefs = historyPreferences()
-        val key = articleKey(game)
-        prefs.edit().putInt("views_" + key, viewCount(game) + 1)
-            .putLong("time_" + key, System.currentTimeMillis()).apply()
+        val editor = prefs.edit()
+        prefs.all.keys.filter { it.startsWith("rating_") || it.startsWith("views_") }
+            .forEach { editor.remove(it) }
+        editor.apply()
     }
+
+    private fun recordRecentRead(game: Game) {
+        historyPreferences().edit()
+            .putLong("time_" + articleKey(game), System.currentTimeMillis())
+            .apply()
+    }
+
     private fun showProfile() {
         val prefs = profilePreferences()
         val settings = getSharedPreferences("app_settings", MODE_PRIVATE)
@@ -1396,7 +1428,6 @@ class MainActivity : Activity() {
                 "ALL" -> true
                 "FAVORITES" -> item.isFavorite
                 "RECENT" -> isRecentlyViewed(item)
-                "POPULAR" -> true
                 "BLOG" -> item.blogImported
                 else -> item.platform == selected
             }
@@ -1408,8 +1439,6 @@ class MainActivity : Activity() {
         val sorted = when (sortMode) {
             "A-Z" -> filtered.sortedBy { it.name.lowercase(Locale.ROOT) }
             "FAVORITES" -> filtered.sortedByDescending { it.isFavorite }
-            "POPULAR" -> filtered.sortedByDescending { popularityScore(it) }
-            "RATING" -> filtered.sortedByDescending { averageRating(it) }
             "NEW" -> filtered.reversed()
             else -> if (selected == "RECENT") filtered.sortedByDescending { lastViewedAt(it) } else filtered
         }
@@ -1433,7 +1462,6 @@ class MainActivity : Activity() {
                 "ALL" -> "الكل"
                 "FAVORITES" -> tr("المفضلة")
                 "RECENT" -> tr("شوهدت مؤخراً")
-                "POPULAR" -> tr("الأكثر مشاهدة")
                 "BLOG" -> "BLOG"
                 else -> selected
             }
@@ -1503,18 +1531,6 @@ class MainActivity : Activity() {
                 }
                 card.addView(title, LinearLayout.LayoutParams(dp(142), dp(27)))
 
-                val metrics = LinearLayout(this).apply {
-                    orientation = LinearLayout.HORIZONTAL
-                    gravity = Gravity.CENTER
-                    setPadding(dp(2), 0, dp(2), 0)
-                }
-                val views = makeText("◉ " + compactMetric(viewCount(post)), 9f, Color.rgb(174, 184, 203))
-                val ratingValue = if (ratingCount(post) > 0) String.format(Locale.ROOT, "%.1f", averageRating(post)) else "—"
-                val ratings = makeText("★ " + ratingValue + " (" + compactMetric(ratingCount(post)) + ")", 9f, Color.rgb(255, 197, 92), true)
-                metrics.addView(views)
-                metrics.addView(makeText("  ·  ", 9f, Color.rgb(112, 121, 143)))
-                metrics.addView(ratings)
-                card.addView(metrics, LinearLayout.LayoutParams(dp(142), dp(19)))
                 row.addView(card, LinearLayout.LayoutParams(dp(142), -2).apply {
                     marginEnd = dp(11)
                 })
@@ -1528,7 +1544,7 @@ class MainActivity : Activity() {
 
     // Dedicated immersive article reader; the WebView owns its scroll instead of nesting inside ScrollView.
     private fun showDetails(game: Game) {
-        recordArticleView(game)
+        recordRecentRead(game)
         val reader = android.app.Dialog(this)
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -1626,9 +1642,6 @@ class MainActivity : Activity() {
         val info = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(14), 0, 0, 0) }
         info.addView(makeText(game.name, 18f, white, true).apply { maxLines = 3; ellipsize = android.text.TextUtils.TruncateAt.END })
         info.addView(makeText(game.platform + "  •  MARCO RX6", 10f, Color.rgb(190, 174, 255), true).apply { setPadding(0, dp(6), 0, dp(12)) })
-        val avg = if (ratingCount(game) > 0) String.format(Locale.ROOT, "%.1f / 5", averageRating(game)) else "لا توجد تقييمات بعد"
-        info.addView(makeText("★  " + avg, 12f, Color.rgb(255, 197, 92), true))
-        info.addView(makeText("◉  " + compactMetric(viewCount(game)) + " مشاهدة   •   " + ratingCount(game) + " تقييم", 10f, Color.rgb(207, 215, 231)).apply { setPadding(0, dp(7), 0, 0) })
         identity.addView(info, LinearLayout.LayoutParams(0, -2, 1f))
         root.addView(identity, LinearLayout.LayoutParams(-1, -2).apply { setMargins(dp(12), dp(10), dp(12), dp(10)) })
 
@@ -1706,47 +1719,6 @@ class MainActivity : Activity() {
             downloadScroll.addView(downloadRow)
             root.addView(downloadScroll)
         }
-
-        val ratingRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(14), dp(7), dp(14), dp(7))
-            setBackgroundColor(Color.rgb(18, 21, 31))
-        }
-        ratingRow.addView(makeText(tr("قيّم هذا المقال"), 10f, gray, true),
-            LinearLayout.LayoutParams(0, -2, 1f))
-        val ratingPrefs = historyPreferences()
-        val ratingKey = "rating_" + articleKey(game)
-        val selectedRating = ratingPrefs.getInt(ratingKey, 0)
-        val ratingSummary = makeText(
-            if (ratingCount(game) > 0) "متوسط تقييمك على هذا الجهاز: " + String.format(Locale.ROOT, "%.1f / 5", averageRating(game))
-            else "قيّم اللعبة وسجّل رأيك على هذا الجهاز",
-            10f, Color.rgb(191, 199, 215)
-        ).apply { setPadding(dp(14), dp(3), dp(14), dp(9)) }
-        for (star in 1..5) {
-            ratingRow.addView(TextView(this).apply {
-                text = if (star <= selectedRating) "★" else "☆"
-                textSize = 22f
-                setTextColor(if (star <= selectedRating) Color.rgb(255, 190, 75) else gray)
-                setPadding(dp(3), dp(3), dp(3), dp(3))
-                setOnClickListener {
-                    ratingPrefs.edit().putInt(ratingKey, star).apply()
-                    for (index in 0 until ratingRow.childCount) {
-                        val child = ratingRow.getChildAt(index)
-                        if (index > 0) {
-                            val score = index
-                            (child as TextView).text = if (score <= star) "★" else "☆"
-                            child.setTextColor(if (score <= star) Color.rgb(255, 190, 75) else gray)
-                        }
-                    }
-                    ratingSummary.text = "تقييمك: " + star + " / 5  •  التقييم محفوظ على هذا الجهاز"
-                    renderGames()
-                    Toast.makeText(this@MainActivity, "تم حفظ تقييمك: " + star + " من 5", Toast.LENGTH_SHORT).show()
-                }
-            })
-        }
-        root.addView(ratingRow)
-        root.addView(ratingSummary)
 
         val bottom = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
