@@ -62,9 +62,9 @@ data class Game(
 
 class MainActivity : Activity() {
 
-    private val bg = Color.rgb(8, 9, 12)
-    private val panel = Color.rgb(21, 22, 27)
-    private val red = Color.rgb(211, 177, 112)
+    private val bg = Color.rgb(9, 10, 22)
+    private val panel = Color.rgb(20, 22, 40)
+    private val red = Color.rgb(139, 92, 246)
     private val white = Color.WHITE
     private val gray = Color.LTGRAY
     private val platforms = listOf("الكل", "BLOG", "FAVORITES", "PSP", "PS1", "PS2", "PS3", "PS4")
@@ -449,11 +449,11 @@ class MainActivity : Activity() {
 
     private fun createInterface() {
         // MARCO RX6 Premium: luxury editorial layout; all existing actions remain connected.
-        val gold = Color.rgb(211, 177, 112)
-        val mutedGold = Color.rgb(157, 129, 82)
-        val ink = Color.rgb(8, 9, 12)
-        val surface = Color.rgb(21, 22, 27)
-        val soft = Color.rgb(34, 34, 39)
+        val gold = Color.rgb(139, 92, 246)
+        val mutedGold = Color.rgb(99, 102, 241)
+        val ink = Color.rgb(9, 10, 22)
+        val surface = Color.rgb(20, 22, 40)
+        val soft = Color.rgb(31, 35, 60)
         val root = LinearLayout(this).apply {
             layoutDirection = if (currentLanguage() == "ar") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
             textDirection = if (currentLanguage() == "ar") View.TEXT_DIRECTION_RTL else View.TEXT_DIRECTION_LTR
@@ -499,10 +499,10 @@ class MainActivity : Activity() {
             orientation = LinearLayout.VERTICAL
             background = GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(47, 39, 27), Color.rgb(28, 27, 25), Color.rgb(17, 19, 23))
+                intArrayOf(Color.rgb(63, 38, 115), Color.rgb(35, 39, 91), Color.rgb(16, 20, 43))
             ).apply {
                 cornerRadius = dp(25).toFloat()
-                setStroke(dp(1), Color.rgb(105, 86, 57))
+                setStroke(dp(1), Color.rgb(91, 76, 160))
             }
             setPadding(dp(21), dp(21), dp(21), dp(20))
             elevation = dp(2).toFloat()
@@ -512,14 +512,14 @@ class MainActivity : Activity() {
             setPadding(0, dp(11), 0, dp(7))
         })
         hero.addView(makeText(tr("ألعاب وشروحات وآخر الإصدارات، كلّها في مكان واحد."), 11f,
-            Color.rgb(190, 188, 181)))
+            Color.rgb(205, 205, 226)))
         val heroStats = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             setPadding(0, dp(17), 0, 0)
         }
         heroStats.addView(makeText("✦  ${games.size} مقال", 10f, gold, true))
-        heroStats.addView(makeText("     •     " + tr("المدونة محدّثة"), 10f, Color.rgb(201, 190, 169), true))
+        heroStats.addView(makeText("     •     " + tr("المدونة محدّثة"), 10f, Color.rgb(190, 183, 255), true))
         hero.addView(heroStats)
         root.addView(hero, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(2) })
         val lastRead = games.filter { isRecentlyViewed(it) }.maxByOrNull { lastViewedAt(it) }
@@ -554,7 +554,7 @@ class MainActivity : Activity() {
             textSize = 13f
             setSingleLine(true)
             setTextColor(white)
-            setHintTextColor(Color.rgb(124, 124, 128))
+            setHintTextColor(Color.rgb(145, 148, 178))
             background = null
             setPadding(dp(10), 0, dp(6), 0)
         }
@@ -1309,7 +1309,7 @@ class MainActivity : Activity() {
             val imageFrame = FrameLayout(this)
             val cover = ImageView(this).apply {
                 scaleType = ImageView.ScaleType.CENTER_CROP
-                setBackgroundColor(Color.rgb(32, 33, 37))
+                setBackgroundColor(Color.rgb(29, 32, 58))
                 contentDescription = post.name
             }
             imageFrame.addView(cover, FrameLayout.LayoutParams(-1, dp(218)))
@@ -1362,7 +1362,7 @@ class MainActivity : Activity() {
                 ellipsize = android.text.TextUtils.TruncateAt.END
             })
             if (post.description.isNotBlank()) {
-                details.addView(makeText(post.description, 12f, Color.rgb(184, 184, 188)).apply {
+                details.addView(makeText(post.description, 12f, Color.rgb(184, 188, 216)).apply {
                     maxLines = 2
                     ellipsize = android.text.TextUtils.TruncateAt.END
                     setPadding(0, dp(6), 0, 0)
@@ -1376,7 +1376,7 @@ class MainActivity : Activity() {
             meta.addView(makeText("◉  ${viewCount(post)} ${tr("مشاهدة")}", 10f, gray),
                 LinearLayout.LayoutParams(0, -2, 1f))
             val date = if (lastViewedAt(post) > 0L) tr("شوهدت سابقاً") else tr("مقال")
-            meta.addView(makeText(date, 10f, Color.rgb(190, 160, 105), true))
+            meta.addView(makeText(date, 10f, Color.rgb(167, 139, 250), true))
             details.addView(meta)
             card.addView(details)
             gameList.addView(card, LinearLayout.LayoutParams(-1, -2).apply {
@@ -1478,13 +1478,13 @@ class MainActivity : Activity() {
                 *{box-sizing:border-box}
                 html,body{margin:0;padding:0;width:100%;max-width:100%;overflow-x:hidden}
                 body{background:${if (readerLightMode) "#f6f2e9" else "#0a0b11"};color:${if (readerLightMode) "#24221e" else "#f4f4f8"};font-family:${fontFamilyName()},Arial,sans-serif;font-size:${(readerFontSize * fontScale()).toInt()}px;line-height:1.9;padding:20px 17px 36px;overflow-wrap:anywhere;direction:rtl;text-align:right}
-                h1,h2,h3,h4{color:${if (readerLightMode) "#876a3d" else "#d3b170"};line-height:1.4;margin:25px 0 12px}
+                h1,h2,h3,h4{color:${if (readerLightMode) "#a78bfa" else "#8b5cf6"};line-height:1.4;margin:25px 0 12px}
                 p{margin:0 0 18px}
                 img{display:block;max-width:100%!important;height:auto!important;width:auto;margin:18px auto;border-radius:12px;object-fit:contain}
-                a{color:${if (readerLightMode) "#805b27" else "#d3b170"};text-decoration:none;font-weight:700}
+                a{color:${if (readerLightMode) "#8b5cf6" else "#d3b170"};text-decoration:none;font-weight:700}
                 ul,ol{padding-left:25px;margin:10px 0 20px}
                 li{padding:4px 0}
-                blockquote{border-right:3px solid #d3b170;padding:8px 14px;margin:16px 0;background:${if (readerLightMode) "#eee7d9" else "#1b1d27"}}
+                blockquote{border-right:3px solid #d3b170;padding:8px 14px;margin:16px 0;background:${if (readerLightMode) "#eee7d9" else "#1b1d3b"}}
                 table{display:block;max-width:100%;overflow-x:auto;border-collapse:collapse}
                 td,th{border:1px solid #444;padding:8px}
                 iframe,video{max-width:100%!important}
