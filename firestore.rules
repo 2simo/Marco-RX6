@@ -1,0 +1,57 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /articles/{articleId} {
+      allow read: if true;
+
+      function validFirstView() {
+        return request.auth != null
+          && request.resource.data.keys().hasOnly(['views', 'name', 'url', 'updatedAt'])
+          && request.resource.data.views == 1;
+      }
+
+      function validFirstRating() {
+        let ratingPath = /databases/$(database)/documents/articles/$(articleId)/ratings/$(request.auth.uid);
+        let score = getAfter(ratingPath).data.score;
+        return request.auth != null
+          && request.resource.data.views == 0
+          && request.resource.data.ratingCount == 1
+          && request.resource.data.ratingSum == score
+          && score is int && score >= 1 && score <= 5;
+      }
+
+      function validViewIncrement() {
+        return request.auth != null
+          && request.resource.data.views == resource.data.get('views', 0) + 1
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views', 'updatedAt']);
+      }
+
+      function validRatingAggregate() {
+        let ratingPath = /databases/$(database)/documents/articles/$(articleId)/ratings/$(request.auth.uid);
+        let oldScore = exists(ratingPath) ? get(ratingPath).data.score : 0;
+        let newScore = getAfter(ratingPath).data.score;
+        return request.auth != null
+          && newScore is int && newScore >= 1 && newScore <= 5
+          && request.resource.data.views == resource.data.get('views', 0)
+          && request.resource.data.ratingCount == resource.data.get('ratingCount', 0) + (oldScore == 0 ? 1 : 0)
+          && request.resource.data.ratingSum == resource.data.get('ratingSum', 0) - oldScore + newScore
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ratingCount', 'ratingSum', 'updatedAt']);
+      }
+
+      allow create: if validFirstView() || validFirstRating();
+      allow update: if validViewIncrement() || validRatingAggregate();
+      allow delete: if false;
+
+      match /ratings/{userId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow create, update: if request.auth != null
+          && request.auth.uid == userId
+          && request.resource.data.keys().hasOnly(['score', 'updatedAt'])
+          && request.resource.data.score is int
+          && request.resource.data.score >= 1
+          && request.resource.data.score <= 5;
+        allow delete: if false;
+      }
+    }
+  }
+}
