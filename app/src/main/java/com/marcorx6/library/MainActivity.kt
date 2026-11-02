@@ -365,7 +365,7 @@ class MainActivity : Activity() {
     private fun showSideMenu() {
         val gold = red
         val ink = bg
-        val surface = panel
+        val surface = if (isDarkMode()) panel else Color.rgb(255, 255, 255)
         val drawer = Dialog(this)
         val panel = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -401,10 +401,20 @@ class MainActivity : Activity() {
                 isFocusable = true
                 setOnClickListener { drawer.dismiss(); action() }
             }
+            val iconView = TextView(this).apply {
+                text = icon
+                textSize = 17f
+                gravity = Gravity.CENTER
+                setTextColor(if (isDarkMode()) Color.WHITE else Color.rgb(68, 76, 96))
+                background = rounded(if (isDarkMode()) Color.rgb(43, 49, 68) else Color.rgb(239, 242, 248), 12)
+                setPadding(dp(11), dp(9), dp(11), dp(9))
+                minWidth = dp(42)
+            }
             val labels = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
             labels.addView(makeText(label, 14f, white, true))
             if (detail.isNotBlank()) labels.addView(makeText(detail, 10f, gray).apply { setPadding(0, dp(4), 0, 0) })
-            row.addView(labels, LinearLayout.LayoutParams(-1, -2, 1f))
+            row.addView(iconView, LinearLayout.LayoutParams(-2, -2).apply { marginEnd = dp(12) })
+            row.addView(labels, LinearLayout.LayoutParams(0, -2, 1f))
             panel.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(9) })
         }
         menuItem("♙", tr("حسابي"), tr("ملفي الشخصي")) { showProfile() }
@@ -430,6 +440,8 @@ class MainActivity : Activity() {
         menuItem("⇧", "نسخ احتياطي", "تصدير مكتبتك وإعداداتك إلى ملف") { exportBackup() }
         menuItem("⇩", "استعادة نسخة", "استيراد نسخة احتياطية محفوظة") { importBackup() }
         menuItem("Aa", "الخط وحجم النص", "تخصيص قراءة وواجهة التطبيق") { showTypographySettings() }
+        menuItem("▶", "قناة YouTube", "@marco_rx7") { openGameLink("https://youtube.com/@marco_rx7") }
+        menuItem("➤", "قناة Telegram", "@MARCO_RX1") { openGameLink("https://t.me/MARCO_RX1") }
         panel.addView(View(this), LinearLayout.LayoutParams(1, dp(12)))
         panel.addView(makeText("MARCO RX6  •  PREMIUM", 9f, Color.rgb(139, 151, 177), true).apply {
             gravity = Gravity.CENTER
@@ -906,10 +918,14 @@ class MainActivity : Activity() {
         val dock = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
-            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+            background = if (isDarkMode()) GradientDrawable(GradientDrawable.Orientation.TL_BR,
                 intArrayOf(Color.rgb(74, 83, 105), Color.rgb(27, 33, 48), Color.rgb(13, 17, 28))).apply {
                 cornerRadius = dp(23).toFloat()
                 setStroke(dp(1), Color.rgb(100, 113, 140))
+            } else GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Color.rgb(255, 255, 255), Color.rgb(241, 244, 250))).apply {
+                cornerRadius = dp(23).toFloat()
+                setStroke(dp(1), Color.rgb(190, 199, 214))
             }
             elevation = dp(14).toFloat()
             setPadding(dp(7), dp(7), dp(7), dp(7))
@@ -918,23 +934,36 @@ class MainActivity : Activity() {
             val item = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
-                setPadding(dp(8), dp(4), dp(8), dp(4))
+                setPadding(dp(5), dp(5), dp(5), dp(5))
+                background = rounded(if (isDarkMode()) Color.rgb(45, 52, 71) else Color.rgb(232, 237, 246), 15)
                 setOnClickListener { action() }
             }
-            item.addView(makeText(label, 11f, silver, true).apply {
+            item.addView(makeText(icon, 15f, if (isDarkMode()) silver else Color.rgb(92, 76, 143), true).apply {
+                gravity = Gravity.CENTER
+            })
+            item.addView(makeText(label, 10f, if (isDarkMode()) silver else Color.rgb(43, 51, 68), true).apply {
                 gravity = Gravity.CENTER
                 maxLines = 1
-                setPadding(dp(2), dp(9), dp(2), dp(9))
+                setPadding(dp(2), dp(3), dp(2), dp(2))
             })
-            dock.addView(item, LinearLayout.LayoutParams(0, -2, 1f))
+            dock.addView(item, LinearLayout.LayoutParams(0, -2, 1f).apply {
+                marginStart = dp(3); marginEnd = dp(3)
+            })
         }
-        dockItem("", tr("الرئيسية")) { selected = "ALL"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
-        dockItem("", tr("المفضلة")) { selected = "FAVORITES"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
-        dockItem("", "متابعتي") { selected = "WANT_TO_PLAY"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
-        dockItem("", tr("حسابي")) { showProfile() }
-        shell.addView(dock, FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply {
+        dockItem("⌂", tr("الرئيسية")) { selected = "ALL"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
+        dockItem("♡", tr("المفضلة")) { selected = "FAVORITES"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
+        dockItem("◷", "متابعتي") { selected = "WANT_TO_PLAY"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
+        dockItem("♙", tr("حسابي")) { showProfile() }
+        val dockParams = FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply {
             leftMargin = dp(16); rightMargin = dp(16); bottomMargin = dp(12)
-        })
+        }
+        shell.addView(dock, dockParams)
+        ViewCompat.setOnApplyWindowInsetsListener(shell) { _, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            dockParams.bottomMargin = dp(12) + bars.bottom
+            dock.layoutParams = dockParams
+            insets
+        }
         setContentView(shell)
         applyMotionPreferences(shell)
         requestHighRefreshRate()
