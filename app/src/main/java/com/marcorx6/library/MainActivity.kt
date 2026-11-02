@@ -38,6 +38,7 @@ import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Locale
+import java.util.Calendar
 import java.util.regex.Pattern
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -406,6 +407,7 @@ class MainActivity : Activity() {
             menuItem("＋", tr("＋  نشر"), "إضافة مقال جديد إلى المدونة") { showGameDialog() }
         }
         menuItem("⬇", "مدير التنزيلات", "متابعة التنزيلات وحالاتها") { showDownloadManager() }
+        menuItem("✧", "لعبة اليوم", "اكتشف اختيار MARCO RX6 اليومي") { showGameOfTheDay() }
         menuItem("☾", if (isDarkMode()) "الوضع النهاري" else "الوضع الليلي", "تبديل مظهر التطبيق وحفظ اختيارك") {
             appearancePreferences().edit().putBoolean("dark_mode", !isDarkMode()).apply()
             recreate()
@@ -2001,6 +2003,43 @@ class MainActivity : Activity() {
                     mainHandler.post { games.remove(game); if (game.coverLocalPath.isNotBlank()) File(game.coverLocalPath).delete(); saveGames(); renderGames(); Toast.makeText(this, "تم الحذف من Blogger", Toast.LENGTH_SHORT).show() }
                 } catch (e: Exception) { mainHandler.post { Toast.makeText(this, e.message ?: "تعذر حذف المقال من Blogger", Toast.LENGTH_LONG).show() } } }.start()
             }
+            .show()
+    }
+
+    private fun showGameOfTheDay() {
+        if (games.isEmpty()) {
+            Toast.makeText(this, "لا توجد ألعاب متاحة لاختيار لعبة اليوم", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val calendar = Calendar.getInstance()
+        val dayKey = calendar.get(Calendar.YEAR) * 366 + calendar.get(Calendar.DAY_OF_YEAR)
+        val game = games[Math.floorMod(dayKey, games.size)]
+        val box = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(18), dp(6), dp(18), dp(4))
+        }
+        val cover = ImageView(this).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            background = rounded(panel, 14)
+            contentDescription = game.name
+        }
+        if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) {
+            loadCover(cover, game.coverLocalPath, game.coverUrl)
+        } else {
+            cover.setImageResource(android.R.drawable.ic_menu_gallery)
+            cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
+        }
+        box.addView(cover, LinearLayout.LayoutParams(-1, dp(190)))
+        box.addView(makeText(game.name, 18f, white, true).apply { setPadding(0, dp(12), 0, dp(5)) })
+        box.addView(makeText(game.platform + if (game.genre.isNotBlank()) " • ${game.genre}" else "", 11f, red, true))
+        val summary = game.description.ifBlank { "اكتشف تفاصيل هذه اللعبة وروابطها داخل مكتبة MARCO RX6." }
+        box.addView(makeText(summary, 12f, gray).apply { setPadding(0, dp(8), 0, 0); maxLines = 5; ellipsize = android.text.TextUtils.TruncateAt.END })
+        AlertDialog.Builder(this)
+            .setTitle("✧ لعبة اليوم")
+            .setView(box)
+            .setPositiveButton("تفاصيل اللعبة") { _, _ -> showDetails(game) }
+            .setNeutralButton("فتح الرابط") { _, _ -> openGameLink(game.url) }
+            .setNegativeButton("إغلاق", null)
             .show()
     }
 
