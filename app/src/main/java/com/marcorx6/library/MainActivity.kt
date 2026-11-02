@@ -1452,6 +1452,28 @@ class MainActivity : Activity() {
             } catch (e: Exception) { isAdminSession = false; createInterface(); Toast.makeText(this, "فشل تسجيل الدخول إلى Google: ${e.message}", Toast.LENGTH_LONG).show() }
             return
         }
+        if (requestCode == 1005 && resultCode == RESULT_OK) {
+            val uri = data?.data ?: return
+            Thread {
+                try {
+                    val folder = File(filesDir, "profile")
+                    if (!folder.exists()) folder.mkdirs()
+                    val destination = File(folder, "avatar.img")
+                    contentResolver.openInputStream(uri).use { input ->
+                        requireNotNull(input) { "تعذرت قراءة الصورة" }
+                        FileOutputStream(destination).use { output -> input.copyTo(output) }
+                    }
+                    profilePreferences().edit().putString("avatar_path", destination.absolutePath).apply()
+                    mainHandler.post {
+                        Toast.makeText(this, "تم تحديث صورة الملف الشخصي", Toast.LENGTH_SHORT).show()
+                        showProfile()
+                    }
+                } catch (e: Exception) {
+                    mainHandler.post { Toast.makeText(this, "تعذر حفظ الصورة: ${e.message}", Toast.LENGTH_LONG).show() }
+                }
+            }.start()
+            return
+        }
         if (requestCode != PICK_IMAGE_REQUEST || resultCode != RESULT_OK) return
 
         val uri: Uri = data?.data ?: return
@@ -1612,6 +1634,37 @@ class MainActivity : Activity() {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(18), dp(8), dp(18), dp(6))
         }
+        val avatar = ImageView(this).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            background = rounded(panel, 60)
+            clipToOutline = true
+            val path = prefs.getString("avatar_path", "").orEmpty()
+            if (path.isNotBlank() && File(path).exists()) {
+                BitmapFactory.decodeFile(path)?.let { setImageBitmap(it) }
+            } else {
+                setImageResource(android.R.drawable.ic_menu_camera)
+                scaleType = ImageView.ScaleType.CENTER_INSIDE
+            }
+        }
+        box.addView(avatar, LinearLayout.LayoutParams(dp(92), dp(92)).apply {
+            gravity = Gravity.CENTER
+            bottomMargin = dp(8)
+        })
+        val chooseAvatar = TextView(this).apply {
+            text = "اختيار صورة الملف الشخصي"
+            textSize = 12f
+            setTextColor(red)
+            gravity = Gravity.CENTER
+            setPadding(dp(8), dp(8), dp(8), dp(14))
+            setOnClickListener {
+                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    type = "image/*"
+                }
+                startActivityForResult(intent, 1005)
+            }
+        }
+        box.addView(chooseAvatar, LinearLayout.LayoutParams(-1, -2))
         val nameLabel = makeText(tr("اسم العرض"), 11f, red, true)
         val input = makeInput(tr("اسم العرض")).apply {
             setSingleLine(true)
