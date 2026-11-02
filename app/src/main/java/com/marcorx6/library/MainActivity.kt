@@ -986,6 +986,7 @@ class MainActivity : Activity() {
     }
 
     // BLOG-STYLE ARTICLE FEED
+    // IMAGE-FIRST BLOG GALLERY: two clean cover tiles per row, no text overlays.
     private fun renderGames() {
         gameList.removeAllViews()
         for (i in 0 until filters.childCount) {
@@ -1002,7 +1003,9 @@ class MainActivity : Activity() {
                 "BLOG" -> item.blogImported
                 else -> item.platform == selected
             }
-            val searchMatch = item.name.lowercase(Locale.ROOT).contains(query) || item.platform.lowercase(Locale.ROOT).contains(query) || item.description.lowercase(Locale.ROOT).contains(query)
+            val searchMatch = item.name.lowercase(Locale.ROOT).contains(query) ||
+                item.platform.lowercase(Locale.ROOT).contains(query) ||
+                item.description.lowercase(Locale.ROOT).contains(query)
             categoryMatch && searchMatch
         }
         val results = when (sortMode) {
@@ -1012,197 +1015,159 @@ class MainActivity : Activity() {
         }
         countText.text = "${results.size} POSTS"
         if (results.isEmpty()) {
-            gameList.addView(makeText("NO ARTICLES YET", 15f, gray, true).apply { gravity = Gravity.CENTER; setPadding(dp(10), dp(55), dp(10), dp(55)) })
+            gameList.addView(makeText("NO ARTICLES YET", 15f, gray, true).apply {
+                gravity = Gravity.CENTER
+                setPadding(dp(10), dp(55), dp(10), dp(55))
+            })
             return
         }
+
+        var row: LinearLayout? = null
         results.forEachIndexed { index, post ->
-            val card = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                background = rounded(panel, 18)
-                setPadding(dp(9), dp(9), dp(9), dp(13))
+            if (index % 2 == 0) {
+                row = LinearLayout(this).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.TOP
+                }
+                gameList.addView(row, LinearLayout.LayoutParams(-1, -2).apply {
+                    bottomMargin = dp(10)
+                })
+            }
+            val tile = FrameLayout(this).apply {
+                background = rounded(panel, 14)
+                clipToOutline = true
                 setOnClickListener { showDetails(post) }
+                contentDescription = post.name
             }
+            val cover = ImageView(this).apply {
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                setBackgroundColor(Color.rgb(32, 35, 47))
+                contentDescription = post.name
+            }
+            tile.addView(cover, FrameLayout.LayoutParams(-1, dp(220)))
             if (post.coverUrl.isNotBlank() || post.coverLocalPath.isNotBlank()) {
-                val cover = ImageView(this).apply { scaleType = ImageView.ScaleType.CENTER_CROP; background = rounded(Color.rgb(38, 41, 54), 13); clipToOutline = true; contentDescription = post.name + " article cover" }
-                card.addView(cover, LinearLayout.LayoutParams(-1, dp(190)))
                 loadCover(cover, post.coverLocalPath, post.coverUrl)
+            } else {
+                cover.setImageResource(android.R.drawable.ic_menu_gallery)
+                cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
             }
-            card.addView(makeText((if (post.isFavorite) "★  " else "") + post.platform + "  •  MARCO RX6", 10f, red, true).apply { setPadding(dp(3), dp(10), dp(3), dp(4)) })
-            card.addView(makeText(post.name, 19f, white, true).apply { maxLines = 2; ellipsize = android.text.TextUtils.TruncateAt.END; setPadding(dp(3), dp(2), dp(3), dp(5)) })
-            card.addView(makeText(post.description.replace(Regex("\\s+"), " ").trim().ifBlank { "Open this article to read the full post and explore its links." }, 12f, gray).apply { maxLines = 3; ellipsize = android.text.TextUtils.TruncateAt.END; setPadding(dp(3), 0, dp(3), dp(8)) })
-            card.addView(makeText("READ ARTICLE  →", 10f, red, true).apply { setPadding(dp(3), dp(3), dp(3), 0) })
-            gameList.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(14) })
+            row?.addView(tile, LinearLayout.LayoutParams(0, dp(220), 1f).apply {
+                if (index % 2 == 0) rightMargin = dp(5) else leftMargin = dp(5)
+            })
         }
     }
 
+    // Dedicated immersive article reader; the WebView owns its scroll instead of nesting inside ScrollView.
     private fun showDetails(game: Game) {
-
-        val box = LinearLayout(this).apply {
+        val reader = android.app.Dialog(this)
+        val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(
-                dp(18),
-                dp(10),
-                dp(18),
-                dp(5)
-            )
+            setBackgroundColor(bg)
         }
 
-        val cover = ImageView(this).apply {
-            scaleType = ImageView.ScaleType.CENTER_CROP
-            background = rounded(panel, 14)
+        val topBar = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(16), dp(12), dp(12), dp(12))
+            setBackgroundColor(panel)
         }
-
-        if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) {
-            box.addView(cover, LinearLayout.LayoutParams(-1, dp(205)))
-            loadCover(cover, game.coverLocalPath, game.coverUrl)
-        }
-
-        box.addView(
-            makeText(game.name, 21f, white, true).apply {
-                gravity = Gravity.CENTER
-                setPadding(0, dp(12), 0, dp(5))
-            }
-        )
-
-        box.addView(
-            makeText(game.platform, 13f, red, true)
-        )
-
-        lateinit var detailsDialog: AlertDialog
-        val favoriteButton = TextView(this).apply {
-            text = if (game.isFavorite) "★  REMOVE FROM FAVORITES" else "☆  ADD TO FAVORITES"
-            textSize = 12f
-            setTextColor(if (game.isFavorite) red else white)
-            setTypeface(null, Typeface.BOLD)
+        val close = TextView(this).apply {
+            text = "‹"
+            textSize = 30f
+            setTextColor(white)
             gravity = Gravity.CENTER
-            background = rounded(panel, 12)
-            setPadding(dp(16), dp(12), dp(16), dp(12))
+            setOnClickListener { reader.dismiss() }
+        }
+        topBar.addView(close, LinearLayout.LayoutParams(dp(42), dp(44)))
+        val heading = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        heading.addView(makeText(game.name, 16f, white, true).apply {
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+        })
+        heading.addView(makeText(game.platform, 10f, red, true))
+        topBar.addView(heading, LinearLayout.LayoutParams(0, -2, 1f))
+        val favorite = TextView(this).apply {
+            text = if (game.isFavorite) "★" else "☆"
+            textSize = 25f
+            gravity = Gravity.CENTER
+            setTextColor(if (game.isFavorite) red else white)
+            setPadding(dp(8), dp(4), dp(8), dp(4))
             setOnClickListener {
                 val index = games.indexOfFirst { it.name == game.name && it.url == game.url }
                 if (index >= 0) {
                     games[index] = games[index].copy(isFavorite = !games[index].isFavorite)
                     saveGames()
-                    Toast.makeText(
-                        this@MainActivity,
-                        if (games[index].isFavorite) "Added to favorites" else "Removed from favorites",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    detailsDialog.dismiss()
+                    text = if (games[index].isFavorite) "★" else "☆"
+                    setTextColor(if (games[index].isFavorite) red else white)
                     renderGames()
                 }
             }
         }
-        box.addView(favoriteButton, LinearLayout.LayoutParams(-1, -2).apply {
-            topMargin = dp(10)
-        })
+        topBar.addView(favorite)
+        root.addView(topBar)
 
         val articleView = android.webkit.WebView(this).apply {
-            setBackgroundColor(panel)
+            setBackgroundColor(bg)
             settings.javaScriptEnabled = false
             settings.domStorageEnabled = false
-            val articleHtml = if (game.bloggerHtml.isNotBlank()) game.bloggerHtml else "<p>" + game.description + "</p>"
-            loadDataWithBaseURL(game.url, "<html><head><meta name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1'><style>*{box-sizing:border-box}html,body{width:100%;max-width:100%;overflow-x:hidden}body{background:#1b1d27;color:#eeeeF5;font-family:sans-serif;font-size:15px;line-height:1.75;padding:10px;margin:0;overflow-wrap:anywhere}img,video,iframe{display:block;max-width:100%!important;width:auto;height:auto!important;margin:12px auto;border:0}img{object-fit:contain}table{display:block;width:100%!important;max-width:100%;overflow-x:auto;border-collapse:collapse}pre,code{white-space:pre-wrap;overflow-wrap:anywhere}a{color:#78beff;overflow-wrap:anywhere}p,li,h1,h2,h3,h4{max-width:100%}ul,ol{padding-left:24px}</style></head><body>$articleHtml</body></html>", "text/html", "UTF-8", null)
+            settings.loadsImagesAutomatically = true
+            val raw = if (game.bloggerHtml.isNotBlank()) game.bloggerHtml else
+                "<h2>${game.name}</h2><p>${game.description}</p>"
+            val articleHtml = raw.replace(Regex("(?is)<script[^>]*>.*?</script>"), "")
+                .replace(Regex("(?i)\\s(onload|onclick|onerror)\\s*=\\s*(['\"]).*?\\2"), "")
+            val style = """
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <style>
+                *{box-sizing:border-box}
+                html,body{margin:0;padding:0;width:100%;max-width:100%;overflow-x:hidden}
+                body{background:#0a0b11;color:#f4f4f8;font-family:Roboto,Arial,sans-serif;font-size:16px;line-height:1.85;padding:18px 16px 32px;overflow-wrap:anywhere}
+                h1,h2,h3,h4{color:#ff6478;line-height:1.35;margin:25px 0 12px}
+                p{margin:0 0 17px}
+                img{display:block;max-width:100%!important;height:auto!important;width:auto;margin:18px auto;border-radius:12px;object-fit:contain}
+                a{color:#79c5ff;text-decoration:none;font-weight:600}
+                ul,ol{padding-left:25px;margin:10px 0 20px}
+                li{padding:4px 0}
+                blockquote{border-left:3px solid #ff6478;padding:8px 14px;margin:16px 0;background:#1b1d27}
+                table{display:block;max-width:100%;overflow-x:auto;border-collapse:collapse}
+                td,th{border:1px solid #444;padding:8px}
+                iframe,video{max-width:100%!important}
+                </style>
+            """.trimIndent()
+            loadDataWithBaseURL(game.url.ifBlank { "https://marcorx6.blogspot.com/" },
+                "<!doctype html><html><head>$style</head><body>$articleHtml</body></html>",
+                "text/html", "UTF-8", null)
         }
-        box.addView(articleView, LinearLayout.LayoutParams(-1, dp(300)))
+        root.addView(articleView, LinearLayout.LayoutParams(-1, 0, 1f))
 
-        if (game.downloadLinks.isNotBlank()) {
-
-            val links = try {
-                JSONArray(game.downloadLinks)
-            } catch (_: Exception) {
-                JSONArray()
-            }
-
-            if (links.length() > 0) {
-
-                box.addView(
-                    makeText(
-                        "BLOG DOWNLOAD LINKS",
-                        12f,
-                        white,
-                        true
-                    ).apply {
-                        setPadding(
-                            0,
-                            dp(8),
-                            0,
-                            dp(6)
-                        )
-                    }
-                )
-
-                for (i in 0 until links.length()) {
-
-                    val item = links.optJSONObject(i) ?: continue
-
-                    val label = item.optString(
-                        "label",
-                        "Open link"
-                    )
-
-                    val href = item.optString("url", "")
-
-                    val linkButton = TextView(this).apply {
-                        text = "↗  $label"
-                        textSize = 13f
-                        setTextColor(Color.rgb(120, 190, 255))
-                        gravity = Gravity.CENTER
-                        background = rounded(panel, 10)
-                        setPadding(
-                            dp(10),
-                            dp(11),
-                            dp(10),
-                            dp(11)
-                        )
-
-                        setOnClickListener {
-                            openGameLink(href)
-                        }
-                    }
-
-                    box.addView(
-                        linkButton,
-                        LinearLayout.LayoutParams(-1, -2).apply {
-                            bottomMargin = dp(6)
-                        }
-                    )
-                }
-            }
+        val bottom = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(12), dp(9), dp(12), dp(9))
+            setBackgroundColor(panel)
         }
-
-        detailsDialog = AlertDialog.Builder(this)
-            .setTitle(
-                if (game.blogImported)
-                    "BLOG GAME DETAILS"
-                else
-                    "GAME DETAILS"
-            )
-            .setView(
-                ScrollView(this).apply {
-                    addView(box)
-                }
-            )
-            .setPositiveButton("OPEN POST", null)
-            .apply { if (isAdminSession) { setNeutralButton("EDIT", null); setNegativeButton("DELETE", null) } }
-            .create()
-
-        val dialog = detailsDialog
-        dialog.setOnShowListener {
-
-            dialog.getButton(
-                AlertDialog.BUTTON_POSITIVE
-            ).setOnClickListener {
-                openGameLink(game.url)
-            }
-
-            if (isAdminSession) {
-                dialog.getButton(AlertDialog.BUTTON_NEUTRAL)?.setOnClickListener { dialog.dismiss(); showGameDialog(game) }
-                dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.setOnClickListener { dialog.dismiss(); deleteGame(game) }
-            }
+        fun readerAction(label: String, action: () -> Unit) = TextView(this).apply {
+            text = label
+            textSize = 12f
+            setTextColor(white)
+            gravity = Gravity.CENTER
+            setTypeface(null, Typeface.BOLD)
+            background = rounded(Color.rgb(48, 53, 70), 11)
+            setPadding(dp(12), dp(12), dp(12), dp(12))
+            setOnClickListener { action() }
         }
-
-        dialog.show()
+        val open = readerAction("فتح المقال الأصلي ↗") { if (game.url.isNotBlank()) openGameLink(game.url) }
+        bottom.addView(open, LinearLayout.LayoutParams(0, -2, 1f))
+        if (isAdminSession) {
+            val edit = readerAction("تعديل") { reader.dismiss(); showGameDialog(game) }
+            bottom.addView(edit, LinearLayout.LayoutParams(-2, -2).apply { leftMargin = dp(8) })
+            val delete = readerAction("حذف") { reader.dismiss(); deleteGame(game) }
+            bottom.addView(delete, LinearLayout.LayoutParams(-2, -2).apply { leftMargin = dp(8) })
+        }
+        root.addView(bottom)
+        reader.setContentView(root)
+        reader.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        reader.show()
+        reader.window?.setLayout(-1, -1)
     }
 
     // BLOG POST COMPOSER: reusable article template published directly to Blogger
