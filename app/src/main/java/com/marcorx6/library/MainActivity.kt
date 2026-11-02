@@ -327,9 +327,9 @@ class MainActivity : Activity() {
     }
 
     private fun showSideMenu() {
-        val gold = Color.rgb(211, 177, 112)
-        val ink = Color.rgb(10, 11, 15)
-        val surface = Color.rgb(24, 25, 31)
+        val gold = Color.rgb(211, 220, 236)
+        val ink = Color.rgb(8, 11, 19)
+        val surface = Color.rgb(24, 30, 44)
         val drawer = Dialog(this)
         val panel = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -339,7 +339,7 @@ class MainActivity : Activity() {
                 setColor(ink)
                 cornerRadii = floatArrayOf(0f, 0f, dp(24).toFloat(), dp(24).toFloat(),
                     dp(24).toFloat(), dp(24).toFloat(), 0f, 0f)
-                setStroke(dp(1), Color.rgb(89, 73, 49))
+                setStroke(dp(1), Color.rgb(99, 113, 141))
             })
         }
         val top = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
@@ -388,7 +388,7 @@ class MainActivity : Activity() {
         }
         menuItem("Aa", "الخط وحجم النص", "تخصيص قراءة وواجهة التطبيق") { showTypographySettings() }
         panel.addView(View(this), LinearLayout.LayoutParams(1, 0, 1f))
-        panel.addView(makeText("MARCO RX6  •  PREMIUM", 9f, Color.rgb(130, 119, 99), true).apply {
+        panel.addView(makeText("MARCO RX6  •  PREMIUM", 9f, Color.rgb(139, 151, 177), true).apply {
             gravity = Gravity.CENTER
             setPadding(0, dp(16), 0, dp(4))
         })
@@ -1379,8 +1379,8 @@ class MainActivity : Activity() {
                 gravity = Gravity.CENTER_VERTICAL
                 setPadding(dp(2), dp(9), dp(2), dp(10))
             }
-            heading.addView(makeText(title, 18f, white, true), LinearLayout.LayoutParams(0, -2, 1f))
-            heading.addView(makeText(posts.size.toString(), 10f, red, true))
+            heading.addView(makeText(title, 17f, Color.rgb(226, 232, 242), true), LinearLayout.LayoutParams(0, -2, 1f))
+            heading.addView(makeText(posts.size.toString(), 10f, Color.rgb(169, 139, 255), true))
             gameList.addView(heading, LinearLayout.LayoutParams(-1, -2))
 
             val horizontal = HorizontalScrollView(this).apply {
