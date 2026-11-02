@@ -2603,13 +2603,12 @@ class MainActivity : Activity() {
             if (existing.platform.isNotBlank()) selectedLabels.add(existing.platform)
             body.setText(existing.description)
             coverUrl.setText(existing.coverUrl)
-        } else if (pendingCoverPublicUrl.isNotBlank()) {
-            coverUrl.setText(pendingCoverPublicUrl)
             link.setText(existing.url.takeIf { it != existing.sourcePostUrl } ?: "")
             genre.setText(existing.genre)
             releaseYear.setText(existing.releaseYear)
         } else {
             body.setText("")
+            if (pendingCoverPublicUrl.isNotBlank()) coverUrl.setText(pendingCoverPublicUrl)
         }
         val preview = ImageView(this).apply { scaleType = ImageView.ScaleType.CENTER_CROP; background = rounded(panel, 13) }
         coverPreview = preview
