@@ -1,4 +1,3 @@
-
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -12,8 +11,8 @@ android {
         applicationId = "com.marcorx6.library"
         minSdk = 23
         targetSdk = 35
-        versionCode = 16
-        versionName = "7.9"
+        versionCode = 17
+        versionName = "8.0"
     }
 
     signingConfigs {
