@@ -207,7 +207,7 @@ class MainActivity : Activity() {
     private fun uploadCoverToDrive(file: File): String {
         if (!file.exists() || file.length() == 0L) throw IllegalStateException("ملف الصورة فارغ أو غير موجود")
         if (file.length() > 10L * 1024 * 1024) throw IllegalStateException("حجم صورة الغلاف يتجاوز 10 ميغابايت")
-        val mime = when ( file.extension.lowercase(Locale.ROOT) ) {
+        val mime = when (file.extension.lowercase(Locale.ROOT)) {
             "png" -> "image/png"
             "webp" -> "image/webp"
             "gif" -> "image/gif"
@@ -215,36 +215,49 @@ class MainActivity : Activity() {
         }
         val token = driveToken()
         val boundary = "MarcoRX6" + System.currentTimeMillis().toString()
-        val metadata = JSONObject().put("name", "MARCO_RX6_" + file.nameWithoutExtension + "." + when (mime) {
-            "image/png" -> "png"; "image/webp" -> "webp"; "image/gif" -> "gif"; else -> "jpg"
-        })
+        val extension = when (mime) {
+            "image/png" -> "png"
+            "image/webp" -> "webp"
+            "image/gif" -> "gif"
+            else -> "jpg"
+        }
+        val metadata = JSONObject().put("name", "MARCO_RX6_" + file.nameWithoutExtension + "." + extension)
         val output = java.io.ByteArrayOutputStream()
-        output.write(("--$boundary\\r\\nContent-Type: application/json; charset=UTF-8\\r\\n\\r\\n").toByteArray(Charsets.UTF_8))
+        output.write(("--$boundary\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n").toByteArray(Charsets.UTF_8))
         output.write(metadata.toString().toByteArray(Charsets.UTF_8))
-        output.write(("\\r\\n--$boundary\\r\\nContent-Type: $mime\\r\\n\\r\\n").toByteArray(Charsets.UTF_8))
+        output.write(("\r\n--$boundary\r\nContent-Type: $mime\r\n\r\n").toByteArray(Charsets.UTF_8))
         file.inputStream().use { it.copyTo(output) }
-        output.write("\\r\\n--$boundary--\\r\\n".toByteArray(Charsets.UTF_8))
+        output.write("\r\n--$boundary--\r\n".toByteArray(Charsets.UTF_8))
+
         val connection = URL("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id").openConnection() as HttpURLConnection
-        connection.requestMethod = "POST"; connection.connectTimeout = 30000; connection.readTimeout = 30000
+        connection.requestMethod = "POST"
+        connection.connectTimeout = 30000
+        connection.readTimeout = 30000
         connection.doOutput = true
         connection.setRequestProperty("Authorization", "Bearer $token")
         connection.setRequestProperty("Content-Type", "multipart/related; boundary=$boundary")
         connection.outputStream.use { it.write(output.toByteArray()) }
         val code = connection.responseCode
-        val response = (if (code in 200..299) connection.inputStream else connection.errorStream)?.bufferedReader()?.use { it.readText() }.orEmpty()
+        val response = (if (code in 200..299) connection.inputStream else connection.errorStream)
+            ?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
         connection.disconnect()
         if (code !in 200..299) throw IllegalStateException("فشل رفع الصورة إلى Google Drive ($code): $response")
+
         val id = JSONObject(response).optString("id")
         if (id.isBlank()) throw IllegalStateException("لم يرجع Google Drive معرّف الصورة")
-        val permission = URL("https://www.googleapis.com/drive/v3/files/$id/permissions")
-            .openConnection() as HttpURLConnection
-        permission.requestMethod = "POST"; permission.connectTimeout = 20000; permission.readTimeout = 20000
+        val permission = URL("https://www.googleapis.com/drive/v3/files/$id/permissions").openConnection() as HttpURLConnection
+        permission.requestMethod = "POST"
+        permission.connectTimeout = 20000
+        permission.readTimeout = 20000
         permission.doOutput = true
         permission.setRequestProperty("Authorization", "Bearer $token")
         permission.setRequestProperty("Content-Type", "application/json; charset=utf-8")
-        permission.outputStream.use { it.write(JSONObject().put("type", "anyone").put("role", "reader").toString().toByteArray(Charsets.UTF_8)) }
+        permission.outputStream.use {
+            it.write(JSONObject().put("type", "anyone").put("role", "reader").toString().toByteArray(Charsets.UTF_8))
+        }
         val permissionCode = permission.responseCode
-        val permissionBody = (if (permissionCode in 200..299) permission.inputStream else permission.errorStream)?.bufferedReader()?.use { it.readText() }.orEmpty()
+        val permissionBody = (if (permissionCode in 200..299) permission.inputStream else permission.errorStream)
+            ?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
         permission.disconnect()
         if (permissionCode !in 200..299) throw IllegalStateException("تم رفع الصورة لكن تعذر جعلها متاحة للموقع ($permissionCode): $permissionBody")
         return "https://drive.google.com/uc?export=view&id=$id"
