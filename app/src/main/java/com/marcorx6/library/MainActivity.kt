@@ -936,7 +936,7 @@ class MainActivity : Activity() {
                 isAdminSession = account.email.equals(adminEmail, ignoreCase = true)
                 if (!isAdminSession) googleSignInClient?.signOut()
                 createInterface()
-                Toast.makeText(this, if (isAdminSession) "Admin Google account connected" else "Only $adminEmail is allowed", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, if (isAdminSession) "Admin Google account connected" else "This account does not have administrator access. You can continue as a visitor.", Toast.LENGTH_LONG).show()
             } catch (e: Exception) { isAdminSession = false; createInterface(); Toast.makeText(this, "Google sign-in failed: ${e.message}", Toast.LENGTH_LONG).show() }
             return
         }
