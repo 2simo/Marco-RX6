@@ -1124,7 +1124,7 @@ class MainActivity : Activity() {
                 <style>
                 *{box-sizing:border-box}
                 html,body{margin:0;padding:0;width:100%;max-width:100%;overflow-x:hidden}
-                body{background:#0a0b11;color:#f4f4f8;font-family:Roboto,Arial,sans-serif;font-size:16px;line-height:1.85;padding:18px 16px 32px;overflow-wrap:anywhere}
+                body{background:#0a0b11;color:#f4f4f8;font-family:Roboto,Arial,sans-serif;font-size:16px;line-height:1.85;padding:18px 16px 32px;overflow-wrap:anywhere;direction:rtl;text-align:right}
                 h1,h2,h3,h4{color:#ff6478;line-height:1.35;margin:25px 0 12px}
                 p{margin:0 0 17px}
                 img{display:block;max-width:100%!important;height:auto!important;width:auto;margin:18px auto;border-radius:12px;object-fit:contain}
@@ -1138,7 +1138,7 @@ class MainActivity : Activity() {
                 </style>
             """.trimIndent()
             loadDataWithBaseURL(game.url.ifBlank { "https://marcorx6.blogspot.com/" },
-                "<!doctype html><html><head>$style</head><body>$articleHtml</body></html>",
+                "<!doctype html><html lang="ar" dir="rtl"><head>$style</head><body dir="rtl">$articleHtml</body></html>",
                 "text/html", "UTF-8", null)
         }
         root.addView(articleView, LinearLayout.LayoutParams(-1, 0, 1f))
