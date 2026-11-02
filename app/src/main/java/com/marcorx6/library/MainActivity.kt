@@ -207,11 +207,19 @@ class MainActivity : Activity() {
     private fun uploadCoverToDrive(file: File): String {
         if (!file.exists() || file.length() == 0L) throw IllegalStateException("ملف الصورة فارغ أو غير موجود")
         if (file.length() > 10L * 1024 * 1024) throw IllegalStateException("حجم صورة الغلاف يتجاوز 10 ميغابايت")
-        val mime = when (file.extension.lowercase(Locale.ROOT)) {
-            "png" -> "image/png"
-            "webp" -> "image/webp"
-            "gif" -> "image/gif"
-            else -> "image/jpeg"
+        // Detect the real image format from its contents. Picked images are stored
+        // with a neutral .img suffix, so relying on the filename mislabels PNG/WebP as JPEG.
+        val imageBounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(file.absolutePath, imageBounds)
+        val detectedMime = imageBounds.outMimeType?.lowercase(Locale.ROOT).orEmpty()
+        val mime = when (detectedMime) {
+            "image/png", "image/webp", "image/gif", "image/jpeg" -> detectedMime
+            else -> when (file.extension.lowercase(Locale.ROOT)) {
+                "png" -> "image/png"
+                "webp" -> "image/webp"
+                "gif" -> "image/gif"
+                else -> "image/jpeg"
+            }
         }
         val token = driveToken()
         val boundary = "MarcoRX6" + System.currentTimeMillis().toString()
@@ -1596,14 +1604,15 @@ class MainActivity : Activity() {
             }
         } else false
 
+        // Include both sources in the key: a broken local copy must not hide a valid remote URL.
         val key = when {
-            localFile != null -> "file:${localFile.absolutePath}"
-            hasBundledAsset -> "asset:$bundledAsset"
+            localFile != null -> "file:${localFile.absolutePath}|url:$imageUrl"
+            hasBundledAsset -> "asset:$bundledAsset|url:$imageUrl"
             else -> "url:$imageUrl"
         }
         image.tag = key
         image.setImageResource(android.R.drawable.ic_menu_gallery)
-        if (key == "url:") return
+        if (localFile == null && !hasBundledAsset && imageUrl.isBlank()) return
 
         coverBitmapCache.get(key)?.let {
             image.setImageBitmap(it)
@@ -1612,22 +1621,37 @@ class MainActivity : Activity() {
 
         imageExecutor.execute {
             try {
-                val bitmap = when {
-                    localFile != null -> decodeCoverFile(localFile)
-                    hasBundledAsset -> decodeCoverAsset(bundledAsset)
-                    else -> {
-                        val folder = File(cacheDir, "cover_cache").apply { mkdirs() }
-                        val cached = File(folder, stableCacheName(imageUrl) + ".img")
-                        val fresh = cached.isFile &&
-                            System.currentTimeMillis() - cached.lastModified() < 7L * 24L * 60L * 60L * 1000L
-                        if (!fresh) downloadCoverToCache(imageUrl, cached)
-                        decodeCoverFile(cached)
+                // Prefer the original local image, but fall back to the published URL if it
+                // cannot be decoded. This is important for covers selected from document providers.
+                var bitmap = localFile?.let { file ->
+                    try { decodeCoverFile(file) } catch (_: Exception) { null }
+                }
+
+                if (bitmap == null && hasBundledAsset) {
+                    bitmap = try { decodeCoverAsset(bundledAsset) } catch (_: Exception) { null }
+                }
+
+                if (bitmap == null && imageUrl.isNotBlank()) {
+                    val folder = File(cacheDir, "cover_cache").apply { mkdirs() }
+                    val cached = File(folder, stableCacheName(imageUrl) + ".img")
+                    val fresh = cached.isFile &&
+                        System.currentTimeMillis() - cached.lastModified() < 7L * 24L * 60L * 60L * 1000L
+                    if (fresh) {
+                        bitmap = try { decodeCoverFile(cached) } catch (_: Exception) { null }
+                    }
+                    // A stale or invalid cached response (for example an HTML error page) is
+                    // discarded and downloaded again once before giving up.
+                    if (bitmap == null) {
+                        cached.delete()
+                        downloadCoverToCache(imageUrl, cached)
+                        bitmap = decodeCoverFile(cached)
                     }
                 }
-                if (bitmap != null) {
-                    coverBitmapCache.put(key, bitmap)
+
+                bitmap?.let { decodedBitmap ->
+                    coverBitmapCache.put(key, decodedBitmap)
                     mainHandler.post {
-                        if (image.tag == key) image.setImageBitmap(bitmap)
+                        if (image.tag == key) image.setImageBitmap(decodedBitmap)
                     }
                 }
             } catch (_: Exception) {
