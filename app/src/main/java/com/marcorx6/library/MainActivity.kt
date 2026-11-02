@@ -568,15 +568,21 @@ class MainActivity : Activity() {
             setPadding(dp(14), 0, dp(14), 0)
         }
         searchWrap.addView(makeText("⌕", 26f, silver, true))
-        search = EditText(this).apply {
+        search = AutoCompleteTextView(this).apply {
             hint = tr("ابحث عن الألعاب والمقالات...")
             textSize = 13f
             typeface = Typeface.create("sans-serif", Typeface.NORMAL)
             setSingleLine(true)
+            threshold = 1
             setTextColor(Color.WHITE)
             setHintTextColor(Color.rgb(139, 149, 170))
             background = null
             setPadding(dp(10), 0, dp(6), 0)
+            setAdapter(ArrayAdapter(this@MainActivity, android.R.layout.simple_dropdown_item_1line,
+                games.map { it.name }.distinct().take(80)))
+            setOnFocusChangeListener { _, focused ->
+                if (focused && text.isNotEmpty()) showDropDown()
+            }
         }
         searchWrap.addView(search, LinearLayout.LayoutParams(0, dp(52), 1f))
         root.addView(searchWrap, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(13) })
