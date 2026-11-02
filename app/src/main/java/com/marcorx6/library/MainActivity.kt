@@ -25,6 +25,7 @@ import android.os.Looper
 import android.text.Editable
 import android.text.Html
 import android.text.TextWatcher
+import android.util.LruCache
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -33,6 +34,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Locale
@@ -46,6 +49,7 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.Executors
 
 data class Game(
     val name: String,
@@ -81,6 +85,12 @@ class MainActivity : Activity() {
     private var selected = "ALL"
     private var sortMode = "الأحدث"
     private val mainHandler = Handler(Looper.getMainLooper())
+    // Bound image work to a small pool and keep decoded thumbnails in memory.
+    private val coverExecutor = Executors.newFixedThreadPool(3)
+    private val coverCache = object : LruCache<String, Bitmap>((Runtime.getRuntime().maxMemory() / 8).toInt()) {
+        override fun sizeOf(key: String, value: Bitmap): Int = value.byteCount
+    }
+    private var searchRenderRunnable: Runnable? = null
     private val PICK_IMAGE_REQUEST = 1001
     private var pendingCoverLocalPath = ""
     private var coverPreview: ImageView? = null
@@ -716,7 +726,13 @@ class MainActivity : Activity() {
         root.requestApplyInsets()
         search.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { renderGames() }
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                // Avoid rebuilding every shelf for every keystroke.
+                searchRenderRunnable?.let { mainHandler.removeCallbacks(it) }
+                searchRenderRunnable = Runnable { renderGames() }.also {
+                    mainHandler.postDelayed(it, 180L)
+                }
+            }
             override fun afterTextChanged(s: Editable?) {}
         })
         renderGames()
@@ -1100,57 +1116,78 @@ class MainActivity : Activity() {
             .trim()
     }
 
-    // IMAGE LOADER
+    // IMAGE LOADER: bounded background work, downsampled bitmaps and an LRU cache.
     private fun loadCover(
         image: ImageView,
         localPath: String,
         imageUrl: String
     ) {
-
         val key = localPath.ifBlank { imageUrl }
-
         image.tag = key
         image.setImageResource(android.R.drawable.ic_menu_gallery)
-
         if (key.isBlank()) return
 
-        Thread {
+        coverCache.get(key)?.let {
+            image.setImageBitmap(it)
+            return
+        }
+
+        coverExecutor.execute {
             try {
-
-                val bitmap = if (localPath.isNotBlank()) {
-
-                    BitmapFactory.decodeFile(localPath)
-
+                val bytes = if (localPath.isNotBlank()) {
+                    File(localPath).inputStream().use { readCoverBytes(it) }
                 } else {
-
-                    val connection =
-                        URL(imageUrl).openConnection() as HttpURLConnection
-
+                    val connection = URL(imageUrl).openConnection() as HttpURLConnection
                     connection.connectTimeout = 10000
                     connection.readTimeout = 10000
                     connection.instanceFollowRedirects = true
-
                     try {
-                        connection.connect()
-                        connection.inputStream.use {
-                            BitmapFactory.decodeStream(it)
-                        }
+                        connection.inputStream.use { readCoverBytes(it) }
                     } finally {
                         connection.disconnect()
                     }
                 }
 
-                if (bitmap != null) {
-                    mainHandler.post {
-                        if (image.tag == key) {
-                            image.setImageBitmap(bitmap)
-                        }
-                    }
+                val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+                if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return@execute
+
+                val targetWidth = dp(142) * 2
+                val targetHeight = dp(190) * 2
+                var sampleSize = 1
+                while (bounds.outWidth / (sampleSize * 2) >= targetWidth &&
+                    bounds.outHeight / (sampleSize * 2) >= targetHeight
+                ) {
+                    sampleSize *= 2
                 }
 
+                val options = BitmapFactory.Options().apply { inSampleSize = sampleSize }
+                val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
+                    ?: return@execute
+                coverCache.put(key, bitmap)
+
+                mainHandler.post {
+                    if (!isFinishing && image.tag == key) image.setImageBitmap(bitmap)
+                }
             } catch (_: Exception) {
+                // Keep the lightweight placeholder when an image is unavailable.
             }
-        }.start()
+        }
+    }
+
+    // Protect the UI from unusually large or malformed cover downloads.
+    private fun readCoverBytes(input: InputStream): ByteArray {
+        val output = ByteArrayOutputStream()
+        val buffer = ByteArray(8192)
+        var total = 0
+        while (true) {
+            val count = input.read(buffer)
+            if (count < 0) break
+            total += count
+            if (total > 12 * 1024 * 1024) throw IllegalStateException("Cover image is too large")
+            output.write(buffer, 0, count)
+        }
+        return output.toByteArray()
     }
 
     private fun chooseCover() {
