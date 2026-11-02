@@ -1414,8 +1414,8 @@ class MainActivity : Activity() {
             addView(makeText(label, 10f, Color.LTGRAY))
         }
         val summary = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        summary.addView(metric(compactMetric(totalViews), "مشاهدات هذا الجهاز"), LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
-        summary.addView(metric(compactMetric(totalRatings), "تقييمات محلية"), LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
+        summary.addView(metric(compactMetric(totalViews), "مشاهدات عالمية"), LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
+        summary.addView(metric(compactMetric(totalRatings), "تقييمات عالمية"), LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
         summary.addView(metric(String.format(Locale.ROOT, "%.1f", average), "متوسط التقييم"), LinearLayout.LayoutParams(0, -2, 1f))
         box.addView(summary)
         box.addView(makeText("الأكثر تفاعلاً", 14f, Color.rgb(180, 151, 255), true).apply { setPadding(0, dp(18), 0, dp(8)) })
@@ -1431,7 +1431,7 @@ class MainActivity : Activity() {
             line.addView(makeText("◉ " + compactMetric(viewCount(game)) + "  ★ " + ratingCount(game), 9f, gray))
             box.addView(line, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(5) })
         }
-        box.addView(makeText("تنبيه: هذه الأرقام محفوظة محلياً على هذا الجهاز وليست إحصاءات جميع المستخدمين.", 10f, Color.rgb(255, 190, 105)).apply {
+        box.addView(makeText("تُحدّث هذه الإحصاءات من Firebase وتُشارك بين مستخدمي MARCO RX6.", 10f, Color.rgb(255, 190, 105)).apply {
             setPadding(0, dp(12), 0, 0)
         })
         AlertDialog.Builder(this).setTitle("تحليلات MARCO RX6")
