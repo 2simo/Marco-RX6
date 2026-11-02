@@ -1360,6 +1360,9 @@ class MainActivity : Activity() {
             val newSum = oldSum - previous + score.toLong()
             transaction.set(ratingRef, mapOf("score" to score, "updatedAt" to System.currentTimeMillis()))
             transaction.set(articleRef, mapOf(
+                "views" to (articleSnapshot.getLong("views") ?: 0L),
+                "name" to game.name,
+                "url" to game.url,
                 "ratingCount" to newCount,
                 "ratingSum" to newSum,
                 "updatedAt" to System.currentTimeMillis()
