@@ -6,6 +6,7 @@ import android.app.Activity
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.AlertDialog
+import android.app.Dialog
 import android.content.Intent
 import com.google.android.gms.auth.GoogleAuthUtil
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -315,6 +316,86 @@ class MainActivity : Activity() {
             .show()
     }
 
+    private fun showSideMenu() {
+        val gold = Color.rgb(211, 177, 112)
+        val ink = Color.rgb(10, 11, 15)
+        val surface = Color.rgb(24, 25, 31)
+        val drawer = Dialog(this)
+        val panel = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutDirection = if (currentLanguage() == "ar") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
+            setPadding(dp(20), dp(24), dp(20), dp(18))
+            setBackground(GradientDrawable().apply {
+                setColor(ink)
+                cornerRadii = floatArrayOf(0f, 0f, dp(24).toFloat(), dp(24).toFloat(),
+                    dp(24).toFloat(), dp(24).toFloat(), 0f, 0f)
+                setStroke(dp(1), Color.rgb(89, 73, 49))
+            })
+        }
+        val top = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+        val brand = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        brand.addView(makeText("MARCO", 10f, gold, true))
+        brand.addView(makeText("RX6", 27f, white, true))
+        top.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
+        top.addView(TextView(this).apply {
+            text = "×"; textSize = 30f; setTextColor(Color.LTGRAY); gravity = Gravity.CENTER
+            setPadding(dp(12), 0, dp(12), 0); setOnClickListener { drawer.dismiss() }
+        })
+        panel.addView(top)
+        panel.addView(makeText("القائمة الرئيسية", 10f, Color.GRAY, true).apply {
+            setPadding(0, dp(24), 0, dp(12))
+        })
+        fun menuItem(icon: String, label: String, detail: String = "", action: () -> Unit) {
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                background = rounded(surface, 15)
+                setPadding(dp(14), dp(14), dp(14), dp(14))
+                isClickable = true
+                isFocusable = true
+                setOnClickListener { drawer.dismiss(); action() }
+            }
+            row.addView(makeText(icon, 21f, gold, true), LinearLayout.LayoutParams(dp(38), -2))
+            val labels = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+            labels.addView(makeText(label, 13f, white, true))
+            if (detail.isNotBlank()) labels.addView(makeText(detail, 9f, Color.LTGRAY).apply { setPadding(0, dp(3), 0, 0) })
+            row.addView(labels, LinearLayout.LayoutParams(0, -2, 1f))
+            row.addView(makeText("‹", 20f, gold, true))
+            panel.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(9) })
+        }
+        menuItem("♙", tr("حسابي"), tr("ملفي الشخصي")) { showProfile() }
+        menuItem("文", tr("إعدادات اللغة"), tr("اختر لغة التطبيق")) { showLanguagePicker() }
+        menuItem("♛", if (isAdminSession) tr("● مسؤول") else tr("دخول المسؤول  ↗"),
+            if (isAdminSession) "تسجيل الخروج من حساب المسؤول" else "إدارة ونشر مقالات المدونة") {
+            if (isAdminSession) signOutAdmin() else startGoogleSignIn()
+        }
+        menuItem("⟳", tr("⟳  مزامنة"), if (isSyncing) "المزامنة قيد التنفيذ" else "تحديث المقالات من المدونة") {
+            syncFromBlog(showResult = true)
+        }
+        menuItem("♧", tr("♧  التنبيهات"), "التحكم في إشعارات المقالات الجديدة") { showNotificationSettings() }
+        if (isAdminSession) {
+            menuItem("＋", tr("＋  نشر"), "إضافة مقال جديد إلى المدونة") { showGameDialog() }
+        }
+        panel.addView(View(this), LinearLayout.LayoutParams(1, 0, 1f))
+        panel.addView(makeText("MARCO RX6  •  PREMIUM", 9f, Color.rgb(130, 119, 99), true).apply {
+            gravity = Gravity.CENTER
+            setPadding(0, dp(16), 0, dp(4))
+        })
+        drawer.setContentView(panel)
+        drawer.window?.let { w ->
+            w.setBackgroundDrawableResource(android.R.color.transparent)
+            w.addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            val lp = w.attributes
+            lp.width = dp(310)
+            lp.height = -1
+            lp.gravity = if (currentLanguage() == "ar") Gravity.RIGHT else Gravity.LEFT
+            lp.dimAmount = 0.62f
+            w.attributes = lp
+        }
+        drawer.show()
+        drawer.window?.setLayout(dp(310), -1)
+    }
+
     private fun createInterface() {
         // MARCO RX6 Premium: luxury editorial layout; all existing actions remain connected.
         val gold = Color.rgb(211, 177, 112)
@@ -354,15 +435,13 @@ class MainActivity : Activity() {
             setPadding(dp(13), dp(12), dp(13), dp(12))
             setOnClickListener { action() }
         }
-        header.addView(headerAction(tr("حسابي")) { showProfile() },
-            LinearLayout.LayoutParams(-2, -2).apply { marginEnd = dp(7) })
-        header.addView(headerAction("文") { showLanguagePicker() },
-            LinearLayout.LayoutParams(-2, -2).apply { marginEnd = dp(7) })
-        val adminButton = headerAction(if (isAdminSession) tr("● مسؤول") else tr("دخول المسؤول  ↗")) {
-            if (isAdminSession) signOutAdmin() else startGoogleSignIn()
+        val menuButton = headerAction("☰") { showSideMenu() }.apply {
+            textSize = 23f
+            setTextColor(gold)
+            contentDescription = "القائمة الجانبية"
+            minWidth = dp(52)
         }
-        adminButton.setTextColor(gold)
-        header.addView(adminButton)
+        header.addView(menuButton)
         root.addView(header)
 
         val hero = LinearLayout(this).apply {
@@ -502,32 +581,19 @@ class MainActivity : Activity() {
         scroll.addView(gameList)
         root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
 
-        val actions = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER
-            background = rounded(Color.rgb(24, 24, 27), 17)
-            setPadding(dp(7), dp(7), dp(7), dp(7))
-        }
-        fun navAction(label: String, accent: Boolean = false, action: () -> Unit) =
-            TextView(this).apply {
-                text = label
-                textSize = 10f
-                setTextColor(if (accent) ink else Color.rgb(219, 207, 183))
+        if (isAdminSession) {
+            val publish = TextView(this).apply {
+                text = tr("＋  نشر")
+                textSize = 11f
+                setTextColor(ink)
                 setTypeface(null, Typeface.BOLD)
                 gravity = Gravity.CENTER
-                background = rounded(if (accent) gold else Color.TRANSPARENT, 12)
-                setPadding(dp(10), dp(13), dp(10), dp(13))
-                setOnClickListener { action() }
+                background = rounded(gold, 14)
+                setPadding(dp(18), dp(13), dp(18), dp(13))
+                setOnClickListener { showGameDialog() }
             }
-        actions.addView(navAction(tr("⟳  مزامنة")) { syncFromBlog(showResult = true) },
-            LinearLayout.LayoutParams(0, -2, 1f))
-        actions.addView(navAction(tr("♧  التنبيهات")) { showNotificationSettings() },
-            LinearLayout.LayoutParams(0, -2, 1f))
-        if (isAdminSession) {
-            actions.addView(navAction(tr("＋  نشر"), true) { showGameDialog() },
-                LinearLayout.LayoutParams(0, -2, 1f))
+            root.addView(publish, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(9) })
         }
-        root.addView(actions, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(9) })
 
         setContentView(root)
         root.requestApplyInsets()
