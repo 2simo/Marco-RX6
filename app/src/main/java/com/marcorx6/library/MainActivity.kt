@@ -1894,26 +1894,97 @@ class MainActivity : Activity() {
 
     private fun showStartupExperience() {
         val splash = Dialog(this)
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(dp(28), dp(30), dp(28), dp(26))
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Color.rgb(23, 17, 43), Color.rgb(8, 10, 24), Color.rgb(5, 7, 17))
+            ).apply {
+                cornerRadius = dp(30).toFloat()
+                setStroke(dp(1), Color.rgb(105, 75, 165))
+            }
+        }
+
         val logo = ImageView(this).apply {
             setImageResource(R.drawable.marco_rx6_brand)
             scaleType = ImageView.ScaleType.FIT_CENTER
             contentDescription = "MARCO RX6"
-            setPadding(dp(8), dp(8), dp(8), dp(8))
-            alpha = 0f
-            scaleX = 0.94f
-            scaleY = 0.94f
             background = GradientDrawable().apply {
-                setColor(Color.rgb(7, 2, 15))
-                cornerRadius = dp(26).toFloat()
-                setStroke(dp(1), Color.rgb(166, 76, 255))
+                shape = GradientDrawable.OVAL
+                setColor(Color.rgb(13, 10, 29))
+                setStroke(dp(1), Color.rgb(139, 92, 246))
             }
+            setPadding(dp(12), dp(12), dp(12), dp(12))
+            alpha = 0f
+            scaleX = 0.82f
+            scaleY = 0.82f
         }
-        splash.setContentView(logo)
+        content.addView(logo, LinearLayout.LayoutParams(dp(112), dp(112)).apply {
+            bottomMargin = dp(18)
+        })
+
+        content.addView(makeText("MARCO RX6", 23f, Color.WHITE, true).apply {
+            letterSpacing = 0.12f
+            gravity = Gravity.CENTER
+        })
+        content.addView(makeText("GAME LIBRARY  •  BLOG HUB", 10f, Color.rgb(180, 165, 215), true).apply {
+            letterSpacing = 0.13f
+            gravity = Gravity.CENTER
+            setPadding(0, dp(5), 0, dp(25))
+        })
+
+        val progressTrack = FrameLayout(this).apply {
+            background = GradientDrawable().apply {
+                setColor(Color.rgb(42, 34, 63))
+                cornerRadius = dp(20).toFloat()
+            }
+            clipToOutline = true
+        }
+        val progressFill = View(this).apply {
+            background = GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(Color.rgb(91, 63, 210), Color.rgb(178, 112, 255), Color.rgb(95, 210, 220))
+            ).apply { cornerRadius = dp(20).toFloat() }
+        }
+        progressTrack.addView(progressFill, FrameLayout.LayoutParams(0, -1, Gravity.START))
+        content.addView(progressTrack, LinearLayout.LayoutParams(-1, dp(7)))
+
+        val loadingText = makeText("جارٍ تجهيز تجربتك...", 11f, Color.rgb(190, 184, 210)).apply {
+            gravity = Gravity.CENTER
+            setPadding(0, dp(14), 0, 0)
+        }
+        content.addView(loadingText)
+
+        splash.setContentView(content)
         splash.window?.setBackgroundDrawableResource(android.R.color.transparent)
         splash.setCancelable(false)
         splash.show()
-        splash.window?.setLayout(dp(310), dp(310))
-        logo.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(520L).start()
+        splash.window?.setLayout(dp(326), -2)
+
+        logo.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(650L)
+            .setInterpolator(android.view.animation.OvershootInterpolator(1.15f)).start()
+
+        progressTrack.post {
+            val animator = android.animation.ValueAnimator.ofInt(0, 100).apply {
+                duration = 1750L
+                interpolator = android.view.animation.DecelerateInterpolator()
+                addUpdateListener { animation ->
+                    val percent = animation.animatedValue as Int
+                    val params = progressFill.layoutParams
+                    params.width = (progressTrack.width * percent / 100f).toInt()
+                    progressFill.layoutParams = params
+                    loadingText.text = when {
+                        percent < 35 -> "جارٍ تهيئة المكتبة..."
+                        percent < 75 -> "جارٍ تجهيز المحتوى..."
+                        else -> "مرحباً بك في MARCO RX6"
+                    }
+                }
+            }
+            animator.start()
+        }
+
         mainHandler.postDelayed({
             if (!isFinishing) {
                 splash.dismiss()
@@ -1925,7 +1996,7 @@ class MainActivity : Activity() {
                     showProfile()
                 }
             }
-        }, 1250L)
+        }, 1850L)
     }
 
 
