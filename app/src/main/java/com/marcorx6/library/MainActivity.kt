@@ -239,234 +239,186 @@ class MainActivity : Activity() {
         }
 
     private fun createInterface() {
-
+        // Fresh MARCO RX6 dashboard: editorial hero, compact controls and a clean image gallery.
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(18), dp(12), dp(18), dp(12))
-            setBackgroundColor(bg)
+            setPadding(dp(18), dp(14), dp(18), dp(10))
+            setBackgroundColor(Color.rgb(8, 10, 17))
         }
-
         @Suppress("DEPRECATION")
         root.setOnApplyWindowInsetsListener { view, insets ->
-            view.setPadding(
-                dp(18),
-                dp(12) + insets.systemWindowInsetTop,
-                dp(18),
-                dp(12) + insets.systemWindowInsetBottom
-            )
+            view.setPadding(dp(18), dp(14) + insets.systemWindowInsetTop,
+                dp(18), dp(10) + insets.systemWindowInsetBottom)
             insets
         }
 
-        // Brand row: keep account control separate from the main actions.
         val header = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, dp(4), 0, dp(8))
         }
-        val brand = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        brand.addView(makeText("MARCO RX6", 25f, white, true))
-        brand.addView(makeText("THE OFFICIAL BLOG EXPERIENCE", 10f, red, true))
-        header.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
-
+        val logo = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        logo.addView(makeText("MARCO", 12f, Color.rgb(255, 83, 104), true))
+        logo.addView(makeText("RX6", 29f, white, true))
+        header.addView(logo, LinearLayout.LayoutParams(0, -2, 1f))
         val adminButton = TextView(this).apply {
-            text = if (isAdminSession) "✓ ADMIN" else "ADMIN"
+            text = if (isAdminSession) "● ADMIN" else "ADMIN  ↗"
             textSize = 10f
             setTextColor(white)
             setTypeface(null, Typeface.BOLD)
             gravity = Gravity.CENTER
-            background = rounded(Color.rgb(48, 53, 70), 12)
-            setPadding(dp(11), dp(11), dp(11), dp(11))
+            background = rounded(Color.rgb(31, 35, 49), 18)
+            setPadding(dp(15), dp(11), dp(15), dp(11))
             setOnClickListener { if (isAdminSession) signOutAdmin() else startGoogleSignIn() }
         }
         header.addView(adminButton)
         root.addView(header)
 
-        // Action row: publish is explicit and never represented by a heart/favorite icon.
-        val actionRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-        }
-        fun actionButton(label: String, color: Int, onTap: () -> Unit) =
-            TextView(this).apply {
-                text = label
-                textSize = 12f
-                setTextColor(white)
-                setTypeface(null, Typeface.BOLD)
-                gravity = Gravity.CENTER
-                background = rounded(color, 12)
-                setPadding(dp(13), dp(11), dp(13), dp(11))
-                setOnClickListener { onTap() }
-            }
-        val syncButton = actionButton("⟳  مزامنة", Color.rgb(48, 53, 70)) {
-            syncFromBlog(showResult = true)
-        }
-        actionRow.addView(syncButton, LinearLayout.LayoutParams(0, -2, 1f))
-        val notificationButton = actionButton("♧  التنبيهات", Color.rgb(48, 53, 70)) {
-            showNotificationSettings()
-        }
-        actionRow.addView(notificationButton, LinearLayout.LayoutParams(0, -2, 1f).apply {
-            leftMargin = dp(7)
-        })
-        if (isAdminSession) {
-            val addButton = actionButton("＋  نشر مقال", red) { showGameDialog() }
-            actionRow.addView(addButton, LinearLayout.LayoutParams(0, -2, 1f).apply {
-                leftMargin = dp(7)
-            })
-        }
-        root.addView(actionRow, LinearLayout.LayoutParams(-1, -2).apply {
-            topMargin = dp(12)
-        })
-
         val hero = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            background = rounded(panel, 20)
-            setPadding(dp(18), dp(18), dp(18), dp(18))
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Color.rgb(91, 26, 48), Color.rgb(35, 27, 52), Color.rgb(19, 28, 45))
+            ).apply { cornerRadius = dp(23).toFloat() }
+            setPadding(dp(20), dp(19), dp(20), dp(19))
+            elevation = dp(3).toFloat()
         }
+        hero.addView(makeText("YOUR GAMING UNIVERSE", 10f, Color.rgb(255, 156, 169), true))
+        hero.addView(makeText("Discover. Play.\nEnjoy more.", 27f, white, true).apply {
+            setPadding(0, dp(7), 0, dp(5))
+        })
+        hero.addView(makeText("Games, guides and the latest releases — all in one place.", 12f,
+            Color.rgb(220, 220, 231)))
+        val heroStats = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, dp(14), 0, 0)
+        }
+        heroStats.addView(makeText("✦  ${games.size} ARTICLES", 10f, white, true))
+        heroStats.addView(makeText("     •     UPDATED BLOG", 10f, Color.rgb(255, 178, 190), true))
+        hero.addView(heroStats)
+        root.addView(hero, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(9) })
 
-        hero.addView(
-            makeText("WELCOME TO MARCO RX6", 10f, red, true)
-        )
-        hero.addView(
-            makeText("GAMES, NEWS\n& DOWNLOADS.", 27f, white, true)
-        )
-        hero.addView(
-            makeText("Discover the latest articles, guides and releases.", 12f, gray)
-        )
-
-        root.addView(
-            hero,
-            LinearLayout.LayoutParams(-1, -2).apply {
-                topMargin = dp(18)
-            }
-        )
-
+        val searchWrap = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            background = rounded(Color.rgb(24, 27, 39), 15)
+            setPadding(dp(13), 0, dp(13), 0)
+        }
+        searchWrap.addView(makeText("⌕", 25f, Color.rgb(255, 83, 104), true))
         search = EditText(this).apply {
-            hint = "Search articles, games and guides..."
+            hint = "Search games and articles..."
             textSize = 14f
             setSingleLine(true)
             setTextColor(white)
-            setHintTextColor(Color.GRAY)
-            background = rounded(panel, 14)
-            setPadding(dp(15), 0, dp(15), 0)
+            setHintTextColor(Color.rgb(137, 143, 158))
+            background = null
+            setPadding(dp(10), 0, dp(6), 0)
         }
-
-        root.addView(
-            search,
-            LinearLayout.LayoutParams(-1, dp(50)).apply {
-                topMargin = dp(16)
-            }
-        )
+        searchWrap.addView(search, LinearLayout.LayoutParams(0, dp(52), 1f))
+        root.addView(searchWrap, LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(15)
+        })
 
         val filterScroll = HorizontalScrollView(this).apply {
             isHorizontalScrollBarEnabled = false
+            clipToPadding = false
         }
-
         filters = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-
-        (listOf("ALL", "BLOG", "FAVORITES") + platforms.drop(3)).forEach { platform ->
-
+        (listOf("ALL", "BLOG", "FAVORITES") + platforms.drop(3)).forEach { category ->
             val chip = TextView(this).apply {
-                text = platform
-                textSize = 12f
+                text = category
+                textSize = 11f
                 gravity = Gravity.CENTER
                 setTypeface(null, Typeface.BOLD)
-                setPadding(dp(15), dp(11), dp(15), dp(11))
-
-                setOnClickListener {
-                    selected = platform
-                    renderGames()
-                }
+                setPadding(dp(16), dp(11), dp(16), dp(11))
+                setOnClickListener { selected = category; renderGames() }
             }
-
-            filters.addView(
-                chip,
-                LinearLayout.LayoutParams(-2, -2).apply {
-                    rightMargin = dp(8)
-                }
-            )
+            filters.addView(chip, LinearLayout.LayoutParams(-2, -2).apply {
+                rightMargin = dp(8)
+            })
         }
-
         filterScroll.addView(filters)
+        root.addView(filterScroll, LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(13)
+            bottomMargin = dp(15)
+        })
 
-        root.addView(
-            filterScroll,
-            LinearLayout.LayoutParams(-1, -2).apply {
-                topMargin = dp(15)
-                bottomMargin = dp(14)
-            }
-        )
-
-        val titleRow = LinearLayout(this).apply {
+        val section = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-
-        titleRow.addView(
-            makeText("LATEST ARTICLES", 16f, white, true),
-            LinearLayout.LayoutParams(0, -2, 1f)
-        )
-
-        countText = makeText("0 POSTS", 10f, red, true)
-        titleRow.addView(countText)
-        val sortButton = makeText("SORT: LATEST  ↕", 10f, white, true).apply {
+        val sectionTitles = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        sectionTitles.addView(makeText("EXPLORE", 10f, Color.rgb(255, 83, 104), true))
+        sectionTitles.addView(makeText("Latest posts", 20f, white, true))
+        section.addView(sectionTitles, LinearLayout.LayoutParams(0, -2, 1f))
+        countText = makeText("0 POSTS", 10f, Color.rgb(255, 112, 130), true)
+        section.addView(countText)
+        val sortButton = TextView(this).apply {
+            text = "↕"
+            textSize = 19f
+            setTextColor(white)
             gravity = Gravity.CENTER
-            background = rounded(panel, 10)
-            setPadding(dp(10), dp(9), dp(10), dp(9))
+            background = rounded(Color.rgb(31, 35, 49), 12)
+            setPadding(dp(12), dp(7), dp(12), dp(7))
+            contentDescription = "Sort posts"
             setOnClickListener {
-                sortMode = when (sortMode) {
-                    "LATEST" -> "A-Z"
-                    "A-Z" -> "FAVORITES"
-                    else -> "LATEST"
-                }
-                text = "$sortMode  ↕"
+                sortMode = when (sortMode) { "LATEST" -> "A-Z"; "A-Z" -> "FAVORITES"; else -> "LATEST" }
                 renderGames()
+                Toast.makeText(this@MainActivity, "Sort: $sortMode", Toast.LENGTH_SHORT).show()
             }
         }
-        titleRow.addView(sortButton, LinearLayout.LayoutParams(-2, -2).apply {
-            leftMargin = dp(8)
-        })
-        root.addView(titleRow)
+        section.addView(sortButton, LinearLayout.LayoutParams(-2, -2).apply { leftMargin = dp(9) })
+        root.addView(section, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
 
-        val scroll = ScrollView(this)
-
+        val scroll = ScrollView(this).apply {
+            isVerticalScrollBarEnabled = false
+            clipToPadding = false
+        }
         gameList = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(0, dp(14), 0, dp(12))
+            setPadding(0, dp(9), 0, dp(18))
         }
-
         scroll.addView(gameList)
+        root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
 
-        root.addView(
-            scroll,
-            LinearLayout.LayoutParams(-1, 0, 1f)
-        )
-
-        root.addView(
-            makeText("MARCO RX6  •  YOUR GAMING BLOG", 9f, Color.GRAY).apply {
+        val actions = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            background = rounded(Color.rgb(20, 23, 34), 17)
+            setPadding(dp(7), dp(7), dp(7), dp(7))
+        }
+        fun navAction(label: String, accent: Boolean = false, action: () -> Unit) =
+            TextView(this).apply {
+                text = label
+                textSize = 11f
+                setTextColor(white)
+                setTypeface(null, Typeface.BOLD)
                 gravity = Gravity.CENTER
-                setPadding(0, dp(10), 0, dp(5))
+                background = rounded(if (accent) Color.rgb(205, 48, 72) else Color.TRANSPARENT, 12)
+                setPadding(dp(10), dp(12), dp(10), dp(12))
+                setOnClickListener { action() }
             }
-        )
+        actions.addView(navAction("⟳  SYNC") { syncFromBlog(showResult = true) },
+            LinearLayout.LayoutParams(0, -2, 1f))
+        actions.addView(navAction("♧  ALERTS") { showNotificationSettings() },
+            LinearLayout.LayoutParams(0, -2, 1f))
+        if (isAdminSession) {
+            actions.addView(navAction("＋  PUBLISH", true) { showGameDialog() },
+                LinearLayout.LayoutParams(0, -2, 1f))
+        }
+        root.addView(actions, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
 
         setContentView(root)
         root.requestApplyInsets()
-
         search.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(
-                s: CharSequence?, start: Int, count: Int, after: Int
-            ) {}
-
-            override fun onTextChanged(
-                s: CharSequence?, start: Int, before: Int, count: Int
-            ) {
-                renderGames()
-            }
-
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { renderGames() }
             override fun afterTextChanged(s: Editable?) {}
         })
-
         renderGames()
     }
 
