@@ -1712,6 +1712,11 @@ class MainActivity : Activity() {
         val ratingPrefs = historyPreferences()
         val ratingKey = "rating_" + articleKey(game)
         val selectedRating = ratingPrefs.getInt(ratingKey, 0)
+        val ratingSummary = makeText(
+            if (ratingCount(game) > 0) "متوسط تقييمك على هذا الجهاز: " + String.format(Locale.ROOT, "%.1f / 5", averageRating(game))
+            else "قيّم اللعبة وسجّل رأيك على هذا الجهاز",
+            10f, Color.rgb(191, 199, 215)
+        ).apply { setPadding(dp(14), dp(3), dp(14), dp(9)) }
         for (star in 1..5) {
             ratingRow.addView(TextView(this).apply {
                 text = if (star <= selectedRating) "★" else "☆"
@@ -1734,11 +1739,6 @@ class MainActivity : Activity() {
                 }
             })
         }
-        val ratingSummary = makeText(
-            if (ratingCount(game) > 0) "متوسط تقييمك على هذا الجهاز: " + String.format(Locale.ROOT, "%.1f / 5", averageRating(game))
-            else "قيّم اللعبة وسجّل رأيك على هذا الجهاز",
-            10f, Color.rgb(191, 199, 215)
-        ).apply { setPadding(dp(14), dp(3), dp(14), dp(9)) }
         root.addView(ratingRow)
         root.addView(ratingSummary)
 
