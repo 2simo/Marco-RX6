@@ -484,6 +484,20 @@ class MainActivity : Activity() {
             }.show()
     }
 
+    // Ask Android for the device's fastest supported mode (up to 144 Hz).
+    // The system may still choose a lower rate to save power or enforce device policy.
+    @Suppress("DEPRECATION")
+    private fun requestHighRefreshRate() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
+        val modes = windowManager.defaultDisplay.supportedModes
+        val refreshRate = modes.maxOfOrNull { it.refreshRate } ?: return
+        if (refreshRate > 60f) {
+            window.attributes = window.attributes.apply {
+                preferredRefreshRate = refreshRate.coerceAtMost(144f)
+            }
+        }
+    }
+
     private fun createInterface() {
         // LIQUID METAL redesign: premium chrome surfaces, clear hierarchy and quick navigation.
         val silver = Color.rgb(226, 232, 242)
@@ -739,6 +753,7 @@ class MainActivity : Activity() {
             leftMargin = dp(16); rightMargin = dp(16); bottomMargin = dp(12)
         })
         setContentView(shell)
+        requestHighRefreshRate()
         root.requestApplyInsets()
         search.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -1431,9 +1446,9 @@ class MainActivity : Activity() {
                 "BLOG" -> item.blogImported
                 else -> item.platform == selected
             }
-            val searchMatch = item.name.lowercase(Locale.ROOT).contains(query) ||
-                item.platform.lowercase(Locale.ROOT).contains(query) ||
-                item.description.lowercase(Locale.ROOT).contains(query)
+            val searchMatch = item.name.contains(query, ignoreCase = true) ||
+                item.platform.contains(query, ignoreCase = true) ||
+                item.description.contains(query, ignoreCase = true)
             categoryMatch && searchMatch
         }
         val sorted = when (sortMode) {
@@ -1488,52 +1503,66 @@ class MainActivity : Activity() {
                 orientation = LinearLayout.HORIZONTAL
                 setPadding(dp(2), dp(2), dp(2), dp(13))
             }
-            posts.forEach { post ->
-                // Keep the original 142x190 cover intact; metadata sits below it.
-                val card = LinearLayout(this).apply {
-                    orientation = LinearLayout.VERTICAL
-                    gravity = Gravity.CENTER_HORIZONTAL
-                    isClickable = true
-                    isFocusable = true
-                    setOnClickListener { showDetails(post) }
-                }
-                val frame = FrameLayout(this).apply {
-                    background = rounded(Color.rgb(198, 204, 218), 13)
-                    clipToOutline = true
-                    elevation = dp(4).toFloat()
-                    isClickable = true
-                    isFocusable = true
-                    setOnClickListener { showDetails(post) }
-                }
-                val cover = ImageView(this).apply {
-                    scaleType = ImageView.ScaleType.CENTER_CROP
-                    setBackgroundColor(Color.rgb(29, 32, 58))
-                    contentDescription = post.name
-                    isClickable = true
-                    setOnClickListener { showDetails(post) }
-                }
-                frame.addView(cover, FrameLayout.LayoutParams(-1, -1))
-                if (post.coverUrl.isNotBlank() || post.coverLocalPath.isNotBlank()) {
-                    loadCover(cover, post.coverLocalPath, post.coverUrl)
-                } else {
-                    cover.setImageResource(android.R.drawable.ic_menu_gallery)
-                    cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
-                }
-                card.addView(frame, LinearLayout.LayoutParams(dp(142), dp(190)))
+            // Build only the first cards immediately; append more as the user scrolls.
+            // This keeps first draw and image decoding responsive for large libraries.
+            var nextPostIndex = 0
+            fun appendNextBatch() {
+                val endIndex = (nextPostIndex + 8).coerceAtMost(posts.size)
+                while (nextPostIndex < endIndex) {
+                    val post = posts[nextPostIndex++]
+                    // Keep the original 142x190 cover intact; metadata sits below it.
+                    val card = LinearLayout(this).apply {
+                        orientation = LinearLayout.VERTICAL
+                        gravity = Gravity.CENTER_HORIZONTAL
+                        isClickable = true
+                        isFocusable = true
+                        setOnClickListener { showDetails(post) }
+                    }
+                    val frame = FrameLayout(this).apply {
+                        background = rounded(Color.rgb(198, 204, 218), 13)
+                        clipToOutline = true
+                        elevation = dp(4).toFloat()
+                        isClickable = true
+                        isFocusable = true
+                        setOnClickListener { showDetails(post) }
+                    }
+                    val cover = ImageView(this).apply {
+                        scaleType = ImageView.ScaleType.CENTER_CROP
+                        setBackgroundColor(Color.rgb(29, 32, 58))
+                        contentDescription = post.name
+                        isClickable = true
+                        setOnClickListener { showDetails(post) }
+                    }
+                    frame.addView(cover, FrameLayout.LayoutParams(-1, -1))
+                    if (post.coverUrl.isNotBlank() || post.coverLocalPath.isNotBlank()) {
+                        loadCover(cover, post.coverLocalPath, post.coverUrl)
+                    } else {
+                        cover.setImageResource(android.R.drawable.ic_menu_gallery)
+                        cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                    }
+                    card.addView(frame, LinearLayout.LayoutParams(dp(142), dp(190)))
 
-                val title = makeText(post.name, 11f, Color.rgb(238, 241, 248), true).apply {
-                    gravity = Gravity.CENTER
-                    maxLines = 1
-                    ellipsize = android.text.TextUtils.TruncateAt.END
-                    setPadding(dp(3), dp(7), dp(3), dp(3))
-                    isClickable = true
-                    setOnClickListener { showDetails(post) }
+                    val title = makeText(post.name, 11f, Color.rgb(238, 241, 248), true).apply {
+                        gravity = Gravity.CENTER
+                        maxLines = 1
+                        ellipsize = android.text.TextUtils.TruncateAt.END
+                        setPadding(dp(3), dp(7), dp(3), dp(3))
+                        isClickable = true
+                        setOnClickListener { showDetails(post) }
+                    }
+                    card.addView(title, LinearLayout.LayoutParams(dp(142), dp(27)))
+                    row.addView(card, LinearLayout.LayoutParams(dp(142), -2).apply {
+                        marginEnd = dp(11)
+                    })
                 }
-                card.addView(title, LinearLayout.LayoutParams(dp(142), dp(27)))
-
-                row.addView(card, LinearLayout.LayoutParams(dp(142), -2).apply {
-                    marginEnd = dp(11)
-                })
+            }
+            appendNextBatch()
+            horizontal.setOnScrollChangeListener { view, scrollX, _, _, _ ->
+                if (nextPostIndex < posts.size &&
+                    scrollX + view.width >= row.width - dp(220)
+                ) {
+                    appendNextBatch()
+                }
             }
             horizontal.addView(row)
             gameList.addView(horizontal, LinearLayout.LayoutParams(-1, dp(250)).apply {
