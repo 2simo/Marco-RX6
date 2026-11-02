@@ -2562,7 +2562,7 @@ class MainActivity : Activity() {
         if (existing != null) {
             title.setText(existing.name)
             if (existing.platform.isNotBlank()) selectedLabels.add(existing.platform)
-            body.setText(if (existing.bloggerHtml.isNotBlank()) existing.bloggerHtml else existing.description)
+            body.setText(existing.description)
             coverUrl.setText(existing.coverUrl)
             link.setText(existing.url.takeIf { it != existing.sourcePostUrl } ?: "")
             genre.setText(existing.genre)
