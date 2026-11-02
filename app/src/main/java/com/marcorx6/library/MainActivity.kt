@@ -1443,25 +1443,55 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun extractFirstImage(html: String): String {
-
-        val pattern = Pattern.compile(
-            "(?i)<img[^>]+(?:src|data-src)=[\\\"']([^\\\"']+)[\\\"']"
-        )
-
-        val matcher = pattern.matcher(html)
-
-        if (matcher.find()) {
-            val src = matcher.group(1) ?: ""
-
-            if (src.startsWith("https://") || src.startsWith("http://")) {
-                return src
-            }
+    // Blogger serves the same uploaded image through size-specific URL paths
+    // such as /s320/filename.jpg. Use a larger rendition for the app's cover cards.
+    private fun normalizeBloggerImageUrl(rawUrl: String): String {
+        val decoded = rawUrl.trim()
+            .replace("&amp;", "&")
+            .replace("\\\\/", "/")
+            .replace("\\u003d", "=")
+        if (decoded.isBlank()) return ""
+        return try {
+            val uri = Uri.parse(decoded)
+            val host = uri.host.orEmpty().lowercase(Locale.ROOT)
+            if (host == "blogger.googleusercontent.com" || host.endsWith(".bp.blogspot.com") ||
+                host == "bp.blogspot.com" || host.endsWith(".blogspot.com")
+            ) {
+                // Blogger path-style transforms: /s320/, /s640/, /w320-h240/
+                val path = uri.encodedPath.orEmpty()
+                val resizedPath = path.replace(
+                    Regex("/(?:s\\\\d+(?:-[a-z0-9]+)*|w\\\\d+-h\\\\d+(?:-[a-z0-9]+)*)/"),
+                    "/s960/"
+                )
+                // Newer Google image URLs may put the transform after '='.
+                val resized = if (resizedPath != path) resizedPath else
+                    uri.toString().replace(Regex("=s\\\\d+(?:-[a-z0-9]+)*$"), "=s960")
+                if (resizedPath != path) uri.buildUpon().encodedPath(resizedPath).build().toString() else resized
+            } else decoded
+        } catch (_: Exception) {
+            decoded
         }
-
-        return ""
     }
 
+    private fun extractFirstImage(html: String): String {
+        // Blogger feed HTML can contain lazy-load attributes or escaped URL entities.
+        val tagPattern = Pattern.compile("(?is)<img\\\\b[^>]*>")
+        val tags = tagPattern.matcher(html)
+        val attributePattern = Pattern.compile(
+            "(?i)(?:src|data-src|data-original|data-lazy-src)\\\\s*=\\\\s*[\"']([^\"']+)[\"']"
+        )
+        while (tags.find()) {
+            val attributes = attributePattern.matcher(tags.group())
+            while (attributes.find()) {
+                val candidate = attributes.group(1)?.trim().orEmpty()
+                if (candidate.startsWith("https://") || candidate.startsWith("http://") || candidate.startsWith("//")) {
+                    val absolute = if (candidate.startsWith("//")) "https:$candidate" else candidate
+                    return normalizeBloggerImageUrl(absolute)
+                }
+            }
+        }
+        return ""
+    }
     private fun extractDownloadLinks(html: String): String {
 
         val result = JSONArray()
@@ -1569,6 +1599,8 @@ class MainActivity : Activity() {
         connection.readTimeout = 12000
         connection.instanceFollowRedirects = true
         connection.useCaches = true
+        connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36")
+        connection.setRequestProperty("Accept", "image/avif,image/webp,image/apng,image/*,*/*;q=0.8")
         val temporary = File(destination.parentFile, destination.name + ".tmp")
         try {
             connection.connect()
@@ -1601,9 +1633,10 @@ class MainActivity : Activity() {
         localPath: String,
         imageUrl: String
     ) {
+        val resolvedImageUrl = normalizeBloggerImageUrl(imageUrl)
         val localFile = localPath.takeIf { it.isNotBlank() && File(it).isFile }?.let(::File)
-        val bundledAsset = if (imageUrl.isNotBlank()) {
-            "offline_images/${stableCacheName(imageUrl)}.webp"
+        val bundledAsset = if (resolvedImageUrl.isNotBlank()) {
+            "offline_images/${stableCacheName(resolvedImageUrl)}.webp"
         } else ""
         val hasBundledAsset = if (bundledAsset.isNotBlank()) {
             try {
@@ -1615,13 +1648,13 @@ class MainActivity : Activity() {
 
         // Include both sources in the key: a broken local copy must not hide a valid remote URL.
         val key = when {
-            localFile != null -> "file:${localFile.absolutePath}|url:$imageUrl"
-            hasBundledAsset -> "asset:$bundledAsset|url:$imageUrl"
-            else -> "url:$imageUrl"
+            localFile != null -> "file:${localFile.absolutePath}|url:$resolvedImageUrl"
+            hasBundledAsset -> "asset:$bundledAsset|url:$resolvedImageUrl"
+            else -> "url:$resolvedImageUrl"
         }
         image.tag = key
         image.setImageResource(android.R.drawable.ic_menu_gallery)
-        if (localFile == null && !hasBundledAsset && imageUrl.isBlank()) return
+        if (localFile == null && !hasBundledAsset && resolvedImageUrl.isBlank()) return
 
         coverBitmapCache.get(key)?.let {
             image.setImageBitmap(it)
@@ -1640,9 +1673,9 @@ class MainActivity : Activity() {
                     bitmap = try { decodeCoverAsset(bundledAsset) } catch (_: Exception) { null }
                 }
 
-                if (bitmap == null && imageUrl.isNotBlank()) {
+                if (bitmap == null && resolvedImageUrl.isNotBlank()) {
                     val folder = File(cacheDir, "cover_cache").apply { mkdirs() }
-                    val cached = File(folder, stableCacheName(imageUrl) + ".img")
+                    val cached = File(folder, stableCacheName(resolvedImageUrl) + ".img")
                     val fresh = cached.isFile &&
                         System.currentTimeMillis() - cached.lastModified() < 7L * 24L * 60L * 60L * 1000L
                     if (fresh) {
@@ -1652,7 +1685,7 @@ class MainActivity : Activity() {
                     // discarded and downloaded again once before giving up.
                     if (bitmap == null) {
                         cached.delete()
-                        downloadCoverToCache(imageUrl, cached)
+                        downloadCoverToCache(resolvedImageUrl, cached)
                         bitmap = decodeCoverFile(cached)
                     }
                 }
