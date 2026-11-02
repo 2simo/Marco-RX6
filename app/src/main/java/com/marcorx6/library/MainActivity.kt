@@ -1555,7 +1555,13 @@ class MainActivity : Activity() {
         mainHandler.postDelayed({
             if (!isFinishing) {
                 splash.dismiss()
-                if (!getSharedPreferences("app_settings", MODE_PRIVATE).getBoolean("setup_completed", false)) showFirstRunSetup()
+                val settings = getSharedPreferences("app_settings", MODE_PRIVATE)
+                if (!settings.getBoolean("setup_completed", false)) {
+                    showFirstRunSetup()
+                } else if (!settings.getBoolean("profile_prompted", false)) {
+                    settings.edit().putBoolean("profile_prompted", true).apply()
+                    showProfile()
+                }
             }
         }, 850L)
     }
@@ -1711,7 +1717,7 @@ class MainActivity : Activity() {
         })
 
         val dialog = AlertDialog.Builder(this)
-            .setTitle(tr("ملفي الشخصي"))
+            .setTitle(if (prefs.getBoolean("profile_created", false)) tr("ملفي الشخصي") else "إنشاء ملف اللاعب")
             .setView(ScrollView(this).apply { addView(box) })
             .setPositiveButton(tr("حفظ"), null)
             .setNegativeButton(tr("إغلاق"), null)
@@ -1720,7 +1726,10 @@ class MainActivity : Activity() {
         dialog.setOnDismissListener { if (activeProfileDialog === dialog) activeProfileDialog = null }
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                prefs.edit().putString("nickname", input.text.toString().trim().ifBlank { "Player" }).apply()
+                prefs.edit()
+                    .putString("nickname", input.text.toString().trim().ifBlank { "Player" })
+                    .putBoolean("profile_created", true)
+                    .apply()
                 Toast.makeText(this, "تم حفظ الملف الشخصي", Toast.LENGTH_SHORT).show()
                 dialog.dismiss()
             }
