@@ -491,8 +491,10 @@ class MainActivity : Activity() {
             view.setOnTouchListener { target, event ->
                 if (!appearancePreferences().getBoolean("animations", true)) return@setOnTouchListener false
                 when (event.actionMasked) {
-                    android.view.MotionEvent.ACTION_DOWN -> target.animate().cancel().scaleX(0.96f)
-                        .scaleY(0.96f).alpha(0.88f).setDuration(90L).start()
+                    android.view.MotionEvent.ACTION_DOWN -> {
+                        target.animate().cancel()
+                        target.animate().scaleX(0.96f).scaleY(0.96f).alpha(0.88f).setDuration(90L).start()
+                    }
                     android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> target.animate()
                         .scaleX(1f).scaleY(1f).alpha(1f).setDuration(170L)
                         .setInterpolator(android.view.animation.OvershootInterpolator(1.35f)).start()
