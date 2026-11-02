@@ -1235,6 +1235,14 @@ class MainActivity : Activity() {
     private fun historyPreferences() = getSharedPreferences("article_activity", MODE_PRIVATE)
     private fun articleKey(game: Game): String = (game.url.ifBlank { game.name }).hashCode().toString()
     private fun viewCount(game: Game): Int = historyPreferences().getInt("views_" + articleKey(game), 0)
+    private fun ratingCount(game: Game): Int =
+        if (historyPreferences().getInt("rating_" + articleKey(game), 0) > 0) 1 else 0
+
+    private fun compactMetric(value: Int): String = when {
+        value >= 1_000_000 -> String.format(Locale.ROOT, "%.1fM", value / 1_000_000f)
+        value >= 1_000 -> String.format(Locale.ROOT, "%.1fK", value / 1_000f)
+        else -> value.toString()
+    }
     private fun lastViewedAt(game: Game): Long = historyPreferences().getLong("time_" + articleKey(game), 0L)
     private fun isRecentlyViewed(game: Game): Boolean = lastViewedAt(game) > 0L
     private fun recordArticleView(game: Game) {
@@ -1394,10 +1402,18 @@ class MainActivity : Activity() {
                 setPadding(dp(2), dp(2), dp(2), dp(13))
             }
             posts.forEach { post ->
+                // Keep the original 142x190 cover intact; metadata sits below it.
+                val card = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    gravity = Gravity.CENTER_HORIZONTAL
+                    isClickable = true
+                    isFocusable = true
+                    setOnClickListener { showDetails(post) }
+                }
                 val frame = FrameLayout(this).apply {
-                    background = rounded(panel, 13)
+                    background = rounded(Color.rgb(198, 204, 218), 13)
                     clipToOutline = true
-                    elevation = dp(3).toFloat()
+                    elevation = dp(4).toFloat()
                     isClickable = true
                     isFocusable = true
                     setOnClickListener { showDetails(post) }
@@ -1406,6 +1422,8 @@ class MainActivity : Activity() {
                     scaleType = ImageView.ScaleType.CENTER_CROP
                     setBackgroundColor(Color.rgb(29, 32, 58))
                     contentDescription = post.name
+                    isClickable = true
+                    setOnClickListener { showDetails(post) }
                 }
                 frame.addView(cover, FrameLayout.LayoutParams(-1, -1))
                 if (post.coverUrl.isNotBlank() || post.coverLocalPath.isNotBlank()) {
@@ -1414,13 +1432,36 @@ class MainActivity : Activity() {
                     cover.setImageResource(android.R.drawable.ic_menu_gallery)
                     cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
                 }
-                row.addView(frame, LinearLayout.LayoutParams(dp(142), dp(190)).apply {
+                card.addView(frame, LinearLayout.LayoutParams(dp(142), dp(190)))
+
+                val title = makeText(post.name, 11f, Color.rgb(238, 241, 248), true).apply {
+                    gravity = Gravity.CENTER
+                    maxLines = 1
+                    ellipsize = android.text.TextUtils.TruncateAt.END
+                    setPadding(dp(3), dp(7), dp(3), dp(3))
+                    isClickable = true
+                    setOnClickListener { showDetails(post) }
+                }
+                card.addView(title, LinearLayout.LayoutParams(dp(142), dp(27)))
+
+                val metrics = LinearLayout(this).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER
+                    setPadding(dp(2), 0, dp(2), 0)
+                }
+                val views = makeText("◉ " + compactMetric(viewCount(post)), 9f, Color.rgb(174, 184, 203))
+                val ratings = makeText("★ " + compactMetric(ratingCount(post)), 9f, Color.rgb(255, 197, 92), true)
+                metrics.addView(views)
+                metrics.addView(makeText("  ·  ", 9f, Color.rgb(112, 121, 143)))
+                metrics.addView(ratings)
+                card.addView(metrics, LinearLayout.LayoutParams(dp(142), dp(19)))
+                row.addView(card, LinearLayout.LayoutParams(dp(142), -2).apply {
                     marginEnd = dp(11)
                 })
             }
             horizontal.addView(row)
-            gameList.addView(horizontal, LinearLayout.LayoutParams(-1, dp(210)).apply {
-                bottomMargin = dp(7)
+            gameList.addView(horizontal, LinearLayout.LayoutParams(-1, dp(250)).apply {
+                bottomMargin = dp(5)
             })
         }
     }
