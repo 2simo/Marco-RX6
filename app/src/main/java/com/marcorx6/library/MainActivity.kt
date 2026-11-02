@@ -1733,7 +1733,29 @@ class MainActivity : Activity() {
 
             } catch (e: Exception) {
                 mainHandler.post {
-                    Toast.makeText(this, "فشل رفع الغلاف: ${e.message ?: "خطأ غير معروف"}", Toast.LENGTH_LONG).show()
+                    val details = (e.message ?: e.javaClass.simpleName).ifBlank { "خطأ غير معروف" }
+                    val detailsView = TextView(this).apply {
+                        text = details
+                        textIsSelectable = true
+                        setTextColor(white)
+                        textSize = 13f
+                        setPadding(dp(16), dp(12), dp(16), dp(12))
+                    }
+                    val scroll = ScrollView(this).apply {
+                        addView(detailsView)
+                        setPadding(dp(8), 0, dp(8), 0)
+                    }
+                    AlertDialog.Builder(this)
+                        .setTitle("فشل رفع الغلاف")
+                        .setMessage("التفاصيل الكاملة لخطأ Google Drive:")
+                        .setView(scroll)
+                        .setPositiveButton("نسخ التفاصيل") { _, _ ->
+                            val clipboard = getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                            clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Google Drive error", details))
+                            Toast.makeText(this, "تم نسخ تفاصيل الخطأ", Toast.LENGTH_SHORT).show()
+                        }
+                        .setNegativeButton("إغلاق", null)
+                        .show()
                 }
             }
         }.start()
