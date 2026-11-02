@@ -13,6 +13,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Typeface
@@ -50,6 +51,10 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.Executors
+import java.security.MessageDigest
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 
 data class Game(
     val name: String,
@@ -66,6 +71,10 @@ data class Game(
     val bloggerPostId: String = "",
     val bloggerHtml: String = ""
 )
+
+private data class GlobalArticleStats(val views: Long = 0L, val ratingSum: Long = 0L, val ratingCount: Long = 0L) {
+    val averageRating: Float get() = if (ratingCount > 0L) ratingSum.toFloat() / ratingCount else 0f
+}
 
 class MainActivity : Activity() {
 
@@ -100,6 +109,11 @@ class MainActivity : Activity() {
     private var bloggerBlogId = ""
     private var googleSignInClient: com.google.android.gms.auth.api.signin.GoogleSignInClient? = null
     private val adminEmail = "xpangwan@gmail.com"
+    private val firebaseAuth by lazy { FirebaseAuth.getInstance() }
+    private val firestore by lazy { FirebaseFirestore.getInstance() }
+    private val globalArticleStats = mutableMapOf<String, GlobalArticleStats>()
+    private var globalStatsListener: com.google.firebase.firestore.ListenerRegistration? = null
+    private var firebaseUserId: String? = null
     private val SIGN_IN_REQUEST = 1002
 
     private val bloggerFeedUrl =
@@ -120,6 +134,7 @@ class MainActivity : Activity() {
             hide(WindowInsetsCompat.Type.statusBars())
         }
 
+        initializeFirebase()
         createNotificationChannel()
         configureGoogleSignIn()
         loadGames()
@@ -1275,13 +1290,100 @@ class MainActivity : Activity() {
     }
 
 
+    private fun initializeFirebase() {
+        val currentUser = firebaseAuth.currentUser
+        if (currentUser != null) {
+            firebaseUserId = currentUser.uid
+            listenToGlobalArticleStats()
+        } else {
+            firebaseAuth.signInAnonymously()
+                .addOnSuccessListener { result ->
+                    firebaseUserId = result.user?.uid
+                    listenToGlobalArticleStats()
+                }
+                .addOnFailureListener { error ->
+                    android.util.Log.w("MARCO_RX6_FIREBASE", "Anonymous sign-in failed", error)
+                }
+        }
+    }
+
+    private fun listenToGlobalArticleStats() {
+        globalStatsListener?.remove()
+        globalStatsListener = firestore.collection("articles")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    android.util.Log.w("MARCO_RX6_FIREBASE", "Could not sync article statistics", error)
+                    return@addSnapshotListener
+                }
+                if (snapshot == null) return@addSnapshotListener
+                synchronized(globalArticleStats) {
+                    snapshot.documents.forEach { document ->
+                        globalArticleStats[document.id] = GlobalArticleStats(
+                            views = document.getLong("views") ?: 0L,
+                            ratingSum = document.getLong("ratingSum") ?: 0L,
+                            ratingCount = document.getLong("ratingCount") ?: 0L
+                        )
+                    }
+                }
+                if (!isFinishing) runOnUiThread {
+                    if (::gameList.isInitialized) renderGames()
+                }
+            }
+    }
+
+    private fun cloudArticleId(game: Game): String {
+        val identity = game.url.trim().ifBlank { game.name.trim().lowercase(Locale.ROOT) }
+        val digest = MessageDigest.getInstance("SHA-256").digest(identity.toByteArray(Charsets.UTF_8))
+        return digest.joinToString("") { "%02x".format(it) }
+    }
+
+    private fun submitGlobalRating(game: Game, score: Int) {
+        val uid = firebaseUserId ?: firebaseAuth.currentUser?.uid
+        if (uid == null) {
+            Toast.makeText(this, "جارٍ الاتصال بالخدمة، حاول بعد لحظات", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val articleRef = firestore.collection("articles").document(cloudArticleId(game))
+        val ratingRef = articleRef.collection("ratings").document(uid)
+        firestore.runTransaction { transaction ->
+            val articleSnapshot = transaction.get(articleRef)
+            val ratingSnapshot = transaction.get(ratingRef)
+            val previous = ratingSnapshot.getLong("score") ?: 0L
+            val oldCount = articleSnapshot.getLong("ratingCount") ?: 0L
+            val oldSum = articleSnapshot.getLong("ratingSum") ?: 0L
+            val newCount = if (previous == 0L) oldCount + 1L else oldCount
+            val newSum = oldSum - previous + score.toLong()
+            transaction.set(ratingRef, mapOf("score" to score, "updatedAt" to System.currentTimeMillis()))
+            transaction.set(articleRef, mapOf(
+                "ratingCount" to newCount,
+                "ratingSum" to newSum,
+                "updatedAt" to System.currentTimeMillis()
+            ), SetOptions.merge())
+            null
+        }.addOnFailureListener { error ->
+            android.util.Log.w("MARCO_RX6_FIREBASE", "Rating sync failed", error)
+            Toast.makeText(this, "تعذر مزامنة التقييم. سيبقى محفوظاً على الجهاز", Toast.LENGTH_LONG).show()
+        }
+    }
+
     private fun profilePreferences() = getSharedPreferences("user_profile", MODE_PRIVATE)
     private fun historyPreferences() = getSharedPreferences("article_activity", MODE_PRIVATE)
     private fun articleKey(game: Game): String = (game.url.ifBlank { game.name }).hashCode().toString()
-    private fun viewCount(game: Game): Int = historyPreferences().getInt("views_" + articleKey(game), 0)
+    private fun globalStats(game: Game): GlobalArticleStats? =
+        synchronized(globalArticleStats) { globalArticleStats[cloudArticleId(game)] }
+
+    private fun viewCount(game: Game): Int =
+        (globalStats(game)?.views ?: historyPreferences().getInt("views_" + articleKey(game), 0).toLong())
+            .coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+
     private fun ratingCount(game: Game): Int =
-        if (historyPreferences().getInt("rating_" + articleKey(game), 0) > 0) 1 else 0
+        (globalStats(game)?.ratingCount
+            ?: if (historyPreferences().getInt("rating_" + articleKey(game), 0) > 0) 1L else 0L)
+            .coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+
     private fun averageRating(game: Game): Float {
+        val stats = globalStats(game)
+        if (stats != null) return stats.averageRating
         val rating = historyPreferences().getInt("rating_" + articleKey(game), 0)
         return if (rating > 0) rating.toFloat() else 0f
     }
@@ -1344,6 +1446,17 @@ class MainActivity : Activity() {
         val key = articleKey(game)
         prefs.edit().putInt("views_" + key, viewCount(game) + 1)
             .putLong("time_" + key, System.currentTimeMillis()).apply()
+        if (firebaseUserId != null || firebaseAuth.currentUser != null) {
+            val articleRef = firestore.collection("articles").document(cloudArticleId(game))
+            articleRef.set(mapOf(
+                "views" to com.google.firebase.firestore.FieldValue.increment(1L),
+                "name" to game.name,
+                "url" to game.url,
+                "updatedAt" to System.currentTimeMillis()
+            ), SetOptions.merge()).addOnFailureListener { error ->
+                android.util.Log.w("MARCO_RX6_FIREBASE", "View sync failed", error)
+            }
+        }
     }
     private fun showProfile() {
         val prefs = profilePreferences()
@@ -1768,6 +1881,7 @@ class MainActivity : Activity() {
                 setPadding(dp(3), dp(3), dp(3), dp(3))
                 setOnClickListener {
                     ratingPrefs.edit().putInt(ratingKey, star).apply()
+                    submitGlobalRating(game, star)
                     for (index in 0 until ratingRow.childCount) {
                         val child = ratingRow.getChildAt(index)
                         if (index > 0) {
@@ -1776,7 +1890,7 @@ class MainActivity : Activity() {
                             child.setTextColor(if (score <= star) Color.rgb(255, 190, 75) else gray)
                         }
                     }
-                    ratingSummary.text = "تقييمك: " + star + " / 5  •  التقييم محفوظ على هذا الجهاز"
+                    ratingSummary.text = "تقييمك: " + star + " / 5  •  جارٍ مزامنته عالمياً"
                     renderGames()
                     Toast.makeText(this@MainActivity, "تم حفظ تقييمك: " + star + " من 5", Toast.LENGTH_SHORT).show()
                 }
