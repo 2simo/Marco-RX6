@@ -1116,23 +1116,14 @@ class MainActivity : Activity() {
             topMargin = dp(10)
         })
 
-        box.addView(
-            makeText(
-                game.description.ifBlank {
-                    "No description available."
-                },
-                12f,
-                gray
-            ).apply {
-                gravity = Gravity.CENTER
-                setPadding(
-                    0,
-                    dp(12),
-                    0,
-                    dp(12)
-                )
-            }
-        )
+        val articleView = android.webkit.WebView(this).apply {
+            setBackgroundColor(panel)
+            settings.javaScriptEnabled = false
+            settings.domStorageEnabled = false
+            val articleHtml = if (game.bloggerHtml.isNotBlank()) game.bloggerHtml else "<p>" + game.description + "</p>"
+            loadDataWithBaseURL(game.url, "<html><head><meta name='viewport' content='width=device-width, initial-scale=1'><style>body{background:#1b1d27;color:#eeeeF5;font-family:sans-serif;font-size:15px;line-height:1.7;padding:8px}img{max-width:100%;height:auto}a{color:#78beff}</style></head><body>$articleHtml</body></html>", "text/html", "UTF-8", null)
+        }
+        box.addView(articleView, LinearLayout.LayoutParams(-1, dp(300)))
 
         if (game.downloadLinks.isNotBlank()) {
 
@@ -1233,203 +1224,59 @@ class MainActivity : Activity() {
         dialog.show()
     }
 
+    // BLOG POST COMPOSER: reusable article template published directly to Blogger
     private fun showGameDialog(existing: Game? = null) {
-
+        if (!isAdminSession) { Toast.makeText(this, "Administrator access is required to publish.", Toast.LENGTH_SHORT).show(); return }
         pendingCoverLocalPath = existing?.coverLocalPath ?: ""
-
-        val box = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(
-                dp(18),
-                dp(5),
-                dp(18),
-                0
-            )
-        }
-
-        val name = makeInput("Game name")
-        val description = makeInput("Description")
-        val link = makeInput("HTTPS game or post link")
-        val coverUrl = makeInput("Cover image URL (optional)")
-
-        name.setSingleLine(true)
-        link.setSingleLine(true)
-        coverUrl.setSingleLine(true)
-
+        val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(18), dp(5), dp(18), dp(5)) }
+        val title = makeInput("Article title").apply { setSingleLine(true) }
+        val category = Spinner(this)
+        val categoryOptions = listOf("BLOG", "PSP", "PS1", "PS2", "PS3", "PS4")
+        category.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, categoryOptions)
+        val body = makeInput("Write your article here...").apply { minLines = 7; gravity = Gravity.TOP; inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE or android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES }
+        val coverUrl = makeInput("Cover image URL (optional)").apply { setSingleLine(true) }
+        val link = makeInput("Download / related link (optional)").apply { setSingleLine(true) }
         coverUrlField = coverUrl
-
-        val platform = Spinner(this)
-
-        platform.adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_dropdown_item,
-            platforms.drop(1)
-        )
-
-        if (existing != null) {
-
-            name.setText(existing.name)
-            description.setText(existing.description)
-            link.setText(existing.url)
-            coverUrl.setText(existing.coverUrl)
-
-            val position = platforms.drop(1)
-                .indexOf(existing.platform)
-
-            if (position >= 0) {
-                platform.setSelection(position)
-            }
-        }
-
-        val preview = ImageView(this).apply {
-            scaleType = ImageView.ScaleType.CENTER_CROP
-            background = rounded(panel, 14)
-        }
-
+        if (existing != null) { title.setText(existing.name); category.setSelection(categoryOptions.indexOf(existing.platform).coerceAtLeast(0)); body.setText(if (existing.bloggerHtml.isNotBlank()) htmlToText(existing.bloggerHtml) else existing.description); coverUrl.setText(existing.coverUrl); link.setText(existing.url.takeIf { it != existing.sourcePostUrl } ?: "") }
+        val preview = ImageView(this).apply { scaleType = ImageView.ScaleType.CENTER_CROP; background = rounded(panel, 13) }
         coverPreview = preview
-
-        box.addView(
-            preview,
-            LinearLayout.LayoutParams(-1, dp(150)).apply {
-                bottomMargin = dp(10)
-            }
-        )
-
-        loadCover(
-            preview,
-            pendingCoverLocalPath,
-            existing?.coverUrl ?: ""
-        )
-
-        box.addView(
-            Button(this).apply {
-                text = "CHOOSE IMAGE FROM PHONE"
-                setTextColor(white)
-                background = rounded(red, 12)
-                setOnClickListener {
-                    chooseCover()
-                }
-            },
-            LinearLayout.LayoutParams(-1, -2).apply {
-                bottomMargin = dp(6)
-            }
-        )
-
-        box.addView(
-            TextView(this).apply {
-                text = "REMOVE COVER IMAGE"
-                textSize = 12f
-                gravity = Gravity.CENTER
-                setTextColor(red)
-                setPadding(
-                    dp(8),
-                    dp(8),
-                    dp(8),
-                    dp(8)
-                )
-
-                setOnClickListener {
-                    pendingCoverLocalPath = ""
-                    coverUrl.setText("")
-                    preview.setImageResource(
-                        android.R.drawable.ic_menu_gallery
-                    )
-                }
-            }
-        )
-
-        box.addView(name)
-        box.addView(platform)
-        box.addView(description)
-        box.addView(link)
-        box.addView(coverUrl)
-
-        val scroll = ScrollView(this)
-        scroll.addView(box)
-
-        val dialog = AlertDialog.Builder(this)
-            .setTitle(
-                if (existing == null)
-                    "ADD NEW GAME"
-                else
-                    "EDIT GAME"
-            )
-            .setView(scroll)
-            .setNegativeButton("CANCEL", null)
-            .setPositiveButton("SAVE", null)
-            .create()
-
+        box.addView(preview, LinearLayout.LayoutParams(-1, dp(145)).apply { bottomMargin = dp(8) })
+        loadCover(preview, pendingCoverLocalPath, existing?.coverUrl ?: "")
+        box.addView(Button(this).apply { text = "CHOOSE COVER FROM PHONE"; setTextColor(white); background = rounded(red, 12); setOnClickListener { chooseCover() } }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
+        box.addView(makeText("POST CATEGORY", 10f, red, true)); box.addView(category); box.addView(title)
+        box.addView(makeText("ARTICLE CONTENT", 10f, red, true).apply { setPadding(0, dp(8), 0, dp(4)) })
+        box.addView(body, LinearLayout.LayoutParams(-1, dp(190))); box.addView(coverUrl); box.addView(link)
+        val scroll = ScrollView(this).apply { addView(box) }
+        val dialog = AlertDialog.Builder(this).setTitle(if (existing == null) "NEW BLOG ARTICLE" else "EDIT BLOG ARTICLE").setView(scroll).setNegativeButton("CANCEL", null).setPositiveButton("PUBLISH", null).create()
         dialog.setOnShowListener {
-
-            dialog.getButton(
-                AlertDialog.BUTTON_POSITIVE
-            ).setOnClickListener {
-
-                val gameName = name.text.toString().trim()
-                val gameLink = link.text.toString().trim()
-                val coverLink = coverUrl.text.toString().trim()
-
-                if (gameName.isBlank()) {
-                    name.error = "Enter game name"
-                    return@setOnClickListener
-                }
-
-                if (!gameLink.startsWith("https://")) {
-                    link.error = "Enter a valid HTTPS link"
-                    return@setOnClickListener
-                }
-
-                if (coverLink.isNotBlank() &&
-                    !coverLink.startsWith("https://")
-                ) {
-                    coverUrl.error = "Use an HTTPS image link"
-                    return@setOnClickListener
-                }
-
-                val localPath =
-                    if (coverLink.isNotBlank()) ""
-                    else pendingCoverLocalPath
-
-                val newGame = Game(
-                    name = gameName,
-                    platform = platform.selectedItem.toString(),
-                    description = description.text.toString().trim(),
-                    url = gameLink,
-                    coverUrl = coverLink,
-                    coverLocalPath = localPath,
-                    sourcePostUrl = existing?.sourcePostUrl ?: "",
-                    downloadLinks = existing?.downloadLinks ?: "",
-                    blogImported = existing?.blogImported ?: false,
-                    platformManuallyCorrected =
-                        existing?.platformManuallyCorrected ?: false,
-                    isFavorite = existing?.isFavorite ?: false,
-                    bloggerPostId = existing?.bloggerPostId ?: "",
-                    bloggerHtml = existing?.bloggerHtml ?: ""
-                )
-
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val postTitle = title.text.toString().trim(); val categoryName = category.selectedItem.toString(); val coverLink = coverUrl.text.toString().trim(); val relatedLink = link.text.toString().trim()
+                if (postTitle.isBlank()) { title.error = "Enter an article title"; return@setOnClickListener }
+                if (coverLink.isNotBlank() && !coverLink.startsWith("https://")) { coverUrl.error = "Use an HTTPS image URL"; return@setOnClickListener }
+                if (relatedLink.isNotBlank() && !relatedLink.startsWith("https://")) { link.error = "Use an HTTPS link"; return@setOnClickListener }
+                val contentText = body.text.toString().trim()
+                val escaped = contentText.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>")
+                val imageHtml = if (coverLink.isNotBlank()) "<p><img src=\"$coverLink\" style=\"max-width:100%;height:auto;\"/></p>" else ""
+                val relatedHtml = if (relatedLink.isNotBlank()) "<p><a href=\"$relatedLink\">تحميل / رابط إضافي</a></p>" else ""
+                val htmlContent = "<div class=\"marcorx6-post\">$imageHtml<p>$escaped</p>$relatedHtml</div>"
+                val post = Game(name = postTitle, platform = categoryName, description = contentText, url = relatedLink.ifBlank { existing?.url ?: "" }, coverUrl = coverLink, coverLocalPath = if (coverLink.isBlank()) pendingCoverLocalPath else "", sourcePostUrl = existing?.sourcePostUrl ?: "", downloadLinks = existing?.downloadLinks ?: "", blogImported = true, isFavorite = existing?.isFavorite ?: false, bloggerPostId = existing?.bloggerPostId ?: "", bloggerHtml = htmlContent)
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
                 Thread {
                     try {
-                        if (!isAdminSession || bloggerBlogId.isBlank()) throw IllegalStateException("Admin login and blog sync are required")
-                        val payload = JSONObject().put("kind", "blogger#post").put("title", newGame.name).put("content", bloggerHtml(newGame)).put("labels", JSONArray().put(newGame.platform))
-                        val result = if (existing == null) bloggerRequest("POST", "blogs/$bloggerBlogId/posts/", payload) else {
-                            if (existing.bloggerPostId.isBlank()) throw IllegalStateException("No Blogger post ID is available for this item")
-                            bloggerRequest("PUT", "blogs/$bloggerBlogId/posts/${existing.bloggerPostId}", payload)
-                        }
+                        if (bloggerBlogId.isBlank()) throw IllegalStateException("Please sync the blog first, then publish.")
+                        val payload = JSONObject().put("kind", "blogger#post").put("title", post.name).put("content", htmlContent).put("labels", JSONArray().put(categoryName))
+                        val result = if (existing == null) bloggerRequest("POST", "blogs/$bloggerBlogId/posts/", payload) else { if (existing.bloggerPostId.isBlank()) throw IllegalStateException("This post has no Blogger ID; sync the blog and try again."); bloggerRequest("PUT", "blogs/$bloggerBlogId/posts/${existing.bloggerPostId}", payload) }
                         mainHandler.post {
-                            val saved = newGame.copy(bloggerPostId = result.optString("id", newGame.bloggerPostId), bloggerHtml = result.optString("content", newGame.bloggerHtml), url = result.optString("url", newGame.url), sourcePostUrl = result.optString("url", newGame.url), blogImported = true)
-                            val index = if (existing == null) -1 else games.indexOf(existing)
-                            if (index >= 0) games[index] = saved else games.add(0, saved)
-                            saveGames(); renderGames(); dialog.dismiss(); Toast.makeText(this, "Saved to Blogger", Toast.LENGTH_LONG).show()
+                            val saved = post.copy(bloggerPostId = result.optString("id", post.bloggerPostId), bloggerHtml = result.optString("content", htmlContent), url = result.optString("url", post.url), sourcePostUrl = result.optString("url", post.sourcePostUrl), blogImported = true)
+                            val idx = if (existing == null) -1 else games.indexOf(existing); if (idx >= 0) games[idx] = saved else games.add(0, saved)
+                            saveGames(); renderGames(); dialog.dismiss(); Toast.makeText(this, "Article published on Blogger", Toast.LENGTH_LONG).show()
                         }
-                    } catch (e: Exception) { mainHandler.post { dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true; Toast.makeText(this, e.message ?: "Blogger write failed", Toast.LENGTH_LONG).show() } }
+                    } catch (e: Exception) { mainHandler.post { dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true; Toast.makeText(this, e.message ?: "Publishing failed", Toast.LENGTH_LONG).show() } }
                 }.start()
             }
         }
-
         dialog.show()
     }
-
     private fun deleteGame(game: Game) {
 
         AlertDialog.Builder(this)
