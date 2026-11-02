@@ -2494,6 +2494,27 @@ class MainActivity : Activity() {
         reader.setOnDismissListener { articleWebView.stopLoading(); articleWebView.destroy() }
     }
 
+    private fun escapeArticleHtml(value: String): String = value
+        .replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        .replace("\"", "&quot;").replace("'", "&#39;")
+
+    // Structured article template shared by the preview and Blogger publishing.
+    private fun buildBloggerArticleHtml(title: String, categories: String, genre: String, releaseYear: String, description: String, coverUrl: String, downloadUrl: String): String {
+        val safeTitle = escapeArticleHtml(title)
+        val safeCategories = escapeArticleHtml(categories)
+        val safeGenre = escapeArticleHtml(genre)
+        val safeYear = escapeArticleHtml(releaseYear)
+        val descriptionHtml = description.trim().split(Regex("\\n\\s*\\n")).filter { it.isNotBlank() }.joinToString("") { "<p style=\"margin:0 0 14px;\">${escapeArticleHtml(it).replace("\\n", "<br/>")}</p>" }
+        val safeCover = escapeArticleHtml(normalizeBloggerImageUrl(coverUrl))
+        val safeDownload = escapeArticleHtml(downloadUrl)
+        val categoryBlock = if (safeCategories.isNotBlank()) "<p style=\"color:#a78bfa;font-size:13px;\">التصنيف: $safeCategories</p>" else ""
+        val meta = listOfNotNull(safeGenre.takeIf { it.isNotBlank() }?.let { "<span>النوع: $it</span>" }, safeYear.takeIf { it.isNotBlank() }?.let { "<span>سنة الإصدار: $it</span>" }).joinToString(" • ")
+        val metaBlock = if (meta.isNotBlank()) "<div style=\"margin:12px 0 18px;color:#b8c0d0;font-size:13px;\">$meta</div>" else ""
+        val coverBlock = if (safeCover.isNotBlank()) "<img src=\"$safeCover\" alt=\"$safeTitle\" style=\"display:block;width:100%;height:auto;max-height:520px;object-fit:cover;border-radius:14px;margin:18px 0;\"/>" else ""
+        val downloadBlock = if (safeDownload.isNotBlank()) "<p style=\"text-align:center;margin:26px 0;\"><a href=\"$safeDownload\" style=\"display:inline-block;background:#e53935;color:#fff;text-decoration:none;padding:13px 28px;border-radius:10px;font-weight:700;\">تحميل الآن</a></p>" else ""
+        return "<article class=\"marcorx6-post\" style=\"max-width:900px;margin:0 auto;padding:16px;color:#e9edf5;background:#111827;font-family:Arial,sans-serif;line-height:1.85;border-radius:16px;\"><h1 style=\"font-size:26px;line-height:1.35;margin:0 0 10px;color:#fff;\">$safeTitle</h1>$categoryBlock$coverBlock$metaBlock<section style=\"font-size:16px;color:#e5e7eb;\">$descriptionHtml</section>$downloadBlock<p style=\"border-top:1px solid #30394a;padding-top:14px;margin-top:24px;color:#929bad;font-size:12px;\">MARCO RX6 • مكتبة الألعاب والتطبيقات</p></article>"
+    }
+
     // BLOG POST COMPOSER: reusable article template published directly to Blogger
     private fun showGameDialog(existing: Game? = null) {
         if (!isAdminSession) { Toast.makeText(this, "يجب تسجيل الدخول بصلاحية المسؤول للنشر.", Toast.LENGTH_SHORT).show(); return }
@@ -2532,7 +2553,7 @@ class MainActivity : Activity() {
                 }.show()
         }
         if (existing != null && existing.platform.isNotBlank()) selectedLabels.add(existing.platform)
-        val body = makeInput("اكتب محتوى المقال هنا — يدعم HTML").apply { minLines = 14; gravity = Gravity.TOP or Gravity.START; inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE or android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS; setPadding(dp(13), dp(12), dp(13), dp(12)) }
+        val body = makeInput("وصف المقال — اكتب المعلومات فقط، وسيُنسّقها القالب تلقائياً").apply { minLines = 8; gravity = Gravity.TOP or Gravity.START; inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE or android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES; setPadding(dp(13), dp(12), dp(13), dp(12)) }
         val coverUrl = makeInput("رابط صورة الغلاف (اختياري)").apply { setSingleLine(true) }
         val link = makeInput("رابط التحميل أو رابط إضافي (اختياري)").apply { setSingleLine(true) }
         val genre = makeInput("نوع اللعبة (مثال: أكشن، مغامرات)").apply { setSingleLine(true) }
@@ -2578,13 +2599,9 @@ class MainActivity : Activity() {
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
                 val previewTitle = title.text.toString().trim().ifBlank { "معاينة المقال" }
-                val previewBody = body.text.toString().trim()
-                val previewHasHtml = Regex("(?is)<\\s*(p|div|h[1-6]|ul|ol|li|a|img|table|br)\\b").containsMatchIn(previewBody)
-                val previewEscaped = previewBody.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>")
-                val previewArticle = if (previewHasHtml) previewBody else if (previewBody.isBlank()) "<p>أضف محتوى المقال لعرضه هنا.</p>" else "<p>$previewEscaped</p>"
-                val previewImage = coverUrl.text.toString().trim().takeIf { it.startsWith("https://") }?.let { "<p><img src=\"$it\" style=\"max-width:100%;height:auto;border-radius:12px;\"/></p>" } ?: ""
-                val previewLink = link.text.toString().trim().takeIf { it.startsWith("https://") }?.let { "<p><a href=\"$it\">تحميل / رابط إضافي</a></p>" } ?: ""
-                val previewHtml = "<html><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><body style=\"background:#111;color:#eee;font-family:sans-serif;padding:16px;line-height:1.7;\"><h2>$previewTitle</h2>$previewImage$previewArticle$previewLink</body></html>"
+                val previewHtml = "<html><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><body style=\"background:#111;padding:12px;\">" +
+                    buildBloggerArticleHtml(previewTitle, selectedLabels.joinToString("، "), genre.text.toString(), releaseYear.text.toString(), body.text.toString(), coverUrl.text.toString(), link.text.toString()) +
+                    "</body></html>"
                 val web = WebView(this).apply {
                     setBackgroundColor(android.graphics.Color.rgb(17, 17, 17))
                     settings.javaScriptEnabled = false
@@ -2600,16 +2617,9 @@ class MainActivity : Activity() {
                 if (coverLink.isNotBlank() && !coverLink.startsWith("https://")) { coverUrl.error = "أدخل رابط صورة يبدأ بـ HTTPS"; return@setOnClickListener }
                 if (relatedLink.isNotBlank() && !relatedLink.startsWith("https://")) { link.error = "أدخل رابطاً يبدأ بـ HTTPS"; return@setOnClickListener }
                 val contentText = body.text.toString().trim()
-                // Accept real Blogger HTML (headings, lists, images and download anchors).
-                // Plain text is still escaped safely and converted to line breaks.
-                val hasHtml = Regex("(?is)<\\s*(p|div|h[1-6]|ul|ol|li|a|img|table|br)\\b").containsMatchIn(contentText)
-                val escaped = contentText.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>")
-                val articleBody = if (hasHtml) contentText else "<p>$escaped</p>"
-                val normalizedArticleBody = normalizeBloggerImageTags(articleBody)
+                if (contentText.isBlank()) { body.error = "أدخل وصف المقال"; return@setOnClickListener }
                 val publishedCoverLink = normalizeBloggerImageUrl(coverLink)
-                val imageHtml = if (publishedCoverLink.isNotBlank() && !normalizedArticleBody.contains(publishedCoverLink)) "<p><img src=\"$publishedCoverLink\" style=\"max-width:100%;height:auto;\"/></p>" else ""
-                val relatedHtml = if (relatedLink.isNotBlank() && !normalizedArticleBody.contains(relatedLink)) "<p><a href=\"$relatedLink\">تحميل / رابط إضافي</a></p>" else ""
-                val htmlContent = "<div class=\"marcorx6-post\">$imageHtml$normalizedArticleBody$relatedHtml</div>"
+                val htmlContent = buildBloggerArticleHtml(postTitle, selectedLabels.joinToString("، "), genre.text.toString().trim(), releaseYear.text.toString().trim(), contentText, publishedCoverLink, relatedLink)
                 val post = Game(name = postTitle, platform = categoryName, description = contentText, url = relatedLink.ifBlank { existing?.url ?: "" }, coverUrl = publishedCoverLink, coverLocalPath = if (coverLink.isBlank()) pendingCoverLocalPath else "", sourcePostUrl = existing?.sourcePostUrl ?: "", downloadLinks = existing?.downloadLinks ?: "", blogImported = true, isFavorite = existing?.isFavorite ?: false, bloggerPostId = existing?.bloggerPostId ?: "", bloggerHtml = htmlContent, playStatus = existing?.playStatus ?: "", genre = genre.text.toString().trim(), releaseYear = releaseYear.text.toString().trim())
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
                 Thread {
