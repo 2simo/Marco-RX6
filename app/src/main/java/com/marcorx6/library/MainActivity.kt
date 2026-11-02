@@ -65,11 +65,22 @@ data class Game(
 
 class MainActivity : Activity() {
 
-    private val bg = Color.rgb(9, 10, 22)
-    private val panel = Color.rgb(20, 22, 40)
-    private val red = Color.rgb(139, 92, 246)
-    private val white = Color.WHITE
-    private val gray = Color.LTGRAY
+    private fun appearancePreferences() = getSharedPreferences("appearance_settings", MODE_PRIVATE)
+    private fun isDarkMode() = appearancePreferences().getBoolean("dark_mode", true)
+    private fun accentColor(): Int = when (appearancePreferences().getString("accent", "violet")) {
+        "blue" -> Color.rgb(65, 145, 245)
+        "green" -> Color.rgb(35, 170, 125)
+        "gold" -> Color.rgb(205, 157, 70)
+        "rose" -> Color.rgb(215, 90, 135)
+        else -> Color.rgb(139, 92, 246)
+    }
+    private val bg: Int get() = if (isDarkMode()) Color.rgb(9, 10, 22) else Color.rgb(245, 247, 251)
+    private val panel: Int get() = if (isDarkMode()) Color.rgb(20, 22, 40) else Color.rgb(229, 234, 243)
+    private val red: Int get() = accentColor()
+    private val white: Int get() = if (isDarkMode()) Color.WHITE else Color.rgb(24, 29, 42)
+    private val gray: Int get() = if (isDarkMode()) Color.LTGRAY else Color.rgb(86, 96, 115)
+    private val BACKUP_EXPORT_REQUEST = 1003
+    private val BACKUP_IMPORT_REQUEST = 1004
     private val platforms = listOf("الكل", "BLOG", "FAVORITES", "PSP", "PS1", "PS2", "PS3", "PS4")
     private val games = mutableListOf<Game>()
 
@@ -387,6 +398,13 @@ class MainActivity : Activity() {
         if (isAdminSession) {
             menuItem("＋", tr("＋  نشر"), "إضافة مقال جديد إلى المدونة") { showGameDialog() }
         }
+        menuItem("☾", if (isDarkMode()) "الوضع النهاري" else "الوضع الليلي", "تبديل مظهر التطبيق وحفظ اختيارك") {
+            appearancePreferences().edit().putBoolean("dark_mode", !isDarkMode()).apply()
+            recreate()
+        }
+        menuItem("✦", "ألوان وحركات الواجهة", "تخصيص اللون الرئيسي وتأثيرات الحركة") { showAppearanceSettings() }
+        menuItem("⇧", "نسخ احتياطي", "تصدير مكتبتك وإعداداتك إلى ملف") { exportBackup() }
+        menuItem("⇩", "استعادة نسخة", "استيراد نسخة احتياطية محفوظة") { importBackup() }
         menuItem("Aa", "الخط وحجم النص", "تخصيص قراءة وواجهة التطبيق") { showTypographySettings() }
         panel.addView(View(this), LinearLayout.LayoutParams(1, 0, 1f))
         panel.addView(makeText("MARCO RX6  •  PREMIUM", 9f, Color.rgb(139, 151, 177), true).apply {
@@ -423,6 +441,107 @@ class MainActivity : Activity() {
         }
         if (view is ViewGroup) for (i in 0 until view.childCount) applyTypography(view.getChildAt(i))
     }
+    private fun showAppearanceSettings() {
+        val choices = arrayOf("بنفسجي", "أزرق", "أخضر", "ذهبي", "وردي")
+        val keys = arrayOf("violet", "blue", "green", "gold", "rose")
+        val selectedIndex = keys.indexOf(appearancePreferences().getString("accent", "violet")).coerceAtLeast(0)
+        AlertDialog.Builder(this).setTitle("تخصيص المظهر")
+            .setSingleChoiceItems(choices, selectedIndex) { dialog, which ->
+                appearancePreferences().edit().putString("accent", keys[which]).apply()
+                dialog.dismiss()
+                recreate()
+            }
+            .setNeutralButton(if (appearancePreferences().getBoolean("animations", true)) "إيقاف الحركات" else "تفعيل الحركات") { _, _ ->
+                val enabled = !appearancePreferences().getBoolean("animations", true)
+                appearancePreferences().edit().putBoolean("animations", enabled).apply()
+                Toast.makeText(this, if (enabled) "تم تفعيل الحركات" else "تم إيقاف الحركات", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("إغلاق", null).show()
+    }
+
+    private fun exportBackup() {
+        val payload = JSONObject()
+            .put("format", "MARCO_RX6_BACKUP")
+            .put("version", 1)
+            .put("createdAt", System.currentTimeMillis())
+            .put("games", JSONArray().also { array ->
+                games.forEach { game ->
+                    array.put(JSONObject()
+                        .put("name", game.name).put("platform", game.platform)
+                        .put("description", game.description).put("url", game.url)
+                        .put("coverUrl", game.coverUrl).put("coverLocalPath", "")
+                        .put("sourcePostUrl", game.sourcePostUrl).put("downloadLinks", game.downloadLinks)
+                        .put("blogImported", game.blogImported)
+                        .put("platformManuallyCorrected", game.platformManuallyCorrected)
+                        .put("isFavorite", game.isFavorite).put("bloggerPostId", game.bloggerPostId)
+                        .put("bloggerHtml", game.bloggerHtml))
+                }
+            })
+            .put("appearance", JSONObject()
+                .put("darkMode", isDarkMode())
+                .put("accent", appearancePreferences().getString("accent", "violet"))
+                .put("animations", appearancePreferences().getBoolean("animations", true)))
+        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE); type = "application/json"
+            putExtra(Intent.EXTRA_TITLE, "MARCO-RX6-backup.json")
+        }
+        backupExportPayload = payload.toString(2)
+        startActivityForResult(intent, BACKUP_EXPORT_REQUEST)
+    }
+    private var backupExportPayload: String = ""
+
+    private fun importBackup() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE); type = "application/json"
+        }
+        startActivityForResult(intent, BACKUP_IMPORT_REQUEST)
+    }
+
+    private fun handleBackupResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
+        if (resultCode != RESULT_OK) return requestCode == BACKUP_EXPORT_REQUEST || requestCode == BACKUP_IMPORT_REQUEST
+        val uri = data?.data ?: return true
+        return try {
+            if (requestCode == BACKUP_EXPORT_REQUEST) {
+                contentResolver.openOutputStream(uri)?.bufferedWriter(Charsets.UTF_8)?.use { it.write(backupExportPayload) }
+                Toast.makeText(this, "تم تصدير النسخة الاحتياطية", Toast.LENGTH_LONG).show()
+            } else if (requestCode == BACKUP_IMPORT_REQUEST) {
+                val raw = contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
+                    ?: throw IllegalStateException("تعذر قراءة الملف")
+                val backup = JSONObject(raw)
+                require(backup.optString("format") == "MARCO_RX6_BACKUP") { "ملف النسخة الاحتياطية غير صالح" }
+                val array = backup.optJSONArray("games") ?: JSONArray()
+                val restored = mutableListOf<Game>()
+                for (i in 0 until array.length()) {
+                    val item = array.optJSONObject(i) ?: continue
+                    val name = item.optString("name")
+                    if (name.isBlank()) continue
+                    restored.add(Game(name, item.optString("platform", "BLOG"), item.optString("description"),
+                        item.optString("url"), item.optString("coverUrl"), "", item.optString("sourcePostUrl"),
+                        item.optString("downloadLinks"), item.optBoolean("blogImported"),
+                        item.optBoolean("platformManuallyCorrected"), item.optBoolean("isFavorite"),
+                        item.optString("bloggerPostId"), item.optString("bloggerHtml")))
+                }
+                AlertDialog.Builder(this).setTitle("استعادة النسخة الاحتياطية")
+                    .setMessage("سيتم استبدال المكتبة الحالية بـ ${restored.size} عنصر. يُفضّل تصدير نسخة من بياناتك الحالية أولاً. هل تريد المتابعة؟")
+                    .setNegativeButton("إلغاء", null)
+                    .setPositiveButton("استعادة") { _, _ ->
+                        games.clear(); games.addAll(restored); saveGames()
+                        backup.optJSONObject("appearance")?.let { a ->
+                            appearancePreferences().edit()
+                                .putBoolean("dark_mode", a.optBoolean("darkMode", true))
+                                .putString("accent", a.optString("accent", "violet")).apply()
+                        }
+                        recreate()
+                        Toast.makeText(this, "تمت استعادة المكتبة", Toast.LENGTH_LONG).show()
+                    }.show()
+            }
+            true
+        } catch (e: Exception) {
+            Toast.makeText(this, "تعذرت معالجة النسخة: ${e.message}", Toast.LENGTH_LONG).show()
+            true
+        }
+    }
+
     private fun showTypographySettings() {
         val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(22), dp(12), dp(22), dp(8)) }
         val preview = makeText("MARCO RX6  •  معاينة شكل النص\nقراءة أوضح وتجربة مريحة", 17f, white, true)
@@ -1165,6 +1284,10 @@ class MainActivity : Activity() {
 
         super.onActivityResult(requestCode, resultCode, data)
 
+        if (requestCode == BACKUP_EXPORT_REQUEST || requestCode == BACKUP_IMPORT_REQUEST) {
+            handleBackupResult(requestCode, resultCode, data)
+            return
+        }
         if (requestCode == SIGN_IN_REQUEST && resultCode == RESULT_OK) {
             try {
                 val account = GoogleSignIn.getSignedInAccountFromIntent(data).getResult(com.google.android.gms.common.api.ApiException::class.java)
