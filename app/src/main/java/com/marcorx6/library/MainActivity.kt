@@ -1859,6 +1859,19 @@ class MainActivity : Activity() {
         activeProfileDialog = dialog
         dialog.setOnDismissListener { if (activeProfileDialog === dialog) activeProfileDialog = null }
         dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
+                val raw = body.text.toString().trim()
+                val html = if (Regex("(?is)<\\s*(p|div|h[1-6]|ul|ol|li|a|img|table|br)\\b").containsMatchIn(raw)) raw else "<p>" + Html.escapeHtml(raw).toString().replace("\\n", "<br/>") + "</p>"
+                val image = coverUrl.text.toString().trim().takeIf { it.isNotBlank() }?.let { "<p><img src=\\"$it\\" style=\\"max-width:100%;height:auto;\\"/></p>" } ?: ""
+                val web = WebView(this).apply {
+                    setBackgroundColor(bg)
+                    settings.javaScriptEnabled = false
+                    val foreground = if (isDarkMode()) "#ffffff" else "#181d2a"
+                    val background = if (isDarkMode()) "#090a16" else "#f5f7fb"
+                    loadDataWithBaseURL("https://marcorx6.blogspot.com/", "<html dir=\\"rtl\\"><meta name=\\"viewport\\" content=\\"width=device-width,initial-scale=1\\"><body style=\\"background:$background;color:$foreground;font-family:sans-serif;padding:16px;line-height:1.8\\"><h2>" + Html.escapeHtml(title.text.toString()) + "</h2>" + image + html + "<style>img{max-width:100%;height:auto}a{color:#8b5cf6}</style></body></html>", "text/html", "UTF-8", null)
+                }
+                AlertDialog.Builder(this).setTitle("معاينة المقال").setView(web).setPositiveButton("عودة للتحرير", null).show().apply { window?.setLayout(-1, dp(620)) }
+            }
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 prefs.edit()
                     .putString("nickname", input.text.toString().trim().ifBlank { "Player" })
@@ -2311,12 +2324,16 @@ class MainActivity : Activity() {
     private fun showGameDialog(existing: Game? = null) {
         if (!isAdminSession) { Toast.makeText(this, "يجب تسجيل الدخول بصلاحية المسؤول للنشر.", Toast.LENGTH_SHORT).show(); return }
         pendingCoverLocalPath = existing?.coverLocalPath ?: ""
-        val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(18), dp(5), dp(18), dp(5)) }
+        val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(10), dp(16), dp(16)); background = rounded(bg, 18) }
+        val intro = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(14), dp(13), dp(14), dp(13)); background = rounded(panel, 15) }
+        intro.addView(makeText(if (existing == null) "استوديو النشر • MARCO RX6" else "استوديو التحرير • MARCO RX6", 17f, white, true))
+        intro.addView(makeText("جهّز الغلاف والتفاصيل والمحتوى، ثم عاين المقال قبل إرساله إلى Blogger.", 11f, gray).apply { setPadding(0, dp(5), 0, 0) })
+        box.addView(intro, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
         val title = makeInput("عنوان المقال").apply { setSingleLine(true) }
         val category = Spinner(this)
         val categoryOptions = listOf("BLOG", "PSP", "PS1", "PS2", "PS3", "PS4")
         category.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, categoryOptions)
-        val body = makeInput("محتوى المقال (يدعم HTML)").apply { minLines = 10; gravity = Gravity.TOP; inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE or android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS }
+        val body = makeInput("اكتب محتوى المقال هنا — يدعم HTML").apply { minLines = 14; gravity = Gravity.TOP or Gravity.START; inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE or android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS; setPadding(dp(13), dp(12), dp(13), dp(12)) }
         val coverUrl = makeInput("رابط صورة الغلاف (اختياري)").apply { setSingleLine(true) }
         val link = makeInput("رابط التحميل أو رابط إضافي (اختياري)").apply { setSingleLine(true) }
         val genre = makeInput("نوع اللعبة (مثال: أكشن، مغامرات)").apply { setSingleLine(true) }
@@ -2350,15 +2367,16 @@ class MainActivity : Activity() {
         }
         val preview = ImageView(this).apply { scaleType = ImageView.ScaleType.CENTER_CROP; background = rounded(panel, 13) }
         coverPreview = preview
-        box.addView(preview, LinearLayout.LayoutParams(-1, dp(145)).apply { bottomMargin = dp(8) })
+        box.addView(makeText("02 • صورة الغلاف", 12f, red, true).apply { setPadding(0, dp(8), 0, dp(6)) })
+        box.addView(preview, LinearLayout.LayoutParams(-1, dp(165)).apply { bottomMargin = dp(8) })
         loadCover(preview, pendingCoverLocalPath, existing?.coverUrl ?: "")
         box.addView(Button(this).apply { text = "اختيار صورة الغلاف من الهاتف"; setTextColor(white); background = rounded(red, 12); setOnClickListener { chooseCover() } }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
         box.addView(makeText("تصنيف المقال", 10f, red, true)); box.addView(category)
         box.addView(genre); box.addView(releaseYear); box.addView(title)
-        box.addView(makeText("محتوى المقال", 10f, red, true).apply { setPadding(0, dp(8), 0, dp(4)) })
+        box.addView(makeText("03 • محتوى المقال", 12f, red, true).apply { setPadding(0, dp(12), 0, dp(5)) })
         box.addView(body, LinearLayout.LayoutParams(-1, dp(190))); box.addView(coverUrl); box.addView(link)
         val scroll = ScrollView(this).apply { addView(box) }
-        val dialog = AlertDialog.Builder(this).setTitle(if (existing == null) "مقال جديد" else "تعديل المقال").setView(scroll).setNegativeButton("CANCEL", null).setPositiveButton("نشر المقال", null).create()
+        val dialog = AlertDialog.Builder(this).setTitle(if (existing == null) "إنشاء مقال جديد" else "تعديل المقال").setView(scroll).setNegativeButton("إغلاق", null).setNeutralButton("معاينة", null).setPositiveButton(if (existing == null) "نشر المقال" else "حفظ التعديلات", null).create()
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 val postTitle = title.text.toString().trim(); val categoryName = category.selectedItem.toString(); val coverLink = coverUrl.text.toString().trim(); val relatedLink = link.text.toString().trim()
