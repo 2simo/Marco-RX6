@@ -1625,6 +1625,7 @@ class MainActivity : Activity() {
             .show()
     }
 
+    private var activeProfileDialog: AlertDialog? = null
     private fun profilePreferences() = getSharedPreferences("user_profile", MODE_PRIVATE)
     private fun readerPreferences() = getSharedPreferences("reader_settings", MODE_PRIVATE)
     private fun showProfile() {
@@ -1661,6 +1662,7 @@ class MainActivity : Activity() {
                     addCategory(Intent.CATEGORY_OPENABLE)
                     type = "image/*"
                 }
+                activeProfileDialog?.dismiss()
                 startActivityForResult(intent, 1005)
             }
         }
@@ -1714,6 +1716,8 @@ class MainActivity : Activity() {
             .setPositiveButton(tr("حفظ"), null)
             .setNegativeButton(tr("إغلاق"), null)
             .create()
+        activeProfileDialog = dialog
+        dialog.setOnDismissListener { if (activeProfileDialog === dialog) activeProfileDialog = null }
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 prefs.edit().putString("nickname", input.text.toString().trim().ifBlank { "Player" }).apply()
