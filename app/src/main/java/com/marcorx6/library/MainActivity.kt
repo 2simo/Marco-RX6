@@ -1640,10 +1640,10 @@ class MainActivity : Activity() {
                     }
                 }
 
-                if (bitmap != null) {
-                    coverBitmapCache.put(key, bitmap)
+                bitmap?.let { decodedBitmap ->
+                    coverBitmapCache.put(key, decodedBitmap)
                     mainHandler.post {
-                        if (image.tag == key) image.setImageBitmap(bitmap)
+                        if (image.tag == key) image.setImageBitmap(decodedBitmap)
                     }
                 }
             } catch (_: Exception) {
