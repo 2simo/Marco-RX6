@@ -2144,7 +2144,8 @@ class MainActivity : Activity() {
     private data class DownloadProbe(
         val finalUrl: String,
         val mimeType: String,
-        val contentDisposition: String
+        val contentDisposition: String,
+        val isDirectFile: Boolean
     )
 
     // Resolve redirects and verify the response is a file before handing it to Android DownloadManager.
@@ -2179,16 +2180,16 @@ class MainActivity : Activity() {
                 throw IllegalStateException("هذا الرابط يفتح صفحة HTML وليس ملفاً مباشراً. افتح صفحة التحميل وابحث عن رابط الملف نفسه.")
             }
             val path = Uri.parse(finalUrl).lastPathSegment.orEmpty().lowercase(Locale.ROOT)
-            val hasFileExtension = Regex("""\.(apk|zip|7z|rar|iso|pkg|bin|cue|chd|img|pbp|cso|nsp|xci|pdf|mp4|mp3)(?:$|\?)""")
+            val hasFileExtension = Regex("""\\.(apk|zip|7z|rar|iso|pkg|bin|cue|chd|img|pbp|cso|nsp|xci|pdf|mp4|mp3)(?:$|\\?)""")
                 .containsMatchIn(path)
             val isAttachment = disposition.contains("attachment", ignoreCase = true)
             val isBinary = mime == "application/octet-stream" ||
                 mime.startsWith("application/") ||
                 mime.startsWith("video/") || mime.startsWith("audio/")
-            if (!isAttachment && !isBinary && !hasFileExtension) {
-                throw IllegalStateException("لم يتمكن التطبيق من التأكد أن الرابط ملف قابل للتنزيل (نوع المحتوى: ${mime.ifBlank { "غير معروف" }}).")
-            }
-            return DownloadProbe(finalUrl, mime, disposition)
+            // HTML pages and ambiguous responses belong in the external browser.
+            val isHtml = mime == "text/html" || mime == "application/xhtml+xml"
+            val isDirectFile = !isHtml && (isAttachment || isBinary || hasFileExtension)
+            return DownloadProbe(finalUrl, mime, disposition, isDirectFile)
         } finally {
             connection.disconnect()
         }
@@ -2210,6 +2211,17 @@ class MainActivity : Activity() {
         Thread {
             try {
                 val probe = inspectDownloadUrl(link, userAgent, contentDisposition, hintedMimeType)
+                if (!probe.isDirectFile) {
+                    mainHandler.post {
+                        Toast.makeText(
+                            this,
+                            "هذا رابط صفحة أو تعذّر التأكد أنه ملف مباشر؛ سيتم فتحه في المتصفح",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        openGameLink(probe.finalUrl)
+                    }
+                    return@Thread
+                }
                 val request = DownloadManager.Request(Uri.parse(probe.finalUrl))
                     .setTitle(title.ifBlank { "MARCO RX6" })
                     .setDescription("تنزيل ملف عبر MARCO RX6")
