@@ -1474,9 +1474,9 @@ class MainActivity : Activity() {
     }
 
     private fun extractFeedThumbnail(entry: JSONObject): String {
-        val mediaThumbnail = entry.optJSONObject("media\\$thumbnail")?.optString("url").orEmpty()
+        val mediaThumbnail = entry.optJSONObject("media\$thumbnail")?.optString("url").orEmpty()
         if (mediaThumbnail.isNotBlank()) return normalizeBloggerImageUrl(mediaThumbnail)
-        val mediaContent = entry.optJSONArray("media\\$content")
+        val mediaContent = entry.optJSONArray("media\$content")
         for (index in 0 until (mediaContent?.length() ?: 0)) {
             val url = mediaContent?.optJSONObject(index)?.optString("url").orEmpty()
             if (url.startsWith("https://") || url.startsWith("http://")) {
