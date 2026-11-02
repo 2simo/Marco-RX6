@@ -387,7 +387,6 @@ class MainActivity : Activity() {
         if (isAdminSession) {
             menuItem("＋", tr("＋  نشر"), "إضافة مقال جديد إلى المدونة") { showGameDialog() }
         }
-        if (isAdminSession) menuItem("◈", "إحصاءات المكتبة", "المشاهدات والتقييمات والألعاب الرائجة") { showAdminAnalytics() }
         menuItem("Aa", "الخط وحجم النص", "تخصيص قراءة وواجهة التطبيق") { showTypographySettings() }
         panel.addView(View(this), LinearLayout.LayoutParams(1, 0, 1f))
         panel.addView(makeText("MARCO RX6  •  PREMIUM", 9f, Color.rgb(139, 151, 177), true).apply {
@@ -548,30 +547,6 @@ class MainActivity : Activity() {
         hero.addView(stats)
         root.addView(hero, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(15) })
 
-        val lastRead = games.filter { isRecentlyViewed(it) }.maxByOrNull { lastViewedAt(it) }
-        if (lastRead != null) {
-            val resume = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-                    intArrayOf(Color.rgb(33, 39, 55), Color.rgb(18, 22, 34))).apply {
-                    cornerRadius = dp(16).toFloat()
-                    setStroke(dp(1), Color.rgb(66, 78, 105))
-                }
-                setPadding(dp(14), dp(11), dp(14), dp(11))
-                setOnClickListener { showDetails(lastRead) }
-            }
-            val resumeLabels = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-            resumeLabels.addView(makeText("CONTINUE", 8f, violet, true))
-            resumeLabels.addView(makeText(lastRead.name, 12f, silver, true).apply {
-                maxLines = 1
-                ellipsize = android.text.TextUtils.TruncateAt.END
-            })
-            resume.addView(resumeLabels, LinearLayout.LayoutParams(0, -2, 1f))
-            resume.addView(makeText("↗", 20f, silver, true))
-            root.addView(resume, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(14) })
-        }
-
         val searchWrap = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -611,14 +586,12 @@ class MainActivity : Activity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        (listOf("ALL", "BLOG", "FAVORITES", "RECENT", "POPULAR") + platforms.drop(3)).forEach { category ->
+        (listOf("ALL", "BLOG", "FAVORITES") + platforms.drop(3)).forEach { category ->
             val chip = TextView(this).apply {
                 text = when (category) {
                     "ALL" -> tr("الكل")
                     "BLOG" -> tr("المدونة")
                     "FAVORITES" -> tr("المفضلة")
-                    "RECENT" -> tr("شوهدت مؤخراً")
-                    "POPULAR" -> tr("الأكثر مشاهدة")
                     else -> category
                 }
                 tag = category
@@ -654,10 +627,10 @@ class MainActivity : Activity() {
             setPadding(dp(12), dp(7), dp(12), dp(7))
             contentDescription = tr("ترتيب المقالات")
             setOnClickListener {
-                sortMode = when (sortMode) { "LATEST" -> "POPULAR"; "POPULAR" -> "RATING"; "RATING" -> "NEW"; "NEW" -> "A-Z"; "A-Z" -> "FAVORITES"; else -> "LATEST" }
+                sortMode = when (sortMode) { "LATEST" -> "NEW"; "NEW" -> "A-Z"; "A-Z" -> "FAVORITES"; else -> "LATEST" }
                 renderGames()
                 Toast.makeText(this@MainActivity, "الترتيب: " + when (sortMode) {
-                    "LATEST" -> "الأحدث"; "POPULAR" -> "الأكثر تفاعلاً"; "RATING" -> "الأعلى تقييماً"; "NEW" -> "المضاف حديثاً"; "A-Z" -> "أبجدياً"; else -> "المفضلة"
+                    "LATEST" -> "الأحدث"; "NEW" -> "المضاف حديثاً"; "A-Z" -> "أبجدياً"; else -> "المفضلة"
                 }, Toast.LENGTH_SHORT).show()
             }
         }
@@ -722,7 +695,6 @@ class MainActivity : Activity() {
         }
         dockItem("⌂", tr("الكل")) { selected = "ALL"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
         dockItem("♡", tr("المفضلة")) { selected = "FAVORITES"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
-        dockItem("◷", tr("شوهدت مؤخراً")) { selected = "RECENT"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
         dockItem("☰", tr("القائمة")) { showSideMenu() }
         shell.addView(dock, FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply {
             leftMargin = dp(16); rightMargin = dp(16); bottomMargin = dp(12)
@@ -1260,75 +1232,7 @@ class MainActivity : Activity() {
 
 
     private fun profilePreferences() = getSharedPreferences("user_profile", MODE_PRIVATE)
-    private fun historyPreferences() = getSharedPreferences("article_activity", MODE_PRIVATE)
-    private fun articleKey(game: Game): String = (game.url.ifBlank { game.name }).hashCode().toString()
-    private fun viewCount(game: Game): Int = historyPreferences().getInt("views_" + articleKey(game), 0)
-    private fun ratingCount(game: Game): Int =
-        if (historyPreferences().getInt("rating_" + articleKey(game), 0) > 0) 1 else 0
-    private fun averageRating(game: Game): Float {
-        val rating = historyPreferences().getInt("rating_" + articleKey(game), 0)
-        return if (rating > 0) rating.toFloat() else 0f
-    }
-    private fun popularityScore(game: Game): Int = viewCount(game) + ratingCount(game) * 5
-
-    private fun showAdminAnalytics() {
-        if (!isAdminSession) return
-        val sorted = games.sortedByDescending { popularityScore(it) }
-        val totalViews = games.sumOf { viewCount(it) }
-        val totalRatings = games.sumOf { ratingCount(it) }
-        val rated = games.filter { ratingCount(it) > 0 }
-        val average = if (rated.isEmpty()) 0f else rated.map { averageRating(it) }.average().toFloat()
-        val box = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(18), dp(8), dp(18), dp(8))
-        }
-        fun metric(value: String, label: String) = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            background = rounded(Color.rgb(25, 30, 46), 13)
-            setPadding(dp(9), dp(13), dp(9), dp(13))
-            addView(makeText(value, 22f, Color.rgb(210, 220, 239), true))
-            addView(makeText(label, 10f, Color.LTGRAY))
-        }
-        val summary = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        summary.addView(metric(compactMetric(totalViews), "مشاهدات هذا الجهاز"), LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
-        summary.addView(metric(compactMetric(totalRatings), "تقييمات محلية"), LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
-        summary.addView(metric(String.format(Locale.ROOT, "%.1f", average), "متوسط التقييم"), LinearLayout.LayoutParams(0, -2, 1f))
-        box.addView(summary)
-        box.addView(makeText("الأكثر تفاعلاً", 14f, Color.rgb(180, 151, 255), true).apply { setPadding(0, dp(18), 0, dp(8)) })
-        sorted.take(8).forEachIndexed { index, game ->
-            val line = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(10), dp(9), dp(10), dp(9))
-                background = rounded(Color.rgb(19, 23, 36), 10)
-            }
-            line.addView(makeText((index + 1).toString() + ".", 12f, Color.rgb(180, 151, 255), true), LinearLayout.LayoutParams(dp(28), -2))
-            line.addView(makeText(game.name, 11f, white, true), LinearLayout.LayoutParams(0, -2, 1f))
-            line.addView(makeText("◉ " + compactMetric(viewCount(game)) + "  ★ " + ratingCount(game), 9f, gray))
-            box.addView(line, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(5) })
-        }
-        box.addView(makeText("تنبيه: هذه الأرقام محفوظة محلياً على هذا الجهاز وليست إحصاءات جميع المستخدمين.", 10f, Color.rgb(255, 190, 105)).apply {
-            setPadding(0, dp(12), 0, 0)
-        })
-        AlertDialog.Builder(this).setTitle("تحليلات MARCO RX6")
-            .setView(ScrollView(this).apply { addView(box) })
-            .setPositiveButton("إغلاق", null).show()
-    }
-
-    private fun compactMetric(value: Int): String = when {
-        value >= 1_000_000 -> String.format(Locale.ROOT, "%.1fM", value / 1_000_000f)
-        value >= 1_000 -> String.format(Locale.ROOT, "%.1fK", value / 1_000f)
-        else -> value.toString()
-    }
-    private fun lastViewedAt(game: Game): Long = historyPreferences().getLong("time_" + articleKey(game), 0L)
-    private fun isRecentlyViewed(game: Game): Boolean = lastViewedAt(game) > 0L
-    private fun recordArticleView(game: Game) {
-        val prefs = historyPreferences()
-        val key = articleKey(game)
-        prefs.edit().putInt("views_" + key, viewCount(game) + 1)
-            .putLong("time_" + key, System.currentTimeMillis()).apply()
-    }
+    private fun readerPreferences() = getSharedPreferences("reader_settings", MODE_PRIVATE)
     private fun showProfile() {
         val prefs = profilePreferences()
         val settings = getSharedPreferences("app_settings", MODE_PRIVATE)
@@ -1345,7 +1249,6 @@ class MainActivity : Activity() {
         box.addView(input, LinearLayout.LayoutParams(-1, dp(50)).apply { topMargin = dp(6); bottomMargin = dp(14) })
 
         val favoriteCount = games.count { it.isFavorite }
-        val recentCount = games.count { isRecentlyViewed(it) }
         val stats = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             background = rounded(panel, 14)
@@ -1359,7 +1262,6 @@ class MainActivity : Activity() {
         }
         stats.addView(stat(games.size.toString(), "المقالات"), LinearLayout.LayoutParams(0, -2, 1f))
         stats.addView(stat(favoriteCount.toString(), "المفضلة"), LinearLayout.LayoutParams(0, -2, 1f))
-        stats.addView(stat(recentCount.toString(), "شوهدت"), LinearLayout.LayoutParams(0, -2, 1f))
         box.addView(stats, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
 
         fun settingButton(label: String, detail: String, action: () -> Unit) =
@@ -1376,10 +1278,6 @@ class MainActivity : Activity() {
         }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
         box.addView(settingButton("♧  الإشعارات", "التحكم في تنبيهات المقالات الجديدة") {
             showNotificationSettings()
-        }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
-        box.addView(settingButton("◷  سجل القراءة", "عرض المقالات التي شاهدتها مؤخراً") {
-            selected = "RECENT"
-            createInterface()
         }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
         box.addView(settingButton("✦  وضع القراءة", "حجم الخط والوضع الليلي متاحان داخل المقال") {
             Toast.makeText(this, "افتح أي مقال لتخصيص تجربة القراءة", Toast.LENGTH_SHORT).show()
@@ -1416,8 +1314,6 @@ class MainActivity : Activity() {
             val categoryMatch = when (selected) {
                 "ALL" -> true
                 "FAVORITES" -> item.isFavorite
-                "RECENT" -> isRecentlyViewed(item)
-                "POPULAR" -> true
                 "BLOG" -> item.blogImported
                 else -> item.platform == selected
             }
@@ -1429,10 +1325,8 @@ class MainActivity : Activity() {
         val sorted = when (sortMode) {
             "A-Z" -> filtered.sortedBy { it.name.lowercase(Locale.ROOT) }
             "FAVORITES" -> filtered.sortedByDescending { it.isFavorite }
-            "POPULAR" -> filtered.sortedByDescending { popularityScore(it) }
-            "RATING" -> filtered.sortedByDescending { averageRating(it) }
             "NEW" -> filtered.reversed()
-            else -> if (selected == "RECENT") filtered.sortedByDescending { lastViewedAt(it) } else filtered
+            else -> filtered
         }
         countText.text = sorted.size.toString() + " " + tr("مقال")
         if (sorted.isEmpty()) {
@@ -1453,8 +1347,6 @@ class MainActivity : Activity() {
             val title = when (selected) {
                 "ALL" -> "الكل"
                 "FAVORITES" -> tr("المفضلة")
-                "RECENT" -> tr("شوهدت مؤخراً")
-                "POPULAR" -> tr("الأكثر مشاهدة")
                 "BLOG" -> "BLOG"
                 else -> selected
             }
@@ -1529,18 +1421,6 @@ class MainActivity : Activity() {
                     }
                     card.addView(title, LinearLayout.LayoutParams(dp(142), dp(27)))
 
-                    val metrics = LinearLayout(this).apply {
-                        orientation = LinearLayout.HORIZONTAL
-                        gravity = Gravity.CENTER
-                        setPadding(dp(2), 0, dp(2), 0)
-                    }
-                    val views = makeText("◉ " + compactMetric(viewCount(post)), 9f, Color.rgb(174, 184, 203))
-                    val ratingValue = if (ratingCount(post) > 0) String.format(Locale.ROOT, "%.1f", averageRating(post)) else "—"
-                    val ratings = makeText("★ " + ratingValue + " (" + compactMetric(ratingCount(post)) + ")", 9f, Color.rgb(255, 197, 92), true)
-                    metrics.addView(views)
-                    metrics.addView(makeText("  ·  ", 9f, Color.rgb(112, 121, 143)))
-                    metrics.addView(ratings)
-                    card.addView(metrics, LinearLayout.LayoutParams(dp(142), dp(19)))
                     row.addView(card, LinearLayout.LayoutParams(dp(142), -2).apply {
                         marginEnd = dp(11)
                     })
@@ -1563,7 +1443,6 @@ class MainActivity : Activity() {
 
     // Dedicated immersive article reader; the WebView owns its scroll instead of nesting inside ScrollView.
     private fun showDetails(game: Game) {
-        recordArticleView(game)
         val reader = android.app.Dialog(this)
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -1609,7 +1488,7 @@ class MainActivity : Activity() {
             }
         }
         topBar.addView(favorite)
-        val readerPrefs = historyPreferences()
+        val readerPrefs = readerPreferences()
         var readerFontSize = readerPrefs.getInt("reader_font_size", 17).coerceIn(14, 24)
         var readerLightMode = readerPrefs.getBoolean("reader_light_mode", false)
         var articleView: android.webkit.WebView? = null
@@ -1661,9 +1540,6 @@ class MainActivity : Activity() {
         val info = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(14), 0, 0, 0) }
         info.addView(makeText(game.name, 18f, white, true).apply { maxLines = 3; ellipsize = android.text.TextUtils.TruncateAt.END })
         info.addView(makeText(game.platform + "  •  MARCO RX6", 10f, Color.rgb(190, 174, 255), true).apply { setPadding(0, dp(6), 0, dp(12)) })
-        val avg = if (ratingCount(game) > 0) String.format(Locale.ROOT, "%.1f / 5", averageRating(game)) else "لا توجد تقييمات بعد"
-        info.addView(makeText("★  " + avg, 12f, Color.rgb(255, 197, 92), true))
-        info.addView(makeText("◉  " + compactMetric(viewCount(game)) + " مشاهدة   •   " + ratingCount(game) + " تقييم", 10f, Color.rgb(207, 215, 231)).apply { setPadding(0, dp(7), 0, 0) })
         identity.addView(info, LinearLayout.LayoutParams(0, -2, 1f))
         root.addView(identity, LinearLayout.LayoutParams(-1, -2).apply { setMargins(dp(12), dp(10), dp(12), dp(10)) })
 
@@ -1741,47 +1617,6 @@ class MainActivity : Activity() {
             downloadScroll.addView(downloadRow)
             root.addView(downloadScroll)
         }
-
-        val ratingRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(14), dp(7), dp(14), dp(7))
-            setBackgroundColor(Color.rgb(18, 21, 31))
-        }
-        ratingRow.addView(makeText(tr("قيّم هذا المقال"), 10f, gray, true),
-            LinearLayout.LayoutParams(0, -2, 1f))
-        val ratingPrefs = historyPreferences()
-        val ratingKey = "rating_" + articleKey(game)
-        val selectedRating = ratingPrefs.getInt(ratingKey, 0)
-        val ratingSummary = makeText(
-            if (ratingCount(game) > 0) "متوسط تقييمك على هذا الجهاز: " + String.format(Locale.ROOT, "%.1f / 5", averageRating(game))
-            else "قيّم اللعبة وسجّل رأيك على هذا الجهاز",
-            10f, Color.rgb(191, 199, 215)
-        ).apply { setPadding(dp(14), dp(3), dp(14), dp(9)) }
-        for (star in 1..5) {
-            ratingRow.addView(TextView(this).apply {
-                text = if (star <= selectedRating) "★" else "☆"
-                textSize = 22f
-                setTextColor(if (star <= selectedRating) Color.rgb(255, 190, 75) else gray)
-                setPadding(dp(3), dp(3), dp(3), dp(3))
-                setOnClickListener {
-                    ratingPrefs.edit().putInt(ratingKey, star).apply()
-                    for (index in 0 until ratingRow.childCount) {
-                        val child = ratingRow.getChildAt(index)
-                        if (index > 0) {
-                            val score = index
-                            (child as TextView).text = if (score <= star) "★" else "☆"
-                            child.setTextColor(if (score <= star) Color.rgb(255, 190, 75) else gray)
-                        }
-                    }
-                    ratingSummary.text = "تقييمك: " + star + " / 5  •  التقييم محفوظ على هذا الجهاز"
-                    renderGames()
-                    Toast.makeText(this@MainActivity, "تم حفظ تقييمك: " + star + " من 5", Toast.LENGTH_SHORT).show()
-                }
-            })
-        }
-        root.addView(ratingRow)
-        root.addView(ratingSummary)
 
         val bottom = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
