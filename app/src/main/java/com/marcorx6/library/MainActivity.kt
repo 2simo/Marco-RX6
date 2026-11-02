@@ -81,6 +81,7 @@ class MainActivity : Activity() {
     private var selected = "ALL"
     private var sortMode = "الأحدث"
     private val mainHandler = Handler(Looper.getMainLooper())
+    private var searchRenderRunnable: Runnable? = null
     private val PICK_IMAGE_REQUEST = 1001
     private var pendingCoverLocalPath = ""
     private var coverPreview: ImageView? = null
@@ -457,6 +458,20 @@ class MainActivity : Activity() {
             }.show()
     }
 
+    // Ask Android for the device's fastest supported mode (up to 144 Hz).
+    // Android may still enforce a lower rate for power or device policy.
+    @Suppress("DEPRECATION")
+    private fun requestHighRefreshRate() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
+        val modes = windowManager.defaultDisplay.supportedModes
+        val refreshRate = modes.maxOfOrNull { it.refreshRate } ?: return
+        if (refreshRate > 60f) {
+            window.attributes = window.attributes.apply {
+                preferredRefreshRate = refreshRate.coerceAtMost(144f)
+            }
+        }
+    }
+
     private fun createInterface() {
         // LIQUID METAL redesign: premium chrome surfaces, clear hierarchy and quick navigation.
         val silver = Color.rgb(226, 232, 242)
@@ -713,10 +728,16 @@ class MainActivity : Activity() {
             leftMargin = dp(16); rightMargin = dp(16); bottomMargin = dp(12)
         })
         setContentView(shell)
+        requestHighRefreshRate()
         root.requestApplyInsets()
         search.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { renderGames() }
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                searchRenderRunnable?.let { mainHandler.removeCallbacks(it) }
+                searchRenderRunnable = Runnable { renderGames() }.also {
+                    mainHandler.postDelayed(it, 180L)
+                }
+            }
             override fun afterTextChanged(s: Editable?) {}
         })
         renderGames()
@@ -1390,7 +1411,7 @@ class MainActivity : Activity() {
             chip.setTextColor(if (active) bg else gray)
         }
 
-        val query = search.text.toString().lowercase(Locale.ROOT).trim()
+        val query = search.text.toString().trim()
         val filtered = games.filter { item ->
             val categoryMatch = when (selected) {
                 "ALL" -> true
@@ -1400,9 +1421,9 @@ class MainActivity : Activity() {
                 "BLOG" -> item.blogImported
                 else -> item.platform == selected
             }
-            val searchMatch = item.name.lowercase(Locale.ROOT).contains(query) ||
-                item.platform.lowercase(Locale.ROOT).contains(query) ||
-                item.description.lowercase(Locale.ROOT).contains(query)
+            val searchMatch = item.name.contains(query, ignoreCase = true) ||
+                item.platform.contains(query, ignoreCase = true) ||
+                item.description.contains(query, ignoreCase = true)
             categoryMatch && searchMatch
         }
         val sorted = when (sortMode) {
@@ -1460,64 +1481,78 @@ class MainActivity : Activity() {
                 orientation = LinearLayout.HORIZONTAL
                 setPadding(dp(2), dp(2), dp(2), dp(13))
             }
-            posts.forEach { post ->
-                // Keep the original 142x190 cover intact; metadata sits below it.
-                val card = LinearLayout(this).apply {
-                    orientation = LinearLayout.VERTICAL
-                    gravity = Gravity.CENTER_HORIZONTAL
-                    isClickable = true
-                    isFocusable = true
-                    setOnClickListener { showDetails(post) }
-                }
-                val frame = FrameLayout(this).apply {
-                    background = rounded(Color.rgb(198, 204, 218), 13)
-                    clipToOutline = true
-                    elevation = dp(4).toFloat()
-                    isClickable = true
-                    isFocusable = true
-                    setOnClickListener { showDetails(post) }
-                }
-                val cover = ImageView(this).apply {
-                    scaleType = ImageView.ScaleType.CENTER_CROP
-                    setBackgroundColor(Color.rgb(29, 32, 58))
-                    contentDescription = post.name
-                    isClickable = true
-                    setOnClickListener { showDetails(post) }
-                }
-                frame.addView(cover, FrameLayout.LayoutParams(-1, -1))
-                if (post.coverUrl.isNotBlank() || post.coverLocalPath.isNotBlank()) {
-                    loadCover(cover, post.coverLocalPath, post.coverUrl)
-                } else {
-                    cover.setImageResource(android.R.drawable.ic_menu_gallery)
-                    cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
-                }
-                card.addView(frame, LinearLayout.LayoutParams(dp(142), dp(190)))
+            // Build cards in small batches so large libraries do not block the first draw.
+            var nextPostIndex = 0
+            fun appendNextBatch() {
+                val endIndex = (nextPostIndex + 8).coerceAtMost(posts.size)
+                while (nextPostIndex < endIndex) {
+                    val post = posts[nextPostIndex++]
+                    // Keep the original 142x190 cover intact; metadata sits below it.
+                    val card = LinearLayout(this).apply {
+                        orientation = LinearLayout.VERTICAL
+                        gravity = Gravity.CENTER_HORIZONTAL
+                        isClickable = true
+                        isFocusable = true
+                        setOnClickListener { showDetails(post) }
+                    }
+                    val frame = FrameLayout(this).apply {
+                        background = rounded(Color.rgb(198, 204, 218), 13)
+                        clipToOutline = true
+                        elevation = dp(4).toFloat()
+                        isClickable = true
+                        isFocusable = true
+                        setOnClickListener { showDetails(post) }
+                    }
+                    val cover = ImageView(this).apply {
+                        scaleType = ImageView.ScaleType.CENTER_CROP
+                        setBackgroundColor(Color.rgb(29, 32, 58))
+                        contentDescription = post.name
+                        isClickable = true
+                        setOnClickListener { showDetails(post) }
+                    }
+                    frame.addView(cover, FrameLayout.LayoutParams(-1, -1))
+                    if (post.coverUrl.isNotBlank() || post.coverLocalPath.isNotBlank()) {
+                        loadCover(cover, post.coverLocalPath, post.coverUrl)
+                    } else {
+                        cover.setImageResource(android.R.drawable.ic_menu_gallery)
+                        cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                    }
+                    card.addView(frame, LinearLayout.LayoutParams(dp(142), dp(190)))
 
-                val title = makeText(post.name, 11f, Color.rgb(238, 241, 248), true).apply {
-                    gravity = Gravity.CENTER
-                    maxLines = 1
-                    ellipsize = android.text.TextUtils.TruncateAt.END
-                    setPadding(dp(3), dp(7), dp(3), dp(3))
-                    isClickable = true
-                    setOnClickListener { showDetails(post) }
-                }
-                card.addView(title, LinearLayout.LayoutParams(dp(142), dp(27)))
+                    val title = makeText(post.name, 11f, Color.rgb(238, 241, 248), true).apply {
+                        gravity = Gravity.CENTER
+                        maxLines = 1
+                        ellipsize = android.text.TextUtils.TruncateAt.END
+                        setPadding(dp(3), dp(7), dp(3), dp(3))
+                        isClickable = true
+                        setOnClickListener { showDetails(post) }
+                    }
+                    card.addView(title, LinearLayout.LayoutParams(dp(142), dp(27)))
 
-                val metrics = LinearLayout(this).apply {
-                    orientation = LinearLayout.HORIZONTAL
-                    gravity = Gravity.CENTER
-                    setPadding(dp(2), 0, dp(2), 0)
+                    val metrics = LinearLayout(this).apply {
+                        orientation = LinearLayout.HORIZONTAL
+                        gravity = Gravity.CENTER
+                        setPadding(dp(2), 0, dp(2), 0)
+                    }
+                    val views = makeText("◉ " + compactMetric(viewCount(post)), 9f, Color.rgb(174, 184, 203))
+                    val ratingValue = if (ratingCount(post) > 0) String.format(Locale.ROOT, "%.1f", averageRating(post)) else "—"
+                    val ratings = makeText("★ " + ratingValue + " (" + compactMetric(ratingCount(post)) + ")", 9f, Color.rgb(255, 197, 92), true)
+                    metrics.addView(views)
+                    metrics.addView(makeText("  ·  ", 9f, Color.rgb(112, 121, 143)))
+                    metrics.addView(ratings)
+                    card.addView(metrics, LinearLayout.LayoutParams(dp(142), dp(19)))
+                    row.addView(card, LinearLayout.LayoutParams(dp(142), -2).apply {
+                        marginEnd = dp(11)
+                    })
                 }
-                val views = makeText("◉ " + compactMetric(viewCount(post)), 9f, Color.rgb(174, 184, 203))
-                val ratingValue = if (ratingCount(post) > 0) String.format(Locale.ROOT, "%.1f", averageRating(post)) else "—"
-                val ratings = makeText("★ " + ratingValue + " (" + compactMetric(ratingCount(post)) + ")", 9f, Color.rgb(255, 197, 92), true)
-                metrics.addView(views)
-                metrics.addView(makeText("  ·  ", 9f, Color.rgb(112, 121, 143)))
-                metrics.addView(ratings)
-                card.addView(metrics, LinearLayout.LayoutParams(dp(142), dp(19)))
-                row.addView(card, LinearLayout.LayoutParams(dp(142), -2).apply {
-                    marginEnd = dp(11)
-                })
+            }
+            appendNextBatch()
+            horizontal.setOnScrollChangeListener { view, scrollX, _, _, _ ->
+                if (nextPostIndex < posts.size &&
+                    scrollX + view.width >= row.width - dp(220)
+                ) {
+                    appendNextBatch()
+                }
             }
             horizontal.addView(row)
             gameList.addView(horizontal, LinearLayout.LayoutParams(-1, dp(250)).apply {
