@@ -78,6 +78,19 @@ class MainActivity : Activity() {
 
     private fun appearancePreferences() = getSharedPreferences("appearance_settings", MODE_PRIVATE)
     private fun isDarkMode() = appearancePreferences().getBoolean("dark_mode", true)
+
+    private fun applySystemBarAppearance() {
+        window.statusBarColor = bg
+        window.navigationBarColor = bg
+        WindowInsetsControllerCompat(window, window.decorView).apply {
+            isAppearanceLightStatusBars = !isDarkMode()
+            isAppearanceLightNavigationBars = !isDarkMode()
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isStatusBarContrastEnforced = false
+            window.isNavigationBarContrastEnforced = false
+        }
+    }
     private fun accentColor(): Int = when (appearancePreferences().getString("accent", "violet")) {
         "blue" -> Color.rgb(65, 145, 245)
         "green" -> Color.rgb(35, 170, 125)
@@ -127,11 +140,7 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        window.statusBarColor = bg
-        window.navigationBarColor = bg
-
-        @Suppress("DEPRECATION")
-        window.decorView.systemUiVisibility = 0
+        applySystemBarAppearance()
 
         // Hide the top status bar (clock, battery and status icons) to prevent overlap.
         WindowInsetsControllerCompat(window, window.decorView).apply {
