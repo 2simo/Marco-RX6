@@ -271,6 +271,12 @@ class MainActivity : Activity() {
             setPadding(dp(15), dp(11), dp(15), dp(11))
             setOnClickListener { if (isAdminSession) signOutAdmin() else startGoogleSignIn() }
         }
+        header.addView(TextView(this).apply {
+            text = "ME"; textSize = 10f; setTextColor(white); gravity = Gravity.CENTER
+            background = rounded(Color.rgb(31, 35, 49), 18)
+            setPadding(dp(13), dp(11), dp(13), dp(11))
+            setOnClickListener { showProfile() }
+        }, LinearLayout.LayoutParams(-2, -2).apply { rightMargin = dp(8) })
         header.addView(adminButton)
         root.addView(header)
 
@@ -328,7 +334,7 @@ class MainActivity : Activity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        (listOf("ALL", "BLOG", "FAVORITES") + platforms.drop(3)).forEach { category ->
+        (listOf("ALL", "BLOG", "FAVORITES", "RECENT", "POPULAR") + platforms.drop(3)).forEach { category ->
             val chip = TextView(this).apply {
                 text = category
                 textSize = 11f
@@ -366,7 +372,7 @@ class MainActivity : Activity() {
             setPadding(dp(12), dp(7), dp(12), dp(7))
             contentDescription = "Sort posts"
             setOnClickListener {
-                sortMode = when (sortMode) { "LATEST" -> "A-Z"; "A-Z" -> "FAVORITES"; else -> "LATEST" }
+                sortMode = when (sortMode) { "LATEST" -> "POPULAR"; "POPULAR" -> "A-Z"; "A-Z" -> "FAVORITES"; else -> "LATEST" }
                 renderGames()
                 Toast.makeText(this@MainActivity, "Sort: $sortMode", Toast.LENGTH_SHORT).show()
             }
@@ -937,6 +943,38 @@ class MainActivity : Activity() {
         }.start()
     }
 
+
+    private fun profilePreferences() = getSharedPreferences("user_profile", MODE_PRIVATE)
+    private fun historyPreferences() = getSharedPreferences("article_activity", MODE_PRIVATE)
+    private fun articleKey(game: Game): String = (game.url.ifBlank { game.name }).hashCode().toString()
+    private fun viewCount(game: Game): Int = historyPreferences().getInt("views_" + articleKey(game), 0)
+    private fun lastViewedAt(game: Game): Long = historyPreferences().getLong("time_" + articleKey(game), 0L)
+    private fun isRecentlyViewed(game: Game): Boolean = lastViewedAt(game) > 0L
+    private fun recordArticleView(game: Game) {
+        val prefs = historyPreferences()
+        val key = articleKey(game)
+        prefs.edit().putInt("views_" + key, viewCount(game) + 1)
+            .putLong("time_" + key, System.currentTimeMillis()).apply()
+    }
+    private fun showProfile() {
+        val prefs = profilePreferences()
+        val input = makeInput("Your display name").apply {
+            setSingleLine(true)
+            setText(prefs.getString("nickname", "Player") ?: "Player")
+        }
+        val summary = "Favorites: " + games.count { it.isFavorite } +
+            "\nRecently viewed: " + games.count { isRecentlyViewed(it) }
+        AlertDialog.Builder(this).setTitle("YOUR PROFILE")
+            .setMessage("Local player profile\n\n" + summary)
+            .setView(input)
+            .setPositiveButton("SAVE") { _, _ ->
+                prefs.edit().putString("nickname", input.text.toString().trim().ifBlank { "Player" }).apply()
+                Toast.makeText(this, "Profile saved", Toast.LENGTH_SHORT).show()
+            }
+            .setNeutralButton("MY ACTIVITY") { _, _ -> selected = "RECENT"; createInterface() }
+            .setNegativeButton("CLOSE", null).show()
+    }
+
     // BLOG-STYLE ARTICLE FEED
     // IMAGE-FIRST BLOG GALLERY: two clean cover tiles per row, no text overlays.
     private fun renderGames() {
@@ -952,6 +990,8 @@ class MainActivity : Activity() {
             val categoryMatch = when (selected) {
                 "ALL" -> true
                 "FAVORITES" -> item.isFavorite
+                "RECENT" -> isRecentlyViewed(item)
+                "POPULAR" -> true
                 "BLOG" -> item.blogImported
                 else -> item.platform == selected
             }
@@ -963,7 +1003,8 @@ class MainActivity : Activity() {
         val results = when (sortMode) {
             "A-Z" -> filtered.sortedBy { it.name.lowercase(Locale.ROOT) }
             "FAVORITES" -> filtered.sortedByDescending { it.isFavorite }
-            else -> filtered
+            "POPULAR" -> filtered.sortedByDescending { viewCount(it) }
+            else -> if (selected == "RECENT") filtered.sortedByDescending { lastViewedAt(it) } else filtered
         }
         countText.text = "${results.size} POSTS"
         if (results.isEmpty()) {
@@ -1018,6 +1059,7 @@ class MainActivity : Activity() {
 
     // Dedicated immersive article reader; the WebView owns its scroll instead of nesting inside ScrollView.
     private fun showDetails(game: Game) {
+        recordArticleView(game)
         val reader = android.app.Dialog(this)
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -1097,6 +1139,25 @@ class MainActivity : Activity() {
                 "text/html", "UTF-8", null)
         }
         root.addView(articleView, LinearLayout.LayoutParams(-1, 0, 1f))
+        val downloads = try { JSONArray(game.downloadLinks) } catch (_: Exception) { JSONArray() }
+        if (downloads.length() > 0) {
+            val downloadScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false; setBackgroundColor(panel) }
+            val downloadRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(dp(12), dp(9), dp(12), dp(9)) }
+            for (i in 0 until downloads.length()) {
+                val item = downloads.optJSONObject(i) ?: continue
+                val target = item.optString("url")
+                if (!target.startsWith("https://")) continue
+                downloadRow.addView(TextView(this).apply {
+                    text = "⬇  " + item.optString("label").ifBlank { "DOWNLOAD " + (i + 1) }
+                    textSize = 12f; setTextColor(white); gravity = Gravity.CENTER; setTypeface(null, Typeface.BOLD)
+                    background = rounded(Color.rgb(190, 43, 68), 11)
+                    setPadding(dp(13), dp(12), dp(13), dp(12))
+                    setOnClickListener { openGameLink(target) }
+                }, LinearLayout.LayoutParams(-2, -2).apply { rightMargin = dp(8) })
+            }
+            downloadScroll.addView(downloadRow)
+            root.addView(downloadScroll)
+        }
 
         val bottom = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -1114,8 +1175,16 @@ class MainActivity : Activity() {
             setPadding(dp(12), dp(12), dp(12), dp(12))
             setOnClickListener { action() }
         }
-        val open = readerAction("فتح المقال الأصلي ↗") { if (game.url.isNotBlank()) openGameLink(game.url) }
-        bottom.addView(open, LinearLayout.LayoutParams(0, -2, 1f))
+        val share = readerAction("مشاركة") {
+            val send = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"; putExtra(Intent.EXTRA_SUBJECT, game.name)
+                putExtra(Intent.EXTRA_TEXT, game.name + "\n" + game.url)
+            }
+            startActivity(Intent.createChooser(send, "Share MARCO RX6 article"))
+        }
+        bottom.addView(share, LinearLayout.LayoutParams(0, -2, 1f))
+        val comments = readerAction("التعليقات") { if (game.url.isNotBlank()) openGameLink(game.url) }
+        bottom.addView(comments, LinearLayout.LayoutParams(0, -2, 1f).apply { leftMargin = dp(6) })
         if (isAdminSession) {
             val edit = readerAction("تعديل") { reader.dismiss(); showGameDialog(game) }
             bottom.addView(edit, LinearLayout.LayoutParams(-2, -2).apply { leftMargin = dp(8) })
