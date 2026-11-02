@@ -2892,7 +2892,21 @@ class MainActivity : Activity() {
                 )
             }
         } catch (_: Exception) {
+            // Recover the bundled starter catalog if saved preferences are malformed.
+            // Never leave the library half-loaded after a JSON parsing failure.
             games.clear()
+            try {
+                val offlineCatalog = assets.open("offline_catalog.json")
+                    .bufferedReader(Charsets.UTF_8).use { it.readText() }
+                val entries = JSONArray(offlineCatalog)
+                for (i in 0 until entries.length()) {
+                    val entry = entries.optJSONObject(i) ?: continue
+                    parseBlogEntry(entry)?.let { games.add(it) }
+                }
+                if (games.isNotEmpty()) saveGames()
+            } catch (_: Exception) {
+                games.clear()
+            }
         }
     }
 
