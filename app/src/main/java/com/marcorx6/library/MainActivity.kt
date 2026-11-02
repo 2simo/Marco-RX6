@@ -2218,8 +2218,10 @@ class MainActivity : Activity() {
                     .setAllowedOverRoaming(false)
                 if (probe.mimeType.isNotBlank()) request.setMimeType(probe.mimeType)
                 if (userAgent.isNotBlank()) request.addRequestHeader("User-Agent", userAgent)
-                CookieManager.getInstance().getCookie(link)?.takeIf { it.isNotBlank() }?.let {
-                    request.addRequestHeader("Cookie", it)
+                if (Uri.parse(link).host.equals(Uri.parse(probe.finalUrl).host, ignoreCase = true)) {
+                    CookieManager.getInstance().getCookie(probe.finalUrl)?.takeIf { it.isNotBlank() }?.let {
+                        request.addRequestHeader("Cookie", it)
+                    }
                 }
                 if (referrer.isNotBlank()) request.addRequestHeader("Referer", referrer)
                 val manager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
