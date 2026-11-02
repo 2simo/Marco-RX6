@@ -63,7 +63,9 @@ data class Game(
     val isFavorite: Boolean = false,
     val bloggerPostId: String = "",
     val bloggerHtml: String = "",
-    val playStatus: String = ""
+    val playStatus: String = "",
+    val genre: String = "",
+    val releaseYear: String = ""
 )
 
 class MainActivity : Activity() {
@@ -94,6 +96,8 @@ class MainActivity : Activity() {
 
     private var selected = "ALL"
     private var sortMode = "الأحدث"
+    private var selectedGenre = ""
+    private var selectedYear = ""
     private val mainHandler = Handler(Looper.getMainLooper())
     private var searchRenderRunnable: Runnable? = null
     private val PICK_IMAGE_REQUEST = 1001
@@ -488,7 +492,8 @@ class MainActivity : Activity() {
                         .put("blogImported", game.blogImported)
                         .put("platformManuallyCorrected", game.platformManuallyCorrected)
                         .put("isFavorite", game.isFavorite).put("bloggerPostId", game.bloggerPostId)
-                        .put("bloggerHtml", game.bloggerHtml).put("playStatus", game.playStatus))
+                        .put("bloggerHtml", game.bloggerHtml).put("playStatus", game.playStatus)
+                        .put("genre", game.genre).put("releaseYear", game.releaseYear))
                 }
             })
             .put("appearance", JSONObject()
@@ -535,7 +540,8 @@ class MainActivity : Activity() {
                         item.optString("url"), item.optString("coverUrl"), "", item.optString("sourcePostUrl"),
                         item.optString("downloadLinks"), item.optBoolean("blogImported"),
                         item.optBoolean("platformManuallyCorrected"), item.optBoolean("isFavorite"),
-                        item.optString("bloggerPostId"), item.optString("bloggerHtml"), item.optString("playStatus", "")))
+                        item.optString("bloggerPostId"), item.optString("bloggerHtml"), item.optString("playStatus", ""),
+                        item.optString("genre", ""), item.optString("releaseYear", "")))
                 }
                 AlertDialog.Builder(this).setTitle("استعادة النسخة الاحتياطية")
                     .setMessage("سيتم استبدال المكتبة الحالية بـ ${restored.size} عنصر. يُفضّل تصدير نسخة من بياناتك الحالية أولاً. هل تريد المتابعة؟")
@@ -605,6 +611,42 @@ class MainActivity : Activity() {
                 preferredRefreshRate = refreshRate.coerceAtMost(144f)
             }
         }
+    }
+
+    private fun showAdvancedFilters() {
+        val genreValues = listOf("كل الأنواع") + games.map { it.genre.trim() }.filter { it.isNotBlank() }.distinct().sorted()
+        val yearValues = listOf("كل السنوات") + games.map { it.releaseYear.trim() }.filter { it.isNotBlank() }.distinct().sortedDescending()
+        val box = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(20), dp(8), dp(20), dp(4))
+        }
+        box.addView(makeText("نوع اللعبة", 12f, red, true))
+        val genreSpinner = Spinner(this).apply {
+            adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, genreValues)
+            setSelection(genreValues.indexOf(selectedGenre.takeIf { it.isNotBlank() } ?: "كل الأنواع").coerceAtLeast(0))
+        }
+        box.addView(genreSpinner)
+        box.addView(makeText("سنة الإصدار", 12f, red, true).apply { setPadding(0, dp(12), 0, 0) })
+        val yearSpinner = Spinner(this).apply {
+            adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, yearValues)
+            setSelection(yearValues.indexOf(selectedYear.takeIf { it.isNotBlank() } ?: "كل السنوات").coerceAtLeast(0))
+        }
+        box.addView(yearSpinner)
+        AlertDialog.Builder(this)
+            .setTitle("الفلاتر المتقدمة")
+            .setView(box)
+            .setPositiveButton("تطبيق") { _, _ ->
+                selectedGenre = genreSpinner.selectedItem?.toString()?.takeUnless { it == "كل الأنواع" }.orEmpty()
+                selectedYear = yearSpinner.selectedItem?.toString()?.takeUnless { it == "كل السنوات" }.orEmpty()
+                renderGames()
+            }
+            .setNeutralButton("مسح الفلاتر") { _, _ ->
+                selectedGenre = ""
+                selectedYear = ""
+                renderGames()
+            }
+            .setNegativeButton("إغلاق", null)
+            .show()
     }
 
     private fun createInterface() {
@@ -774,6 +816,17 @@ class MainActivity : Activity() {
             }
         }
         section.addView(sort, LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(9) })
+        val advancedFilter = TextView(this).apply {
+            text = "⚙"
+            textSize = 17f
+            gravity = Gravity.CENTER
+            setTextColor(silver)
+            background = rounded(glass, 13)
+            setPadding(dp(12), dp(8), dp(12), dp(8))
+            contentDescription = "الفلاتر المتقدمة"
+            setOnClickListener { showAdvancedFilters() }
+        }
+        section.addView(advancedFilter, LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(7) })
         root.addView(section, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
 
         gameList = LinearLayout(this).apply {
@@ -975,6 +1028,8 @@ class MainActivity : Activity() {
                     platformManuallyCorrected = old.platformManuallyCorrected,
                     isFavorite = old.isFavorite,
                     playStatus = old.playStatus,
+                    genre = old.genre.ifBlank { incoming.genre },
+                    releaseYear = old.releaseYear.ifBlank { incoming.releaseYear },
                     bloggerPostId = incoming.bloggerPostId,
                     bloggerHtml = incoming.bloggerHtml
                 )
@@ -1468,7 +1523,9 @@ class MainActivity : Activity() {
             val searchMatch = item.name.contains(query, ignoreCase = true) ||
                 item.platform.contains(query, ignoreCase = true) ||
                 item.description.contains(query, ignoreCase = true)
-            categoryMatch && searchMatch
+            val genreMatch = selectedGenre.isBlank() || item.genre.equals(selectedGenre, ignoreCase = true)
+            val yearMatch = selectedYear.isBlank() || item.releaseYear == selectedYear
+            categoryMatch && searchMatch && genreMatch && yearMatch
         }
         val sorted = when (sortMode) {
             "A-Z" -> filtered.sortedBy { it.name.lowercase(Locale.ROOT) }
@@ -1690,7 +1747,11 @@ class MainActivity : Activity() {
         identity.addView(cover, LinearLayout.LayoutParams(dp(104), dp(140)))
         val info = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(14), 0, 0, 0) }
         info.addView(makeText(game.name, 18f, white, true).apply { maxLines = 3; ellipsize = android.text.TextUtils.TruncateAt.END })
-        info.addView(makeText(game.platform + "  •  MARCO RX6", 10f, Color.rgb(190, 174, 255), true).apply { setPadding(0, dp(6), 0, dp(12)) })
+        info.addView(makeText(game.platform + "  •  MARCO RX6", 10f, Color.rgb(190, 174, 255), true).apply { setPadding(0, dp(6), 0, dp(4)) })
+        if (game.genre.isNotBlank() || game.releaseYear.isNotBlank()) {
+            val metadata = listOf(game.genre, game.releaseYear).filter { it.isNotBlank() }.joinToString("  •  ")
+            info.addView(makeText(metadata, 10f, gray, true).apply { setPadding(0, 0, 0, dp(7)) })
+        }
         val watchlistNames = arrayOf("بدون حالة", "أريد لعبها", "ألعبها حالياً", "أنهيتها")
         val watchlistKeys = arrayOf("", "WANT_TO_PLAY", "PLAYING", "COMPLETED")
         fun watchlistLabel(status: String) = when (status) {
@@ -1854,6 +1915,8 @@ class MainActivity : Activity() {
         val body = makeInput("محتوى المقال (يدعم HTML)").apply { minLines = 10; gravity = Gravity.TOP; inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE or android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS }
         val coverUrl = makeInput("رابط صورة الغلاف (اختياري)").apply { setSingleLine(true) }
         val link = makeInput("رابط التحميل أو رابط إضافي (اختياري)").apply { setSingleLine(true) }
+        val genre = makeInput("نوع اللعبة (مثال: أكشن، مغامرات)").apply { setSingleLine(true) }
+        val releaseYear = makeInput("سنة الإصدار (مثال: 2024)").apply { setSingleLine(true); inputType = android.text.InputType.TYPE_CLASS_NUMBER }
         coverUrlField = coverUrl
         if (existing != null) {
             title.setText(existing.name)
@@ -1861,6 +1924,8 @@ class MainActivity : Activity() {
             body.setText(if (existing.bloggerHtml.isNotBlank()) existing.bloggerHtml else existing.description)
             coverUrl.setText(existing.coverUrl)
             link.setText(existing.url.takeIf { it != existing.sourcePostUrl } ?: "")
+            genre.setText(existing.genre)
+            releaseYear.setText(existing.releaseYear)
         } else {
             body.setText("""<p>أهلاً بكم متابعي مدونة MARCO_RX6 الكرام. إليكم لعبة جديدة من إضافاتنا الحصرية بروابط مباشرة وسريعة.</p>
 
@@ -1884,7 +1949,8 @@ class MainActivity : Activity() {
         box.addView(preview, LinearLayout.LayoutParams(-1, dp(145)).apply { bottomMargin = dp(8) })
         loadCover(preview, pendingCoverLocalPath, existing?.coverUrl ?: "")
         box.addView(Button(this).apply { text = "اختيار صورة الغلاف من الهاتف"; setTextColor(white); background = rounded(red, 12); setOnClickListener { chooseCover() } }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
-        box.addView(makeText("تصنيف المقال", 10f, red, true)); box.addView(category); box.addView(title)
+        box.addView(makeText("تصنيف المقال", 10f, red, true)); box.addView(category)
+        box.addView(genre); box.addView(releaseYear); box.addView(title)
         box.addView(makeText("محتوى المقال", 10f, red, true).apply { setPadding(0, dp(8), 0, dp(4)) })
         box.addView(body, LinearLayout.LayoutParams(-1, dp(190))); box.addView(coverUrl); box.addView(link)
         val scroll = ScrollView(this).apply { addView(box) }
@@ -1904,7 +1970,7 @@ class MainActivity : Activity() {
                 val imageHtml = if (coverLink.isNotBlank() && !articleBody.contains(coverLink)) "<p><img src=\"$coverLink\" style=\"max-width:100%;height:auto;\"/></p>" else ""
                 val relatedHtml = if (relatedLink.isNotBlank() && !articleBody.contains(relatedLink)) "<p><a href=\"$relatedLink\">تحميل / رابط إضافي</a></p>" else ""
                 val htmlContent = "<div class=\"marcorx6-post\">$imageHtml$articleBody$relatedHtml</div>"
-                val post = Game(name = postTitle, platform = categoryName, description = contentText, url = relatedLink.ifBlank { existing?.url ?: "" }, coverUrl = coverLink, coverLocalPath = if (coverLink.isBlank()) pendingCoverLocalPath else "", sourcePostUrl = existing?.sourcePostUrl ?: "", downloadLinks = existing?.downloadLinks ?: "", blogImported = true, isFavorite = existing?.isFavorite ?: false, bloggerPostId = existing?.bloggerPostId ?: "", bloggerHtml = htmlContent, playStatus = existing?.playStatus ?: "")
+                val post = Game(name = postTitle, platform = categoryName, description = contentText, url = relatedLink.ifBlank { existing?.url ?: "" }, coverUrl = coverLink, coverLocalPath = if (coverLink.isBlank()) pendingCoverLocalPath else "", sourcePostUrl = existing?.sourcePostUrl ?: "", downloadLinks = existing?.downloadLinks ?: "", blogImported = true, isFavorite = existing?.isFavorite ?: false, bloggerPostId = existing?.bloggerPostId ?: "", bloggerHtml = htmlContent, playStatus = existing?.playStatus ?: "", genre = genre.text.toString().trim(), releaseYear = releaseYear.text.toString().trim())
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
                 Thread {
                     try {
@@ -2067,6 +2133,8 @@ class MainActivity : Activity() {
                     .put("bloggerPostId", game.bloggerPostId)
                     .put("bloggerHtml", game.bloggerHtml)
                     .put("playStatus", game.playStatus)
+                    .put("genre", game.genre)
+                    .put("releaseYear", game.releaseYear)
             )
         }
 
@@ -2111,7 +2179,9 @@ class MainActivity : Activity() {
                         item.optBoolean("isFavorite", false),
                         item.optString("bloggerPostId", ""),
                         item.optString("bloggerHtml", ""),
-                        item.optString("playStatus", "")
+                        item.optString("playStatus", ""),
+                        item.optString("genre", ""),
+                        item.optString("releaseYear", "")
                     )
                 )
             }
