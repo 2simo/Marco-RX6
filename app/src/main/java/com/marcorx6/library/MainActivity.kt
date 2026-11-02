@@ -417,6 +417,54 @@ class MainActivity : Activity() {
         if (bold) setTypeface(null, Typeface.BOLD)
     }
 
+
+    private fun stylePrimaryButton(button: Button, primary: Boolean = false) {
+        button.background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
+            if (primary) intArrayOf(red, Color.rgb(104, 75, 190))
+            else if (isDarkMode()) intArrayOf(Color.rgb(45, 51, 72), Color.rgb(29, 34, 51))
+            else intArrayOf(Color.rgb(250, 251, 255), Color.rgb(232, 237, 247))).apply {
+            cornerRadius = dp(14).toFloat()
+            if (!primary) setStroke(dp(1), if (isDarkMode()) Color.rgb(72, 81, 108) else Color.rgb(211, 219, 232))
+        }
+        button.setTextColor(if (primary) Color.WHITE else white)
+        button.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+        button.textSize = 13f
+        button.minHeight = dp(46)
+        button.setPadding(dp(16), dp(10), dp(16), dp(10))
+        button.stateListAnimator = null
+    }
+
+    private fun applyUnifiedSkin(view: View) {
+        when (view) {
+            is EditText -> {
+                view.background = GradientDrawable().apply {
+                    setColor(if (isDarkMode()) Color.rgb(25, 30, 47) else Color.rgb(248, 250, 254))
+                    cornerRadius = dp(14).toFloat()
+                    setStroke(dp(1), if (isDarkMode()) Color.rgb(67, 76, 104) else Color.rgb(211, 219, 232))
+                }
+                view.setPadding(dp(14), dp(12), dp(14), dp(12))
+                view.setTextColor(white)
+                view.setHintTextColor(gray)
+            }
+            is Button -> stylePrimaryButton(view, view.tag == "marco_primary_action")
+        }
+        if (view is ViewGroup) {
+            for (i in 0 until view.childCount) applyUnifiedSkin(view.getChildAt(i))
+        }
+    }
+
+    private fun styleAlertDialog(dialog: AlertDialog) {
+        dialog.window?.setBackgroundDrawable(rounded(if (isDarkMode()) Color.rgb(17, 21, 36) else Color.WHITE, 22))
+        dialog.window?.let { window ->
+            window.addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            window.attributes = window.attributes.apply { dimAmount = 0.58f }
+        }
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.let { stylePrimaryButton(it, true) }
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.let { stylePrimaryButton(it) }
+        dialog.getButton(AlertDialog.BUTTON_NEUTRAL)?.let { stylePrimaryButton(it) }
+        dialog.findViewById<View>(android.R.id.message)?.let { (it as? TextView)?.setTextColor(gray) }
+    }
+
     private fun makeInput(hintText: String): EditText =
         EditText(this).apply {
             hint = hintText
@@ -591,6 +639,7 @@ class MainActivity : Activity() {
             addView(panel, ViewGroup.LayoutParams(-1, -2))
         }
         applyMotionPreferences(menuScroll)
+        applyUnifiedSkin(menuScroll)
         drawer.setContentView(menuScroll)
         drawer.window?.let { w ->
             w.setBackgroundDrawableResource(android.R.color.transparent)
@@ -1092,6 +1141,7 @@ class MainActivity : Activity() {
         }
 
         applyTypography(root)
+        applyUnifiedSkin(root)
         val pageScroll = ScrollView(this).apply {
             isFillViewport = true
             isVerticalScrollBarEnabled = false
@@ -1893,18 +1943,26 @@ class MainActivity : Activity() {
 
 
     private fun showStartupExperience() {
-        val splash = Dialog(this)
-        val content = LinearLayout(this).apply {
+        val splash = Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+        val content = FrameLayout(this).apply {
+            setBackground(GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Color.rgb(20, 14, 39), Color.rgb(7, 10, 23), Color.rgb(4, 7, 16))))
+        }
+        val center = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             setPadding(dp(28), dp(30), dp(28), dp(26))
-            background = GradientDrawable(
-                GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(23, 17, 43), Color.rgb(8, 10, 24), Color.rgb(5, 7, 17))
-            ).apply {
+        }
+        val contentCard = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(dp(28), dp(30), dp(28), dp(26))
+            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Color.rgb(25, 22, 48), Color.rgb(10, 14, 30), Color.rgb(15, 11, 31))).apply {
                 cornerRadius = dp(30).toFloat()
                 setStroke(dp(1), Color.rgb(105, 75, 165))
             }
+            elevation = dp(20).toFloat()
         }
 
         val logo = ImageView(this).apply {
@@ -1921,15 +1979,15 @@ class MainActivity : Activity() {
             scaleX = 0.82f
             scaleY = 0.82f
         }
-        content.addView(logo, LinearLayout.LayoutParams(dp(112), dp(112)).apply {
+        contentCard.addView(logo, LinearLayout.LayoutParams(dp(126), dp(126)).apply {
             bottomMargin = dp(18)
         })
 
-        content.addView(makeText("MARCO RX6", 23f, Color.WHITE, true).apply {
+        contentCard.addView(makeText("MARCO RX6", 23f, Color.WHITE, true).apply {
             letterSpacing = 0.12f
             gravity = Gravity.CENTER
         })
-        content.addView(makeText("GAME LIBRARY  •  BLOG HUB", 10f, Color.rgb(180, 165, 215), true).apply {
+        contentCard.addView(makeText("GAME LIBRARY  •  BLOG HUB", 10f, Color.rgb(180, 165, 215), true).apply {
             letterSpacing = 0.13f
             gravity = Gravity.CENTER
             setPadding(0, dp(5), 0, dp(25))
@@ -1949,19 +2007,27 @@ class MainActivity : Activity() {
             ).apply { cornerRadius = dp(20).toFloat() }
         }
         progressTrack.addView(progressFill, FrameLayout.LayoutParams(0, -1, Gravity.START))
-        content.addView(progressTrack, LinearLayout.LayoutParams(-1, dp(7)))
+        contentCard.addView(progressTrack, LinearLayout.LayoutParams(-1, dp(8)))
 
         val loadingText = makeText("جارٍ تجهيز تجربتك...", 11f, Color.rgb(190, 184, 210)).apply {
             gravity = Gravity.CENTER
             setPadding(0, dp(14), 0, 0)
         }
-        content.addView(loadingText)
-
+        contentCard.addView(loadingText)
+        center.addView(contentCard, LinearLayout.LayoutParams(-1, -2))
+        content.addView(center, FrameLayout.LayoutParams(-1, -1))
         splash.setContentView(content)
-        splash.window?.setBackgroundDrawableResource(android.R.color.transparent)
         splash.setCancelable(false)
+        splash.setCanceledOnTouchOutside(false)
         splash.show()
-        splash.window?.setLayout(dp(326), -2)
+        splash.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        splash.window?.setLayout(-1, -1)
+        splash.window?.addFlags(android.view.WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+            android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
+        WindowInsetsControllerCompat(splash.window!!, splash.window!!.decorView).apply {
+            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            hide(WindowInsetsCompat.Type.systemBars())
+        }
 
         logo.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(650L)
             .setInterpolator(android.view.animation.OvershootInterpolator(1.15f)).start()
@@ -2166,6 +2232,8 @@ class MainActivity : Activity() {
             }
         }
         dialog.show()
+        styleAlertDialog(dialog)
+        applyUnifiedSkin(box)
     }
 
     // PLAYSTATION LIBRARY: image-only horizontal shelves for every category.
@@ -2597,10 +2665,12 @@ class MainActivity : Activity() {
         }
         root.addView(bottom)
         applyMotionPreferences(root)
+        applyUnifiedSkin(root)
         reader.setContentView(root)
         reader.window?.setBackgroundDrawableResource(android.R.color.transparent)
         reader.show()
         reader.window?.setLayout(-1, -1)
+        reader.window?.setBackgroundDrawable(rounded(if (isDarkMode()) Color.rgb(9, 10, 22) else Color.rgb(245, 247, 251), 0))
         reader.setOnDismissListener { articleWebView.stopLoading(); articleWebView.destroy() }
     }
 
