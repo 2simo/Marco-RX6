@@ -37,6 +37,8 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Locale
 import java.util.regex.Pattern
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
@@ -461,10 +463,12 @@ class MainActivity : Activity() {
             setPadding(dp(20), dp(13), dp(20), dp(10))
             setBackgroundColor(ink)
         }
-        @Suppress("DEPRECATION")
-        root.setOnApplyWindowInsetsListener { view, insets ->
-            view.setPadding(dp(20), dp(13) + insets.systemWindowInsetTop,
-                dp(20), dp(10) + insets.systemWindowInsetBottom)
+        ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(
+                dp(20), dp(13) + systemBars.top,
+                dp(20), dp(10) + systemBars.bottom
+            )
             insets
         }
 
