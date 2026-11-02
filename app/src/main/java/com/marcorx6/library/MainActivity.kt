@@ -1328,7 +1328,7 @@ class MainActivity : Activity() {
         try {
             connection.connect()
             if (connection.responseCode !in 200..299) throw IllegalStateException("HTTP ${connection.responseCode}")
-            if (connection.contentLengthLong > 12L * 1024L * 1024L) throw IllegalStateException("Cover too large")
+            if (connection.contentLength > 12 * 1024 * 1024) throw IllegalStateException("Cover too large")
             connection.inputStream.use { input ->
                 FileOutputStream(temporary).use { output ->
                     val buffer = ByteArray(8192)
@@ -1947,7 +1947,6 @@ class MainActivity : Activity() {
                 articleWebView.saveWebArchive(archiveFile.absolutePath, false) { savedPath ->
                     mainHandler.post {
                         if (!savedPath.isNullOrBlank() && File(savedPath).isFile) {
-                            offline.text = "قراءة دون إنترنت"
                             Toast.makeText(this, "تم حفظ المقال للقراءة دون اتصال", Toast.LENGTH_LONG).show()
                         } else {
                             Toast.makeText(this, "تعذر حفظ المقال. انتظر اكتمال تحميل الصور ثم حاول مجدداً.", Toast.LENGTH_LONG).show()
