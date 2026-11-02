@@ -257,74 +257,64 @@ class MainActivity : Activity() {
             insets
         }
 
+        // Brand row: keep account control separate from the main actions.
         val header = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-
-        val brand = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-        }
-
+        val brand = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         brand.addView(makeText("MARCO RX6", 25f, white, true))
         brand.addView(makeText("THE OFFICIAL BLOG EXPERIENCE", 10f, red, true))
+        header.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
 
-        header.addView(
-            brand,
-            LinearLayout.LayoutParams(0, -2, 1f)
-        )
-
-        val syncButton = TextView(this).apply {
-            text = "↻ SYNC"
-            textSize = 12f
+        val adminButton = TextView(this).apply {
+            text = if (isAdminSession) "✓ ADMIN" else "ADMIN"
+            textSize = 10f
             setTextColor(white)
             setTypeface(null, Typeface.BOLD)
             gravity = Gravity.CENTER
-            background = rounded(Color.rgb(48, 53, 70), 13)
-            setPadding(dp(12), dp(12), dp(12), dp(12))
-            setOnClickListener {
-                syncFromBlog(showResult = true)
-            }
-        }
-
-        header.addView(syncButton)
-
-        val notificationButton = TextView(this).apply {
-            text = "🔔"
-            textSize = 17f
-            gravity = Gravity.CENTER
-            setTextColor(white)
-            background = rounded(Color.rgb(48, 53, 70), 13)
-            setPadding(dp(12), dp(10), dp(12), dp(10))
-            setOnClickListener { showNotificationSettings() }
-        }
-        header.addView(notificationButton, LinearLayout.LayoutParams(-2, -2).apply {
-            leftMargin = dp(7)
-        })
-
-        val adminButton = TextView(this).apply {
-            text = if (isAdminSession) "ADMIN ✓" else "ADMIN LOGIN"
-            textSize = 10f; setTextColor(white); setTypeface(null, Typeface.BOLD); gravity = Gravity.CENTER
-            background = rounded(Color.rgb(48, 53, 70), 13); setPadding(dp(9), dp(12), dp(9), dp(12))
+            background = rounded(Color.rgb(48, 53, 70), 12)
+            setPadding(dp(11), dp(11), dp(11), dp(11))
             setOnClickListener { if (isAdminSession) signOutAdmin() else startGoogleSignIn() }
         }
         header.addView(adminButton)
-        val addButton = TextView(this).apply {
-            text = "+ ADD"
-            textSize = 13f
-            setTextColor(white)
-            setTypeface(null, Typeface.BOLD)
-            gravity = Gravity.CENTER
-            background = rounded(red, 14)
-            setPadding(dp(15), dp(12), dp(15), dp(12))
-            setOnClickListener {
-                showGameDialog()
-            }
-        }
-
-        if (isAdminSession) header.addView(addButton, LinearLayout.LayoutParams(-2, -2).apply { leftMargin = dp(8) })
-
         root.addView(header)
+
+        // Action row: publish is explicit and never represented by a heart/favorite icon.
+        val actionRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        fun actionButton(label: String, color: Int, onTap: () -> Unit) =
+            TextView(this).apply {
+                text = label
+                textSize = 12f
+                setTextColor(white)
+                setTypeface(null, Typeface.BOLD)
+                gravity = Gravity.CENTER
+                background = rounded(color, 12)
+                setPadding(dp(13), dp(11), dp(13), dp(11))
+                setOnClickListener { onTap() }
+            }
+        val syncButton = actionButton("⟳  مزامنة", Color.rgb(48, 53, 70)) {
+            syncFromBlog(showResult = true)
+        }
+        actionRow.addView(syncButton, LinearLayout.LayoutParams(0, -2, 1f))
+        val notificationButton = actionButton("♧  التنبيهات", Color.rgb(48, 53, 70)) {
+            showNotificationSettings()
+        }
+        actionRow.addView(notificationButton, LinearLayout.LayoutParams(0, -2, 1f).apply {
+            leftMargin = dp(7)
+        })
+        if (isAdminSession) {
+            val addButton = actionButton("＋  نشر مقال", red) { showGameDialog() }
+            actionRow.addView(addButton, LinearLayout.LayoutParams(0, -2, 1f).apply {
+                leftMargin = dp(7)
+            })
+        }
+        root.addView(actionRow, LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(12)
+        })
 
         val hero = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -1034,7 +1024,7 @@ class MainActivity : Activity() {
             }
             if (post.coverUrl.isNotBlank() || post.coverLocalPath.isNotBlank()) {
                 val cover = ImageView(this).apply { scaleType = ImageView.ScaleType.CENTER_CROP; background = rounded(Color.rgb(38, 41, 54), 13); clipToOutline = true; contentDescription = post.name + " article cover" }
-                card.addView(cover, LinearLayout.LayoutParams(-1, dp(if (index == 0) 205 else 175)))
+                card.addView(cover, LinearLayout.LayoutParams(-1, dp(190)))
                 loadCover(cover, post.coverLocalPath, post.coverUrl)
             }
             card.addView(makeText((if (post.isFavorite) "★  " else "") + post.platform + "  •  MARCO RX6", 10f, red, true).apply { setPadding(dp(3), dp(10), dp(3), dp(4)) })
@@ -1063,19 +1053,10 @@ class MainActivity : Activity() {
             background = rounded(panel, 14)
         }
 
-        box.addView(
-            cover,
-            LinearLayout.LayoutParams(
-                dp(150),
-                dp(175)
-            )
-        )
-
-        loadCover(
-            cover,
-            game.coverLocalPath,
-            game.coverUrl
-        )
+        if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) {
+            box.addView(cover, LinearLayout.LayoutParams(-1, dp(205)))
+            loadCover(cover, game.coverLocalPath, game.coverUrl)
+        }
 
         box.addView(
             makeText(game.name, 21f, white, true).apply {
@@ -1121,7 +1102,7 @@ class MainActivity : Activity() {
             settings.javaScriptEnabled = false
             settings.domStorageEnabled = false
             val articleHtml = if (game.bloggerHtml.isNotBlank()) game.bloggerHtml else "<p>" + game.description + "</p>"
-            loadDataWithBaseURL(game.url, "<html><head><meta name='viewport' content='width=device-width, initial-scale=1'><style>body{background:#1b1d27;color:#eeeeF5;font-family:sans-serif;font-size:15px;line-height:1.7;padding:8px}img{max-width:100%;height:auto}a{color:#78beff}</style></head><body>$articleHtml</body></html>", "text/html", "UTF-8", null)
+            loadDataWithBaseURL(game.url, "<html><head><meta name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1'><style>*{box-sizing:border-box}html,body{width:100%;max-width:100%;overflow-x:hidden}body{background:#1b1d27;color:#eeeeF5;font-family:sans-serif;font-size:15px;line-height:1.75;padding:10px;margin:0;overflow-wrap:anywhere}img,video,iframe{display:block;max-width:100%!important;width:auto;height:auto!important;margin:12px auto;border:0}img{object-fit:contain}table{display:block;width:100%!important;max-width:100%;overflow-x:auto;border-collapse:collapse}pre,code{white-space:pre-wrap;overflow-wrap:anywhere}a{color:#78beff;overflow-wrap:anywhere}p,li,h1,h2,h3,h4{max-width:100%}ul,ol{padding-left:24px}</style></head><body>$articleHtml</body></html>", "text/html", "UTF-8", null)
         }
         box.addView(articleView, LinearLayout.LayoutParams(-1, dp(300)))
 
@@ -1233,11 +1214,34 @@ class MainActivity : Activity() {
         val category = Spinner(this)
         val categoryOptions = listOf("BLOG", "PSP", "PS1", "PS2", "PS3", "PS4")
         category.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, categoryOptions)
-        val body = makeInput("Write your article here...").apply { minLines = 7; gravity = Gravity.TOP; inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE or android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES }
+        val body = makeInput("محتوى المقال (يدعم HTML)").apply { minLines = 10; gravity = Gravity.TOP; inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE or android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS }
         val coverUrl = makeInput("Cover image URL (optional)").apply { setSingleLine(true) }
         val link = makeInput("Download / related link (optional)").apply { setSingleLine(true) }
         coverUrlField = coverUrl
-        if (existing != null) { title.setText(existing.name); category.setSelection(categoryOptions.indexOf(existing.platform).coerceAtLeast(0)); body.setText(if (existing.bloggerHtml.isNotBlank()) htmlToText(existing.bloggerHtml) else existing.description); coverUrl.setText(existing.coverUrl); link.setText(existing.url.takeIf { it != existing.sourcePostUrl } ?: "") }
+        if (existing != null) {
+            title.setText(existing.name)
+            category.setSelection(categoryOptions.indexOf(existing.platform).coerceAtLeast(0))
+            body.setText(if (existing.bloggerHtml.isNotBlank()) existing.bloggerHtml else existing.description)
+            coverUrl.setText(existing.coverUrl)
+            link.setText(existing.url.takeIf { it != existing.sourcePostUrl } ?: "")
+        } else {
+            body.setText("""<p>أهلاً بكم متابعي مدونة MARCO_RX6 الكرام. إليكم لعبة جديدة من إضافاتنا الحصرية بروابط مباشرة وسريعة.</p>
+
+<h3 style="color: #8b5cf6;">معلومات اللعبة:</h3>
+<ul>
+  <li><strong>الحجم:</strong> </li>
+  <li><strong>النسخة:</strong> </li>
+  <li><strong>الصيغة:</strong> PKG</li>
+  <li><strong>اللغة:</strong> الإنجليزية</li>
+  <li><strong>كلمة السر:</strong> </li>
+  <li><strong>الحقوق:</strong> </li>
+</ul>
+
+<h3 style="color: #8b5cf6;">روابط التحميل المباشرة:</h3>
+<p><a href="https://example.com" target="_blank">ضع رابط تحميل هنا</a></p>
+<p><a href="https://example.com" target="_blank">ضع رابط تحميل هنا</a></p>
+<p><a href="https://example.com" target="_blank">ضع رابط تحميل هنا</a></p>""")
+        }
         val preview = ImageView(this).apply { scaleType = ImageView.ScaleType.CENTER_CROP; background = rounded(panel, 13) }
         coverPreview = preview
         box.addView(preview, LinearLayout.LayoutParams(-1, dp(145)).apply { bottomMargin = dp(8) })
@@ -1255,10 +1259,14 @@ class MainActivity : Activity() {
                 if (coverLink.isNotBlank() && !coverLink.startsWith("https://")) { coverUrl.error = "Use an HTTPS image URL"; return@setOnClickListener }
                 if (relatedLink.isNotBlank() && !relatedLink.startsWith("https://")) { link.error = "Use an HTTPS link"; return@setOnClickListener }
                 val contentText = body.text.toString().trim()
+                // Accept real Blogger HTML (headings, lists, images and download anchors).
+                // Plain text is still escaped safely and converted to line breaks.
+                val hasHtml = Regex("(?is)<\\s*(p|div|h[1-6]|ul|ol|li|a|img|table|br)\\b").containsMatchIn(contentText)
                 val escaped = contentText.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>")
-                val imageHtml = if (coverLink.isNotBlank()) "<p><img src=\"$coverLink\" style=\"max-width:100%;height:auto;\"/></p>" else ""
-                val relatedHtml = if (relatedLink.isNotBlank()) "<p><a href=\"$relatedLink\">تحميل / رابط إضافي</a></p>" else ""
-                val htmlContent = "<div class=\"marcorx6-post\">$imageHtml<p>$escaped</p>$relatedHtml</div>"
+                val articleBody = if (hasHtml) contentText else "<p>$escaped</p>"
+                val imageHtml = if (coverLink.isNotBlank() && !articleBody.contains(coverLink)) "<p><img src=\"$coverLink\" style=\"max-width:100%;height:auto;\"/></p>" else ""
+                val relatedHtml = if (relatedLink.isNotBlank() && !articleBody.contains(relatedLink)) "<p><a href=\"$relatedLink\">تحميل / رابط إضافي</a></p>" else ""
+                val htmlContent = "<div class=\"marcorx6-post\">$imageHtml$articleBody$relatedHtml</div>"
                 val post = Game(name = postTitle, platform = categoryName, description = contentText, url = relatedLink.ifBlank { existing?.url ?: "" }, coverUrl = coverLink, coverLocalPath = if (coverLink.isBlank()) pendingCoverLocalPath else "", sourcePostUrl = existing?.sourcePostUrl ?: "", downloadLinks = existing?.downloadLinks ?: "", blogImported = true, isFavorite = existing?.isFavorite ?: false, bloggerPostId = existing?.bloggerPostId ?: "", bloggerHtml = htmlContent)
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
                 Thread {
