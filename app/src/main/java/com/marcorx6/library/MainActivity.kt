@@ -376,6 +376,7 @@ class MainActivity : Activity() {
         if (isAdminSession) {
             menuItem("＋", tr("＋  نشر"), "إضافة مقال جديد إلى المدونة") { showGameDialog() }
         }
+        menuItem("Aa", "الخط وحجم النص", "تخصيص قراءة وواجهة التطبيق") { showTypographySettings() }
         panel.addView(View(this), LinearLayout.LayoutParams(1, 0, 1f))
         panel.addView(makeText("MARCO RX6  •  PREMIUM", 9f, Color.rgb(130, 119, 99), true).apply {
             gravity = Gravity.CENTER
@@ -394,6 +395,55 @@ class MainActivity : Activity() {
         }
         drawer.show()
         drawer.window?.setLayout(dp(310), -1)
+    }
+
+    private fun fontPreferences() = getSharedPreferences("font_settings", MODE_PRIVATE)
+    private fun fontScale(): Float = fontPreferences().getFloat("scale", 1.0f).coerceIn(0.85f, 1.25f)
+    private fun fontFamilyName(): String = when (fontPreferences().getString("family", "sans")) {
+        "serif" -> "serif"
+        "mono" -> "monospace"
+        else -> "sans-serif"
+    }
+    private fun applyTypography(view: View) {
+        if (view is TextView) {
+            val style = view.typeface?.style ?: Typeface.NORMAL
+            view.setTypeface(Typeface.create(fontFamilyName(), style))
+            view.textSize = view.textSize / resources.displayMetrics.scaledDensity * fontScale()
+        }
+        if (view is ViewGroup) for (i in 0 until view.childCount) applyTypography(view.getChildAt(i))
+    }
+    private fun showTypographySettings() {
+        val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(22), dp(12), dp(22), dp(8)) }
+        val preview = makeText("MARCO RX6  •  معاينة شكل النص\nقراءة أوضح وتجربة مريحة", 17f, white, true)
+        preview.setPadding(dp(14), dp(14), dp(14), dp(14)); preview.background = rounded(panel, 13)
+        box.addView(preview, LinearLayout.LayoutParams(-1, -2))
+        box.addView(makeText("حجم الخط", 13f, red, true).apply { setPadding(0, dp(18), 0, dp(5)) })
+        val size = SeekBar(this).apply { max = 8; progress = ((fontScale() - 0.85f) / 0.05f).toInt().coerceIn(0, 8) }
+        box.addView(size)
+        val sizeLabel = makeText("حجم النص: " + (fontScale() * 100).toInt() + "%", 11f, gray)
+        box.addView(sizeLabel)
+        box.addView(makeText("نوع الخط", 13f, red, true).apply { setPadding(0, dp(16), 0, dp(5)) })
+        val family = Spinner(this)
+        family.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, listOf("واضح (افتراضي)", "كلاسيكي", "أحادي المسافة"))
+        family.setSelection(when (fontPreferences().getString("family", "sans")) { "serif" -> 1; "mono" -> 2; else -> 0 })
+        box.addView(family)
+        size.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                val scale = 0.85f + progress * 0.05f
+                sizeLabel.text = "حجم النص: " + (scale * 100).toInt() + "%"
+                preview.textSize = 17f * scale
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+        AlertDialog.Builder(this).setTitle("تخصيص الخط").setView(box)
+            .setNegativeButton("إلغاء", null)
+            .setPositiveButton("حفظ") { _, _ ->
+                val familyValue = when (family.selectedItemPosition) { 1 -> "serif"; 2 -> "mono"; else -> "sans" }
+                fontPreferences().edit().putFloat("scale", 0.85f + size.progress * 0.05f).putString("family", familyValue).apply()
+                createInterface()
+                Toast.makeText(this, "تم حفظ إعدادات الخط", Toast.LENGTH_SHORT).show()
+            }.show()
     }
 
     private fun createInterface() {
@@ -570,16 +620,11 @@ class MainActivity : Activity() {
         section.addView(sortButton, LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(9) })
         root.addView(section, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
 
-        val scroll = ScrollView(this).apply {
-            isVerticalScrollBarEnabled = false
-            clipToPadding = false
-        }
         gameList = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(0, dp(9), 0, dp(18))
         }
-        scroll.addView(gameList)
-        root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
+        root.addView(gameList, LinearLayout.LayoutParams(-1, -2))
 
         if (isAdminSession) {
             val publish = TextView(this).apply {
@@ -595,7 +640,14 @@ class MainActivity : Activity() {
             root.addView(publish, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(9) })
         }
 
-        setContentView(root)
+        applyTypography(root)
+        val pageScroll = ScrollView(this).apply {
+            isFillViewport = true
+            isVerticalScrollBarEnabled = false
+            clipToPadding = false
+            addView(root, ScrollView.LayoutParams(-1, -2))
+        }
+        setContentView(pageScroll)
         root.requestApplyInsets()
         search.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -1424,7 +1476,7 @@ class MainActivity : Activity() {
                 <style>
                 *{box-sizing:border-box}
                 html,body{margin:0;padding:0;width:100%;max-width:100%;overflow-x:hidden}
-                body{background:${if (readerLightMode) "#f6f2e9" else "#0a0b11"};color:${if (readerLightMode) "#24221e" else "#f4f4f8"};font-family:Roboto,Arial,sans-serif;font-size:${readerFontSize}px;line-height:1.9;padding:20px 17px 36px;overflow-wrap:anywhere;direction:rtl;text-align:right}
+                body{background:${if (readerLightMode) "#f6f2e9" else "#0a0b11"};color:${if (readerLightMode) "#24221e" else "#f4f4f8"};font-family:${fontFamilyName()},Arial,sans-serif;font-size:${(readerFontSize * fontScale()).toInt()}px;line-height:1.9;padding:20px 17px 36px;overflow-wrap:anywhere;direction:rtl;text-align:right}
                 h1,h2,h3,h4{color:${if (readerLightMode) "#876a3d" else "#d3b170"};line-height:1.4;margin:25px 0 12px}
                 p{margin:0 0 18px}
                 img{display:block;max-width:100%!important;height:auto!important;width:auto;margin:18px auto;border-radius:12px;object-fit:contain}
