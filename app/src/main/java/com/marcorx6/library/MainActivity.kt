@@ -417,29 +417,30 @@ class MainActivity : Activity() {
             row.addView(labels, LinearLayout.LayoutParams(0, -2, 1f))
             panel.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(9) })
         }
+        // الأكثر استخداماً أولاً، ثم الحساب والإدارة، وبعدها التخصيص والنسخ الاحتياطي والقنوات
+        menuItem("⟳", tr("⟳  مزامنة"), if (isSyncing) "المزامنة قيد التنفيذ" else "تحديث المقالات من المدونة") {
+            syncFromBlog(showResult = true)
+        }
+        menuItem("⬇", "مدير التنزيلات", "متابعة التنزيلات وحالاتها") { showDownloadManager() }
+        menuItem("♧", tr("♧  التنبيهات"), "التحكم في إشعارات المقالات الجديدة") { showNotificationSettings() }
         menuItem("♙", tr("حسابي"), tr("ملفي الشخصي")) { showProfile() }
-        menuItem("文", tr("إعدادات اللغة"), tr("اختر لغة التطبيق")) { showLanguagePicker() }
         menuItem("♛", if (isAdminSession) tr("● مسؤول") else tr("دخول المسؤول  ↗"),
             if (isAdminSession) "تسجيل الخروج من حساب المسؤول" else "إدارة ونشر مقالات المدونة") {
             if (isAdminSession) signOutAdmin() else startGoogleSignIn()
         }
-        menuItem("⟳", tr("⟳  مزامنة"), if (isSyncing) "المزامنة قيد التنفيذ" else "تحديث المقالات من المدونة") {
-            syncFromBlog(showResult = true)
-        }
-        menuItem("♧", tr("♧  التنبيهات"), "التحكم في إشعارات المقالات الجديدة") { showNotificationSettings() }
         if (isAdminSession) {
             menuItem("＋", tr("＋  نشر"), "إضافة مقال جديد إلى المدونة") { showGameDialog() }
         }
-        menuItem("⬇", "مدير التنزيلات", "متابعة التنزيلات وحالاتها") { showDownloadManager() }
         menuItem("✧", "لعبة اليوم", "اكتشف اختيار MARCO RX6 اليومي") { showGameOfTheDay() }
+        menuItem("文", tr("إعدادات اللغة"), tr("اختر لغة التطبيق")) { showLanguagePicker() }
         menuItem("☾", if (isDarkMode()) "الوضع النهاري" else "الوضع الليلي", "تبديل مظهر التطبيق وحفظ اختيارك") {
             appearancePreferences().edit().putBoolean("dark_mode", !isDarkMode()).apply()
             recreate()
         }
         menuItem("✦", "ألوان وحركات الواجهة", "تخصيص اللون الرئيسي وتأثيرات الحركة") { showAppearanceSettings() }
+        menuItem("Aa", "الخط وحجم النص", "تخصيص قراءة وواجهة التطبيق") { showTypographySettings() }
         menuItem("⇧", "نسخ احتياطي", "تصدير مكتبتك وإعداداتك إلى ملف") { exportBackup() }
         menuItem("⇩", "استعادة نسخة", "استيراد نسخة احتياطية محفوظة") { importBackup() }
-        menuItem("Aa", "الخط وحجم النص", "تخصيص قراءة وواجهة التطبيق") { showTypographySettings() }
         menuItem("▶", "قناة YouTube", "@marco_rx7") { openGameLink("https://youtube.com/@marco_rx7") }
         menuItem("➤", "قناة Telegram", "@MARCO_RX1") { openGameLink("https://t.me/MARCO_RX1") }
         panel.addView(View(this), LinearLayout.LayoutParams(1, dp(12)))
