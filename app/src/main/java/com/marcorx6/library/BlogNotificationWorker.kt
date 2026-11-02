@@ -20,7 +20,13 @@ import java.net.URL
 class BlogNotificationWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
     override fun doWork(): Result {
         val prefs = applicationContext.getSharedPreferences("notification_settings", Context.MODE_PRIVATE)
-        if (!prefs.getBoolean("enabled", true)) return Result.success()
+        if (!prefs.getBoolean("enabled", false)) return Result.success()
+        // Do not advance last_seen_post_id when Android notification permission is
+        // missing; the next periodic run can deliver the pending post after permission is granted.
+        if (Build.VERSION.SDK_INT >= 33 &&
+            ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) return Result.success()
         return try {
             val connection = URL(FEED_URL).openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
