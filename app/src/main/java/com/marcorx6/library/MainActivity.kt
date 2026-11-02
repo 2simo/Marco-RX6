@@ -64,7 +64,7 @@ class MainActivity : Activity() {
     private val red = Color.rgb(255, 55, 75)
     private val white = Color.WHITE
     private val gray = Color.LTGRAY
-    private val platforms = listOf("ALL", "PSP", "PS1", "PS2", "PS3", "PS4")
+    private val platforms = listOf("ALL", "BLOG", "FAVORITES", "PSP", "PS1", "PS2", "PS3", "PS4")
     private val games = mutableListOf<Game>()
 
     private lateinit var gameList: LinearLayout
@@ -267,7 +267,7 @@ class MainActivity : Activity() {
         }
 
         brand.addView(makeText("MARCO RX6", 25f, white, true))
-        brand.addView(makeText("ULTIMATE GAMING LIBRARY", 10f, red, true))
+        brand.addView(makeText("THE OFFICIAL BLOG EXPERIENCE", 10f, red, true))
 
         header.addView(
             brand,
@@ -333,13 +333,13 @@ class MainActivity : Activity() {
         }
 
         hero.addView(
-            makeText("CONNECTED TO MARCO RX6 BLOG", 10f, red, true)
+            makeText("WELCOME TO MARCO RX6", 10f, red, true)
         )
         hero.addView(
-            makeText("YOUR GAME.\nYOUR WORLD.", 27f, white, true)
+            makeText("GAMES, NEWS\n& DOWNLOADS.", 27f, white, true)
         )
         hero.addView(
-            makeText("Sync new posts from your Blogger library.", 12f, gray)
+            makeText("Discover the latest articles, guides and releases.", 12f, gray)
         )
 
         root.addView(
@@ -350,7 +350,7 @@ class MainActivity : Activity() {
         )
 
         search = EditText(this).apply {
-            hint = "Search games..."
+            hint = "Search articles, games and guides..."
             textSize = 14f
             setSingleLine(true)
             setTextColor(white)
@@ -375,7 +375,7 @@ class MainActivity : Activity() {
             gravity = Gravity.CENTER_VERTICAL
         }
 
-        (listOf("ALL", "FAVORITES") + platforms.drop(1)).forEach { platform ->
+        (listOf("ALL", "BLOG", "FAVORITES") + platforms.drop(3)).forEach { platform ->
 
             val chip = TextView(this).apply {
                 text = platform
@@ -414,11 +414,11 @@ class MainActivity : Activity() {
         }
 
         titleRow.addView(
-            makeText("EXPLORE GAMES", 16f, white, true),
+            makeText("LATEST ARTICLES", 16f, white, true),
             LinearLayout.LayoutParams(0, -2, 1f)
         )
 
-        countText = makeText("0 GAMES", 10f, red, true)
+        countText = makeText("0 POSTS", 10f, red, true)
         titleRow.addView(countText)
         val sortButton = makeText("SORT: LATEST  ↕", 10f, white, true).apply {
             gravity = Gravity.CENTER
@@ -430,7 +430,7 @@ class MainActivity : Activity() {
                     "A-Z" -> "FAVORITES"
                     else -> "LATEST"
                 }
-                text = "SORT: $sortMode  ↕"
+                text = "$sortMode  ↕"
                 renderGames()
             }
         }
@@ -454,7 +454,7 @@ class MainActivity : Activity() {
         )
 
         root.addView(
-            makeText("MARCO RX6  •  GAMING EXPERIENCE", 9f, Color.GRAY).apply {
+            makeText("MARCO RX6  •  YOUR GAMING BLOG", 9f, Color.GRAY).apply {
                 gravity = Gravity.CENTER
                 setPadding(0, dp(10), 0, dp(5))
             }
@@ -708,7 +708,7 @@ class MainActivity : Activity() {
         val postUrl = findPostUrl(entry)
         if (postUrl.isBlank()) return null
 
-        val platform = platformFromCategories(entry) ?: return null
+        val platform = platformFromCategories(entry) ?: "BLOG"
         val image = extractFirstImage(content)
         val cleanText = htmlToText(content)
         val links = extractDownloadLinks(content)
@@ -995,7 +995,7 @@ class MainActivity : Activity() {
         }.start()
     }
 
-    // MODERN GAME LIBRARY: TWO-COLUMN GAME CARDS
+    // BLOG-STYLE ARTICLE FEED
     private fun renderGames() {
         gameList.removeAllViews()
         for (i in 0 until filters.childCount) {
@@ -1005,106 +1005,43 @@ class MainActivity : Activity() {
             chip.setTextColor(if (active) white else gray)
         }
         val query = search.text.toString().lowercase(Locale.ROOT).trim()
-        val filtered = games.filter {
-            val platformMatch = when (selected) {
+        val filtered = games.filter { item ->
+            val categoryMatch = when (selected) {
                 "ALL" -> true
-                "FAVORITES" -> it.isFavorite
-                else -> it.platform == selected
+                "FAVORITES" -> item.isFavorite
+                "BLOG" -> item.blogImported
+                else -> item.platform == selected
             }
-            val searchMatch = it.name.lowercase(Locale.ROOT).contains(query) ||
-                it.platform.lowercase(Locale.ROOT).contains(query) ||
-                it.description.lowercase(Locale.ROOT).contains(query)
-            platformMatch && searchMatch
+            val searchMatch = item.name.lowercase(Locale.ROOT).contains(query) || item.platform.lowercase(Locale.ROOT).contains(query) || item.description.lowercase(Locale.ROOT).contains(query)
+            categoryMatch && searchMatch
         }
         val results = when (sortMode) {
             "A-Z" -> filtered.sortedBy { it.name.lowercase(Locale.ROOT) }
             "FAVORITES" -> filtered.sortedByDescending { it.isFavorite }
             else -> filtered
         }
-        countText.text = "${results.size} GAMES"
+        countText.text = "${results.size} POSTS"
         if (results.isEmpty()) {
-            gameList.addView(makeText("NO GAMES FOUND", 14f, gray).apply {
-                gravity = Gravity.CENTER
-                setPadding(dp(10), dp(45), dp(10), dp(45))
-            })
+            gameList.addView(makeText("NO ARTICLES YET", 15f, gray, true).apply { gravity = Gravity.CENTER; setPadding(dp(10), dp(55), dp(10), dp(55)) })
             return
         }
-        if (selected == "ALL" && query.isBlank() && sortMode == "LATEST") {
-            val featured = results.first()
-            gameList.addView(makeText("FEATURED RELEASE", 11f, red, true).apply {
-                setPadding(dp(4), dp(2), dp(4), dp(9))
-            })
-            val featureCard = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                background = rounded(panel, 18)
-                setPadding(dp(10), dp(10), dp(12), dp(10))
-                setOnClickListener { showDetails(featured) }
-            }
-            val featureCover = ImageView(this).apply {
-                scaleType = ImageView.ScaleType.CENTER_CROP
-                background = rounded(Color.rgb(38, 41, 54), 12)
-                clipToOutline = true
-                contentDescription = "${featured.name} featured cover"
-            }
-            featureCard.addView(featureCover, LinearLayout.LayoutParams(dp(92), dp(112)))
-            loadCover(featureCover, featured.coverLocalPath, featured.coverUrl)
-            val featureInfo = LinearLayout(this).apply {
+        results.forEachIndexed { index, post ->
+            val card = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
-                setPadding(dp(12), 0, 0, 0)
+                background = rounded(panel, 18)
+                setPadding(dp(9), dp(9), dp(9), dp(13))
+                setOnClickListener { showDetails(post) }
             }
-            featureInfo.addView(makeText(featured.platform + " • LATEST ON THE BLOG", 9f, red, true))
-            featureInfo.addView(makeText(featured.name, 16f, white, true).apply {
-                maxLines = 3
-                ellipsize = android.text.TextUtils.TruncateAt.END
-                setPadding(0, dp(7), 0, dp(7))
-            })
-            featureInfo.addView(makeText("TAP TO VIEW DETAILS  →", 10f, gray, true))
-            featureCard.addView(featureInfo, LinearLayout.LayoutParams(0, -2, 1f))
-            gameList.addView(featureCard, LinearLayout.LayoutParams(-1, -2).apply {
-                bottomMargin = dp(16)
-            })
-        }
-
-        results.chunked(2).forEach { group ->
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.TOP
+            if (post.coverUrl.isNotBlank() || post.coverLocalPath.isNotBlank()) {
+                val cover = ImageView(this).apply { scaleType = ImageView.ScaleType.CENTER_CROP; background = rounded(Color.rgb(38, 41, 54), 13); clipToOutline = true; contentDescription = post.name + " article cover" }
+                card.addView(cover, LinearLayout.LayoutParams(-1, dp(if (index == 0) 205 else 175)))
+                loadCover(cover, post.coverLocalPath, post.coverUrl)
             }
-            group.forEach { game ->
-                val card = LinearLayout(this).apply {
-                    orientation = LinearLayout.VERTICAL
-                    background = rounded(panel, 16)
-                    setPadding(dp(6), dp(6), dp(6), dp(10))
-                    setOnClickListener { showDetails(game) }
-                }
-                val cover = ImageView(this).apply {
-                    scaleType = ImageView.ScaleType.CENTER_CROP
-                    background = rounded(Color.rgb(38, 41, 54), 12)
-                    contentDescription = "\${game.name} cover"
-                    clipToOutline = true
-                }
-                card.addView(cover, LinearLayout.LayoutParams(-1, dp(178)))
-                loadCover(cover, game.coverLocalPath, game.coverUrl)
-                card.addView(makeText(game.name, 13f, white, true).apply {
-                    maxLines = 2
-                    ellipsize = android.text.TextUtils.TruncateAt.END
-                    setPadding(dp(4), dp(9), dp(4), dp(3))
-                })
-                card.addView(makeText(
-                    (if (game.isFavorite) "★  " else "") + game.platform,
-                    10f, red, true
-                ).apply { setPadding(dp(4), dp(2), dp(4), 0) })
-                row.addView(card, LinearLayout.LayoutParams(0, -2, 1f).apply {
-                    leftMargin = dp(4)
-                    rightMargin = dp(4)
-                    bottomMargin = dp(12)
-                })
-            }
-            if (group.size == 1) {
-                row.addView(Space(this), LinearLayout.LayoutParams(0, dp(220), 1f))
-            }
-            gameList.addView(row, LinearLayout.LayoutParams(-1, -2))
+            card.addView(makeText((if (post.isFavorite) "★  " else "") + post.platform + "  •  MARCO RX6", 10f, red, true).apply { setPadding(dp(3), dp(10), dp(3), dp(4)) })
+            card.addView(makeText(post.name, 19f, white, true).apply { maxLines = 2; ellipsize = android.text.TextUtils.TruncateAt.END; setPadding(dp(3), dp(2), dp(3), dp(5)) })
+            card.addView(makeText(post.description.replace(Regex("\\s+"), " ").trim().ifBlank { "Open this article to read the full post and explore its links." }, 12f, gray).apply { maxLines = 3; ellipsize = android.text.TextUtils.TruncateAt.END; setPadding(dp(3), 0, dp(3), dp(8)) })
+            card.addView(makeText("READ ARTICLE  →", 10f, red, true).apply { setPadding(dp(3), dp(3), dp(3), 0) })
+            gameList.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(14) })
         }
     }
 
