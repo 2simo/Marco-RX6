@@ -1736,7 +1736,7 @@ class MainActivity : Activity() {
                     val details = (e.message ?: e.javaClass.simpleName).ifBlank { "خطأ غير معروف" }
                     val detailsView = TextView(this).apply {
                         text = details
-                        textIsSelectable = true
+                        setTextIsSelectable(true)
                         setTextColor(white)
                         textSize = 13f
                         setPadding(dp(16), dp(12), dp(16), dp(12))
