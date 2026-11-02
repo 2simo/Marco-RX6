@@ -1159,6 +1159,39 @@ class MainActivity : Activity() {
             root.addView(downloadScroll)
         }
 
+        val ratingRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(14), dp(7), dp(14), dp(7))
+            setBackgroundColor(Color.rgb(18, 21, 31))
+        }
+        ratingRow.addView(makeText("RATE THIS POST", 10f, gray, true),
+            LinearLayout.LayoutParams(0, -2, 1f))
+        val ratingPrefs = historyPreferences()
+        val ratingKey = "rating_" + articleKey(game)
+        val selectedRating = ratingPrefs.getInt(ratingKey, 0)
+        for (star in 1..5) {
+            ratingRow.addView(TextView(this).apply {
+                text = if (star <= selectedRating) "★" else "☆"
+                textSize = 22f
+                setTextColor(if (star <= selectedRating) Color.rgb(255, 190, 75) else gray)
+                setPadding(dp(3), dp(3), dp(3), dp(3))
+                setOnClickListener {
+                    ratingPrefs.edit().putInt(ratingKey, star).apply()
+                    for (index in 0 until ratingRow.childCount) {
+                        val child = ratingRow.getChildAt(index)
+                        if (index > 0) {
+                            val score = index
+                            (child as TextView).text = if (score <= star) "★" else "☆"
+                            child.setTextColor(if (score <= star) Color.rgb(255, 190, 75) else gray)
+                        }
+                    }
+                    Toast.makeText(this@MainActivity, "Your rating: $star/5", Toast.LENGTH_SHORT).show()
+                }
+            })
+        }
+        root.addView(ratingRow)
+
         val bottom = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
