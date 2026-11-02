@@ -39,6 +39,7 @@ import java.util.Locale
 import java.util.regex.Pattern
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
@@ -102,6 +103,12 @@ class MainActivity : Activity() {
 
         @Suppress("DEPRECATION")
         window.decorView.systemUiVisibility = 0
+
+        // Hide the top status bar (clock, battery and status icons) to prevent overlap.
+        WindowInsetsControllerCompat(window, window.decorView).apply {
+            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            hide(WindowInsetsCompat.Type.statusBars())
+        }
 
         createNotificationChannel()
         configureGoogleSignIn()
