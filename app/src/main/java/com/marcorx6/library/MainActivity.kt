@@ -1448,7 +1448,7 @@ class MainActivity : Activity() {
     private fun normalizeBloggerImageUrl(rawUrl: String): String {
         val decoded = rawUrl.trim()
             .replace("&amp;", "&")
-            .replace("\\\\/", "/")
+            .replace("\\/", "/")
             .replace("\\u003d", "=")
         if (decoded.isBlank()) return ""
         return try {
@@ -1460,12 +1460,12 @@ class MainActivity : Activity() {
                 // Blogger path-style transforms: /s320/, /s640/, /w320-h240/
                 val path = uri.encodedPath.orEmpty()
                 val resizedPath = path.replace(
-                    Regex("/(?:s\\\\d+(?:-[a-z0-9]+)*|w\\\\d+-h\\\\d+(?:-[a-z0-9]+)*)/"),
+                    Regex("/(?:s\\d+(?:-[a-z0-9]+)*|w\\d+-h\\d+(?:-[a-z0-9]+)*)/"),
                     "/s960/"
                 )
                 // Newer Google image URLs may put the transform after '='.
                 val resized = if (resizedPath != path) resizedPath else
-                    uri.toString().replace(Regex("=s\\\\d+(?:-[a-z0-9]+)*$"), "=s960")
+                    uri.toString().replace(Regex("=s\\d+(?:-[a-z0-9]+)*$"), "=s960")
                 if (resizedPath != path) uri.buildUpon().encodedPath(resizedPath).build().toString() else resized
             } else decoded
         } catch (_: Exception) {
@@ -1475,10 +1475,10 @@ class MainActivity : Activity() {
 
     private fun extractFirstImage(html: String): String {
         // Blogger feed HTML can contain lazy-load attributes or escaped URL entities.
-        val tagPattern = Pattern.compile("(?is)<img\\\\b[^>]*>")
+        val tagPattern = Pattern.compile("(?is)<img\\b[^>]*>")
         val tags = tagPattern.matcher(html)
         val attributePattern = Pattern.compile(
-            "(?i)(?:src|data-src|data-original|data-lazy-src)\\\\s*=\\\\s*[\"']([^\"']+)[\"']"
+            "(?i)(?:src|data-src|data-original|data-lazy-src)\\s*=\\s*[\"']([^\"']+)[\"']"
         )
         while (tags.find()) {
             val attributes = attributePattern.matcher(tags.group())
