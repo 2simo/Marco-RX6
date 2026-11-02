@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - main
+      - redesign/game-catalog-ui
 
 permissions:
   contents: read
