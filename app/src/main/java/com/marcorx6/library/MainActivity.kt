@@ -100,8 +100,8 @@ class MainActivity : Activity() {
         createNotificationChannel()
         configureGoogleSignIn()
         loadGames()
-        createInterface()
         restoreAdminSession()
+        createInterface()
         if (notificationPreferences().getBoolean("enabled", true)) {
             scheduleBlogNotifications()
             requestNotificationPermissionIfNeeded()
