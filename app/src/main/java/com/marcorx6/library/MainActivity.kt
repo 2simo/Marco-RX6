@@ -64,7 +64,7 @@ class MainActivity : Activity() {
     private val red = Color.rgb(255, 55, 75)
     private val white = Color.WHITE
     private val gray = Color.LTGRAY
-    private val platforms = listOf("ALL", "BLOG", "FAVORITES", "PSP", "PS1", "PS2", "PS3", "PS4")
+    private val platforms = listOf("الكل", "BLOG", "FAVORITES", "PSP", "PS1", "PS2", "PS3", "PS4")
     private val games = mutableListOf<Game>()
 
     private lateinit var gameList: LinearLayout
@@ -73,7 +73,7 @@ class MainActivity : Activity() {
     private lateinit var countText: TextView
 
     private var selected = "ALL"
-    private var sortMode = "LATEST"
+    private var sortMode = "الأحدث"
     private val mainHandler = Handler(Looper.getMainLooper())
     private val PICK_IMAGE_REQUEST = 1001
     private var pendingCoverLocalPath = ""
@@ -137,7 +137,7 @@ class MainActivity : Activity() {
         if (payload != null) { connection.doOutput = true; connection.setRequestProperty("Content-Type", "application/json; charset=utf-8"); connection.outputStream.use { it.write(payload.toString().toByteArray(Charsets.UTF_8)) } }
         val code = connection.responseCode; val stream = if (code in 200..299) connection.inputStream else connection.errorStream
         val body = stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty(); connection.disconnect()
-        if (code !in 200..299) { val message = try { JSONObject(body).optJSONObject("error")?.optString("message") ?: body } catch (_: Exception) { body }; throw IllegalStateException("Blogger API ($code): $message") }
+        if (code !in 200..299) { val message = try { JSONObject(body).optJSONObject("error")?.optString("message") ?: body } catch (_: Exception) { body }; throw IllegalStateException("خطأ في Blogger API ($code): $message") }
         return if (body.isBlank()) JSONObject() else JSONObject(body)
     }
     private fun bloggerHtml(game: Game): String {
@@ -336,7 +336,7 @@ class MainActivity : Activity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        (listOf("ALL", "BLOG", "FAVORITES", "RECENT", "POPULAR") + platforms.drop(3)).forEach { category ->
+        (listOf("ALL", "BLOG", "FAVORITES", "الأخيرة", "الأكثر مشاهدة") + platforms.drop(3)).forEach { category ->
             val chip = TextView(this).apply {
                 text = when (category) { "ALL" -> "الكل"; "BLOG" -> "المدونة"; "FAVORITES" -> "المفضلة"; "RECENT" -> "شوهدت مؤخراً"; "POPULAR" -> "الأكثر مشاهدة"; else -> category }
                 tag = category
@@ -587,15 +587,15 @@ class MainActivity : Activity() {
         val (game, detected) = warnings.first()
 
         AlertDialog.Builder(this)
-            .setTitle("Platform information conflict")
+            .setTitle("تعارض في معلومات المنصة")
             .setMessage(
                 "${game.name}\n\nBlogger category: ${game.platform}" +
                     "\nOperating system field: $detected" +
                     "\n\nThe app has used the Blogger category. " +
-                    "Would you like to correct the platform manually?"
+                    "هل تريد تصحيح المنصة يدوياً؟"
             )
-            .setNegativeButton("KEEP CATEGORY", null)
-            .setPositiveButton("CORRECT") { _, _ ->
+            .setNegativeButton("الإبقاء على التصنيف", null)
+            .setPositiveButton("تصحيح") { _, _ ->
                 showPlatformCorrection(game)
             }
             .show()
@@ -606,7 +606,7 @@ class MainActivity : Activity() {
         val choices = platforms.drop(1).toTypedArray()
 
         AlertDialog.Builder(this)
-            .setTitle("Choose platform")
+            .setTitle("اختر المنصة")
             .setItems(choices) { _, which ->
 
                 val index = games.indexOfFirst {
@@ -1216,7 +1216,7 @@ class MainActivity : Activity() {
                 type = "text/plain"; putExtra(Intent.EXTRA_SUBJECT, game.name)
                 putExtra(Intent.EXTRA_TEXT, game.name + "\n" + game.url)
             }
-            startActivity(Intent.createChooser(send, "Share MARCO RX6 article"))
+            startActivity(Intent.createChooser(send, "مشاركة مقال من MARCO RX6"))
         }
         bottom.addView(share, LinearLayout.LayoutParams(0, -2, 1f))
         val comments = readerAction("التعليقات") { if (game.url.isNotBlank()) openGameLink(game.url) }
@@ -1321,7 +1321,7 @@ class MainActivity : Activity() {
             .setMessage("هل تريد حذف المقال ${game.name}؟")
             .setNegativeButton("CANCEL", null)
             .setPositiveButton("حذف") { _, _ ->
-                if (!isAdminSession || bloggerBlogId.isBlank() || game.bloggerPostId.isBlank()) { Toast.makeText(this, "Admin session and Blogger post ID required", Toast.LENGTH_LONG).show(); return@setPositiveButton }
+                if (!isAdminSession || bloggerBlogId.isBlank() || game.bloggerPostId.isBlank()) { Toast.makeText(this, "يلزم تسجيل دخول المسؤول ومعرّف المقال في Blogger", Toast.LENGTH_LONG).show(); return@setPositiveButton }
                 Thread { try {
                     bloggerRequest("DELETE", "blogs/$bloggerBlogId/posts/${game.bloggerPostId}")
                     mainHandler.post { games.remove(game); if (game.coverLocalPath.isNotBlank()) File(game.coverLocalPath).delete(); saveGames(); renderGames(); Toast.makeText(this, "تم الحذف من Blogger", Toast.LENGTH_SHORT).show() }
