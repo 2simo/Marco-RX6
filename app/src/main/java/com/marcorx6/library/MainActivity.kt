@@ -392,6 +392,25 @@ class MainActivity : Activity() {
         heroStats.addView(makeText("     •     " + tr("المدونة محدّثة"), 10f, Color.rgb(201, 190, 169), true))
         hero.addView(heroStats)
         root.addView(hero, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(2) })
+        val lastRead = games.filter { isRecentlyViewed(it) }.maxByOrNull { lastViewedAt(it) }
+        if (lastRead != null) {
+            val resume = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                background = rounded(surface, 14)
+                setPadding(dp(13), dp(10), dp(13), dp(10))
+                setOnClickListener { showDetails(lastRead) }
+            }
+            val resumeText = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+            resumeText.addView(makeText("تابع القراءة", 9f, gold, true))
+            resumeText.addView(makeText(lastRead.name, 12f, white, true).apply {
+                maxLines = 1
+                ellipsize = android.text.TextUtils.TruncateAt.END
+            })
+            resume.addView(resumeText, LinearLayout.LayoutParams(0, -2, 1f))
+            resume.addView(makeText("متابعة  ↗", 10f, gold, true))
+            root.addView(resume, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
+        }
 
         val searchWrap = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -1050,32 +1069,84 @@ class MainActivity : Activity() {
     }
     private fun showProfile() {
         val prefs = profilePreferences()
+        val settings = getSharedPreferences("app_settings", MODE_PRIVATE)
+        val box = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(18), dp(8), dp(18), dp(6))
+        }
+        val nameLabel = makeText(tr("اسم العرض"), 11f, red, true)
         val input = makeInput(tr("اسم العرض")).apply {
             setSingleLine(true)
             setText(prefs.getString("nickname", "Player") ?: "Player")
         }
-        val summary = "المفضلة: " + games.count { it.isFavorite } +
-            "\nشوهدت مؤخراً: " + games.count { isRecentlyViewed(it) }
-        AlertDialog.Builder(this).setTitle(tr("ملفي الشخصي"))
-            .setMessage(tr("ملف اللاعب على هذا الجهاز") + "\n\n" + summary)
-            .setView(input)
-            .setPositiveButton(tr("حفظ")) { _, _ ->
+        box.addView(nameLabel)
+        box.addView(input, LinearLayout.LayoutParams(-1, dp(50)).apply { topMargin = dp(6); bottomMargin = dp(14) })
+
+        val favoriteCount = games.count { it.isFavorite }
+        val recentCount = games.count { isRecentlyViewed(it) }
+        val stats = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            background = rounded(panel, 14)
+            setPadding(dp(12), dp(14), dp(12), dp(14))
+        }
+        fun stat(value: String, label: String) = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            addView(makeText(value, 21f, red, true))
+            addView(makeText(label, 10f, gray))
+        }
+        stats.addView(stat(games.size.toString(), "المقالات"), LinearLayout.LayoutParams(0, -2, 1f))
+        stats.addView(stat(favoriteCount.toString(), "المفضلة"), LinearLayout.LayoutParams(0, -2, 1f))
+        stats.addView(stat(recentCount.toString(), "شوهدت"), LinearLayout.LayoutParams(0, -2, 1f))
+        box.addView(stats, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
+
+        fun settingButton(label: String, detail: String, action: () -> Unit) =
+            LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                background = rounded(panel, 12)
+                setPadding(dp(13), dp(11), dp(13), dp(11))
+                addView(makeText(label, 13f, white, true))
+                addView(makeText(detail, 10f, gray).apply { setPadding(0, dp(3), 0, 0) })
+                setOnClickListener { action() }
+            }
+        box.addView(settingButton("🌐  اللغة", "العربية • English • Français • Español") {
+            showLanguagePicker()
+        }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
+        box.addView(settingButton("♧  الإشعارات", "التحكم في تنبيهات المقالات الجديدة") {
+            showNotificationSettings()
+        }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
+        box.addView(settingButton("◷  سجل القراءة", "عرض المقالات التي شاهدتها مؤخراً") {
+            selected = "RECENT"
+            createInterface()
+        }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
+        box.addView(settingButton("✦  وضع القراءة", "حجم الخط والوضع الليلي متاحان داخل المقال") {
+            Toast.makeText(this, "افتح أي مقال لتخصيص تجربة القراءة", Toast.LENGTH_SHORT).show()
+        })
+
+        val dialog = AlertDialog.Builder(this)
+            .setTitle(tr("ملفي الشخصي"))
+            .setView(ScrollView(this).apply { addView(box) })
+            .setPositiveButton(tr("حفظ"), null)
+            .setNegativeButton(tr("إغلاق"), null)
+            .create()
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 prefs.edit().putString("nickname", input.text.toString().trim().ifBlank { "Player" }).apply()
                 Toast.makeText(this, "تم حفظ الملف الشخصي", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
             }
-            .setNeutralButton(tr("نشاطي")) { _, _ -> selected = "RECENT"; createInterface() }
-            .setNegativeButton(tr("إغلاق"), null).show()
+        }
+        dialog.show()
     }
 
-    // BLOG-STYLE ARTICLE FEED
-    // IMAGE-FIRST BLOG GALLERY: two clean cover tiles per row, no text overlays.
+    // PREMIUM ARTICLE CARDS: image, title, category, reading count and quick favorite.
     private fun renderGames() {
         gameList.removeAllViews()
         for (i in 0 until filters.childCount) {
             val chip = filters.getChildAt(i) as TextView
             val active = chip.tag?.toString() == selected
             chip.background = rounded(if (active) red else panel, 15)
-            chip.setTextColor(if (active) white else gray)
+            chip.setTextColor(if (active) bg else gray)
         }
         val query = search.text.toString().lowercase(Locale.ROOT).trim()
         val filtered = games.filter { item ->
@@ -1107,9 +1178,7 @@ class MainActivity : Activity() {
             return
         }
 
-        // Compact two-column cover gallery across every category to show more posts above the fold.
         val columns = 2
-        val imageHeight = 176
         var row: LinearLayout? = null
         results.forEachIndexed { index, post ->
             if (index % columns == 0) {
@@ -1117,42 +1186,84 @@ class MainActivity : Activity() {
                     orientation = LinearLayout.HORIZONTAL
                     gravity = Gravity.TOP
                 }
-                gameList.addView(row, LinearLayout.LayoutParams(-1, -2).apply {
-                    bottomMargin = dp(9)
-                })
+                gameList.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(11) })
             }
-            val tile = FrameLayout(this).apply {
+            val card = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
                 background = rounded(panel, 16)
                 clipToOutline = true
-                elevation = dp(1).toFloat()
+                elevation = dp(2).toFloat()
                 setOnClickListener { showDetails(post) }
-                contentDescription = post.name
             }
+            val imageFrame = FrameLayout(this)
             val cover = ImageView(this).apply {
                 scaleType = ImageView.ScaleType.CENTER_CROP
                 setBackgroundColor(Color.rgb(32, 33, 37))
                 contentDescription = post.name
             }
-            tile.addView(cover, FrameLayout.LayoutParams(-1, dp(imageHeight)))
+            imageFrame.addView(cover, FrameLayout.LayoutParams(-1, dp(142)))
             if (post.coverUrl.isNotBlank() || post.coverLocalPath.isNotBlank()) {
                 loadCover(cover, post.coverLocalPath, post.coverUrl)
             } else {
                 cover.setImageResource(android.R.drawable.ic_menu_gallery)
                 cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
             }
-            val tileWidth = LinearLayout.LayoutParams(0, dp(imageHeight), 1f).apply {
-                if (index % 2 == 0) {
-                    marginEnd = dp(5)
-                } else {
-                    marginStart = dp(5)
+            val categoryBadge = TextView(this).apply {
+                text = post.platform
+                textSize = 8f
+                setTextColor(bg)
+                setTypeface(null, Typeface.BOLD)
+                background = rounded(red, 8)
+                setPadding(dp(7), dp(4), dp(7), dp(4))
+            }
+            imageFrame.addView(categoryBadge, FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.START).apply {
+                leftMargin = dp(8); topMargin = dp(8)
+            })
+            val favorite = TextView(this).apply {
+                text = if (post.isFavorite) "★" else "☆"
+                textSize = 20f
+                gravity = Gravity.CENTER
+                setTextColor(if (post.isFavorite) red else white)
+                background = rounded(Color.argb(190, 12, 13, 16), 20)
+                setOnClickListener {
+                    val idx = games.indexOfFirst { it.name == post.name && it.url == post.url }
+                    if (idx >= 0) {
+                        games[idx] = games[idx].copy(isFavorite = !games[idx].isFavorite)
+                        saveGames()
+                        renderGames()
+                    }
                 }
             }
-            row?.addView(tile, tileWidth)
+            imageFrame.addView(favorite, FrameLayout.LayoutParams(dp(34), dp(34), Gravity.TOP or Gravity.END).apply {
+                rightMargin = dp(8); topMargin = dp(7)
+            })
+            card.addView(imageFrame)
+
+            val details = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(10), dp(9), dp(10), dp(10))
+            }
+            details.addView(makeText(post.name, 12f, white, true).apply {
+                maxLines = 2
+                minLines = 2
+                ellipsize = android.text.TextUtils.TruncateAt.END
+            })
+            val meta = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(0, dp(7), 0, 0)
+            }
+            meta.addView(makeText("◉ ${viewCount(post)}", 9f, gray), LinearLayout.LayoutParams(0, -2, 1f))
+            val date = if (lastViewedAt(post) > 0L) "شوهدت" else "مقال"
+            meta.addView(makeText(date, 8f, Color.rgb(170, 151, 117)))
+            details.addView(meta)
+            card.addView(details)
+            row?.addView(card, LinearLayout.LayoutParams(0, -2, 1f).apply {
+                if (index % 2 == 0) marginEnd = dp(6) else marginStart = dp(6)
+            })
         }
         if (results.size % columns != 0) {
-            row?.addView(View(this), LinearLayout.LayoutParams(0, dp(imageHeight), 1f).apply {
-                marginStart = dp(5)
-            })
+            row?.addView(View(this), LinearLayout.LayoutParams(0, dp(1), 1f).apply { marginStart = dp(6) })
         }
     }
 
@@ -1204,9 +1315,37 @@ class MainActivity : Activity() {
             }
         }
         topBar.addView(favorite)
+        val readerPrefs = historyPreferences()
+        var readerFontSize = readerPrefs.getInt("reader_font_size", 17).coerceIn(14, 24)
+        var readerLightMode = readerPrefs.getBoolean("reader_light_mode", false)
+        var articleView: android.webkit.WebView? = null
+        fun readerTool(label: String, action: () -> Unit) = TextView(this).apply {
+            text = label
+            textSize = 12f
+            setTextColor(red)
+            gravity = Gravity.CENTER
+            background = rounded(bg, 9)
+            setPadding(dp(8), dp(8), dp(8), dp(8))
+            setOnClickListener { action() }
+        }
+        topBar.addView(readerTool("A−") {
+            readerFontSize = (readerFontSize - 1).coerceAtLeast(14)
+            readerPrefs.edit().putInt("reader_font_size", readerFontSize).apply()
+            articleView?.reload()
+        })
+        topBar.addView(readerTool("A+") {
+            readerFontSize = (readerFontSize + 1).coerceAtMost(24)
+            readerPrefs.edit().putInt("reader_font_size", readerFontSize).apply()
+            articleView?.reload()
+        })
+        topBar.addView(readerTool(if (readerLightMode) "☾" else "☼") {
+            readerLightMode = !readerLightMode
+            readerPrefs.edit().putBoolean("reader_light_mode", readerLightMode).apply()
+            articleView?.reload()
+        })
         root.addView(topBar)
 
-        val articleView = android.webkit.WebView(this).apply {
+        articleView = android.webkit.WebView(this).apply {
             setBackgroundColor(bg)
             settings.javaScriptEnabled = false
             settings.domStorageEnabled = false
@@ -1220,14 +1359,14 @@ class MainActivity : Activity() {
                 <style>
                 *{box-sizing:border-box}
                 html,body{margin:0;padding:0;width:100%;max-width:100%;overflow-x:hidden}
-                body{background:#0a0b11;color:#f4f4f8;font-family:Roboto,Arial,sans-serif;font-size:16px;line-height:1.85;padding:18px 16px 32px;overflow-wrap:anywhere;direction:rtl;text-align:right}
-                h1,h2,h3,h4{color:#ff6478;line-height:1.35;margin:25px 0 12px}
-                p{margin:0 0 17px}
+                body{background:${if (readerLightMode) "#f6f2e9" else "#0a0b11"};color:${if (readerLightMode) "#24221e" else "#f4f4f8"};font-family:Roboto,Arial,sans-serif;font-size:${readerFontSize}px;line-height:1.9;padding:20px 17px 36px;overflow-wrap:anywhere;direction:rtl;text-align:right}
+                h1,h2,h3,h4{color:${if (readerLightMode) "#876a3d" else "#d3b170"};line-height:1.4;margin:25px 0 12px}
+                p{margin:0 0 18px}
                 img{display:block;max-width:100%!important;height:auto!important;width:auto;margin:18px auto;border-radius:12px;object-fit:contain}
-                a{color:#79c5ff;text-decoration:none;font-weight:600}
+                a{color:${if (readerLightMode) "#805b27" else "#d3b170"};text-decoration:none;font-weight:700}
                 ul,ol{padding-left:25px;margin:10px 0 20px}
                 li{padding:4px 0}
-                blockquote{border-left:3px solid #ff6478;padding:8px 14px;margin:16px 0;background:#1b1d27}
+                blockquote{border-right:3px solid #d3b170;padding:8px 14px;margin:16px 0;background:${if (readerLightMode) "#eee7d9" else "#1b1d27"}}
                 table{display:block;max-width:100%;overflow-x:auto;border-collapse:collapse}
                 td,th{border:1px solid #444;padding:8px}
                 iframe,video{max-width:100%!important}
