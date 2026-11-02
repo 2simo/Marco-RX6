@@ -61,7 +61,8 @@ data class Game(
     val platformManuallyCorrected: Boolean = false,
     val isFavorite: Boolean = false,
     val bloggerPostId: String = "",
-    val bloggerHtml: String = ""
+    val bloggerHtml: String = "",
+    val playStatus: String = ""
 )
 
 class MainActivity : Activity() {
@@ -485,7 +486,7 @@ class MainActivity : Activity() {
                         .put("blogImported", game.blogImported)
                         .put("platformManuallyCorrected", game.platformManuallyCorrected)
                         .put("isFavorite", game.isFavorite).put("bloggerPostId", game.bloggerPostId)
-                        .put("bloggerHtml", game.bloggerHtml))
+                        .put("bloggerHtml", game.bloggerHtml).put("playStatus", game.playStatus))
                 }
             })
             .put("appearance", JSONObject()
@@ -532,7 +533,7 @@ class MainActivity : Activity() {
                         item.optString("url"), item.optString("coverUrl"), "", item.optString("sourcePostUrl"),
                         item.optString("downloadLinks"), item.optBoolean("blogImported"),
                         item.optBoolean("platformManuallyCorrected"), item.optBoolean("isFavorite"),
-                        item.optString("bloggerPostId"), item.optString("bloggerHtml")))
+                        item.optString("bloggerPostId"), item.optString("bloggerHtml"), item.optString("playStatus", "")))
                 }
                 AlertDialog.Builder(this).setTitle("استعادة النسخة الاحتياطية")
                     .setMessage("سيتم استبدال المكتبة الحالية بـ ${restored.size} عنصر. يُفضّل تصدير نسخة من بياناتك الحالية أولاً. هل تريد المتابعة؟")
@@ -719,12 +720,15 @@ class MainActivity : Activity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        (listOf("ALL", "BLOG", "FAVORITES") + platforms.drop(3)).forEach { category ->
+        (listOf("ALL", "BLOG", "FAVORITES") + platforms.drop(3) + listOf("WANT_TO_PLAY", "PLAYING", "COMPLETED")).forEach { category ->
             val chip = TextView(this).apply {
                 text = when (category) {
                     "ALL" -> tr("الكل")
                     "BLOG" -> tr("المدونة")
                     "FAVORITES" -> tr("المفضلة")
+                    "WANT_TO_PLAY" -> "أريد لعبها"
+                    "PLAYING" -> "ألعبها حالياً"
+                    "COMPLETED" -> "أنهيتها"
                     else -> category
                 }
                 tag = category
@@ -968,6 +972,7 @@ class MainActivity : Activity() {
                         old.platform else incoming.platform,
                     platformManuallyCorrected = old.platformManuallyCorrected,
                     isFavorite = old.isFavorite,
+                    playStatus = old.playStatus,
                     bloggerPostId = incoming.bloggerPostId,
                     bloggerHtml = incoming.bloggerHtml
                 )
@@ -1452,6 +1457,9 @@ class MainActivity : Activity() {
             val categoryMatch = when (selected) {
                 "ALL" -> true
                 "FAVORITES" -> item.isFavorite
+                "WANT_TO_PLAY" -> item.playStatus == "WANT_TO_PLAY"
+                "PLAYING" -> item.playStatus == "PLAYING"
+                "COMPLETED" -> item.playStatus == "COMPLETED"
                 "BLOG" -> item.blogImported
                 else -> item.platform == selected
             }
@@ -1485,6 +1493,9 @@ class MainActivity : Activity() {
             val title = when (selected) {
                 "ALL" -> "الكل"
                 "FAVORITES" -> tr("المفضلة")
+                "WANT_TO_PLAY" -> "أريد لعبها"
+                "PLAYING" -> "ألعبها حالياً"
+                "COMPLETED" -> "أنهيتها"
                 "BLOG" -> "BLOG"
                 else -> selected
             }
@@ -1678,6 +1689,40 @@ class MainActivity : Activity() {
         val info = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(14), 0, 0, 0) }
         info.addView(makeText(game.name, 18f, white, true).apply { maxLines = 3; ellipsize = android.text.TextUtils.TruncateAt.END })
         info.addView(makeText(game.platform + "  •  MARCO RX6", 10f, Color.rgb(190, 174, 255), true).apply { setPadding(0, dp(6), 0, dp(12)) })
+        val watchlistNames = arrayOf("بدون حالة", "أريد لعبها", "ألعبها حالياً", "أنهيتها")
+        val watchlistKeys = arrayOf("", "WANT_TO_PLAY", "PLAYING", "COMPLETED")
+        fun watchlistLabel(status: String) = when (status) {
+            "WANT_TO_PLAY" -> "أريد لعبها"
+            "PLAYING" -> "ألعبها حالياً"
+            "COMPLETED" -> "أنهيتها"
+            else -> "إضافة إلى قائمة المتابعة"
+        }
+        val watchlistButton = TextView(this).apply {
+            text = "＋  " + watchlistLabel(game.playStatus)
+            textSize = 11f
+            setTextColor(white)
+            gravity = Gravity.CENTER
+            background = rounded(panel, 11)
+            setPadding(dp(11), dp(9), dp(11), dp(9))
+            setOnClickListener {
+                val current = watchlistKeys.indexOf(game.playStatus).coerceAtLeast(0)
+                AlertDialog.Builder(this@MainActivity)
+                    .setTitle("قائمة متابعة الألعاب")
+                    .setSingleChoiceItems(watchlistNames, current) { dialog, which ->
+                        val index = games.indexOfFirst { it.name == game.name && it.url == game.url }
+                        if (index >= 0) {
+                            games[index] = games[index].copy(playStatus = watchlistKeys[which])
+                            saveGames()
+                            text = "＋  " + watchlistLabel(watchlistKeys[which])
+                            renderGames()
+                        }
+                        dialog.dismiss()
+                    }
+                    .setNegativeButton("إغلاق", null)
+                    .show()
+            }
+        }
+        info.addView(watchlistButton, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(7) })
         identity.addView(info, LinearLayout.LayoutParams(0, -2, 1f))
         root.addView(identity, LinearLayout.LayoutParams(-1, -2).apply { setMargins(dp(12), dp(10), dp(12), dp(10)) })
 
@@ -1857,7 +1902,7 @@ class MainActivity : Activity() {
                 val imageHtml = if (coverLink.isNotBlank() && !articleBody.contains(coverLink)) "<p><img src=\"$coverLink\" style=\"max-width:100%;height:auto;\"/></p>" else ""
                 val relatedHtml = if (relatedLink.isNotBlank() && !articleBody.contains(relatedLink)) "<p><a href=\"$relatedLink\">تحميل / رابط إضافي</a></p>" else ""
                 val htmlContent = "<div class=\"marcorx6-post\">$imageHtml$articleBody$relatedHtml</div>"
-                val post = Game(name = postTitle, platform = categoryName, description = contentText, url = relatedLink.ifBlank { existing?.url ?: "" }, coverUrl = coverLink, coverLocalPath = if (coverLink.isBlank()) pendingCoverLocalPath else "", sourcePostUrl = existing?.sourcePostUrl ?: "", downloadLinks = existing?.downloadLinks ?: "", blogImported = true, isFavorite = existing?.isFavorite ?: false, bloggerPostId = existing?.bloggerPostId ?: "", bloggerHtml = htmlContent)
+                val post = Game(name = postTitle, platform = categoryName, description = contentText, url = relatedLink.ifBlank { existing?.url ?: "" }, coverUrl = coverLink, coverLocalPath = if (coverLink.isBlank()) pendingCoverLocalPath else "", sourcePostUrl = existing?.sourcePostUrl ?: "", downloadLinks = existing?.downloadLinks ?: "", blogImported = true, isFavorite = existing?.isFavorite ?: false, bloggerPostId = existing?.bloggerPostId ?: "", bloggerHtml = htmlContent, playStatus = existing?.playStatus ?: "")
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
                 Thread {
                     try {
@@ -1942,6 +1987,7 @@ class MainActivity : Activity() {
                     .put("isFavorite", game.isFavorite)
                     .put("bloggerPostId", game.bloggerPostId)
                     .put("bloggerHtml", game.bloggerHtml)
+                    .put("playStatus", game.playStatus)
             )
         }
 
@@ -1985,7 +2031,8 @@ class MainActivity : Activity() {
                         ),
                         item.optBoolean("isFavorite", false),
                         item.optString("bloggerPostId", ""),
-                        item.optString("bloggerHtml", "")
+                        item.optString("bloggerHtml", ""),
+                        item.optString("playStatus", "")
                     )
                 )
             }
