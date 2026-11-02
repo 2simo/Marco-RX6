@@ -125,9 +125,9 @@ class MainActivity : Activity() {
         googleSignInClient?.signOut()?.addOnCompleteListener { isAdminSession = false; createInterface() }
     }
     private fun adminToken(): String {
-        val account = GoogleSignIn.getLastSignedInAccount(this) ?: throw IllegalStateException("Please sign in as the blog admin")
-        if (!account.email.equals(adminEmail, ignoreCase = true)) throw SecurityException("Unauthorized Google account")
-        val androidAccount = account.account ?: throw IllegalStateException("Google account data is unavailable")
+        val account = GoogleSignIn.getLastSignedInAccount(this) ?: throw IllegalStateException("يرجى تسجيل الدخول بحساب مسؤول المدونة")
+        if (!account.email.equals(adminEmail, ignoreCase = true)) throw SecurityException("حساب Google غير مخوّل")
+        val androidAccount = account.account ?: throw IllegalStateException("بيانات حساب Google غير متاحة")
         return GoogleAuthUtil.getToken(applicationContext, androidAccount, "oauth2:https://www.googleapis.com/auth/blogger")
     }
     private fun bloggerRequest(method: String, path: String, payload: JSONObject? = null): JSONObject {
@@ -187,23 +187,23 @@ class MainActivity : Activity() {
     private fun showNotificationSettings() {
         val enabled = notificationPreferences().getBoolean("enabled", true)
         AlertDialog.Builder(this)
-            .setTitle("NEW POST NOTIFICATIONS")
+            .setTitle("إشعارات المقالات الجديدة")
             .setMessage(if (enabled)
-                "Notifications are enabled. MARCO RX6 checks your Blogger feed periodically and alerts you when a new post is published."
+                "الإشعارات مفعّلة. يتحقق تطبيق MARCO RX6 من مدونتك دورياً وينبهك عند نشر مقال جديد."
             else
-                "Notifications are disabled. Enable them to receive an alert when a new post is published.")
-            .setPositiveButton(if (enabled) "KEEP ENABLED" else "ENABLE") { _, _ ->
+                "الإشعارات متوقفة. فعّلها ليصلك تنبيه عند نشر مقال جديد.")
+            .setPositiveButton(if (enabled) "إبقاء مفعّلة" else "تفعيل") { _, _ ->
                 notificationPreferences().edit().putBoolean("enabled", true).apply()
                 scheduleBlogNotifications()
                 requestNotificationPermissionIfNeeded()
-                Toast.makeText(this, "New post alerts enabled", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "تم تفعيل إشعارات المقالات الجديدة", Toast.LENGTH_SHORT).show()
             }
-            .setNegativeButton("TURN OFF") { _, _ ->
+            .setNegativeButton("إيقاف") { _, _ ->
                 notificationPreferences().edit().putBoolean("enabled", false).apply()
                 WorkManager.getInstance(this).cancelUniqueWork(BlogNotificationWorker.WORK_NAME)
-                Toast.makeText(this, "New post alerts disabled", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "تم إيقاف الإشعارات", Toast.LENGTH_SHORT).show()
             }
-            .setNeutralButton("CLOSE", null)
+            .setNeutralButton("إغلاق", null)
             .show()
     }
 
@@ -241,6 +241,8 @@ class MainActivity : Activity() {
     private fun createInterface() {
         // Fresh MARCO RX6 dashboard: editorial hero, compact controls and a clean image gallery.
         val root = LinearLayout(this).apply {
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            textDirection = View.TEXT_DIRECTION_RTL
             orientation = LinearLayout.VERTICAL
             setPadding(dp(18), dp(14), dp(18), dp(10))
             setBackgroundColor(Color.rgb(8, 10, 17))
@@ -262,7 +264,7 @@ class MainActivity : Activity() {
         logo.addView(makeText("RX6", 29f, white, true))
         header.addView(logo, LinearLayout.LayoutParams(0, -2, 1f))
         val adminButton = TextView(this).apply {
-            text = if (isAdminSession) "● ADMIN" else "ADMIN  ↗"
+            text = if (isAdminSession) "● مسؤول" else "دخول المسؤول  ↗"
             textSize = 10f
             setTextColor(white)
             setTypeface(null, Typeface.BOLD)
@@ -272,7 +274,7 @@ class MainActivity : Activity() {
             setOnClickListener { if (isAdminSession) signOutAdmin() else startGoogleSignIn() }
         }
         header.addView(TextView(this).apply {
-            text = "ME"; textSize = 10f; setTextColor(white); gravity = Gravity.CENTER
+            text = "حسابي"; textSize = 10f; setTextColor(white); gravity = Gravity.CENTER
             background = rounded(Color.rgb(31, 35, 49), 18)
             setPadding(dp(13), dp(11), dp(13), dp(11))
             setOnClickListener { showProfile() }
@@ -289,19 +291,19 @@ class MainActivity : Activity() {
             setPadding(dp(20), dp(19), dp(20), dp(19))
             elevation = dp(3).toFloat()
         }
-        hero.addView(makeText("YOUR GAMING UNIVERSE", 10f, Color.rgb(255, 156, 169), true))
-        hero.addView(makeText("Discover. Play.\nEnjoy more.", 27f, white, true).apply {
+        hero.addView(makeText("عالمك للألعاب", 10f, Color.rgb(255, 156, 169), true))
+        hero.addView(makeText("اكتشف. العب.\nاستمتع أكثر.", 27f, white, true).apply {
             setPadding(0, dp(7), 0, dp(5))
         })
-        hero.addView(makeText("Games, guides and the latest releases — all in one place.", 12f,
+        hero.addView(makeText("ألعاب وشروحات وآخر الإصدارات، كلّها في مكان واحد.", 12f,
             Color.rgb(220, 220, 231)))
         val heroStats = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             setPadding(0, dp(14), 0, 0)
         }
-        heroStats.addView(makeText("✦  ${games.size} ARTICLES", 10f, white, true))
-        heroStats.addView(makeText("     •     UPDATED BLOG", 10f, Color.rgb(255, 178, 190), true))
+        heroStats.addView(makeText("✦  ${games.size} مقال", 10f, white, true))
+        heroStats.addView(makeText("     •     المدونة محدّثة", 10f, Color.rgb(255, 178, 190), true))
         hero.addView(heroStats)
         root.addView(hero, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(9) })
 
@@ -313,7 +315,7 @@ class MainActivity : Activity() {
         }
         searchWrap.addView(makeText("⌕", 25f, Color.rgb(255, 83, 104), true))
         search = EditText(this).apply {
-            hint = "Search games and articles..."
+            hint = "ابحث عن الألعاب والمقالات..."
             textSize = 14f
             setSingleLine(true)
             setTextColor(white)
@@ -336,7 +338,8 @@ class MainActivity : Activity() {
         }
         (listOf("ALL", "BLOG", "FAVORITES", "RECENT", "POPULAR") + platforms.drop(3)).forEach { category ->
             val chip = TextView(this).apply {
-                text = category
+                text = when (category) { "ALL" -> "الكل"; "BLOG" -> "المدونة"; "FAVORITES" -> "المفضلة"; "RECENT" -> "شوهدت مؤخراً"; "POPULAR" -> "الأكثر مشاهدة"; else -> category }
+                tag = category
                 textSize = 11f
                 gravity = Gravity.CENTER
                 setTypeface(null, Typeface.BOLD)
@@ -358,10 +361,10 @@ class MainActivity : Activity() {
             gravity = Gravity.CENTER_VERTICAL
         }
         val sectionTitles = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        sectionTitles.addView(makeText("EXPLORE", 10f, Color.rgb(255, 83, 104), true))
-        sectionTitles.addView(makeText("Latest posts", 20f, white, true))
+        sectionTitles.addView(makeText("استكشف", 10f, Color.rgb(255, 83, 104), true))
+        sectionTitles.addView(makeText("أحدث المقالات", 20f, white, true))
         section.addView(sectionTitles, LinearLayout.LayoutParams(0, -2, 1f))
-        countText = makeText("0 POSTS", 10f, Color.rgb(255, 112, 130), true)
+        countText = makeText("0 مقال", 10f, Color.rgb(255, 112, 130), true)
         section.addView(countText)
         val sortButton = TextView(this).apply {
             text = "↕"
@@ -370,11 +373,11 @@ class MainActivity : Activity() {
             gravity = Gravity.CENTER
             background = rounded(Color.rgb(31, 35, 49), 12)
             setPadding(dp(12), dp(7), dp(12), dp(7))
-            contentDescription = "Sort posts"
+            contentDescription = "ترتيب المقالات"
             setOnClickListener {
                 sortMode = when (sortMode) { "LATEST" -> "POPULAR"; "POPULAR" -> "A-Z"; "A-Z" -> "FAVORITES"; else -> "LATEST" }
                 renderGames()
-                Toast.makeText(this@MainActivity, "Sort: $sortMode", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "الترتيب: " + when (sortMode) { "LATEST" -> "الأحدث"; "POPULAR" -> "الأكثر مشاهدة"; "A-Z" -> "أبجدياً"; else -> "المفضلة" }, Toast.LENGTH_SHORT).show()
             }
         }
         section.addView(sortButton, LinearLayout.LayoutParams(-2, -2).apply { leftMargin = dp(9) })
@@ -408,12 +411,12 @@ class MainActivity : Activity() {
                 setPadding(dp(10), dp(12), dp(10), dp(12))
                 setOnClickListener { action() }
             }
-        actions.addView(navAction("⟳  SYNC") { syncFromBlog(showResult = true) },
+        actions.addView(navAction("⟳  مزامنة") { syncFromBlog(showResult = true) },
             LinearLayout.LayoutParams(0, -2, 1f))
-        actions.addView(navAction("♧  ALERTS") { showNotificationSettings() },
+        actions.addView(navAction("♧  التنبيهات") { showNotificationSettings() },
             LinearLayout.LayoutParams(0, -2, 1f))
         if (isAdminSession) {
-            actions.addView(navAction("＋  PUBLISH", true) { showGameDialog() },
+            actions.addView(navAction("＋  نشر", true) { showGameDialog() },
                 LinearLayout.LayoutParams(0, -2, 1f))
         }
         root.addView(actions, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
@@ -434,7 +437,7 @@ class MainActivity : Activity() {
             if (showResult) {
                 Toast.makeText(
                     this,
-                    "Sync already running",
+                    "المزامنة جارية بالفعل",
                     Toast.LENGTH_SHORT
                 ).show()
             }
@@ -446,7 +449,7 @@ class MainActivity : Activity() {
         if (showResult) {
             Toast.makeText(
                 this,
-                "Connecting to Marco RX6 blog...",
+                "جارٍ الاتصال بمدونة MARCO RX6...",
                 Toast.LENGTH_SHORT
             ).show()
         }
@@ -496,7 +499,7 @@ class MainActivity : Activity() {
                     if (showResult) {
                         Toast.makeText(
                             this,
-                            "Sync complete: ${result.first} added, ${result.second} updated",
+                            "اكتملت المزامنة: تمت إضافة ${result.first} وتحديث ${result.second}",
                             Toast.LENGTH_LONG
                         ).show()
                     }
@@ -511,7 +514,7 @@ class MainActivity : Activity() {
                     if (showResult) {
                         Toast.makeText(
                             this,
-                            "Could not sync. Check internet and try again.",
+                            "تعذرت المزامنة. تحقق من اتصال الإنترنت وحاول مجدداً.",
                             Toast.LENGTH_LONG
                         ).show()
                     }
@@ -620,7 +623,7 @@ class MainActivity : Activity() {
                     renderGames()
                 }
             }
-            .setNegativeButton("CANCEL", null)
+            .setNegativeButton("إلغاء", null)
             .show()
     }
 
@@ -884,8 +887,8 @@ class MainActivity : Activity() {
                 isAdminSession = account.email.equals(adminEmail, ignoreCase = true)
                 if (!isAdminSession) googleSignInClient?.signOut()
                 createInterface()
-                Toast.makeText(this, if (isAdminSession) "Admin Google account connected" else "This account does not have administrator access. You can continue as a visitor.", Toast.LENGTH_LONG).show()
-            } catch (e: Exception) { isAdminSession = false; createInterface(); Toast.makeText(this, "Google sign-in failed: ${e.message}", Toast.LENGTH_LONG).show() }
+                Toast.makeText(this, if (isAdminSession) "تم ربط حساب Google المسؤول" else "هذا الحساب لا يملك صلاحية المسؤول. يمكنك المتابعة كزائر.", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) { isAdminSession = false; createInterface(); Toast.makeText(this, "فشل تسجيل الدخول إلى Google: ${e.message}", Toast.LENGTH_LONG).show() }
             return
         }
         if (requestCode != PICK_IMAGE_REQUEST || resultCode != RESULT_OK) return
@@ -906,7 +909,7 @@ class MainActivity : Activity() {
                 contentResolver.openInputStream(uri).use { input ->
 
                     if (input == null) {
-                        throw Exception("Cannot read image")
+                        throw Exception("تعذرت قراءة الصورة")
                     }
 
                     FileOutputStream(destination).use { output ->
@@ -925,7 +928,7 @@ class MainActivity : Activity() {
 
                     Toast.makeText(
                         this,
-                        "Cover image selected",
+                        "تم اختيار صورة الغلاف",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -935,7 +938,7 @@ class MainActivity : Activity() {
                 mainHandler.post {
                     Toast.makeText(
                         this,
-                        "Could not load this image",
+                        "تعذر تحميل هذه الصورة",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -958,21 +961,21 @@ class MainActivity : Activity() {
     }
     private fun showProfile() {
         val prefs = profilePreferences()
-        val input = makeInput("Your display name").apply {
+        val input = makeInput("اسم العرض").apply {
             setSingleLine(true)
             setText(prefs.getString("nickname", "Player") ?: "Player")
         }
-        val summary = "Favorites: " + games.count { it.isFavorite } +
-            "\nRecently viewed: " + games.count { isRecentlyViewed(it) }
-        AlertDialog.Builder(this).setTitle("YOUR PROFILE")
-            .setMessage("Local player profile\n\n" + summary)
+        val summary = "المفضلة: " + games.count { it.isFavorite } +
+            "\nشوهدت مؤخراً: " + games.count { isRecentlyViewed(it) }
+        AlertDialog.Builder(this).setTitle("ملفي الشخصي")
+            .setMessage("ملف اللاعب على هذا الجهاز\n\n" + summary)
             .setView(input)
-            .setPositiveButton("SAVE") { _, _ ->
+            .setPositiveButton("حفظ") { _, _ ->
                 prefs.edit().putString("nickname", input.text.toString().trim().ifBlank { "Player" }).apply()
-                Toast.makeText(this, "Profile saved", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "تم حفظ الملف الشخصي", Toast.LENGTH_SHORT).show()
             }
-            .setNeutralButton("MY ACTIVITY") { _, _ -> selected = "RECENT"; createInterface() }
-            .setNegativeButton("CLOSE", null).show()
+            .setNeutralButton("نشاطي") { _, _ -> selected = "RECENT"; createInterface() }
+            .setNegativeButton("إغلاق", null).show()
     }
 
     // BLOG-STYLE ARTICLE FEED
@@ -981,7 +984,7 @@ class MainActivity : Activity() {
         gameList.removeAllViews()
         for (i in 0 until filters.childCount) {
             val chip = filters.getChildAt(i) as TextView
-            val active = chip.text.toString() == selected
+            val active = chip.tag?.toString() == selected
             chip.background = rounded(if (active) red else panel, 15)
             chip.setTextColor(if (active) white else gray)
         }
@@ -1006,9 +1009,9 @@ class MainActivity : Activity() {
             "POPULAR" -> filtered.sortedByDescending { viewCount(it) }
             else -> if (selected == "RECENT") filtered.sortedByDescending { lastViewedAt(it) } else filtered
         }
-        countText.text = "${results.size} POSTS"
+        countText.text = "${results.size} مقال"
         if (results.isEmpty()) {
-            gameList.addView(makeText("NO ARTICLES YET", 15f, gray, true).apply {
+            gameList.addView(makeText("لا توجد مقالات حالياً", 15f, gray, true).apply {
                 gravity = Gravity.CENTER
                 setPadding(dp(10), dp(55), dp(10), dp(55))
             })
@@ -1148,7 +1151,7 @@ class MainActivity : Activity() {
                 val target = item.optString("url")
                 if (!target.startsWith("https://")) continue
                 downloadRow.addView(TextView(this).apply {
-                    text = "⬇  " + item.optString("label").ifBlank { "DOWNLOAD " + (i + 1) }
+                    text = "⬇  " + item.optString("label").ifBlank { "تحميل " + (i + 1) }
                     textSize = 12f; setTextColor(white); gravity = Gravity.CENTER; setTypeface(null, Typeface.BOLD)
                     background = rounded(Color.rgb(190, 43, 68), 11)
                     setPadding(dp(13), dp(12), dp(13), dp(12))
@@ -1165,7 +1168,7 @@ class MainActivity : Activity() {
             setPadding(dp(14), dp(7), dp(14), dp(7))
             setBackgroundColor(Color.rgb(18, 21, 31))
         }
-        ratingRow.addView(makeText("RATE THIS POST", 10f, gray, true),
+        ratingRow.addView(makeText("قيّم هذا المقال", 10f, gray, true),
             LinearLayout.LayoutParams(0, -2, 1f))
         val ratingPrefs = historyPreferences()
         val ratingKey = "rating_" + articleKey(game)
@@ -1186,7 +1189,7 @@ class MainActivity : Activity() {
                             child.setTextColor(if (score <= star) Color.rgb(255, 190, 75) else gray)
                         }
                     }
-                    Toast.makeText(this@MainActivity, "Your rating: $star/5", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, "تقييمك: $star من 5", Toast.LENGTH_SHORT).show()
                 }
             })
         }
@@ -1233,16 +1236,16 @@ class MainActivity : Activity() {
 
     // BLOG POST COMPOSER: reusable article template published directly to Blogger
     private fun showGameDialog(existing: Game? = null) {
-        if (!isAdminSession) { Toast.makeText(this, "Administrator access is required to publish.", Toast.LENGTH_SHORT).show(); return }
+        if (!isAdminSession) { Toast.makeText(this, "يجب تسجيل الدخول بصلاحية المسؤول للنشر.", Toast.LENGTH_SHORT).show(); return }
         pendingCoverLocalPath = existing?.coverLocalPath ?: ""
         val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(18), dp(5), dp(18), dp(5)) }
-        val title = makeInput("Article title").apply { setSingleLine(true) }
+        val title = makeInput("عنوان المقال").apply { setSingleLine(true) }
         val category = Spinner(this)
         val categoryOptions = listOf("BLOG", "PSP", "PS1", "PS2", "PS3", "PS4")
         category.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, categoryOptions)
         val body = makeInput("محتوى المقال (يدعم HTML)").apply { minLines = 10; gravity = Gravity.TOP; inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE or android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS }
-        val coverUrl = makeInput("Cover image URL (optional)").apply { setSingleLine(true) }
-        val link = makeInput("Download / related link (optional)").apply { setSingleLine(true) }
+        val coverUrl = makeInput("رابط صورة الغلاف (اختياري)").apply { setSingleLine(true) }
+        val link = makeInput("رابط التحميل أو رابط إضافي (اختياري)").apply { setSingleLine(true) }
         coverUrlField = coverUrl
         if (existing != null) {
             title.setText(existing.name)
@@ -1272,18 +1275,18 @@ class MainActivity : Activity() {
         coverPreview = preview
         box.addView(preview, LinearLayout.LayoutParams(-1, dp(145)).apply { bottomMargin = dp(8) })
         loadCover(preview, pendingCoverLocalPath, existing?.coverUrl ?: "")
-        box.addView(Button(this).apply { text = "CHOOSE COVER FROM PHONE"; setTextColor(white); background = rounded(red, 12); setOnClickListener { chooseCover() } }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
-        box.addView(makeText("POST CATEGORY", 10f, red, true)); box.addView(category); box.addView(title)
-        box.addView(makeText("ARTICLE CONTENT", 10f, red, true).apply { setPadding(0, dp(8), 0, dp(4)) })
+        box.addView(Button(this).apply { text = "اختيار صورة الغلاف من الهاتف"; setTextColor(white); background = rounded(red, 12); setOnClickListener { chooseCover() } }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
+        box.addView(makeText("تصنيف المقال", 10f, red, true)); box.addView(category); box.addView(title)
+        box.addView(makeText("محتوى المقال", 10f, red, true).apply { setPadding(0, dp(8), 0, dp(4)) })
         box.addView(body, LinearLayout.LayoutParams(-1, dp(190))); box.addView(coverUrl); box.addView(link)
         val scroll = ScrollView(this).apply { addView(box) }
-        val dialog = AlertDialog.Builder(this).setTitle(if (existing == null) "NEW BLOG ARTICLE" else "EDIT BLOG ARTICLE").setView(scroll).setNegativeButton("CANCEL", null).setPositiveButton("PUBLISH", null).create()
+        val dialog = AlertDialog.Builder(this).setTitle(if (existing == null) "مقال جديد" else "تعديل المقال").setView(scroll).setNegativeButton("CANCEL", null).setPositiveButton("نشر المقال", null).create()
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 val postTitle = title.text.toString().trim(); val categoryName = category.selectedItem.toString(); val coverLink = coverUrl.text.toString().trim(); val relatedLink = link.text.toString().trim()
-                if (postTitle.isBlank()) { title.error = "Enter an article title"; return@setOnClickListener }
-                if (coverLink.isNotBlank() && !coverLink.startsWith("https://")) { coverUrl.error = "Use an HTTPS image URL"; return@setOnClickListener }
-                if (relatedLink.isNotBlank() && !relatedLink.startsWith("https://")) { link.error = "Use an HTTPS link"; return@setOnClickListener }
+                if (postTitle.isBlank()) { title.error = "أدخل عنوان المقال"; return@setOnClickListener }
+                if (coverLink.isNotBlank() && !coverLink.startsWith("https://")) { coverUrl.error = "أدخل رابط صورة يبدأ بـ HTTPS"; return@setOnClickListener }
+                if (relatedLink.isNotBlank() && !relatedLink.startsWith("https://")) { link.error = "أدخل رابطاً يبدأ بـ HTTPS"; return@setOnClickListener }
                 val contentText = body.text.toString().trim()
                 // Accept real Blogger HTML (headings, lists, images and download anchors).
                 // Plain text is still escaped safely and converted to line breaks.
@@ -1297,15 +1300,15 @@ class MainActivity : Activity() {
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
                 Thread {
                     try {
-                        if (bloggerBlogId.isBlank()) throw IllegalStateException("Please sync the blog first, then publish.")
+                        if (bloggerBlogId.isBlank()) throw IllegalStateException("زامن المدونة أولاً، ثم حاول النشر.")
                         val payload = JSONObject().put("kind", "blogger#post").put("title", post.name).put("content", htmlContent).put("labels", JSONArray().put(categoryName))
-                        val result = if (existing == null) bloggerRequest("POST", "blogs/$bloggerBlogId/posts/", payload) else { if (existing.bloggerPostId.isBlank()) throw IllegalStateException("This post has no Blogger ID; sync the blog and try again."); bloggerRequest("PUT", "blogs/$bloggerBlogId/posts/${existing.bloggerPostId}", payload) }
+                        val result = if (existing == null) bloggerRequest("POST", "blogs/$bloggerBlogId/posts/", payload) else { if (existing.bloggerPostId.isBlank()) throw IllegalStateException("لا يملك هذا المقال معرّف Blogger. زامن المدونة ثم حاول مجدداً."); bloggerRequest("PUT", "blogs/$bloggerBlogId/posts/${existing.bloggerPostId}", payload) }
                         mainHandler.post {
                             val saved = post.copy(bloggerPostId = result.optString("id", post.bloggerPostId), bloggerHtml = result.optString("content", htmlContent), url = result.optString("url", post.url), sourcePostUrl = result.optString("url", post.sourcePostUrl), blogImported = true)
                             val idx = if (existing == null) -1 else games.indexOf(existing); if (idx >= 0) games[idx] = saved else games.add(0, saved)
-                            saveGames(); renderGames(); dialog.dismiss(); Toast.makeText(this, "Article published on Blogger", Toast.LENGTH_LONG).show()
+                            saveGames(); renderGames(); dialog.dismiss(); Toast.makeText(this, "تم نشر المقال على Blogger", Toast.LENGTH_LONG).show()
                         }
-                    } catch (e: Exception) { mainHandler.post { dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true; Toast.makeText(this, e.message ?: "Publishing failed", Toast.LENGTH_LONG).show() } }
+                    } catch (e: Exception) { mainHandler.post { dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true; Toast.makeText(this, e.message ?: "فشل نشر المقال", Toast.LENGTH_LONG).show() } }
                 }.start()
             }
         }
@@ -1314,15 +1317,15 @@ class MainActivity : Activity() {
     private fun deleteGame(game: Game) {
 
         AlertDialog.Builder(this)
-            .setTitle("DELETE GAME")
-            .setMessage("Do you want to delete ${game.name}?")
+            .setTitle("حذف المقال")
+            .setMessage("هل تريد حذف المقال ${game.name}؟")
             .setNegativeButton("CANCEL", null)
-            .setPositiveButton("DELETE") { _, _ ->
+            .setPositiveButton("حذف") { _, _ ->
                 if (!isAdminSession || bloggerBlogId.isBlank() || game.bloggerPostId.isBlank()) { Toast.makeText(this, "Admin session and Blogger post ID required", Toast.LENGTH_LONG).show(); return@setPositiveButton }
                 Thread { try {
                     bloggerRequest("DELETE", "blogs/$bloggerBlogId/posts/${game.bloggerPostId}")
-                    mainHandler.post { games.remove(game); if (game.coverLocalPath.isNotBlank()) File(game.coverLocalPath).delete(); saveGames(); renderGames(); Toast.makeText(this, "Deleted from Blogger", Toast.LENGTH_SHORT).show() }
-                } catch (e: Exception) { mainHandler.post { Toast.makeText(this, e.message ?: "Blogger delete failed", Toast.LENGTH_LONG).show() } } }.start()
+                    mainHandler.post { games.remove(game); if (game.coverLocalPath.isNotBlank()) File(game.coverLocalPath).delete(); saveGames(); renderGames(); Toast.makeText(this, "تم الحذف من Blogger", Toast.LENGTH_SHORT).show() }
+                } catch (e: Exception) { mainHandler.post { Toast.makeText(this, e.message ?: "تعذر حذف المقال من Blogger", Toast.LENGTH_LONG).show() } } }.start()
             }
             .show()
     }
@@ -1332,7 +1335,7 @@ class MainActivity : Activity() {
         if (link.isBlank()) {
             Toast.makeText(
                 this,
-                "No link available",
+                "لا يوجد رابط متاح",
                 Toast.LENGTH_SHORT
             ).show()
             return
@@ -1348,7 +1351,7 @@ class MainActivity : Activity() {
         } catch (_: Exception) {
             Toast.makeText(
                 this,
-                "Cannot open this link",
+                "تعذر فتح هذا الرابط",
                 Toast.LENGTH_SHORT
             ).show()
         }
