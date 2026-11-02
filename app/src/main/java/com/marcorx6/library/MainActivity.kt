@@ -186,6 +186,11 @@ class MainActivity : Activity() {
     private fun notificationPreferences() =
         getSharedPreferences("notification_settings", MODE_PRIVATE)
 
+    override fun onDestroy() {
+        globalStatsListener?.remove()
+        super.onDestroy()
+    }
+
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -1898,6 +1903,22 @@ class MainActivity : Activity() {
         }
         root.addView(ratingRow)
         root.addView(ratingSummary)
+        firebaseUserId?.let { uid ->
+            firestore.collection("articles").document(cloudArticleId(game))
+                .collection("ratings").document(uid).get()
+                .addOnSuccessListener { document ->
+                    val remoteScore = (document.getLong("score") ?: 0L).toInt()
+                    if (remoteScore in 1..5 && !isFinishing) runOnUiThread {
+                        ratingPrefs.edit().putInt(ratingKey, remoteScore).apply()
+                        for (index in 1..5) {
+                            val starView = ratingRow.getChildAt(index) as? TextView ?: continue
+                            starView.text = if (index <= remoteScore) "★" else "☆"
+                            starView.setTextColor(if (index <= remoteScore) Color.rgb(255, 190, 75) else gray)
+                        }
+                        ratingSummary.text = "تقييمك السابق: " + remoteScore + " / 5"
+                    }
+                }
+        }
 
         val bottom = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
