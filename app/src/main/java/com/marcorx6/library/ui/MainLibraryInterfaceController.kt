@@ -49,7 +49,7 @@ internal class MainLibraryInterfaceController(
 ) {
     private val mainHandler = Handler(Looper.getMainLooper())
     private var searchRenderRunnable: Runnable? = null
-    private lateinit var search: EditText
+    private lateinit var search: AutoCompleteTextView
     private lateinit var filters: LinearLayout
     private lateinit var countText: TextView
     private lateinit var gameList: LinearLayout
@@ -59,6 +59,8 @@ internal class MainLibraryInterfaceController(
     private var sortMode: String
         get() = getSortMode()
         set(value) = setSortMode(value)
+
+    private fun isDarkMode(): Boolean = darkMode()
 
     private fun makeText(value: String, size: Float, color: Int, bold: Boolean = false): TextView =
         createText(value, size, color, bold)
