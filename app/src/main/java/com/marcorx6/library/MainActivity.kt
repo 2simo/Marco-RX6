@@ -2140,7 +2140,7 @@ class MainActivity : Activity() {
                 getSharedPreferences("app_settings", MODE_PRIVATE).edit().putBoolean("setup_completed", true).apply()
             }
             .setCancelable(false)
-            .create().also { styleAlertDialog(it) }.show()
+            .create().apply { setOnShowListener { styleAlertDialog(this) } }.show()
     }
 
     private var activeProfileDialog: AlertDialog? = null
