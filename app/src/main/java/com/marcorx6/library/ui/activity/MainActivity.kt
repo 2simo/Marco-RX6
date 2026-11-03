@@ -1,6 +1,7 @@
 
 package com.marcorx6.library.ui.activity
 
+import com.marcorx6.library.ui.ActivityServicesRuntimeFeature
 import com.marcorx6.library.ui.AccentPalette
 import com.marcorx6.library.ui.AppearanceRuntimeFeature
 import com.marcorx6.library.ui.AppearancePreferencesStore
@@ -11,7 +12,6 @@ import com.marcorx6.library.ui.BloggerPostFeature
 import com.marcorx6.library.ui.BloggerRuntimeFeature
 import com.marcorx6.library.ui.CoverRuntimeFeature
 import com.marcorx6.library.ui.CoverUploadRuntimeFeature
-import com.marcorx6.library.ui.DownloadFeature
 import com.marcorx6.library.ui.FirstRunSetupFeature
 import com.marcorx6.library.ui.GameExperienceRuntimeFeature
 import com.marcorx6.library.ui.GameImportMerger
@@ -21,18 +21,14 @@ import com.marcorx6.library.ui.GoogleAccountRuntimeFeature
 import com.marcorx6.library.ui.LanguageFeature
 import com.marcorx6.library.ui.MotionPreferencesApplier
 import com.marcorx6.library.ui.MainLibraryRuntimeFeature
-import com.marcorx6.library.ui.NotificationsFeature
 import com.marcorx6.library.ui.OfflineCatalogLoader
 import com.marcorx6.library.ui.PlatformCorrectionController
 import com.marcorx6.library.ui.ProfileFeature
 import com.marcorx6.library.ui.ProfilePreferences
 import com.marcorx6.library.ui.SideMenuFeature
 import com.marcorx6.library.ui.StartupExperienceController
-import com.marcorx6.library.ui.SystemBarAppearanceController
-import com.marcorx6.library.ui.UiThreadDispatcher
 import com.marcorx6.library.ui.UiToolkitFeature
 import com.marcorx6.library.ui.UserExperienceRuntimeFeature
-import java.util.concurrent.Executors
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import com.marcorx6.library.data.Game
@@ -51,18 +47,14 @@ class MainActivity : ComponentActivity() {
 
     private val runtimeState = MainActivityRuntimeState()
 
-    private val downloadFeature by lazy {
-        DownloadFeature(this, ::styleAlertDialog)
+    private val activityServicesRuntimeFeature by lazy {
+        ActivityServicesRuntimeFeature(this, ::styleAlertDialog, ::isDarkMode)
     }
 
     private fun appearancePreferences() = AppearancePreferencesStore.appearance(this)
     private fun isDarkMode() = AppearancePreferencesStore.isDarkMode(appearancePreferences())
 
-    private val systemBarAppearanceController by lazy {
-        SystemBarAppearanceController(this, ::isDarkMode)
-    }
-
-    private fun applySystemBarAppearance() = systemBarAppearanceController.apply()
+    private fun applySystemBarAppearance() = activityServicesRuntimeFeature.applySystemBarAppearance()
     private fun accentColor(): Int = AccentPalette.color(appearancePreferences().getString("accent", "blue"))
     private val bg: Int get() = if (isDarkMode()) Color.rgb(7, 13, 25) else Color.rgb(245, 247, 251)
     private val panel: Int get() = if (isDarkMode()) Color.rgb(16, 27, 45) else Color.rgb(229, 234, 243)
@@ -78,10 +70,9 @@ class MainActivity : ComponentActivity() {
     }
 
     private val libraryViewState = MainLibraryViewState()
-    private val uiThreadDispatcher by lazy { UiThreadDispatcher(this) }
-    private fun postToUi(action: () -> Unit) = uiThreadDispatcher.post(action)
+    private fun postToUi(action: () -> Unit) = activityServicesRuntimeFeature.postToUi(action)
 
-    private val ioExecutor = Executors.newCachedThreadPool()
+    private val ioExecutor get() = activityServicesRuntimeFeature.ioExecutor
     private val PICK_IMAGE_REQUEST = 1001
     private val coverFeature by lazy {
         CoverUploadRuntimeFeature(
@@ -153,10 +144,10 @@ class MainActivity : ComponentActivity() {
             onAvatarError = { message ->
                 Toast.makeText(this, "تعذر حفظ الصورة: $message", Toast.LENGTH_LONG).show()
             },
-            isNotificationsEnabled = notificationFeature::isEnabled,
-            setNotificationsEnabled = notificationFeature::setEnabled,
-            scheduleNotifications = notificationFeature::schedule,
-            cancelNotifications = notificationFeature::cancel,
+            isNotificationsEnabled = activityServicesRuntimeFeature::areNotificationsEnabled,
+            setNotificationsEnabled = activityServicesRuntimeFeature::setNotificationsEnabled,
+            scheduleNotifications = activityServicesRuntimeFeature::scheduleNotifications,
+            cancelNotifications = activityServicesRuntimeFeature::cancelNotifications,
             requestNotificationPermission = ::requestNotificationPermissionIfNeeded,
             onPlatformSelected = { libraryViewState.selected = it },
             recreateActivity = ::recreate,
@@ -258,7 +249,7 @@ class MainActivity : ComponentActivity() {
 
         applySystemBarAppearance()
 
-        notificationFeature.createChannel()
+        activityServicesRuntimeFeature.createNotificationChannel()
         loadGames()
         restoreAdminSession()
         createInterface()
@@ -268,8 +259,8 @@ class MainActivity : ComponentActivity() {
         val setupCompleted = getSharedPreferences("app_settings", MODE_PRIVATE)
             .getBoolean("setup_completed", false)
         if (setupCompleted) {
-            if (notificationFeature.isEnabled()) {
-                notificationFeature.schedule()
+            if (activityServicesRuntimeFeature.areNotificationsEnabled()) {
+                activityServicesRuntimeFeature.scheduleNotifications()
                 requestNotificationPermissionIfNeeded()
             }
             syncFromBlog(showResult = false)
@@ -287,7 +278,7 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         userExperienceRuntimeFeature.dismiss()
         libraryRuntimeFeature.dispose()
-        ioExecutor.shutdownNow()
+        activityServicesRuntimeFeature.shutdown()
         if (coverRuntimeFeatureCreated) coverRuntimeFeature.close()
         super.onDestroy()
     }
@@ -309,15 +300,6 @@ class MainActivity : ComponentActivity() {
 
 
     private fun bloggerHtml(game: Game): String = BloggerHtmlBuilder.build(game)
-
-    private val notificationFeature by lazy {
-        NotificationsFeature(this, ::styleAlertDialog)
-    }
-
-    private fun requestNotificationPermissionIfNeeded() =
-        notificationFeature.requestPermissionIfNeeded()
-
-    private fun showNotificationSettings() = notificationFeature.showSettings()
 
     private val appearanceRuntimeFeature by lazy {
         AppearanceRuntimeFeature(
@@ -485,17 +467,17 @@ class MainActivity : ComponentActivity() {
         hintedMimeType: String = "",
         referrer: String = ""
     ) {
-        downloadFeature.enqueueGameDownload(
+        activityServicesRuntimeFeature.enqueueGameDownload(
             link, title, userAgent, contentDisposition, hintedMimeType, referrer
         )
     }
 
     private fun showDownloadManager() {
-        downloadFeature.showManager()
+        activityServicesRuntimeFeature.showDownloadManager()
     }
 
     private fun openGameLink(link: String) {
-        downloadFeature.openGameLink(link)
+        activityServicesRuntimeFeature.openGameLink(link)
     }
 
     private fun deleteCoverFileIfUnused(path: String) =
