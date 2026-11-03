@@ -1,6 +1,7 @@
 package com.marcorx6.library.ui
 
-import android.app.Activity
+import androidx.activity.ComponentActivity
+import android.widget.EditText
 import android.graphics.drawable.GradientDrawable
 import android.widget.ImageView
 import android.widget.TextView
@@ -10,13 +11,14 @@ import java.util.concurrent.Executor
 
 /** Composition root for Blogger post composition, labels, saving, and deletion UI. */
 internal class BloggerPostFeature(
-    activity: Activity,
+    activity: ComponentActivity,
     services: BloggerServices,
     gameLibraryStore: GameLibraryStore,
     isAdminSession: () -> Boolean,
     bloggerBlogId: () -> String,
     dp: (Int) -> Int,
     bg: () -> Int,
+    isDarkMode: () -> Boolean,
     panel: () -> Int,
     white: () -> Int,
     gray: () -> Int,
@@ -29,7 +31,7 @@ internal class BloggerPostFeature(
     postToUi: (() -> Unit) -> Unit,
     styleAlertDialog: (android.app.AlertDialog) -> Unit,
     applyUnifiedSkin: (android.view.View) -> Unit,
-    setCoverFields: (String, ImageView) -> Unit,
+    setCoverFields: (EditText, ImageView) -> Unit,
     pendingCoverLocalPath: () -> String,
     setPendingCoverLocalPath: (String) -> Unit,
     pendingCoverPublicUrl: () -> String,
@@ -70,7 +72,7 @@ internal class BloggerPostFeature(
     private val previewFactory = BloggerArticlePreviewFactory(
         activity = activity,
         backgroundColor = bg,
-        isDarkMode = { bg() == android.graphics.Color.BLACK || bg() == android.graphics.Color.rgb(7, 13, 25) }
+        isDarkMode = isDarkMode
     )
 
     private val composer = BloggerPostComposerController(
