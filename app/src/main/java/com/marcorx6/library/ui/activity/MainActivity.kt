@@ -507,8 +507,8 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private val gameDetailsFeature by lazy {
-        GameDetailsFeature(
+    private val gameExperienceFeature by lazy {
+        GameExperienceRuntimeFeature(
             activity = this,
             games = games,
             bg = { bg },
@@ -523,7 +523,7 @@ class MainActivity : ComponentActivity() {
             red = { red },
             gray = { gray },
             panel = { panel },
-            tr = ::tr,
+            translate = ::tr,
             loadCover = ::loadCover,
             saveGames = ::saveGames,
             renderGames = ::renderGames,
@@ -536,37 +536,19 @@ class MainActivity : ComponentActivity() {
             showGameDialog = { showGameDialog(it) },
             deleteGame = ::deleteGame,
             applyMotionPreferences = ::applyMotionPreferences,
-            applyUnifiedSkin = ::applyUnifiedSkin
+            applyUnifiedSkin = ::applyUnifiedSkin,
+            showDetailsForDay = ::showDetails
         )
     }
 
-    private fun showDetails(game: Game) = gameDetailsFeature.show(game)
-
+    private fun showDetails(game: Game) = gameExperienceFeature.showDetails(game)
 
     private fun showGameDialog(existing: Game? = null) =
         bloggerPostFeature.showComposer(existing)
 
     private fun deleteGame(game: Game) = bloggerPostFeature.delete(game)
 
-    private val gameOfTheDayController by lazy {
-        GameOfTheDayController(
-            activity = this,
-            games = { games },
-            dp = ::dp,
-            rounded = ::rounded,
-            panel = { panel },
-            white = { white },
-            red = { red },
-            gray = { gray },
-            makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
-            loadCover = ::loadCover,
-            showDetails = ::showDetails,
-            openGameLink = ::openGameLink,
-            styleAlertDialog = ::styleAlertDialog
-        )
-    }
-
-    private fun showGameOfTheDay() = gameOfTheDayController.show()
+    private fun showGameOfTheDay() = gameExperienceFeature.showGameOfTheDay()
 
     private fun enqueueGameDownload(
         link: String,
