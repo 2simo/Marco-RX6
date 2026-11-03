@@ -55,7 +55,7 @@ internal class GameLibraryRenderer(
                     })
                     return
                 }
-                val heading = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+                val heading = LinearLayout(activity).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
                 val title = when (selected) {
                     "ALL" -> tr("اكتشف الألعاب"); "FAVORITES" -> tr("المفضلة"); "BLOG" -> tr("المدونة")
                     "WANT_TO_PLAY" -> "أريد لعبها"; "PLAYING" -> "ألعبها حالياً"; "COMPLETED" -> "أنهيتها"
@@ -65,15 +65,15 @@ internal class GameLibraryRenderer(
                 heading.addView(makeText(sorted.size.toString() + " " + tr("لعبة"), 10f, red, true))
                 gameList.addView(heading, LinearLayout.LayoutParams(-1, -2).apply { setMargins(dp(2), dp(10), dp(2), dp(12)) })
                 for (index in sorted.indices step 3) {
-                    val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.TOP }
+                    val row = LinearLayout(activity).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.TOP }
                     for (offset in 0..2) {
                         val itemIndex = index + offset
                         if (itemIndex >= sorted.size) {
-                            row.addView(View(this), LinearLayout.LayoutParams(0, 1, 1f).apply { marginStart = dp(5); marginEnd = dp(5) })
+                            row.addView(View(activity), LinearLayout.LayoutParams(0, 1, 1f).apply { marginStart = dp(5); marginEnd = dp(5) })
                             continue
                         }
                         val game = sorted[itemIndex]
-                        val card = LinearLayout(this).apply {
+                        val card = LinearLayout(activity).apply {
                             orientation = LinearLayout.VERTICAL
                             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
                                 if (isDarkMode()) intArrayOf(Color.rgb(20, 34, 57), Color.rgb(11, 20, 36)) else intArrayOf(Color.WHITE, Color.rgb(235, 241, 250))).apply {
@@ -83,8 +83,8 @@ internal class GameLibraryRenderer(
                             setPadding(dp(6), dp(6), dp(6), dp(8)); elevation = dp(2).toFloat(); isClickable = true; isFocusable = true
                             setOnClickListener { showDetails(game) }
                         }
-                        val imageFrame = FrameLayout(this).apply { clipToOutline = true; background = rounded(bg, 12) }
-                        val image = ImageView(this).apply { scaleType = ImageView.ScaleType.CENTER_CROP; contentDescription = game.name }
+                        val imageFrame = FrameLayout(activity).apply { clipToOutline = true; background = rounded(bg, 12) }
+                        val image = ImageView(activity).apply { scaleType = ImageView.ScaleType.CENTER_CROP; contentDescription = game.name }
                         imageFrame.addView(image, FrameLayout.LayoutParams(-1, -1))
                         if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) loadCover(image, game.coverLocalPath, game.coverUrl)
                         else { image.setImageResource(android.R.drawable.ic_menu_gallery); image.scaleType = ImageView.ScaleType.CENTER_INSIDE }
