@@ -944,9 +944,10 @@ class MainActivity : Activity() {
             gravity = Gravity.CENTER
             setTextColor(silver)
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(75, 83, 105), Color.rgb(25, 30, 45), Color.rgb(11, 14, 24))).apply {
+                if (isDarkMode()) intArrayOf(Color.rgb(75, 83, 105), Color.rgb(25, 30, 45), Color.rgb(11, 14, 24))
+                else intArrayOf(Color.WHITE, Color.rgb(235, 239, 247), Color.rgb(222, 229, 241))).apply {
                 cornerRadius = dp(17).toFloat()
-                setStroke(dp(1), Color.rgb(93, 105, 130))
+                setStroke(dp(1), if (isDarkMode()) Color.rgb(93, 105, 130) else Color.rgb(190, 199, 215))
             }
             setPadding(dp(15), dp(10), dp(15), dp(10))
             contentDescription = "القائمة الجانبية"
@@ -2325,8 +2326,8 @@ class MainActivity : Activity() {
                 gravity = Gravity.CENTER_VERTICAL
                 setPadding(dp(2), dp(9), dp(2), dp(10))
             }
-            heading.addView(makeText(title, 17f, Color.rgb(226, 232, 242), true), LinearLayout.LayoutParams(0, -2, 1f))
-            heading.addView(makeText(posts.size.toString(), 10f, Color.rgb(169, 139, 255), true))
+            heading.addView(makeText(title, 17f, if (isDarkMode()) Color.rgb(226, 232, 242) else Color.rgb(43, 52, 68), true), LinearLayout.LayoutParams(0, -2, 1f))
+            heading.addView(makeText(posts.size.toString(), 10f, if (isDarkMode()) Color.rgb(169, 139, 255) else red, true))
             gameList.addView(heading, LinearLayout.LayoutParams(-1, -2))
 
             val horizontal = HorizontalScrollView(this).apply {
