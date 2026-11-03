@@ -39,7 +39,7 @@ internal class UserExperienceRuntimeFeature(
     gray: () -> Int,
     showLanguagePicker: () -> Unit,
     showNotificationSettings: () -> Unit,
-    launchAvatarPicker: (Intent) -> Unit,
+    private val launchAvatarPicker: (Intent) -> Unit,
     styleAlertDialog: (android.app.AlertDialog) -> Unit,
     applyUnifiedSkin: (View) -> Unit,
     onAvatarSaved: () -> Unit,
