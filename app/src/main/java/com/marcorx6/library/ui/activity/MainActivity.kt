@@ -172,9 +172,9 @@ class MainActivity : ComponentActivity() {
                 coverFeature.state.preview = preview
             },
             pendingCoverLocalPath = { coverFeature.state.pendingLocalPath },
-            setPendingCoverLocalPath = { coverUploadState.pendingLocalPath = it },
+            setPendingCoverLocalPath = { coverFeature.state.pendingLocalPath = it },
             pendingCoverPublicUrl = { coverFeature.state.pendingPublicUrl },
-            setPendingCoverPublicUrl = { coverUploadState.pendingPublicUrl = it },
+            setPendingCoverPublicUrl = { coverFeature.state.pendingPublicUrl = it },
             coverUploadInProgress = { coverFeature.state.inProgress },
             loadCover = coverRuntimeFeature::load,
             chooseCover = ::chooseCover,
