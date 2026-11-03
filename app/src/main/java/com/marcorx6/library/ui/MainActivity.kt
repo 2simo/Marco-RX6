@@ -84,13 +84,7 @@ class MainActivity : ComponentActivity() {
             window.isNavigationBarContrastEnforced = false
         }
     }
-    private fun accentColor(): Int = when (appearancePreferences().getString("accent", "blue")) {
-        "blue" -> Color.rgb(42, 145, 255)
-        "green" -> Color.rgb(35, 170, 125)
-        "gold" -> Color.rgb(205, 157, 70)
-        "rose" -> Color.rgb(215, 90, 135)
-        else -> Color.rgb(42, 145, 255)
-    }
+    private fun accentColor(): Int = AccentPalette.color(appearancePreferences().getString("accent", "blue"))
     private val bg: Int get() = if (isDarkMode()) Color.rgb(7, 13, 25) else Color.rgb(245, 247, 251)
     private val panel: Int get() = if (isDarkMode()) Color.rgb(16, 27, 45) else Color.rgb(229, 234, 243)
     private val red: Int get() = accentColor()
