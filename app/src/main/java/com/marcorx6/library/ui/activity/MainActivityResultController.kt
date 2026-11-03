@@ -1,5 +1,4 @@
-package com.marcorx6.library.ui
-
+package com.marcorx6.library.ui.activity
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
