@@ -11,4 +11,6 @@ internal object AccentPalette {
         "rose" -> Color.rgb(215, 90, 135)
         else -> Color.rgb(42, 145, 255)
     }
+
+    fun foreground(): Int = Color.WHITE
 }

@@ -89,7 +89,7 @@ class MainActivity : ComponentActivity() {
     private val panel: Int get() = if (isDarkMode()) Color.rgb(16, 27, 45) else Color.rgb(229, 234, 243)
     private val red: Int get() = accentColor()
     private val white: Int get() = if (isDarkMode()) Color.WHITE else Color.rgb(24, 29, 42)
-    private fun accentForeground(): Int = Color.WHITE
+    private fun accentForeground(): Int = AccentPalette.foreground()
     private val gray: Int get() = if (isDarkMode()) Color.LTGRAY else Color.rgb(86, 96, 115)
     private val platforms = listOf("الكل", "BLOG", "FAVORITES", "PS2", "PS3", "PS4")
     private val games = mutableListOf<Game>()
