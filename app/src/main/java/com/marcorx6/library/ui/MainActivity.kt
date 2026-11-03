@@ -13,6 +13,7 @@ import com.marcorx6.library.data.GameLibraryManager
 import com.marcorx6.library.data.GameLibraryStore
 import com.marcorx6.library.data.BackupCodec
 import com.marcorx6.library.data.BackupFileRepository
+import com.marcorx6.library.data.ProfileAvatarRepository
 import com.marcorx6.library.data.BloggerPostRepository
 import com.marcorx6.library.data.DownloadRepository
 import com.marcorx6.library.data.DownloadStartResult
@@ -51,7 +52,6 @@ import android.widget.*
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
-import java.io.FileOutputStream
 import java.util.Locale
 import java.util.Calendar
 import java.util.regex.Pattern
@@ -65,6 +65,7 @@ class MainActivity : ComponentActivity() {
     private val notificationScheduler by lazy { BlogNotificationScheduler(applicationContext) }
     private val downloadRepository by lazy { DownloadRepository(applicationContext) }
     private val backupFileRepository by lazy { BackupFileRepository(contentResolver) }
+    private val profileAvatarRepository by lazy { ProfileAvatarRepository(contentResolver, filesDir) }
 
     private fun appearancePreferences() = getSharedPreferences("appearance_settings", MODE_PRIVATE)
     private fun isDarkMode() = appearancePreferences().getBoolean("dark_mode", true)
@@ -1366,13 +1367,7 @@ class MainActivity : ComponentActivity() {
             val uri = data?.data ?: return
             Thread {
                 try {
-                    val folder = File(filesDir, "profile")
-                    if (!folder.exists()) folder.mkdirs()
-                    val destination = File(folder, "avatar.img")
-                    contentResolver.openInputStream(uri).use { input ->
-                        requireNotNull(input) { "تعذرت قراءة الصورة" }
-                        FileOutputStream(destination).use { output -> input.copyTo(output) }
-                    }
+                    val destination = profileAvatarRepository.save(uri)
                     profilePreferences().edit().putString("avatar_path", destination.absolutePath).apply()
                     mainHandler.post {
                         Toast.makeText(this, "تم تحديث صورة الملف الشخصي", Toast.LENGTH_SHORT).show()
