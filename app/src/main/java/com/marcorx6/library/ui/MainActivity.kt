@@ -127,15 +127,7 @@ class MainActivity : ComponentActivity() {
     private var isAdminSession = false
     private var bloggerBlogId = ""
     private var googleSignInClient: com.google.android.gms.auth.api.signin.GoogleSignInClient? = null
-    // App owner plus the two Blogger administrators approved by the owner.
-    // Blogger itself remains the authority: its API validates each signed-in account.
-    private val adminEmails = setOf(
-        "xpangwan@gmail.com",
-        "an9910106@gmail.com",
-        "slmankabos@gmail.com"
-    )
-    private fun isApprovedAdmin(email: String?): Boolean =
-        email?.trim()?.lowercase(Locale.ROOT) in adminEmails
+    private val bloggerApiClient by lazy { BloggerApiClient { googleBloggerToken() } }
     private val SIGN_IN_REQUEST = 1002
 
     private val googleSignInLauncher =
@@ -200,34 +192,69 @@ class MainActivity : ComponentActivity() {
         googleSignInClient = GoogleSignIn.getClient(this, options)
     }
     private fun restoreAdminSession() {
+        isAdminSession = false
+        refreshBloggerAccess()
+    }
+
+    private fun refreshBloggerAccess() {
         val account = GoogleSignIn.getLastSignedInAccount(this)
-        isAdminSession = isApprovedAdmin(account?.email)
+        val blogId = bloggerBlogId
+        if (account?.account == null || blogId.isBlank()) {
+            isAdminSession = false
+            return
+        }
+        isAdminSession = false
+        Thread {
+            val allowed = try {
+                bloggerApiClient.hasWriteAccess(blogId)
+            } catch (_: Exception) {
+                false
+            }
+            mainHandler.post {
+                val current = GoogleSignIn.getLastSignedInAccount(this)
+                if (bloggerBlogId == blogId && current?.id == account.id) {
+                    isAdminSession = allowed
+                    createInterface()
+                    if (!allowed) {
+                        Toast.makeText(
+                            this,
+                            "هذا الحساب لا يملك صلاحية النشر أو التعديل في مدونة Blogger",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            }
+        }.start()
     }
     private fun startGoogleSignIn() { googleSignInClient?.let { googleSignInLauncher.launch(it.signInIntent) } }
     private fun signOutAdmin() {
         googleSignInClient?.signOut()?.addOnCompleteListener { isAdminSession = false; createInterface() }
     }
+    private fun googleBloggerToken(): String {
+        val account = GoogleSignIn.getLastSignedInAccount(this)
+            ?: throw IllegalStateException("يرجى تسجيل الدخول بحساب Google")
+        val androidAccount = account.account
+            ?: throw IllegalStateException("بيانات حساب Google غير متاحة")
+        return GoogleAuthUtil.getToken(
+            applicationContext,
+            androidAccount,
+            "oauth2:https://www.googleapis.com/auth/blogger"
+        )
+    }
+
     private fun adminToken(): String {
-        val account = GoogleSignIn.getLastSignedInAccount(this) ?: throw IllegalStateException("يرجى تسجيل الدخول بحساب مسؤول المدونة")
-        if (!isApprovedAdmin(account.email)) throw SecurityException("حساب Google غير مخوّل")
-        val androidAccount = account.account ?: throw IllegalStateException("بيانات حساب Google غير متاحة")
-        return GoogleAuthUtil.getToken(applicationContext, androidAccount, "oauth2:https://www.googleapis.com/auth/blogger")
+        if (!isAdminSession) throw SecurityException("لم يتم التحقق من صلاحيات Blogger لهذا الحساب")
+        return googleBloggerToken()
     }
     private fun bloggerRequest(method: String, path: String, payload: JSONObject? = null): JSONObject {
-        val connection = URL("https://www.googleapis.com/blogger/v3/$path").openConnection() as HttpURLConnection
-        connection.requestMethod = method; connection.connectTimeout = 20000; connection.readTimeout = 25000
-        connection.setRequestProperty("Authorization", "Bearer ${adminToken()}"); connection.setRequestProperty("Accept", "application/json")
-        if (payload != null) { connection.doOutput = true; connection.setRequestProperty("Content-Type", "application/json; charset=utf-8"); connection.outputStream.use { it.write(payload.toString().toByteArray(Charsets.UTF_8)) } }
-        val code = connection.responseCode; val stream = if (code in 200..299) connection.inputStream else connection.errorStream
-        val body = stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty(); connection.disconnect()
-        if (code !in 200..299) { val message = try { JSONObject(body).optJSONObject("error")?.optString("message") ?: body } catch (_: Exception) { body }; throw IllegalStateException("خطأ في Blogger API ($code): $message") }
-        return if (body.isBlank()) JSONObject() else JSONObject(body)
+        if (!isAdminSession) throw SecurityException("لم يتم التحقق من صلاحيات Blogger لهذا الحساب")
+        return bloggerApiClient.request(method, path, payload)
     }
     private fun driveToken(): String {
         val account = GoogleSignIn.getLastSignedInAccount(this)
             ?: throw IllegalStateException("يرجى تسجيل الدخول بحساب المسؤول")
-        if (!isApprovedAdmin(account.email)) {
-            throw SecurityException("حساب Google غير مخوّل لرفع الأغلفة")
+        if (!isAdminSession) {
+            throw SecurityException("يلزم التحقق من صلاحيات Blogger قبل رفع الأغلفة")
         }
         val androidAccount = account.account
             ?: throw IllegalStateException("بيانات حساب Google غير متاحة")
@@ -1404,6 +1431,7 @@ class MainActivity : ComponentActivity() {
                 mainHandler.post {
                     val result = mergeImportedGames(imported)
                     isSyncing = false
+                    refreshBloggerAccess()
                     renderGames()
 
                     if (showResult) {
@@ -1954,10 +1982,10 @@ class MainActivity : ComponentActivity() {
         if (requestCode == SIGN_IN_REQUEST && resultCode == RESULT_OK) {
             try {
                 val account = GoogleSignIn.getSignedInAccountFromIntent(data).getResult(com.google.android.gms.common.api.ApiException::class.java)
-                isAdminSession = isApprovedAdmin(account.email)
-                if (!isAdminSession) googleSignInClient?.signOut()
+                isAdminSession = false
                 createInterface()
-                Toast.makeText(this, if (isAdminSession) "تم ربط حساب Google المسؤول" else "هذا الحساب لا يملك صلاحية المسؤول. يمكنك المتابعة كزائر.", Toast.LENGTH_LONG).show()
+                refreshBloggerAccess()
+                Toast.makeText(this, "تم ربط حساب Google؛ جارٍ التحقق من صلاحيات Blogger…", Toast.LENGTH_LONG).show()
             } catch (e: Exception) { isAdminSession = false; createInterface(); Toast.makeText(this, "فشل تسجيل الدخول إلى Google: ${e.message}", Toast.LENGTH_LONG).show() }
             return
         }
