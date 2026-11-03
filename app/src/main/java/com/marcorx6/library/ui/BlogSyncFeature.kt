@@ -1,15 +1,16 @@
 package com.marcorx6.library.ui
 
+import android.content.Context
 import com.marcorx6.library.data.Game
 import com.marcorx6.library.network.BloggerFeedClient
 import java.util.concurrent.Executor
 
 /** Composes Blogger feed retrieval, merge, access refresh, and library refresh. */
 internal class BlogSyncFeature(
+    context: Context,
     executor: Executor,
     isSyncing: () -> Boolean,
     setSyncing: (Boolean) -> Unit,
-    blogId: () -> String,
     feedUrl: String,
     postToUi: (() -> Unit) -> Unit,
     merge: (List<Game>) -> Pair<Int, Int>,
@@ -18,6 +19,7 @@ internal class BlogSyncFeature(
     renderGames: () -> Unit
 ) {
     private val controller = BlogSyncController(
+        context = context,
         executor = executor,
         isSyncing = isSyncing,
         setSyncing = setSyncing,
