@@ -11,6 +11,8 @@ import com.marcorx6.library.data.Game
 import com.marcorx6.library.data.GameRepository
 import com.marcorx6.library.data.BackupCodec
 import com.marcorx6.library.data.BloggerPostRepository
+import com.marcorx6.library.data.DownloadRepository
+import com.marcorx6.library.data.DownloadStartResult
 import com.marcorx6.library.network.SecureUrlPolicy
 import com.marcorx6.library.network.BloggerApiClient
 import com.marcorx6.library.network.BloggerFeedClient
@@ -61,6 +63,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 class MainActivity : ComponentActivity() {
 
     private val notificationScheduler by lazy { BlogNotificationScheduler(applicationContext) }
+    private val downloadRepository by lazy { DownloadRepository(applicationContext) }
 
     private fun appearancePreferences() = getSharedPreferences("appearance_settings", MODE_PRIVATE)
     private fun isDarkMode() = appearancePreferences().getBoolean("dark_mode", true)
@@ -2466,59 +2469,6 @@ class MainActivity : ComponentActivity() {
             .show()
     }
 
-    private data class DownloadProbe(
-        val finalUrl: String,
-        val mimeType: String,
-        val contentDisposition: String,
-        val isDirectFile: Boolean
-    )
-
-    // Resolve redirects and verify the response is a file before handing it to Android DownloadManager.
-    private fun inspectDownloadUrl(
-        link: String,
-        userAgent: String,
-        hintedDisposition: String,
-        hintedMimeType: String
-    ): DownloadProbe {
-        val connection = (URL(link).openConnection() as HttpURLConnection).apply {
-            instanceFollowRedirects = true
-            connectTimeout = 12000
-            readTimeout = 12000
-            requestMethod = "GET"
-            setRequestProperty("Range", "bytes=0-0")
-            if (userAgent.isNotBlank()) setRequestProperty("User-Agent", userAgent)
-            CookieManager.getInstance().getCookie(link)?.takeIf { it.isNotBlank() }?.let {
-                setRequestProperty("Cookie", it)
-            }
-        }
-        try {
-            val code = connection.responseCode
-            val mime = (connection.contentType ?: hintedMimeType)
-                .substringBefore(';').trim().lowercase(Locale.ROOT)
-            val disposition = connection.getHeaderField("Content-Disposition")
-                ?: hintedDisposition
-            val finalUrl = connection.url.toString()
-            if (code !in 200..299) {
-                throw IllegalStateException("الخادم رفض رابط التنزيل (HTTP $code)")
-            }
-            if (mime == "text/html" || mime == "application/xhtml+xml") {
-                throw IllegalStateException("هذا الرابط يفتح صفحة HTML وليس ملفاً مباشراً. افتح صفحة التحميل وابحث عن رابط الملف نفسه.")
-            }
-            val path = Uri.parse(finalUrl).lastPathSegment.orEmpty().lowercase(Locale.ROOT)
-            val hasFileExtension = Regex("""\.(apk|zip|7z|rar|iso|pkg|bin|cue|chd|img|pbp|cso|nsp|xci|pdf|mp4|mp3)$""").containsMatchIn(path)
-            val isAttachment = disposition.contains("attachment", ignoreCase = true)
-            val isBinary = mime == "application/octet-stream" ||
-                mime.startsWith("application/") ||
-                mime.startsWith("video/") || mime.startsWith("audio/")
-            // HTML pages and ambiguous responses belong in the external browser.
-            val isHtml = mime == "text/html" || mime == "application/xhtml+xml"
-            val isDirectFile = !isHtml && (isAttachment || isBinary || hasFileExtension)
-            return DownloadProbe(finalUrl, mime, disposition, isDirectFile)
-        } finally {
-            connection.disconnect()
-        }
-    }
-
     private fun enqueueGameDownload(
         link: String,
         title: String,
@@ -2533,76 +2483,37 @@ class MainActivity : ComponentActivity() {
             return
         }
         Toast.makeText(this, "جارٍ التحقق من رابط الملف…", Toast.LENGTH_SHORT).show()
-        Thread {
-            try {
-                val probe = inspectDownloadUrl(secureLink, userAgent, contentDisposition, hintedMimeType)
-                if (!probe.isDirectFile) {
-                    mainHandler.post {
-                        Toast.makeText(
-                            this,
-                            "هذا رابط صفحة أو تعذّر التأكد أنه ملف مباشر؛ سيتم فتحه في المتصفح",
-                            Toast.LENGTH_LONG
-                        ).show()
-                        openGameLink(probe.finalUrl)
+        downloadRepository.enqueue(
+            secureLink, title, userAgent, contentDisposition, hintedMimeType, referrer
+        ) { result ->
+            mainHandler.post {
+                when (result) {
+                    is DownloadStartResult.Enqueued ->
+                        Toast.makeText(this, "تم التحقق من الملف وإضافته إلى مدير التنزيلات", Toast.LENGTH_LONG).show()
+                    is DownloadStartResult.OpenInBrowser -> {
+                        Toast.makeText(this, "هذا رابط صفحة أو تعذّر التأكد أنه ملف مباشر؛ سيتم فتحه في المتصفح", Toast.LENGTH_LONG).show()
+                        openGameLink(result.finalUrl)
                     }
-                    return@Thread
-                }
-                if (!probe.finalUrl.startsWith("https://", ignoreCase = true)) {
-                    throw SecurityException("رابط التحويل النهائي لا يستخدم HTTPS؛ تم إيقاف التنزيل لحماية بياناتك")
-                }
-                val request = DownloadManager.Request(Uri.parse(probe.finalUrl))
-                    .setTitle(title.ifBlank { "MARCO RX6" })
-                    .setDescription("تنزيل ملف عبر MARCO RX6")
-                    .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                    .setAllowedOverMetered(true)
-                    .setAllowedOverRoaming(false)
-                if (probe.mimeType.isNotBlank()) request.setMimeType(probe.mimeType)
-                if (userAgent.isNotBlank()) request.addRequestHeader("User-Agent", userAgent)
-                if (Uri.parse(secureLink).host.equals(Uri.parse(probe.finalUrl).host, ignoreCase = true)) {
-                    CookieManager.getInstance().getCookie(probe.finalUrl)?.takeIf { it.isNotBlank() }?.let {
-                        request.addRequestHeader("Cookie", it)
-                    }
-                }
-                if (referrer.isNotBlank()) request.addRequestHeader("Referer", referrer)
-                val manager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
-                manager.enqueue(request)
-                mainHandler.post {
-                    Toast.makeText(this, "تم التحقق من الملف وإضافته إلى مدير التنزيلات", Toast.LENGTH_LONG).show()
-                }
-            } catch (e: Exception) {
-                mainHandler.post {
-                    Toast.makeText(this, e.message ?: "تعذر بدء تنزيل الملف", Toast.LENGTH_LONG).show()
+                    is DownloadStartResult.Failed ->
+                        Toast.makeText(this, result.message, Toast.LENGTH_LONG).show()
                 }
             }
-        }.start()
+        }
     }
 
     private fun showDownloadManager() {
-        val manager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
-        val query = DownloadManager.Query().setFilterByStatus(
-            DownloadManager.STATUS_PENDING or DownloadManager.STATUS_RUNNING or
-                DownloadManager.STATUS_PAUSED or DownloadManager.STATUS_SUCCESSFUL or
-                DownloadManager.STATUS_FAILED
-        )
-        val entries = mutableListOf<String>()
-        try {
-            manager.query(query)?.use { cursor ->
-                while (cursor.moveToNext()) {
-                    val title = cursor.getString(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TITLE))
-                    val status = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
-                    val downloaded = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
-                    val total = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
-                    val statusText = when (status) {
-                        DownloadManager.STATUS_PENDING -> "في الانتظار"
-                        DownloadManager.STATUS_RUNNING -> "قيد التنزيل"
-                        DownloadManager.STATUS_PAUSED -> "متوقف مؤقتاً"
-                        DownloadManager.STATUS_SUCCESSFUL -> "اكتمل"
-                        DownloadManager.STATUS_FAILED -> "فشل"
-                        else -> "غير معروف"
-                    }
-                    val progress = if (total > 0L) " • ${(downloaded * 100L / total).coerceIn(0L, 100L)}%" else ""
-                    entries.add("$title\n$statusText$progress")
+        val entries = try {
+            downloadRepository.getDownloads().map { item ->
+                val statusText = when (item.status) {
+                    DownloadManager.STATUS_PENDING -> "في الانتظار"
+                    DownloadManager.STATUS_RUNNING -> "قيد التنزيل"
+                    DownloadManager.STATUS_PAUSED -> "متوقف مؤقتاً"
+                    DownloadManager.STATUS_SUCCESSFUL -> "اكتمل"
+                    DownloadManager.STATUS_FAILED -> "فشل"
+                    else -> "غير معروف"
                 }
+                val progress = if (item.totalBytes > 0L) " • ${(item.downloadedBytes * 100L / item.totalBytes).coerceIn(0L, 100L)}%" else ""
+                "${item.title}\\n$statusText$progress"
             }
         } catch (e: Exception) {
             Toast.makeText(this, "تعذر قراءة التنزيلات: ${e.message}", Toast.LENGTH_LONG).show()
