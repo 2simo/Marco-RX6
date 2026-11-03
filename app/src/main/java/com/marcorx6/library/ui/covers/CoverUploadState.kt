@@ -6,9 +6,7 @@ import android.widget.ImageView
 /** Temporary editor state for a cover selected for the next Blogger post. */
 internal class CoverUploadState {
     var pendingLocalPath: String = ""
-        private set
     var pendingPublicUrl: String = ""
-        private set
     var inProgress: Boolean = false
         private set
     var failed: Boolean = false
