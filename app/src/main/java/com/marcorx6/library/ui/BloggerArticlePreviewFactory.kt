@@ -1,5 +1,7 @@
 package com.marcorx6.library.ui
 
+import com.marcorx6.library.network.BloggerArticleBuilder
+
 import android.app.Activity
 import android.webkit.WebView
 
