@@ -564,37 +564,37 @@ class MainActivity : ComponentActivity() {
         )
     }
 
+    private val activityResultController by lazy {
+        MainActivityResultController(
+            signInRequestCode = SIGN_IN_REQUEST,
+            avatarRequestCode = 1005,
+            coverRequestCode = PICK_IMAGE_REQUEST,
+            onGoogleSignInResult = { data ->
+                googleSignInResultHandler.handle(
+                    data = data,
+                    onSuccess = {
+                        isAdminSession = false
+                        createInterface()
+                        refreshBloggerAccess()
+                        Toast.makeText(this, "تم ربط حساب Google؛ جارٍ التحقق من صلاحيات Blogger…", Toast.LENGTH_LONG).show()
+                    },
+                    onFailure = { message ->
+                        isAdminSession = false
+                        createInterface()
+                        Toast.makeText(this, "فشل تسجيل الدخول إلى Google: $message", Toast.LENGTH_LONG).show()
+                    }
+                )
+            },
+            onAvatarSelected = profileAvatarController::handle,
+            onCoverSelected = coverSelectionController::handle
+        )
+    }
+
     private fun handleActivityResult(
         requestCode: Int,
         resultCode: Int,
         data: Intent?
-    ) {
-        if (requestCode == SIGN_IN_REQUEST) {
-            googleSignInResultHandler.handle(
-                data = data,
-                onSuccess = {
-                    isAdminSession = false
-                    createInterface()
-                    refreshBloggerAccess()
-                    Toast.makeText(this, "تم ربط حساب Google؛ جارٍ التحقق من صلاحيات Blogger…", Toast.LENGTH_LONG).show()
-                },
-                onFailure = { message ->
-                    isAdminSession = false
-                    createInterface()
-                    Toast.makeText(this, "فشل تسجيل الدخول إلى Google: $message", Toast.LENGTH_LONG).show()
-                }
-            )
-            return
-        }
-        if (requestCode == 1005 && resultCode == RESULT_OK) {
-            val uri = data?.data ?: return
-            profileAvatarController.handle(uri)
-            return
-        }
-        if (requestCode != PICK_IMAGE_REQUEST || resultCode != RESULT_OK) return
-        val uri: Uri = data?.data ?: return
-        coverSelectionController.handle(uri)
-    }
+    ) = activityResultController.handle(requestCode, resultCode, data)
 
     private val startupExperienceController by lazy {
         StartupExperienceController(
