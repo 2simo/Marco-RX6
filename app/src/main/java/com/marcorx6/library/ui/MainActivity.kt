@@ -101,6 +101,7 @@ class MainActivity : ComponentActivity() {
     private val platforms = listOf("الكل", "BLOG", "FAVORITES", "PSP", "PS1", "PS2", "PS3", "PS4")
     private val games = mutableListOf<Game>()
     private val googleDriveClient by lazy { com.marcorx6.library.network.GoogleDriveClient() }
+    private val coverUploadRepository by lazy { com.marcorx6.library.data.CoverUploadRepository(filesDir, contentResolver, googleDriveClient) }
     private val coverRepository by lazy { com.marcorx6.library.data.CoverRepository(applicationContext).also { coverRepositoryCreated = true } }
     private var coverRepositoryCreated = false
 
@@ -1395,24 +1396,7 @@ class MainActivity : ComponentActivity() {
         Thread {
             try {
 
-                val folder = File(filesDir, "covers")
-                if (!folder.exists()) folder.mkdirs()
-
-                val destination = File(
-                    folder,
-                    "cover_${System.currentTimeMillis()}.img"
-                )
-
-                contentResolver.openInputStream(uri).use { input ->
-
-                    if (input == null) {
-                        throw Exception("تعذرت قراءة الصورة")
-                    }
-
-                    FileOutputStream(destination).use { output ->
-                        input.copyTo(output)
-                    }
-                }
+                val destination = coverUploadRepository.savePickedCover(uri)
 
                 mainHandler.post {
                     pendingCoverLocalPath = destination.absolutePath
@@ -1420,7 +1404,7 @@ class MainActivity : ComponentActivity() {
                     coverPreview?.let { loadCover(it, pendingCoverLocalPath, "") }
                     Toast.makeText(this, "تم اختيار الصورة، جارٍ رفعها للموقع...", Toast.LENGTH_SHORT).show()
                 }
-                val publicImageUrl = googleDriveClient.uploadCover(destination, driveToken())
+                val publicImageUrl = coverUploadRepository.uploadCover(destination, driveToken())
                 mainHandler.post {
                     pendingCoverPublicUrl = publicImageUrl
                     coverUploadInProgress = false
