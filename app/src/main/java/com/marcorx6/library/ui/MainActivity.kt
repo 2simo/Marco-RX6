@@ -1395,22 +1395,24 @@ class MainActivity : ComponentActivity() {
 
         Thread {
             try {
-
-                val destination = coverUploadRepository.savePickedCover(uri)
-
-                mainHandler.post {
-                    pendingCoverLocalPath = destination.absolutePath
-                    coverUrlField?.setText("")
-                    coverPreview?.let { loadCover(it, pendingCoverLocalPath, "") }
-                    Toast.makeText(this, "تم اختيار الصورة، جارٍ رفعها للموقع...", Toast.LENGTH_SHORT).show()
+                val uploadResult = coverUploadRepository.saveAndUploadCover(
+                    uri,
+                    driveToken()
+                ) { localFile ->
+                    mainHandler.post {
+                        pendingCoverLocalPath = localFile.absolutePath
+                        coverUrlField?.setText("")
+                        coverPreview?.let { loadCover(it, pendingCoverLocalPath, "") }
+                        Toast.makeText(this, "تم اختيار الصورة، جارٍ رفعها للموقع...", Toast.LENGTH_SHORT).show()
+                    }
                 }
-                val publicImageUrl = coverUploadRepository.uploadCover(destination, driveToken())
                 mainHandler.post {
-                    pendingCoverPublicUrl = publicImageUrl
+                    pendingCoverLocalPath = uploadResult.localFile.absolutePath
+                    pendingCoverPublicUrl = uploadResult.publicUrl
                     coverUploadInProgress = false
                     coverUploadFailed = false
-                    coverUrlField?.setText(publicImageUrl)
-                    coverPreview?.let { loadCover(it, pendingCoverLocalPath, publicImageUrl) }
+                    coverUrlField?.setText(uploadResult.publicUrl)
+                    coverPreview?.let { loadCover(it, pendingCoverLocalPath, uploadResult.publicUrl) }
                     Toast.makeText(this, "تم رفع الغلاف بنجاح وأصبح جاهزاً للنشر", Toast.LENGTH_LONG).show()
                 }
 
