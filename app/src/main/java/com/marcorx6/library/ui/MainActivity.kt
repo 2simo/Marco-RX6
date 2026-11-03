@@ -798,14 +798,14 @@ class MainActivity : ComponentActivity() {
             orientation = LinearLayout.VERTICAL
             layoutDirection = if (currentLanguage() == "ar") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
             textDirection = if (currentLanguage() == "ar") View.TEXT_DIRECTION_RTL else View.TEXT_DIRECTION_LTR
-            setPadding(dp(16), dp(10), dp(16), dp(104))
+            setPadding(dp(12), dp(8), dp(12), dp(104))
             setBackgroundColor(ink)
         }
         ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
             val safeAreas = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
             )
-            view.setPadding(dp(16), dp(10) + safeAreas.top, dp(16), dp(104) + safeAreas.bottom)
+            view.setPadding(dp(12), dp(8) + safeAreas.top, dp(12), dp(104) + safeAreas.bottom)
             insets
         }
 
@@ -821,96 +821,28 @@ class MainActivity : ComponentActivity() {
             letterSpacing = 0.01f
         })
         header.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
-        val menu = TextView(this).apply {
-            text = "☰"
-            textSize = 22f
+        fun headerAction(icon: String, label: String, action: () -> Unit) = TextView(this).apply {
+            text = icon
+            textSize = 19f
             gravity = Gravity.CENTER
-            setTextColor(silver)
+            setTextColor(if (isDarkMode()) Color.rgb(196, 222, 250) else Color.rgb(35, 104, 169))
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                if (isDarkMode()) intArrayOf(Color.rgb(75, 83, 105), Color.rgb(25, 30, 45), Color.rgb(11, 14, 24))
-                else intArrayOf(Color.WHITE, Color.rgb(235, 239, 247), Color.rgb(222, 229, 241))).apply {
-                cornerRadius = dp(17).toFloat()
-                setStroke(dp(1), if (isDarkMode()) Color.rgb(93, 105, 130) else Color.rgb(190, 199, 215))
+                if (isDarkMode()) intArrayOf(Color.rgb(24, 42, 66), Color.rgb(10, 20, 35))
+                else intArrayOf(Color.WHITE, Color.rgb(230, 239, 250))).apply {
+                cornerRadius = dp(14).toFloat()
+                setStroke(dp(1), if (isDarkMode()) Color.rgb(47, 91, 139) else Color.rgb(191, 211, 235))
             }
-            setPadding(dp(15), dp(10), dp(15), dp(10))
-            minWidth = dp(48)
-            minHeight = dp(48)
-            contentDescription = "القائمة الجانبية"
-            setOnClickListener { showSideMenu() }
+            minWidth = dp(43); minHeight = dp(43)
+            contentDescription = label
+            setOnClickListener { action() }
         }
-        val themeToggle = TextView(this).apply {
-            text = if (isDarkMode()) "☾" else "☀"
-            textSize = 23f
-            gravity = Gravity.CENTER
-            setTextColor(if (isDarkMode()) Color.rgb(224, 231, 255) else Color.rgb(130, 83, 8))
-            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                if (isDarkMode()) intArrayOf(Color.rgb(75, 83, 105), Color.rgb(25, 30, 45))
-                else intArrayOf(Color.rgb(255, 246, 214), Color.rgb(255, 224, 155))).apply {
-                cornerRadius = dp(16).toFloat()
-                setStroke(dp(1), if (isDarkMode()) Color.rgb(111, 126, 157) else Color.rgb(235, 181, 83))
-            }
-            setPadding(dp(13), dp(9), dp(13), dp(9))
-            minWidth = dp(48)
-            minHeight = dp(48)
-            contentDescription = if (isDarkMode()) "التبديل إلى الوضع النهاري" else "التبديل إلى الوضع الليلي"
-            setOnClickListener {
-                val nextDarkMode = !isDarkMode()
-                isEnabled = false
-                animate().rotationBy(180f).scaleX(0.2f).scaleY(0.2f).setDuration(220L).withEndAction {
-                    text = if (nextDarkMode) "☾" else "☀"
-                    setTextColor(if (nextDarkMode) Color.rgb(224, 231, 255) else Color.rgb(130, 83, 8))
-                    background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                        if (nextDarkMode) intArrayOf(Color.rgb(75, 83, 105), Color.rgb(25, 30, 45))
-                        else intArrayOf(Color.rgb(255, 246, 214), Color.rgb(255, 224, 155))).apply {
-                        cornerRadius = dp(16).toFloat()
-                        setStroke(dp(1), if (nextDarkMode) Color.rgb(111, 126, 157) else Color.rgb(235, 181, 83))
-                    }
-                    appearancePreferences().edit().putBoolean("dark_mode", nextDarkMode).apply()
-                    animate().rotationBy(180f).scaleX(1f).scaleY(1f).setDuration(220L).withEndAction {
-                        recreate()
-                    }.start()
-                }.start()
-            }
-        }
-        header.addView(themeToggle, LinearLayout.LayoutParams(-2, -2).apply { marginEnd = dp(9) })
-        header.addView(menu)
+        header.addView(headerAction("♧", "الإشعارات") { showNotificationSettings() },
+            LinearLayout.LayoutParams(dp(43), dp(43)).apply { marginEnd = dp(8) })
+        header.addView(headerAction("⚙", "الإعدادات") { showAppearanceSettings() },
+            LinearLayout.LayoutParams(dp(43), dp(43)))
         root.addView(header)
 
-        val hero = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-                if (isDarkMode()) intArrayOf(Color.rgb(14, 65, 119), Color.rgb(10, 34, 60), Color.rgb(8, 23, 40))
-                else intArrayOf(Color.rgb(225, 239, 255), Color.rgb(240, 246, 255), Color.WHITE)).apply {
-                cornerRadius = dp(22).toFloat()
-                setStroke(dp(1), if (isDarkMode()) Color.rgb(48, 119, 190) else Color.rgb(190, 215, 244))
-            }
-            elevation = dp(3).toFloat()
-            setPadding(dp(17), dp(17), dp(17), dp(17))
-        }
-        val heroCopy = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_VERTICAL }
-        heroCopy.addView(makeText("PLAY • DISCOVER • COLLECT", 9f, if (isDarkMode()) Color.rgb(139, 202, 255) else Color.rgb(28, 116, 205), true).apply { letterSpacing = 0.12f })
-        heroCopy.addView(makeText(tr("عالم ألعابك يبدأ من هنا"), 21f, white, true).apply { setPadding(0, dp(7), 0, dp(5)) })
-        heroCopy.addView(makeText(tr("تصفّح مكتبتك، اكتشف التفاصيل وتابع ألعابك المفضلة."), 10f, if (isDarkMode()) Color.rgb(205, 220, 239) else Color.rgb(76, 94, 119)).apply { maxLines = 2 })
-        hero.addView(heroCopy, LinearLayout.LayoutParams(0, -2, 1f))
-        val heroMark = TextView(this).apply {
-            text = "RX6"
-            textSize = 23f
-            typeface = Typeface.create("sans-serif-black", Typeface.NORMAL)
-            letterSpacing = 0.04f
-            gravity = Gravity.CENTER
-            setTextColor(Color.WHITE)
-            background = GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(Color.rgb(40, 153, 255), Color.rgb(14, 88, 177))).apply {
-                cornerRadius = dp(17).toFloat()
-                setStroke(dp(1), Color.rgb(116, 194, 255))
-            }
-            setPadding(dp(13), dp(17), dp(13), dp(17))
-        }
-        hero.addView(heroMark, LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(10) })
-        root.addView(hero, LinearLayout.LayoutParams(-1, dp(126)).apply {
-            gravity = Gravity.CENTER_HORIZONTAL
-            bottomMargin = dp(14)
-        })
+        // Compact game-first layout: the reference has no promotional hero banner.
 
         val searchWrap = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -1104,6 +1036,7 @@ class MainActivity : ComponentActivity() {
         dockItem("⌂", tr("الرئيسية")) { selected = "ALL"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
         dockItem("♡", tr("المفضلة")) { selected = "FAVORITES"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
         dockItem("◷", "متابعتي") { selected = "WANT_TO_PLAY"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
+        dockItem("⌕", "بحث") { search.requestFocus(); pageScroll.smoothScrollTo(0, 0); (getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager).showSoftInput(search, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT) }
         dockItem("♙", tr("حسابي")) { showProfile() }
         val dockParams = FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply {
             leftMargin = dp(16); rightMargin = dp(16); bottomMargin = dp(12)
@@ -1707,9 +1640,9 @@ class MainActivity : ComponentActivity() {
         heading.addView(makeText(title, 18f, white, true), LinearLayout.LayoutParams(0, -2, 1f))
         heading.addView(makeText(sorted.size.toString() + " " + tr("لعبة"), 10f, red, true))
         gameList.addView(heading, LinearLayout.LayoutParams(-1, -2).apply { setMargins(dp(2), dp(10), dp(2), dp(12)) })
-        for (index in sorted.indices step 2) {
+        for (index in sorted.indices step 3) {
             val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.TOP }
-            for (offset in 0..1) {
+            for (offset in 0..2) {
                 val itemIndex = index + offset
                 if (itemIndex >= sorted.size) {
                     row.addView(View(this), LinearLayout.LayoutParams(0, 1, 1f).apply { marginStart = dp(5); marginEnd = dp(5) })
@@ -1732,7 +1665,7 @@ class MainActivity : ComponentActivity() {
                 if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) loadCover(image, game.coverLocalPath, game.coverUrl)
                 else { image.setImageResource(android.R.drawable.ic_menu_gallery); image.scaleType = ImageView.ScaleType.CENTER_INSIDE }
                 imageFrame.background = rounded(if (isDarkMode()) Color.rgb(8, 16, 29) else Color.rgb(224, 232, 243), 13)
-                card.addView(imageFrame, LinearLayout.LayoutParams(-1, dp(178)))
+                card.addView(imageFrame, LinearLayout.LayoutParams(-1, dp(142)))
                 card.addView(makeText(game.name, 12.5f, white, true).apply {
                     maxLines = 2; minLines = 2; ellipsize = android.text.TextUtils.TruncateAt.END
                     gravity = Gravity.CENTER_VERTICAL; setPadding(dp(4), dp(7), dp(4), dp(2))
@@ -1741,7 +1674,7 @@ class MainActivity : ComponentActivity() {
                 card.addView(makeText(meta, 9f, red, true).apply {
                     maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END; setPadding(dp(4), 0, dp(4), dp(2))
                 })
-                row.addView(card, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(5); marginEnd = dp(5); bottomMargin = dp(10) })
+                row.addView(card, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(3); marginEnd = dp(3); bottomMargin = dp(8) })
             }
             gameList.addView(row, LinearLayout.LayoutParams(-1, -2))
         }
