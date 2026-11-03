@@ -1111,8 +1111,6 @@ class MainActivity : ComponentActivity() {
                             Toast.LENGTH_LONG
                         ).show()
                     }
-
-                    showPlatformWarnings(result.third)
                 }
 
             } catch (e: Exception) {
@@ -1136,30 +1134,6 @@ class MainActivity : ComponentActivity() {
     ): Triple<Int, Int, List<Pair<Game, String>>> {
         val result = gameLibraryStore.mergeImported(imported)
         return Triple(result.added, result.updated, result.warnings)
-    }
-
-    private fun showPlatformWarnings(
-        warnings: List<Pair<Game, String>>
-    ) {
-        val setupFinished = getSharedPreferences("app_settings", MODE_PRIVATE)
-            .getBoolean("setup_completed", false)
-        if (warnings.isEmpty() || isFinishing || !setupFinished) return
-
-        val (game, detected) = warnings.first()
-
-        AlertDialog.Builder(this)
-            .setTitle("تعارض في معلومات المنصة")
-            .setMessage(
-                "${game.name}\n\nBlogger category: ${game.platform}" +
-                    "\nOperating system field: $detected" +
-                    "\n\nThe app has used the Blogger category. " +
-                    "هل تريد تصحيح المنصة يدوياً؟"
-            )
-            .setNegativeButton("الإبقاء على التصنيف", null)
-            .setPositiveButton("تصحيح") { _, _ ->
-                showPlatformCorrection(game)
-            }
-            .show().also { styleAlertDialog(it) }
     }
 
     private fun showPlatformCorrection(game: Game) {
