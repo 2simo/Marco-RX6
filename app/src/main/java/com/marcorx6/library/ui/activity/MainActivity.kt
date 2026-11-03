@@ -45,7 +45,6 @@ class MainActivity : ComponentActivity() {
 
     private val libraryViewState get() = libraryRuntimeFeature.viewState
 
-    private val PICK_IMAGE_REQUEST = 1001
     private val coverFeature by lazy {
         CoverUploadRuntimeFeature(
             context = this,
@@ -159,13 +158,8 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private val SIGN_IN_REQUEST = 1002
-
     private val activityResultRuntimeFeature = ActivityResultRuntimeFeature(
         activity = this,
-        signInRequestCode = SIGN_IN_REQUEST,
-        avatarRequestCode = 1005,
-        coverRequestCode = PICK_IMAGE_REQUEST,
         onGoogleSignInResult = { data ->
             googleAccountRuntimeFeature.handleSignInResult(
                 data = data,
