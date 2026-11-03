@@ -288,61 +288,19 @@ class MainActivity : ComponentActivity() {
 
     private fun showNotificationSettings() = notificationFeature.showSettings()
 
-    private val uiToolkitFeature by lazy {
-        UiToolkitFeature(
+    private val appearanceRuntimeFeature by lazy {
+        AppearanceRuntimeFeature(
             activity = this,
+            appearancePreferences = ::appearancePreferences,
             isDarkMode = ::isDarkMode,
             bg = { bg },
             panel = { panel },
             red = { red },
             white = { white },
             gray = { gray },
-            accentForeground = ::accentForeground
-        )
-    }
-
-    private fun dp(v: Int): Int = uiToolkitFeature.dp(v)
-    private fun rounded(color: Int, radius: Int) = uiToolkitFeature.rounded(color, radius)
-    private fun makeText(value: String, size: Float, color: Int, bold: Boolean = false) =
-        uiToolkitFeature.makeText(value, size, color, bold)
-    private fun stylePrimaryButton(button: Button, primary: Boolean = false) =
-        uiToolkitFeature.stylePrimaryButton(button, primary)
-    private fun applyUnifiedSkin(view: View) = uiToolkitFeature.applyUnifiedSkin(view)
-    private fun styleAlertDialog(dialog: AlertDialog) = uiToolkitFeature.styleAlertDialog(dialog)
-    private fun themedSpinner(items: List<String>, selectedIndex: Int = 0): Spinner =
-        uiToolkitFeature.themedSpinner(items, selectedIndex)
-    private fun makeInput(hintText: String): EditText = uiToolkitFeature.makeInput(hintText)
-
-
-    private val languageFeature by lazy {
-        LanguageFeature(
-            activity = this,
-            preferences = getSharedPreferences("app_settings", MODE_PRIVATE),
-            styleDialog = ::styleAlertDialog,
-            onLanguageChanged = ::createInterface
-        )
-    }
-
-    private fun currentLanguage(): String = languageFeature.currentLanguage()
-    private fun tr(value: String): String = languageFeature.translate(value)
-    private fun showLanguagePicker() = languageFeature.showPicker()
-
-
-    private val sideMenuFeature by lazy {
-        SideMenuFeature(
-            activity = this,
-            dp = ::dp,
-            makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
-            translate = ::tr,
-            isDark = ::isDarkMode,
-            language = ::currentLanguage,
-            gold = red,
-            ink = bg,
-            surface = panel,
-            white = white,
-            gray = gray,
-            syncing = { isSyncing },
-            isAdmin = { isAdminSession },
+            accentForeground = ::accentForeground,
+            isSyncing = { isSyncing },
+            isAdminSession = { isAdminSession },
             sync = { syncFromBlog(showResult = true) },
             showDownloads = ::showDownloadManager,
             showNotifications = ::showNotificationSettings,
@@ -351,50 +309,36 @@ class MainActivity : ComponentActivity() {
             signIn = ::startGoogleSignIn,
             showGameDialog = { showGameDialog() },
             showGameOfDay = ::showGameOfTheDay,
-            showLanguage = ::showLanguagePicker,
-            showAppearance = ::showAppearanceSettings,
-            showTypography = ::showTypographySettings,
             openLink = ::openGameLink,
-            applyMotion = ::applyMotionPreferences,
-            applySkin = ::applyUnifiedSkin
-        )
-    }
-
-    private fun showSideMenu() = sideMenuFeature.show()
-
-    private val motionPreferencesApplier by lazy {
-        MotionPreferencesApplier(::appearancePreferences)
-    }
-
-    private fun applyMotionPreferences(view: View) =
-        motionPreferencesApplier.apply(view)
-
-    private val appearanceFeature by lazy {
-        AppearanceFeature(
-            activity = this,
-            appearancePreferences = ::appearancePreferences,
-            dp = ::dp,
-            makeText = ::makeText,
-            panelColor = { panel },
-            redColor = { red },
-            whiteColor = { white },
-            grayColor = { gray },
-            roundedBackground = ::rounded,
-            themedSpinner = ::themedSpinner,
-            applyMotionPreferences = ::applyMotionPreferences,
-            styleDialog = ::styleAlertDialog,
+            applyUnifiedSkin = ::applyUnifiedSkin,
             recreateActivity = ::recreate,
             recreateInterface = ::createInterface
         )
     }
 
-    private fun applyTypography(view: View) =
-        appearanceFeature.applyTypography(view, resources.displayMetrics.scaledDensity)
+    private fun dp(v: Int): Int = appearanceRuntimeFeature.dp(v)
+    private fun rounded(color: Int, radius: Int) = appearanceRuntimeFeature.rounded(color, radius)
+    private fun makeText(value: String, size: Float, color: Int, bold: Boolean = false) =
+        appearanceRuntimeFeature.makeText(value, size, color, bold)
+    private fun stylePrimaryButton(button: Button, primary: Boolean = false) =
+        appearanceRuntimeFeature.stylePrimaryButton(button, primary)
+    private fun applyUnifiedSkin(view: View) = appearanceRuntimeFeature.applyUnifiedSkin(view)
+    private fun styleAlertDialog(dialog: AlertDialog) = appearanceRuntimeFeature.styleAlertDialog(dialog)
+    private fun themedSpinner(items: List<String>, selectedIndex: Int = 0): Spinner =
+        appearanceRuntimeFeature.themedSpinner(items, selectedIndex)
+    private fun makeInput(hintText: String): EditText = appearanceRuntimeFeature.makeInput(hintText)
 
-    private fun fontScale(): Float = appearanceFeature.fontScale()
-    private fun fontFamilyName(): String = appearanceFeature.fontFamilyName()
-    private fun showAppearanceSettings() = appearanceFeature.showAppearanceSettings()
-    private fun showTypographySettings() = appearanceFeature.showTypographySettings()
+    private fun currentLanguage(): String = appearanceRuntimeFeature.currentLanguage()
+    private fun tr(value: String): String = appearanceRuntimeFeature.translate(value)
+    private fun showLanguagePicker() = appearanceRuntimeFeature.showLanguagePicker()
+    private fun showSideMenu() = appearanceRuntimeFeature.showSideMenu()
+    private fun applyMotionPreferences(view: View) = appearanceRuntimeFeature.applyMotionPreferences(view)
+    private fun applyTypography(view: View) =
+        appearanceRuntimeFeature.applyTypography(view, resources.displayMetrics.scaledDensity)
+    private fun fontScale(): Float = appearanceRuntimeFeature.fontScale()
+    private fun fontFamilyName(): String = appearanceRuntimeFeature.fontFamilyName()
+    private fun showAppearanceSettings() = appearanceRuntimeFeature.showAppearanceSettings()
+    private fun showTypographySettings() = appearanceRuntimeFeature.showTypographySettings()
 
     private val advancedFiltersFeature by lazy {
         AdvancedFiltersFeature(
