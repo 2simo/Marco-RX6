@@ -16,7 +16,6 @@ import com.marcorx6.library.ui.UserExperienceRuntimeFeature
 import androidx.activity.ComponentActivity
 import com.marcorx6.library.data.Game
 import android.app.AlertDialog
-import android.content.Intent
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import android.os.Bundle
 import android.view.View
@@ -185,7 +184,7 @@ class MainActivity : ComponentActivity() {
         avatarRequestCode = 1005,
         coverRequestCode = PICK_IMAGE_REQUEST,
         onGoogleSignInResult = { data ->
-            googleAccountRuntimeFeature.accountController.handleSignInResult(
+            googleAccountRuntimeFeature.handleSignInResult(
                 data = data,
                 onSuccess = {
                     isAdminSession = false
@@ -272,8 +271,8 @@ class MainActivity : ComponentActivity() {
             showDownloads = activityServicesRuntimeFeature::showDownloadManager,
             showNotifications = activityServicesRuntimeFeature::showNotificationSettings,
             showProfile = { userExperienceRuntimeFeature.showProfile() },
-            signOut = { googleAccountRuntimeFeature.accountController.signOut { isAdminSession = false; createInterface() } },
-            signIn = { activityResultRuntimeFeature.launchGoogleSignIn(googleAccountRuntimeFeature.accountController.signInIntent()) },
+            signOut = { googleAccountRuntimeFeature.signOut { isAdminSession = false; createInterface() } },
+            signIn = { activityResultRuntimeFeature.launchGoogleSignIn(googleAccountRuntimeFeature.signInIntent()) },
             showGameDialog = { bloggerRuntimeFeature.showComposer() },
             showGameOfDay = { gameExperienceFeature.showGameOfTheDay() },
             openLink = activityServicesRuntimeFeature::openGameLink,
