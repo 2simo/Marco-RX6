@@ -482,6 +482,7 @@ class MainActivity : Activity() {
         dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.let { stylePrimaryButton(it) }
         dialog.getButton(AlertDialog.BUTTON_NEUTRAL)?.let { stylePrimaryButton(it) }
         dialog.listView?.let { list ->
+            list.setBackgroundColor(if (isDarkMode()) Color.rgb(20, 22, 40) else Color.WHITE)
             list.divider = android.graphics.drawable.ColorDrawable(if (isDarkMode()) Color.rgb(48, 55, 78) else Color.rgb(226, 231, 241))
             list.dividerHeight = dp(1)
             list.post {
@@ -2508,7 +2509,7 @@ class MainActivity : Activity() {
         }
         val cover = ImageView(this).apply {
             scaleType = ImageView.ScaleType.CENTER_CROP
-            background = rounded(Color.rgb(48, 54, 72), 12)
+            background = rounded(if (isDarkMode()) Color.rgb(48, 54, 72) else Color.rgb(235, 239, 247), 12)
             contentDescription = game.name
         }
         if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) loadCover(cover, game.coverLocalPath, game.coverUrl)
