@@ -11,8 +11,6 @@ import com.marcorx6.library.data.Game
 import com.marcorx6.library.data.GameRepository
 import com.marcorx6.library.data.GameLibraryManager
 import com.marcorx6.library.data.GameLibraryStore
-import com.marcorx6.library.data.BackupCodec
-import com.marcorx6.library.data.BackupFileRepository
 import com.marcorx6.library.data.ProfileAvatarRepository
 import com.marcorx6.library.data.BloggerPostRepository
 import com.marcorx6.library.data.DownloadRepository
@@ -64,7 +62,6 @@ class MainActivity : ComponentActivity() {
     private val downloadUiController by lazy {
         DownloadUiController(this, downloadRepository) { dialog -> styleAlertDialog(dialog) }
     }
-    private val backupFileRepository by lazy { BackupFileRepository(contentResolver) }
     private val profileAvatarRepository by lazy { ProfileAvatarRepository(contentResolver, filesDir) }
 
     private fun appearancePreferences() = getSharedPreferences("appearance_settings", MODE_PRIVATE)
@@ -98,8 +95,6 @@ class MainActivity : ComponentActivity() {
     private val white: Int get() = if (isDarkMode()) Color.WHITE else Color.rgb(24, 29, 42)
     private fun accentForeground(): Int = Color.WHITE
     private val gray: Int get() = if (isDarkMode()) Color.LTGRAY else Color.rgb(86, 96, 115)
-    private val BACKUP_EXPORT_REQUEST = 1003
-    private val BACKUP_IMPORT_REQUEST = 1004
     private val platforms = listOf("الكل", "BLOG", "FAVORITES", "PSP", "PS1", "PS2", "PS3", "PS4")
     private val games = mutableListOf<Game>()
     private val googleDriveClient by lazy { com.marcorx6.library.network.GoogleDriveClient() }
@@ -140,14 +135,6 @@ class MainActivity : ComponentActivity() {
     private val googleSignInLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             handleActivityResult(SIGN_IN_REQUEST, result.resultCode, result.data)
-        }
-    private val backupExportLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            handleActivityResult(BACKUP_EXPORT_REQUEST, result.resultCode, result.data)
-        }
-    private val backupImportLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            handleActivityResult(BACKUP_IMPORT_REQUEST, result.resultCode, result.data)
         }
     private val coverPickerLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -607,7 +594,7 @@ class MainActivity : ComponentActivity() {
             row.addView(labels, LinearLayout.LayoutParams(0, -2, 1f))
             panel.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(9) })
         }
-        // الأكثر استخداماً أولاً، ثم الحساب والإدارة، وبعدها التخصيص والنسخ الاحتياطي والقنوات
+        // الأكثر استخداماً أولاً، ثم الحساب والإدارة والتخصيص والقنوات
         menuItem("⟳", tr("⟳  مزامنة"), if (isSyncing) "المزامنة قيد التنفيذ" else "تحديث المقالات من المدونة") {
             syncFromBlog(showResult = true)
         }
@@ -625,8 +612,6 @@ class MainActivity : ComponentActivity() {
         menuItem("文", tr("إعدادات اللغة"), tr("اختر لغة التطبيق")) { showLanguagePicker() }
         menuItem("✦", "ألوان وحركات الواجهة", "تخصيص اللون الرئيسي وتأثيرات الحركة") { showAppearanceSettings() }
         menuItem("Aa", "الخط وحجم النص", "تخصيص قراءة وواجهة التطبيق") { showTypographySettings() }
-        menuItem("⇧", "نسخ احتياطي", "تصدير مكتبتك وإعداداتك إلى ملف") { exportBackup() }
-        menuItem("⇩", "استعادة نسخة", "استيراد نسخة احتياطية محفوظة") { importBackup() }
         menuItem("▶", "قناة YouTube", "@marco_rx7") { openGameLink("https://youtube.com/@marco_rx7") }
         menuItem("➤", "قناة Telegram", "@MARCO_RX1") { openGameLink("https://t.me/MARCO_RX1") }
         panel.addView(View(this), LinearLayout.LayoutParams(1, dp(12)))
@@ -721,60 +706,6 @@ class MainActivity : ComponentActivity() {
                 Toast.makeText(this, if (enabled) "تم تفعيل انتقالات الواجهة" else "تم إيقاف انتقالات الواجهة", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("إغلاق", null).show().also { styleAlertDialog(it) }
-    }
-
-    private fun exportBackup() {
-        backupExportPayload = BackupCodec.encode(
-            games = games,
-            darkMode = isDarkMode(),
-            accent = appearancePreferences().getString("accent", "blue") ?: "blue",
-            animations = appearancePreferences().getBoolean("animations", true)
-        )
-        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE); type = "application/json"
-            putExtra(Intent.EXTRA_TITLE, "MARCO-RX6-backup.json")
-        }
-        backupExportLauncher.launch(intent)
-    }
-    private var backupExportPayload: String = ""
-
-    private fun importBackup() {
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE); type = "application/json"
-        }
-        backupImportLauncher.launch(intent)
-    }
-
-    private fun handleBackupResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
-        if (resultCode != RESULT_OK) return requestCode == BACKUP_EXPORT_REQUEST || requestCode == BACKUP_IMPORT_REQUEST
-        val uri = data?.data ?: return true
-        return try {
-            if (requestCode == BACKUP_EXPORT_REQUEST) {
-                backupFileRepository.write(uri, backupExportPayload)
-                Toast.makeText(this, "تم تصدير النسخة الاحتياطية", Toast.LENGTH_LONG).show()
-            } else if (requestCode == BACKUP_IMPORT_REQUEST) {
-                val backup = backupFileRepository.read(uri)
-                val restored = backup.games
-                AlertDialog.Builder(this).setTitle("استعادة النسخة الاحتياطية")
-                    .setMessage("سيتم استبدال المكتبة الحالية بـ ${restored.size} عنصر. يُفضّل تصدير نسخة من بياناتك الحالية أولاً. هل تريد المتابعة؟")
-                    .setNegativeButton("إلغاء", null)
-                    .setPositiveButton("استعادة") { _, _ ->
-                        gameLibraryStore.replaceAll(restored)
-                        backup.appearance?.let { a ->
-                            appearancePreferences().edit()
-                                .putBoolean("dark_mode", a.darkMode)
-                                .putString("accent", a.accent)
-                                .putBoolean("animations", a.animations).apply()
-                        }
-                        recreate()
-                        Toast.makeText(this, "تمت استعادة المكتبة", Toast.LENGTH_LONG).show()
-                    }.show().also { styleAlertDialog(it) }
-            }
-            true
-        } catch (e: Exception) {
-            Toast.makeText(this, "تعذرت معالجة النسخة: ${e.message}", Toast.LENGTH_LONG).show()
-            true
-        }
     }
 
     private fun showTypographySettings() {
@@ -1348,10 +1279,6 @@ class MainActivity : ComponentActivity() {
         data: Intent?
     ) {
 
-        if (requestCode == BACKUP_EXPORT_REQUEST || requestCode == BACKUP_IMPORT_REQUEST) {
-            handleBackupResult(requestCode, resultCode, data)
-            return
-        }
         if (requestCode == SIGN_IN_REQUEST && resultCode == RESULT_OK) {
             try {
                 val account = GoogleSignIn.getSignedInAccountFromIntent(data).getResult(com.google.android.gms.common.api.ApiException::class.java)
