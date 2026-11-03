@@ -15,8 +15,8 @@ import com.marcorx6.library.ui.DownloadFeature
 import com.marcorx6.library.ui.FirstRunSetupFeature
 import com.marcorx6.library.ui.GameExperienceRuntimeFeature
 import com.marcorx6.library.ui.GameImportMerger
+import com.marcorx6.library.ui.GameDataRuntimeFeature
 import com.marcorx6.library.ui.GameOfTheDayController
-import com.marcorx6.library.ui.GamePersistenceController
 import com.marcorx6.library.ui.GoogleAccountRuntimeFeature
 import com.marcorx6.library.ui.LanguageFeature
 import com.marcorx6.library.ui.MotionPreferencesApplier
@@ -36,8 +36,6 @@ import java.util.concurrent.Executors
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import com.marcorx6.library.data.Game
-import com.marcorx6.library.data.GameRepository
-import com.marcorx6.library.data.GameLibraryStore
 import android.app.AlertDialog
 import android.content.Intent
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -115,7 +113,7 @@ class MainActivity : ComponentActivity() {
         get() = googleAccountRuntimeFeature.isAdminSession
         set(value) { googleAccountRuntimeFeature.isAdminSession = value }
     private val bloggerServices get() = googleAccountRuntimeFeature.bloggerServices
-    private val gameRepository by lazy { GameRepository(applicationContext) }
+    private val gameDataRuntimeFeature by lazy { GameDataRuntimeFeature(this, games) }
     private val userExperienceRuntimeFeature by lazy {
         UserExperienceRuntimeFeature(
             activity = this,
@@ -185,7 +183,7 @@ class MainActivity : ComponentActivity() {
             setBlogId = { bloggerBlogId = it },
             refreshAccess = ::refreshBloggerAccess,
             renderGames = ::renderGames,
-            gameLibraryStore = gameLibraryStore,
+            gameLibraryStore = gameDataRuntimeFeature.libraryStore,
             dp = ::dp,
             bg = { bg },
             isDarkMode = ::isDarkMode,
@@ -415,10 +413,10 @@ class MainActivity : ComponentActivity() {
     private fun syncFromBlog(showResult: Boolean) = bloggerRuntimeFeature.sync(showResult)
 
     private fun mergeImportedGames(imported: List<Game>): Pair<Int, Int> =
-        GameImportMerger.merge(gameLibraryStore, imported)
+        GameImportMerger.merge(gameDataRuntimeFeature.libraryStore, imported)
 
     private fun showPlatformCorrection(game: Game) {
-        PlatformCorrectionController(this, gameLibraryStore, ::renderGames, ::styleAlertDialog)
+        PlatformCorrectionController(this, gameDataRuntimeFeature.libraryStore, ::renderGames, ::styleAlertDialog)
             .show(game)
     }
 
@@ -503,12 +501,12 @@ class MainActivity : ComponentActivity() {
     private fun deleteCoverFileIfUnused(path: String) =
         coverRuntimeFeature.deleteIfUnused(path)
 
-    private fun saveGames() = gamePersistenceController.save()
+    private fun saveGames() = gameDataRuntimeFeature.saveGames()
 
-    private fun loadGames() = gamePersistenceController.load()
+    private fun loadGames() = gameDataRuntimeFeature.loadGames()
 
     private fun loadOfflineCatalog() {
-        OfflineCatalogLoader.load(this, games) { saveGames() }
+        gameDataRuntimeFeature.loadOfflineCatalog()
     }
 
 
