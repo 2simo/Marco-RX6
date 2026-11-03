@@ -437,6 +437,8 @@ class MainActivity : Activity() {
         button.setTextColor(if (primary) accentForeground() else white)
         button.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
         button.textSize = 13.5f
+        button.isAllCaps = false
+        button.letterSpacing = 0.01f
         button.minHeight = dp(48)
         button.minWidth = dp(48)
         button.setPadding(dp(16), dp(10), dp(16), dp(10))
@@ -458,6 +460,24 @@ class MainActivity : Activity() {
                 view.setHintTextColor(gray)
             }
             is Button -> stylePrimaryButton(view, view.tag == "marco_primary_action")
+            is CheckBox -> {
+                view.setTextColor(white)
+                view.buttonTintList = android.content.res.ColorStateList.valueOf(red)
+                view.minHeight = dp(48)
+            }
+            is RadioButton -> {
+                view.setTextColor(white)
+                view.buttonTintList = android.content.res.ColorStateList.valueOf(red)
+                view.minHeight = dp(48)
+            }
+            is SeekBar -> {
+                view.progressTintList = android.content.res.ColorStateList.valueOf(red)
+                view.thumbTintList = android.content.res.ColorStateList.valueOf(red)
+            }
+            is Spinner -> {
+                view.backgroundTintList = android.content.res.ColorStateList.valueOf(gray)
+                view.minimumHeight = dp(48)
+            }
         }
         if (view is ViewGroup) {
             for (i in 0 until view.childCount) applyUnifiedSkin(view.getChildAt(i))
