@@ -256,32 +256,9 @@ class MainActivity : ComponentActivity() {
     private fun signOutAdmin() {
         googleSignInClient?.signOut()?.addOnCompleteListener { isAdminSession = false; createInterface() }
     }
-    private fun googleBloggerToken(): String {
-        val account = GoogleSignIn.getLastSignedInAccount(this)
-            ?: throw IllegalStateException("يرجى تسجيل الدخول بحساب Google")
-        val androidAccount = account.account
-            ?: throw IllegalStateException("بيانات حساب Google غير متاحة")
-        return GoogleAuthUtil.getToken(
-            applicationContext,
-            androidAccount,
-            "oauth2:https://www.googleapis.com/auth/blogger"
-        )
-    }
+    private fun googleBloggerToken(): String = GoogleTokenProvider(this).bloggerToken()
 
-    private fun driveToken(): String {
-        val account = GoogleSignIn.getLastSignedInAccount(this)
-            ?: throw IllegalStateException("يرجى تسجيل الدخول بحساب المسؤول")
-        if (!isAdminSession) {
-            throw SecurityException("يلزم التحقق من صلاحيات Blogger قبل رفع الأغلفة")
-        }
-        val androidAccount = account.account
-            ?: throw IllegalStateException("بيانات حساب Google غير متاحة")
-        return GoogleAuthUtil.getToken(
-            applicationContext,
-            androidAccount,
-            "oauth2:https://www.googleapis.com/auth/drive.file"
-        )
-    }
+    private fun driveToken(): String = GoogleTokenProvider(this) { isAdminSession }.driveToken()
 
 
     private fun bloggerHtml(game: Game): String {
