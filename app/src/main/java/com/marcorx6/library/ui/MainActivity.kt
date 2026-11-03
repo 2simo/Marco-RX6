@@ -97,12 +97,8 @@ class MainActivity : ComponentActivity() {
     private var sortMode = "الأحدث"
     private var selectedGenre = ""
     private var selectedYear = ""
-    private val mainHandler = Handler(Looper.getMainLooper())
-    private fun postToUi(action: () -> Unit) {
-        mainHandler.post {
-            if (!isFinishing && !isDestroyed) action()
-        }
-    }
+    private val uiThreadDispatcher by lazy { UiThreadDispatcher(this) }
+    private fun postToUi(action: () -> Unit) = uiThreadDispatcher.post(action)
 
     private val ioExecutor = Executors.newCachedThreadPool()
     private var setupDialog: Dialog? = null
