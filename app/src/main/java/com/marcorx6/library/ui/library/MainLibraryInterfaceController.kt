@@ -43,6 +43,7 @@ internal class MainLibraryInterfaceController(
     private val showAdvancedFilters: () -> Unit,
     private val showGameDialog: () -> Unit,
     private val showProfile: () -> Unit,
+    private val showSideMenu: () -> Unit,
     private val applyTypography: (View) -> Unit,
     private val applyUnifiedSkin: (View) -> Unit,
     private val applyMotionPreferences: (View) -> Unit
@@ -123,6 +124,8 @@ internal class MainLibraryInterfaceController(
         header.addView(headerAction("♧", "الإشعارات") { showNotificationSettings() },
             LinearLayout.LayoutParams(dp(43), dp(43)).apply { marginEnd = dp(8) })
         header.addView(headerAction("⚙", "الإعدادات") { showAppearanceSettings() },
+            LinearLayout.LayoutParams(dp(43), dp(43)).apply { marginEnd = dp(8) })
+        header.addView(headerAction("♛", "دخول المسؤول / القائمة") { showSideMenu() },
             LinearLayout.LayoutParams(dp(43), dp(43)))
         root.addView(header)
 
