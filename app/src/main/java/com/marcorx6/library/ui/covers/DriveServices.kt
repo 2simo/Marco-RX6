@@ -10,8 +10,8 @@ internal class DriveServices(
     filesDir: File,
     contentResolver: ContentResolver,
     accessToken: () -> String,
-    executeIo: ((() -> Unit) -> Unit),
-    postToUi: ((() -> Unit) -> Unit)
+    executeIo: (() -> Unit) -> Unit,
+    postToUi: (() -> Unit) -> Unit
 ) {
     private val repository = CoverUploadRepository(
         filesDir = filesDir,
