@@ -4,10 +4,10 @@ import android.content.Context
 import com.google.android.gms.auth.GoogleAuthUtil
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 
-/** Centralizes scoped Google OAuth token retrieval for Blogger and Drive. */
+/** Owns OAuth token retrieval; Drive access is bound to the verified admin session. */
 internal class GoogleTokenProvider(
     context: Context,
-    private val isAdminSession: () -> Boolean
+    private val adminSessionState: AdminSessionState
 ) {
     private val appContext = context.applicationContext
 
@@ -26,7 +26,7 @@ internal class GoogleTokenProvider(
     fun driveToken(): String {
         val account = GoogleSignIn.getLastSignedInAccount(appContext)
             ?: throw IllegalStateException("يرجى تسجيل الدخول بحساب المسؤول")
-        if (!isAdminSession()) {
+        if (!adminSessionState.isAuthorized(account.id)) {
             throw SecurityException("يلزم التحقق من صلاحيات Blogger قبل رفع الأغلفة")
         }
         val androidAccount = account.account
