@@ -382,28 +382,18 @@ class MainActivity : ComponentActivity() {
         appearanceUiFactory.makeInput(hintText)
 
 
-    private fun currentLanguage(): String =
-        getSharedPreferences("app_settings", MODE_PRIVATE).getString("language", "ar") ?: "ar"
-
-    private fun tr(value: String): String =
-        LanguageTranslator.translate(value, currentLanguage())
-
-    private fun showLanguagePicker() {
-        val codes = arrayOf("ar", "en", "fr", "es")
-        val labels = arrayOf(tr("العربية"), tr("الإنجليزية"), tr("الفرنسية"), tr("الإسبانية"))
-        val current = codes.indexOf(currentLanguage()).coerceAtLeast(0)
-        AlertDialog.Builder(this)
-            .setTitle(tr("اختر لغة التطبيق"))
-            .setSingleChoiceItems(labels, current) { dialog, which ->
-                getSharedPreferences("app_settings", MODE_PRIVATE).edit()
-                    .putString("language", codes[which]).apply()
-                dialog.dismiss()
-                createInterface()
-                Toast.makeText(this, tr("تم حفظ اللغة"), Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton(tr("إغلاق"), null)
-            .show().also { styleAlertDialog(it) }
+    private val languageFeature by lazy {
+        LanguageFeature(
+            activity = this,
+            preferences = getSharedPreferences("app_settings", MODE_PRIVATE),
+            styleDialog = ::styleAlertDialog,
+            onLanguageChanged = ::createInterface
+        )
     }
+
+    private fun currentLanguage(): String = languageFeature.currentLanguage()
+    private fun tr(value: String): String = languageFeature.translate(value)
+    private fun showLanguagePicker() = languageFeature.showPicker()
 
 
     private val sideMenuController by lazy {
