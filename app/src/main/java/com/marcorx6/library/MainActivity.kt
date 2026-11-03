@@ -3086,7 +3086,9 @@ class MainActivity : Activity() {
                         dismiss()
                     }
                 }
-            }.show().also { styleAlertDialog(it) }
+            }
+        dialog.show()
+        styleAlertDialog(dialog)
     }
 
     private fun openGameLink(link: String) {
