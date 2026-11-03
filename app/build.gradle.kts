@@ -11,8 +11,8 @@ android {
         applicationId = "com.marcorx6.library"
         minSdk = 23
         targetSdk = 35
-        versionCode = 30
-        versionName = "8.13"
+        versionCode = 31
+        versionName = "8.14"
     }
 
     signingConfigs {
