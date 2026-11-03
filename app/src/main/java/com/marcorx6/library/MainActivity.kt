@@ -45,6 +45,7 @@ import java.util.Locale
 import java.util.Calendar
 import java.util.regex.Pattern
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.work.Constraints
@@ -81,11 +82,14 @@ class MainActivity : Activity() {
     private fun isDarkMode() = appearancePreferences().getBoolean("dark_mode", true)
 
     private fun applySystemBarAppearance() {
-        window.statusBarColor = bg
-        window.navigationBarColor = bg
+        // Draw edge-to-edge and let each screen apply safe insets to its own content.
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.statusBarColor = Color.TRANSPARENT
+        window.navigationBarColor = Color.TRANSPARENT
         WindowInsetsControllerCompat(window, window.decorView).apply {
             isAppearanceLightStatusBars = !isDarkMode()
             isAppearanceLightNavigationBars = !isDarkMode()
+            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             window.isStatusBarContrastEnforced = false
@@ -147,12 +151,6 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
 
         applySystemBarAppearance()
-
-        // Hide the top status bar (clock, battery and status icons) to prevent overlap.
-        WindowInsetsControllerCompat(window, window.decorView).apply {
-            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            hide(WindowInsetsCompat.Type.statusBars())
-        }
 
         createNotificationChannel()
         configureGoogleSignIn()
@@ -431,7 +429,8 @@ class MainActivity : Activity() {
         button.setTextColor(if (primary) accentForeground() else white)
         button.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
         button.textSize = 13f
-        button.minHeight = dp(46)
+        button.minHeight = dp(48)
+        button.minWidth = dp(48)
         button.setPadding(dp(16), dp(10), dp(16), dp(10))
         button.stateListAnimator = null
     }
@@ -958,8 +957,10 @@ class MainActivity : Activity() {
             setBackgroundColor(ink)
         }
         ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
-            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.setPadding(dp(18), dp(12) + bars.top, dp(18), dp(96) + bars.bottom)
+            val safeAreas = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            view.setPadding(dp(18), dp(12) + safeAreas.top, dp(18), dp(96) + safeAreas.bottom)
             insets
         }
 
@@ -1255,8 +1256,10 @@ class MainActivity : Activity() {
         }
         shell.addView(dock, dockParams)
         ViewCompat.setOnApplyWindowInsetsListener(shell) { _, insets ->
-            val bars = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
-            dockParams.bottomMargin = dp(12) + bars.bottom
+            val safeAreas = insets.getInsets(
+                WindowInsetsCompat.Type.navigationBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            dockParams.bottomMargin = dp(12) + safeAreas.bottom
             dock.layoutParams = dockParams
             insets
         }
