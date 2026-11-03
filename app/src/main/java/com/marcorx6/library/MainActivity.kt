@@ -2041,7 +2041,7 @@ class MainActivity : Activity() {
 
 
     private fun showStartupExperience() {
-        val splash = Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+        val splash = Dialog(this, android.R.style.Theme_Material_NoActionBar)
         val splashText = white
         val splashMuted = gray
         val splashAccent = red
@@ -2125,11 +2125,18 @@ class MainActivity : Activity() {
         splash.show()
         splash.window?.setBackgroundDrawableResource(android.R.color.transparent)
         splash.window?.setLayout(-1, -1)
-        splash.window?.addFlags(android.view.WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-            android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
-        WindowInsetsControllerCompat(splash.window!!, splash.window!!.decorView).apply {
-            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            hide(WindowInsetsCompat.Type.systemBars())
+        splash.window?.let { splashWindow ->
+            // Keep system bars visible on the startup window and let the decor
+            // fit its content inside the safe area on Android 15+.
+            WindowCompat.setDecorFitsSystemWindows(splashWindow, true)
+            splashWindow.statusBarColor = Color.TRANSPARENT
+            splashWindow.navigationBarColor = Color.TRANSPARENT
+            WindowInsetsControllerCompat(splashWindow, splashWindow.decorView).apply {
+                isAppearanceLightStatusBars = !isDarkMode()
+                isAppearanceLightNavigationBars = !isDarkMode()
+                systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
+                show(WindowInsetsCompat.Type.systemBars())
+            }
         }
 
         logo.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(650L)
