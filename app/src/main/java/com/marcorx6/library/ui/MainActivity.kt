@@ -24,10 +24,7 @@ import com.marcorx6.library.network.BloggerFeedParser
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Intent
-import com.google.android.gms.auth.GoogleAuthUtil
 import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.Scope
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.graphics.Color
