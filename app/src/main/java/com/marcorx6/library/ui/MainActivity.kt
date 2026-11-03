@@ -935,47 +935,39 @@ class MainActivity : ComponentActivity() {
         root.addView(header)
 
         val hero = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                if (isDarkMode()) intArrayOf(Color.rgb(18, 83, 151), Color.rgb(12, 37, 67), Color.rgb(8, 19, 35), Color.rgb(10, 82, 116))
-                else intArrayOf(Color.rgb(250, 251, 255), Color.rgb(226, 234, 247), Color.rgb(246, 241, 255), Color.rgb(226, 215, 247))).apply {
-                cornerRadius = dp(24).toFloat()
-                setStroke(dp(1), if (isDarkMode()) Color.rgb(130, 143, 170) else Color.rgb(157, 166, 190))
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
+                if (isDarkMode()) intArrayOf(Color.rgb(14, 65, 119), Color.rgb(10, 34, 60), Color.rgb(8, 23, 40))
+                else intArrayOf(Color.rgb(225, 239, 255), Color.rgb(240, 246, 255), Color.WHITE)).apply {
+                cornerRadius = dp(22).toFloat()
+                setStroke(dp(1), if (isDarkMode()) Color.rgb(48, 119, 190) else Color.rgb(190, 215, 244))
             }
-            elevation = dp(5).toFloat()
-            setPadding(dp(20), dp(20), dp(20), dp(20))
+            elevation = dp(3).toFloat()
+            setPadding(dp(17), dp(17), dp(17), dp(17))
         }
-        hero.addView(makeText("✧  PREMIUM GAME LIBRARY", 9f, if (isDarkMode()) silver else Color.rgb(62, 72, 94), true).apply {
-            letterSpacing = 0.12f
+        val heroCopy = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_VERTICAL }
+        heroCopy.addView(makeText("MARCO RX6  •  GAME HUB", 9f, if (isDarkMode()) Color.rgb(139, 202, 255) else Color.rgb(28, 116, 205), true).apply { letterSpacing = 0.10f })
+        heroCopy.addView(makeText(tr("اكتشف ألعابك المفضلة"), 21f, white, true).apply { setPadding(0, dp(7), 0, dp(5)) })
+        heroCopy.addView(makeText(tr("مكتبتك، مقالاتك وتفاصيل ألعابك في مكان واحد."), 10f, if (isDarkMode()) Color.rgb(205, 220, 239) else Color.rgb(76, 94, 119)).apply { maxLines = 2 })
+        hero.addView(heroCopy, LinearLayout.LayoutParams(0, -2, 1f))
+        val heroMark = TextView(this).apply {
+            text = "RX6"
+            textSize = 23f
+            typeface = Typeface.create("sans-serif-black", Typeface.NORMAL)
+            letterSpacing = 0.04f
             gravity = Gravity.CENTER
-        })
-        hero.addView(makeText(tr("اكتشف. العب.\nاستمتع أكثر."), 27f, white, true).apply {
-            typeface = Typeface.create("sans-serif", Typeface.BOLD)
-            gravity = Gravity.CENTER
-            setPadding(0, dp(15), 0, dp(10))
-        })
-        hero.addView(makeText(tr("ألعاب وشروحات وآخر الإصدارات، كلّها في مكان واحد."), 11f,
-            if (isDarkMode()) Color.rgb(218, 222, 235) else Color.rgb(75, 85, 105)).apply {
-            gravity = Gravity.CENTER
-        })
-        val stats = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            setPadding(0, dp(18), 0, 0)
+            setTextColor(Color.WHITE)
+            background = GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(Color.rgb(40, 153, 255), Color.rgb(14, 88, 177))).apply {
+                cornerRadius = dp(17).toFloat()
+                setStroke(dp(1), Color.rgb(116, 194, 255))
+            }
+            setPadding(dp(13), dp(17), dp(13), dp(17))
         }
-        stats.addView(makeText("◈  ${games.size} " + tr("مقال"), 11f, if (isDarkMode()) silver else Color.rgb(49, 59, 80), true).apply {
-            gravity = Gravity.CENTER
-        })
-        stats.addView(makeText("•  " + tr("المدونة محدّثة"), 10f,
-            if (isDarkMode()) Color.rgb(151, 205, 255) else Color.rgb(35, 139, 235), true).apply {
-            gravity = Gravity.CENTER
-            setPadding(0, dp(8), 0, 0)
-        })
-        hero.addView(stats)
-        root.addView(hero, LinearLayout.LayoutParams(-1, dp(212)).apply {
+        hero.addView(heroMark, LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(10) })
+        root.addView(hero, LinearLayout.LayoutParams(-1, dp(126)).apply {
             gravity = Gravity.CENTER_HORIZONTAL
-            bottomMargin = dp(18)
+            bottomMargin = dp(14)
         })
 
         val searchWrap = LinearLayout(this).apply {
