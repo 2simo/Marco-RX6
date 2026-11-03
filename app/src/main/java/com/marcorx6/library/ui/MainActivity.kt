@@ -67,7 +67,7 @@ class MainActivity : ComponentActivity() {
     private val profileAvatarRepository by lazy { ProfileAvatarRepository(contentResolver, filesDir) }
 
     private fun appearancePreferences() = AppearancePreferencesStore.appearance(this)
-    private fun isDarkMode() = appearancePreferences().getBoolean("dark_mode", true)
+    private fun isDarkMode() = AppearancePreferencesStore.isDarkMode(appearancePreferences())
 
     private fun applySystemBarAppearance() {
         // Draw edge-to-edge and let each screen apply safe insets to its own content.

@@ -10,4 +10,7 @@ internal object AppearancePreferencesStore {
 
     fun typography(context: Context): SharedPreferences =
         context.getSharedPreferences("font_settings", Context.MODE_PRIVATE)
+
+    fun isDarkMode(preferences: SharedPreferences): Boolean =
+        preferences.getBoolean("dark_mode", true)
 }
