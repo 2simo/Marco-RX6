@@ -69,21 +69,11 @@ class MainActivity : ComponentActivity() {
     private fun appearancePreferences() = AppearancePreferencesStore.appearance(this)
     private fun isDarkMode() = AppearancePreferencesStore.isDarkMode(appearancePreferences())
 
-    private fun applySystemBarAppearance() {
-        // Draw edge-to-edge and let each screen apply safe insets to its own content.
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        window.statusBarColor = Color.TRANSPARENT
-        window.navigationBarColor = Color.TRANSPARENT
-        WindowInsetsControllerCompat(window, window.decorView).apply {
-            isAppearanceLightStatusBars = !isDarkMode()
-            isAppearanceLightNavigationBars = !isDarkMode()
-            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            window.isStatusBarContrastEnforced = false
-            window.isNavigationBarContrastEnforced = false
-        }
+    private val systemBarAppearanceController by lazy {
+        SystemBarAppearanceController(this, ::isDarkMode)
     }
+
+    private fun applySystemBarAppearance() = systemBarAppearanceController.apply()
     private fun accentColor(): Int = AccentPalette.color(appearancePreferences().getString("accent", "blue"))
     private val bg: Int get() = if (isDarkMode()) Color.rgb(7, 13, 25) else Color.rgb(245, 247, 251)
     private val panel: Int get() = if (isDarkMode()) Color.rgb(16, 27, 45) else Color.rgb(229, 234, 243)
