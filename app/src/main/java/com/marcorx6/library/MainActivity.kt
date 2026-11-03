@@ -560,7 +560,7 @@ class MainActivity : Activity() {
                 Toast.makeText(this, tr("تم حفظ اللغة"), Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton(tr("إغلاق"), null)
-            .show()
+            .show().also { styleAlertDialog(it) }
     }
 
     private fun showSideMenu() {
@@ -722,7 +722,7 @@ class MainActivity : Activity() {
                 applyMotionPreferences(window.decorView)
                 Toast.makeText(this, if (enabled) "تم تفعيل انتقالات الواجهة" else "تم إيقاف انتقالات الواجهة", Toast.LENGTH_SHORT).show()
             }
-            .setNegativeButton("إغلاق", null).show()
+            .setNegativeButton("إغلاق", null).show().also { styleAlertDialog(it) }
     }
 
     private fun exportBackup() {
@@ -1400,7 +1400,7 @@ class MainActivity : Activity() {
             .setPositiveButton("تصحيح") { _, _ ->
                 showPlatformCorrection(game)
             }
-            .show()
+            .show().also { styleAlertDialog(it) }
     }
 
     private fun showPlatformCorrection(game: Game) {
@@ -1426,7 +1426,7 @@ class MainActivity : Activity() {
                 }
             }
             .setNegativeButton("إلغاء", null)
-            .show()
+            .show().also { styleAlertDialog(it) }
     }
 
     private fun findPlatformMismatch(game: Game): String? {
