@@ -123,6 +123,24 @@ class MainActivity : ComponentActivity() {
         BloggerPostRepository(bloggerApiClient, { bloggerBlogId }, { isAdminSession })
     }
     private val gameRepository by lazy { GameRepository(applicationContext) }
+    private val bloggerAccessController by lazy {
+        BloggerAccessController(
+            executor = ioExecutor,
+            checkAccess = bloggerApiClient::hasWriteAccess,
+            currentAccountId = { GoogleSignIn.getLastSignedInAccount(this)?.id },
+            setAdmin = { isAdminSession = it },
+            postToUi = ::postToUi,
+            refreshUi = ::createInterface,
+            onDenied = {
+                Toast.makeText(
+                    this,
+                    "هذا الحساب لا يملك صلاحية النشر أو التعديل في مدونة Blogger",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        )
+    }
+
     private val blogSyncController by lazy {
         BlogSyncController(
             context = this,
@@ -219,33 +237,11 @@ class MainActivity : ComponentActivity() {
 
     private fun refreshBloggerAccess() {
         val account = GoogleSignIn.getLastSignedInAccount(this)
-        val blogId = bloggerBlogId
-        if (account?.account == null || blogId.isBlank()) {
-            isAdminSession = false
-            return
-        }
-        isAdminSession = false
-        ioExecutor.execute {
-            val allowed = try {
-                bloggerApiClient.hasWriteAccess(blogId)
-            } catch (_: Exception) {
-                false
-            }
-            postToUi {
-                val current = GoogleSignIn.getLastSignedInAccount(this)
-                if (bloggerBlogId == blogId && current?.id == account.id) {
-                    isAdminSession = allowed
-                    createInterface()
-                    if (!allowed) {
-                        Toast.makeText(
-                            this,
-                            "هذا الحساب لا يملك صلاحية النشر أو التعديل في مدونة Blogger",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
-            }
-        }
+        bloggerAccessController.refresh(
+            blogId = bloggerBlogId,
+            accountId = account?.id,
+            hasAccount = account?.account != null
+        )
     }
     private fun startGoogleSignIn() { googleSignInClient?.let { googleSignInLauncher.launch(it.signInIntent) } }
     private fun signOutAdmin() {
