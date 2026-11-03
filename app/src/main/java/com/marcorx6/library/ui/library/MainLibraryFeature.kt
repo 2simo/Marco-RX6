@@ -1,5 +1,7 @@
 package com.marcorx6.library.ui
 
+import com.marcorx6.library.ui.activity.MainActivity
+
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
