@@ -173,6 +173,13 @@ class MainActivity : Activity() {
         syncFromBlog(showResult = false)
     }
 
+    override fun onResume() {
+        super.onResume()
+        applySystemBarAppearance()
+        WindowInsetsControllerCompat(window, window.decorView)
+            .show(WindowInsetsCompat.Type.systemBars())
+        ViewCompat.requestApplyInsets(window.decorView)
+    }
 
     override fun onDestroy() {
         searchRenderRunnable?.let { mainHandler.removeCallbacks(it) }
@@ -2041,7 +2048,7 @@ class MainActivity : Activity() {
 
 
     private fun showStartupExperience() {
-        val splash = Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+        val splash = Dialog(this, android.R.style.Theme_Material_NoActionBar)
         val splashText = white
         val splashMuted = gray
         val splashAccent = red
@@ -2125,11 +2132,14 @@ class MainActivity : Activity() {
         splash.show()
         splash.window?.setBackgroundDrawableResource(android.R.color.transparent)
         splash.window?.setLayout(-1, -1)
-        splash.window?.addFlags(android.view.WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-            android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
-        WindowInsetsControllerCompat(splash.window!!, splash.window!!.decorView).apply {
-            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            hide(WindowInsetsCompat.Type.systemBars())
+        splash.window?.let { splashWindow ->
+            WindowCompat.setDecorFitsSystemWindows(splashWindow, true)
+            WindowInsetsControllerCompat(splashWindow, splashWindow.decorView).apply {
+                isAppearanceLightStatusBars = !isDarkMode()
+                isAppearanceLightNavigationBars = !isDarkMode()
+                systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
+                show(WindowInsetsCompat.Type.systemBars())
+            }
         }
 
         logo.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(650L)
