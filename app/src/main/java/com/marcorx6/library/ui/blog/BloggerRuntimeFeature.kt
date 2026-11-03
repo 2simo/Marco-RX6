@@ -20,7 +20,7 @@ internal class BloggerRuntimeFeature(
     currentBlogId: () -> String,
     setAdmin: (Boolean) -> Unit,
     isAdminSession: () -> Boolean,
-    feedUrl: String,
+    feedUrl: String = "https://marcorx6.blogspot.com/feeds/posts/default?alt=json&max-results=100",
     postToUi: (() -> Unit) -> Unit,
     refreshUi: () -> Unit,
     merge: (List<Game>) -> Pair<Int, Int>,
