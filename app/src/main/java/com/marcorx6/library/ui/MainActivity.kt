@@ -301,25 +301,9 @@ class MainActivity : ComponentActivity() {
 
     private fun showNotificationSettings() = notificationFeature.showSettings()
 
-    private val basicUiFactory by lazy { BasicUiFactory(this) }
-
-    private fun dp(v: Int): Int = basicUiFactory.dp(v)
-
-    private fun rounded(color: Int, radius: Int) =
-        basicUiFactory.rounded(color, radius)
-
-    private fun makeText(
-        value: String,
-        size: Float,
-        color: Int,
-        bold: Boolean = false
-    ) = basicUiFactory.makeText(value, size, color, bold)
-
-
-    private val appearanceUiFactory by lazy {
-        AppearanceUiFactory(
+    private val uiToolkitFeature by lazy {
+        UiToolkitFeature(
             activity = this,
-            dp = ::dp,
             isDarkMode = ::isDarkMode,
             bg = { bg },
             panel = { panel },
@@ -330,20 +314,17 @@ class MainActivity : ComponentActivity() {
         )
     }
 
+    private fun dp(v: Int): Int = uiToolkitFeature.dp(v)
+    private fun rounded(color: Int, radius: Int) = uiToolkitFeature.rounded(color, radius)
+    private fun makeText(value: String, size: Float, color: Int, bold: Boolean = false) =
+        uiToolkitFeature.makeText(value, size, color, bold)
     private fun stylePrimaryButton(button: Button, primary: Boolean = false) =
-        appearanceUiFactory.stylePrimaryButton(button, primary)
-
-    private fun applyUnifiedSkin(view: View) =
-        appearanceUiFactory.applyUnifiedSkin(view)
-
-    private fun styleAlertDialog(dialog: AlertDialog) =
-        appearanceUiFactory.styleAlertDialog(dialog)
-
+        uiToolkitFeature.stylePrimaryButton(button, primary)
+    private fun applyUnifiedSkin(view: View) = uiToolkitFeature.applyUnifiedSkin(view)
+    private fun styleAlertDialog(dialog: AlertDialog) = uiToolkitFeature.styleAlertDialog(dialog)
     private fun themedSpinner(items: List<String>, selectedIndex: Int = 0): Spinner =
-        appearanceUiFactory.themedSpinner(items, selectedIndex)
-
-    private fun makeInput(hintText: String): EditText =
-        appearanceUiFactory.makeInput(hintText)
+        uiToolkitFeature.themedSpinner(items, selectedIndex)
+    private fun makeInput(hintText: String): EditText = uiToolkitFeature.makeInput(hintText)
 
 
     private val languageFeature by lazy {
