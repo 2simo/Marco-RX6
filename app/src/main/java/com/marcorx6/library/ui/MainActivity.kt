@@ -126,7 +126,7 @@ class MainActivity : ComponentActivity() {
                 adminSessionState.clear()
             }
         }
-    private var googleSignInClient: com.google.android.gms.auth.api.signin.GoogleSignInClient? = null
+    private val googleAccountController by lazy { GoogleAccountController(this) }
     private val googleTokenProvider by lazy { GoogleTokenProvider(this, adminSessionState) }
     private val bloggerApiClient by lazy { BloggerApiClient { googleBloggerToken() } }
     private val bloggerPostRepository by lazy {
@@ -217,8 +217,7 @@ class MainActivity : ComponentActivity() {
         applySystemBarAppearance()
 
         notificationScheduler.createNotificationChannel()
-        configureGoogleSignIn()
-        loadGames()
+         loadGames()
         restoreAdminSession()
         createInterface()
         showStartupExperience()
@@ -253,9 +252,6 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
     }
 
-    private fun configureGoogleSignIn() {
-        googleSignInClient = GoogleSignInFactory.create(this)
-    }
     private fun restoreAdminSession() {
         isAdminSession = false
         refreshBloggerAccess()
@@ -269,9 +265,12 @@ class MainActivity : ComponentActivity() {
             hasAccount = account?.account != null
         )
     }
-    private fun startGoogleSignIn() { googleSignInClient?.let { googleSignInLauncher.launch(it.signInIntent) } }
+    private fun startGoogleSignIn() = googleSignInLauncher.launch(googleAccountController.signInIntent())
     private fun signOutAdmin() {
-        googleSignInClient?.signOut()?.addOnCompleteListener { isAdminSession = false; createInterface() }
+        googleAccountController.signOut {
+            isAdminSession = false
+            createInterface()
+        }
     }
     private fun googleBloggerToken(): String = googleTokenProvider.bloggerToken()
 
