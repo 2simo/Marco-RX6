@@ -1,4 +1,6 @@
-package com.marcorx6.library.ui
+package com.marcorx6.library.ui.game
+
+import com.marcorx6.library.ui.*
 
 import androidx.activity.ComponentActivity
 import com.marcorx6.library.data.Game
