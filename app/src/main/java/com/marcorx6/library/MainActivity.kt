@@ -103,6 +103,8 @@ class MainActivity : Activity() {
     private val panel: Int get() = if (isDarkMode()) Color.rgb(20, 22, 40) else Color.rgb(229, 234, 243)
     private val red: Int get() = accentColor()
     private val white: Int get() = if (isDarkMode()) Color.WHITE else Color.rgb(24, 29, 42)
+    private fun accentForeground(): Int =
+        if (appearancePreferences().getString("accent", "violet") == "violet") Color.WHITE else Color.rgb(24, 29, 42)
     private val gray: Int get() = if (isDarkMode()) Color.LTGRAY else Color.rgb(86, 96, 115)
     private val BACKUP_EXPORT_REQUEST = 1003
     private val BACKUP_IMPORT_REQUEST = 1004
@@ -426,7 +428,7 @@ class MainActivity : Activity() {
             cornerRadius = dp(14).toFloat()
             if (!primary) setStroke(dp(1), if (isDarkMode()) Color.rgb(72, 81, 108) else Color.rgb(211, 219, 232))
         }
-        button.setTextColor(if (primary) Color.WHITE else white)
+        button.setTextColor(if (primary) accentForeground() else white)
         button.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
         button.textSize = 13f
         button.minHeight = dp(46)
@@ -686,7 +688,7 @@ class MainActivity : Activity() {
         menuItem("▶", "قناة YouTube", "@marco_rx7") { openGameLink("https://youtube.com/@marco_rx7") }
         menuItem("➤", "قناة Telegram", "@MARCO_RX1") { openGameLink("https://t.me/MARCO_RX1") }
         panel.addView(View(this), LinearLayout.LayoutParams(1, dp(12)))
-        panel.addView(makeText("MARCO RX6  •  PREMIUM", 9f, Color.rgb(139, 151, 177), true).apply {
+        panel.addView(makeText("MARCO RX6  •  PREMIUM", 9f, gray, true).apply {
             gravity = Gravity.CENTER
             setPadding(0, dp(16), 0, dp(4))
         })
@@ -991,7 +993,7 @@ class MainActivity : Activity() {
             text = if (isDarkMode()) "☾" else "☀"
             textSize = 23f
             gravity = Gravity.CENTER
-            setTextColor(if (isDarkMode()) Color.rgb(224, 231, 255) else Color.rgb(255, 177, 45))
+            setTextColor(if (isDarkMode()) Color.rgb(224, 231, 255) else Color.rgb(130, 83, 8))
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
                 if (isDarkMode()) intArrayOf(Color.rgb(75, 83, 105), Color.rgb(25, 30, 45))
                 else intArrayOf(Color.rgb(255, 246, 214), Color.rgb(255, 224, 155))).apply {
@@ -1005,7 +1007,7 @@ class MainActivity : Activity() {
                 isEnabled = false
                 animate().rotationBy(180f).scaleX(0.2f).scaleY(0.2f).setDuration(220L).withEndAction {
                     text = if (nextDarkMode) "☾" else "☀"
-                    setTextColor(if (nextDarkMode) Color.rgb(224, 231, 255) else Color.rgb(255, 177, 45))
+                    setTextColor(if (nextDarkMode) Color.rgb(224, 231, 255) else Color.rgb(130, 83, 8))
                     background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
                         if (nextDarkMode) intArrayOf(Color.rgb(75, 83, 105), Color.rgb(25, 30, 45))
                         else intArrayOf(Color.rgb(255, 246, 214), Color.rgb(255, 224, 155))).apply {
@@ -2288,7 +2290,7 @@ class MainActivity : Activity() {
             val chip = filters.getChildAt(i) as TextView
             val active = chip.tag?.toString() == selected
             chip.background = rounded(if (active) red else panel, 15)
-            chip.setTextColor(if (active) Color.WHITE else gray)
+            chip.setTextColor(if (active) accentForeground() else gray)
         }
 
         val query = search.text.toString().trim()
@@ -2514,7 +2516,7 @@ class MainActivity : Activity() {
         identity.addView(cover, LinearLayout.LayoutParams(dp(104), dp(140)))
         val info = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(14), 0, 0, 0) }
         info.addView(makeText(game.name, 18f, white, true).apply { maxLines = 3; ellipsize = android.text.TextUtils.TruncateAt.END })
-        info.addView(makeText(game.platform + "  •  MARCO RX6", 10f, Color.rgb(190, 174, 255), true).apply { setPadding(0, dp(6), 0, dp(4)) })
+        info.addView(makeText(game.platform + "  •  MARCO RX6", 10f, if (isDarkMode()) Color.rgb(190, 174, 255) else Color.rgb(104, 66, 165), true).apply { setPadding(0, dp(6), 0, dp(4)) })
         if (game.genre.isNotBlank() || game.releaseYear.isNotBlank()) {
             val metadata = listOf(game.genre, game.releaseYear).filter { it.isNotBlank() }.joinToString("  •  ")
             info.addView(makeText(metadata, 10f, gray, true).apply { setPadding(0, 0, 0, dp(7)) })
@@ -2559,7 +2561,7 @@ class MainActivity : Activity() {
         val similar = games.filter { it.name != game.name && (it.platform == game.platform || it.blogImported == game.blogImported) }.take(5)
         if (similar.isNotEmpty()) {
             val similarBox = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(14), dp(5), dp(14), dp(9)) }
-            similarBox.addView(makeText("قد يعجبك أيضاً", 12f, Color.rgb(190, 174, 255), true).apply { setPadding(0, 0, 0, dp(7)) })
+            similarBox.addView(makeText("قد يعجبك أيضاً", 12f, if (isDarkMode()) Color.rgb(190, 174, 255) else Color.rgb(104, 66, 165), true).apply { setPadding(0, 0, 0, dp(7)) })
             val similarRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
             similar.forEach { item ->
                 similarRow.addView(TextView(this).apply {
@@ -2815,7 +2817,7 @@ class MainActivity : Activity() {
         box.addView(makeText("02 • صورة الغلاف", 12f, red, true).apply { setPadding(0, dp(8), 0, dp(6)) })
         box.addView(preview, LinearLayout.LayoutParams(-1, dp(165)).apply { bottomMargin = dp(8) })
         loadCover(preview, pendingCoverLocalPath, existing?.coverUrl ?: "")
-        box.addView(Button(this).apply { text = "اختيار صورة الغلاف من الهاتف"; tag = "marco_primary_action"; setTextColor(Color.WHITE); background = rounded(red, 12); setOnClickListener { chooseCover() } }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
+        box.addView(Button(this).apply { text = "اختيار صورة الغلاف من الهاتف"; tag = "marco_primary_action"; setTextColor(accentForeground()); background = rounded(red, 12); setOnClickListener { chooseCover() } }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
         box.addView(makeText("أقسام المقال • Labels من المدونة", 10f, red, true)); box.addView(categoryButton)
         Thread {
             try {
