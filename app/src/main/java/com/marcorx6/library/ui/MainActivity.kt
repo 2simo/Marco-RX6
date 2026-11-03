@@ -14,9 +14,7 @@ import com.marcorx6.library.data.GameRepository
 import com.marcorx6.library.data.GameLibraryManager
 import com.marcorx6.library.data.GameLibraryStore
 import com.marcorx6.library.data.ProfileAvatarRepository
-import com.marcorx6.library.data.BloggerPostRepository
 import com.marcorx6.library.data.DownloadRepository
-import com.marcorx6.library.network.BloggerApiClient
 import com.marcorx6.library.network.BloggerFeedClient
 import com.marcorx6.library.network.BloggerArticleBuilder
 import com.marcorx6.library.notification.BlogNotificationScheduler
@@ -128,9 +126,12 @@ class MainActivity : ComponentActivity() {
         }
     private val googleAccountController by lazy { GoogleAccountController(this) }
     private val googleTokenProvider by lazy { GoogleTokenProvider(this, adminSessionState) }
-    private val bloggerApiClient by lazy { BloggerApiClient { googleBloggerToken() } }
-    private val bloggerPostRepository by lazy {
-        BloggerPostRepository(bloggerApiClient, { bloggerBlogId }, { isAdminSession })
+    private val bloggerServices by lazy {
+        BloggerServices(
+            tokenProvider = googleTokenProvider,
+            blogIdProvider = { bloggerBlogId },
+            isAdminSession = { isAdminSession }
+        )
     }
     private val gameRepository by lazy { GameRepository(applicationContext) }
     private val profileAvatarController: ProfileAvatarController by lazy {
@@ -150,9 +151,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private val bloggerAccessController by lazy {
-        BloggerAccessController(
+        bloggerServices.createAccessController(
             executor = ioExecutor,
-            checkAccess = bloggerApiClient::hasWriteAccess,
             currentAccountId = { GoogleSignIn.getLastSignedInAccount(this)?.id },
             setAdmin = { isAdminSession = it },
             postToUi = ::postToUi,
@@ -750,7 +750,7 @@ class MainActivity : ComponentActivity() {
         BloggerPostSaveController(
             executeIo = { task -> ioExecutor.execute { task() } },
             postToUi = ::postToUi,
-            savePost = bloggerPostRepository::savePost
+            savePost = bloggerServices.posts::savePost
         )
     }
 
@@ -832,7 +832,7 @@ class MainActivity : ComponentActivity() {
             white = { white },
             panel = { panel },
             rounded = ::rounded,
-            fetchLabels = bloggerPostRepository::fetchLabels,
+            fetchLabels = bloggerServices.posts::fetchLabels,
             executeIo = { task -> ioExecutor.execute { task() } },
             postToUi = ::postToUi,
             styleAlertDialog = ::styleAlertDialog
@@ -943,7 +943,7 @@ class MainActivity : ComponentActivity() {
             activity = this,
             isAdminSession = { isAdminSession },
             bloggerBlogId = { bloggerBlogId },
-            deletePost = bloggerPostRepository::deletePost,
+            deletePost = bloggerServices.posts::deletePost,
             removeGame = gameLibraryStore::remove,
             deleteCoverFileIfUnused = ::deleteCoverFileIfUnused,
             renderGames = ::renderGames,
