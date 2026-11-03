@@ -15,7 +15,6 @@ internal class GameDetailsIdentityViewFactory(
     private val makeText: (String, Float, Int, Boolean) -> TextView,
     private val isDarkMode: () -> Boolean,
     private val white: () -> Int,
-    private val red: () -> Int,
     private val gray: () -> Int,
     private val loadCover: (ImageView, String, String) -> Unit,
     private val watchlistViewFactory: GameWatchlistViewFactory
