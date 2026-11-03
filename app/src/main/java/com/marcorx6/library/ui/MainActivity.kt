@@ -8,7 +8,7 @@ import java.util.concurrent.Executors
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import com.marcorx6.library.R
-import com.marcorx6.library.BlogNotificationWorker
+import com.marcorx6.library.notification.BlogNotificationWorker
 import com.marcorx6.library.data.Game
 import com.marcorx6.library.data.GameRepository
 import com.marcorx6.library.data.GameLibraryManager
