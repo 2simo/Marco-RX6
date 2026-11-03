@@ -15,7 +15,6 @@ import com.marcorx6.library.ui.MainLibraryRuntimeFeature
 import com.marcorx6.library.ui.UserExperienceRuntimeFeature
 import androidx.activity.ComponentActivity
 import android.app.AlertDialog
-import com.google.android.gms.auth.api.signin.GoogleSignIn
 import android.os.Bundle
 import android.view.View
 import android.widget.*
@@ -118,7 +117,7 @@ class MainActivity : ComponentActivity() {
             activity = this,
             services = googleAccountRuntimeFeature.bloggerServices,
             executor = activityServicesRuntimeFeature.ioExecutor,
-            currentAccount = { GoogleSignIn.getLastSignedInAccount(this) },
+            currentAccount = googleAccountRuntimeFeature::currentAccount,
             currentBlogId = { googleAccountRuntimeFeature.blogId },
             setAdmin = { googleAccountRuntimeFeature.isAdminSession = it },
             isAdminSession = { googleAccountRuntimeFeature.isAdminSession },
