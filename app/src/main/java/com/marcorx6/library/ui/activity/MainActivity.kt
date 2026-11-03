@@ -149,7 +149,7 @@ class MainActivity : ComponentActivity() {
                     addCategory(Intent.CATEGORY_OPENABLE)
                     type = "image/*"
                 }
-                profileAvatarLauncher.launch(intent)
+                activityResultRuntimeFeature.launchProfileAvatar(intent)
             },
             styleAlertDialog = ::styleAlertDialog,
             applyUnifiedSkin = ::applyUnifiedSkin,
@@ -228,18 +228,30 @@ class MainActivity : ComponentActivity() {
     private val gameLibraryStore by lazy { GameLibraryStore(games) { saveGames() } }
     private val SIGN_IN_REQUEST = 1002
 
-    private val googleSignInLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            handleActivityResult(SIGN_IN_REQUEST, result.resultCode, result.data)
-        }
-    private val coverPickerLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            handleActivityResult(PICK_IMAGE_REQUEST, result.resultCode, result.data)
-        }
-    private val profileAvatarLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            handleActivityResult(1005, result.resultCode, result.data)
-        }
+    private val activityResultRuntimeFeature = ActivityResultRuntimeFeature(
+        activity = this,
+        signInRequestCode = SIGN_IN_REQUEST,
+        avatarRequestCode = 1005,
+        coverRequestCode = PICK_IMAGE_REQUEST,
+        onGoogleSignInResult = { data ->
+            googleAdminFeature.accountController.handleSignInResult(
+                data = data,
+                onSuccess = {
+                    isAdminSession = false
+                    createInterface()
+                    refreshBloggerAccess()
+                    Toast.makeText(this, "تم ربط حساب Google؛ جارٍ التحقق من صلاحيات Blogger…", Toast.LENGTH_LONG).show()
+                },
+                onFailure = { message ->
+                    isAdminSession = false
+                    createInterface()
+                    Toast.makeText(this, "فشل تسجيل الدخول إلى Google: $message", Toast.LENGTH_LONG).show()
+                }
+            )
+        },
+        onAvatarSelected = { uri -> userExperienceRuntimeFeature.avatarController.handle(uri) },
+        onCoverSelected = { uri -> coverFeature.selectionController.handle(uri) }
+    )
 
     private val bloggerFeedUrl =
         "https://marcorx6.blogspot.com/feeds/posts/default?alt=json&max-results=100"
@@ -293,7 +305,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun refreshBloggerAccess() = bloggerRuntimeFeature.refreshAccess()
-    private fun startGoogleSignIn() = googleSignInLauncher.launch(googleAdminFeature.accountController.signInIntent())
+    private fun startGoogleSignIn() = activityResultRuntimeFeature.launchGoogleSignIn(googleAdminFeature.accountController.signInIntent())
     private fun signOutAdmin() {
         googleAdminFeature.accountController.signOut {
             isAdminSession = false
@@ -426,40 +438,8 @@ class MainActivity : ComponentActivity() {
             type = "image/*"
         }
 
-        coverPickerLauncher.launch(intent)
+        activityResultRuntimeFeature.launchCoverPicker(intent)
     }
-
-    private val activityResultController: MainActivityResultController by lazy {
-        MainActivityResultController(
-            signInRequestCode = SIGN_IN_REQUEST,
-            avatarRequestCode = 1005,
-            coverRequestCode = PICK_IMAGE_REQUEST,
-            onGoogleSignInResult = { data ->
-                googleAdminFeature.accountController.handleSignInResult(
-                    data = data,
-                    onSuccess = {
-                        isAdminSession = false
-                        createInterface()
-                        refreshBloggerAccess()
-                        Toast.makeText(this, "تم ربط حساب Google؛ جارٍ التحقق من صلاحيات Blogger…", Toast.LENGTH_LONG).show()
-                    },
-                    onFailure = { message ->
-                        isAdminSession = false
-                        createInterface()
-                        Toast.makeText(this, "فشل تسجيل الدخول إلى Google: $message", Toast.LENGTH_LONG).show()
-                    }
-                )
-            },
-            onAvatarSelected = userExperienceRuntimeFeature.avatarController::handle,
-            onCoverSelected = coverFeature.selectionController::handle
-        )
-    }
-
-    private fun handleActivityResult(
-        requestCode: Int,
-        resultCode: Int,
-        data: Intent?
-    ) = activityResultController.handle(requestCode, resultCode, data)
 
     private fun showProfile(): Unit = userExperienceRuntimeFeature.showProfile()
     private val gameExperienceFeature by lazy {
