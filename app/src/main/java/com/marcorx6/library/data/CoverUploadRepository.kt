@@ -22,12 +22,17 @@ internal class CoverUploadRepository(
             throw IllegalStateException("تعذر إنشاء مجلد الأغلفة")
         }
 
-        val destination = File(folder, "cover_${System.currentTimeMillis()}.img")
-        contentResolver.openInputStream(uri).use { input ->
-            if (input == null) throw IllegalStateException("تعذرت قراءة الصورة")
-            FileOutputStream(destination).use { output -> input.copyTo(output) }
+        val destination = File(folder, "cover_${System.currentTimeMillis()}_${System.nanoTime()}.img")
+        try {
+            contentResolver.openInputStream(uri).use { input ->
+                if (input == null) throw IllegalStateException("تعذرت قراءة الصورة")
+                FileOutputStream(destination).use { output -> input.copyTo(output) }
+            }
+            return destination
+        } catch (error: Exception) {
+            destination.delete()
+            throw error
         }
-        return destination
     }
 
     /**
