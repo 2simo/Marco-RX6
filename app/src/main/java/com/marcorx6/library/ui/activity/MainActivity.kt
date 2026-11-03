@@ -11,7 +11,13 @@ import com.marcorx6.library.ui.data.GameDataRuntimeFeature
 import com.marcorx6.library.ui.experience.UserExperienceRuntimeFeature
 import com.marcorx6.library.ui.game.GameExperienceRuntimeFeature
 import com.marcorx6.library.ui.library.MainLibraryRuntimeFeature
+import com.marcorx6.library.ui.ActivityServicesRuntimeFeature
+import com.marcorx6.library.ui.ActivityResultRuntimeFeature
+import com.marcorx6.library.ui.MainActivityLifecycleCoordinator
 import com.marcorx6.library.ui.GameImportMerger
+import com.marcorx6.library.ui.library.MainLibraryViewState
+import com.marcorx6.library.data.Game
+import com.marcorx6.library.ui.auth.GoogleAccountRuntimeFeature
 import androidx.activity.ComponentActivity
 import android.app.AlertDialog
 import android.os.Bundle
@@ -20,11 +26,11 @@ import android.widget.*
 
 class MainActivity : ComponentActivity() {
 
-    private val activityServicesRuntimeFeature by lazy {
+    private val activityServicesRuntimeFeature: ActivityServicesRuntimeFeature by lazy {
         ActivityServicesRuntimeFeature(this, ::styleAlertDialog, ::isDarkMode)
     }
 
-    private val appearancePaletteFeature by lazy { AppearancePaletteRuntimeFeature(this) }
+    private val appearancePaletteFeature: AppearancePaletteRuntimeFeature by lazy { AppearancePaletteRuntimeFeature(this) }
 
     private fun appearancePreferences() = appearancePaletteFeature.preferences()
     private fun isDarkMode() = appearancePaletteFeature.isDarkMode()
@@ -35,15 +41,15 @@ class MainActivity : ComponentActivity() {
     private fun accentForeground(): Int = appearancePaletteFeature.accentForeground()
     private val gray: Int get() = appearancePaletteFeature.gray
 
-    private val games get() = gameDataRuntimeFeature.games
-    private val coverRuntimeFeatureDelegate = lazy {
+    private val games: MutableList<Game> get() = gameDataRuntimeFeature.games
+    private val coverRuntimeFeatureDelegate: Lazy<CoverRuntimeFeature> = lazy {
         CoverRuntimeFeature(applicationContext, filesDir) { games }
     }
-    private val coverRuntimeFeature by coverRuntimeFeatureDelegate
+    private val coverRuntimeFeature: CoverRuntimeFeature by coverRuntimeFeatureDelegate
 
-    private val libraryViewState get() = libraryRuntimeFeature.viewState
+    private val libraryViewState: MainLibraryViewState get() = libraryRuntimeFeature.viewState
 
-    private val coverFeature by lazy {
+    private val coverFeature: CoverUploadRuntimeFeature by lazy {
         CoverUploadRuntimeFeature(
             context = this,
             filesDir = filesDir,
@@ -60,11 +66,11 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private val googleAccountRuntimeFeature by lazy {
+    private val googleAccountRuntimeFeature: GoogleAccountRuntimeFeature by lazy {
         GoogleAccountRuntimeFeature(applicationContext)
     }
-    private val gameDataRuntimeFeature by lazy { GameDataRuntimeFeature(this) }
-    private val userExperienceRuntimeFeature by lazy {
+    private val gameDataRuntimeFeature: GameDataRuntimeFeature by lazy { GameDataRuntimeFeature(this) }
+    private val userExperienceRuntimeFeature: UserExperienceRuntimeFeature by lazy {
         UserExperienceRuntimeFeature(
             activity = this,
             contentResolver = contentResolver,
@@ -109,7 +115,7 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private val bloggerRuntimeFeature by lazy {
+    private val bloggerRuntimeFeature: BloggerRuntimeFeature by lazy {
         BloggerRuntimeFeature(
             activity = this,
             services = googleAccountRuntimeFeature.bloggerServices,
@@ -156,7 +162,7 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private val activityResultRuntimeFeature = ActivityResultRuntimeFeature(
+    private val activityResultRuntimeFeature: ActivityResultRuntimeFeature = ActivityResultRuntimeFeature(
         activity = this,
         onGoogleSignInResult = { data ->
             googleAccountRuntimeFeature.handleSignInResult(
@@ -178,7 +184,7 @@ class MainActivity : ComponentActivity() {
         onCoverSelected = { uri -> coverFeature.selectionController.handle(uri) }
     )
 
-    private val lifecycleCoordinator by lazy {
+    private val lifecycleCoordinator: MainActivityLifecycleCoordinator by lazy {
         MainActivityLifecycleCoordinator(
             activity = this,
             initializePreferredPlatform = { libraryRuntimeFeature.initializePreferredPlatform() },
@@ -219,7 +225,7 @@ class MainActivity : ComponentActivity() {
 
 
 
-    private val appearanceRuntimeFeature by lazy {
+    private val appearanceRuntimeFeature: AppearanceRuntimeFeature by lazy {
         AppearanceRuntimeFeature(
             activity = this,
             appearancePreferences = ::appearancePreferences,
@@ -262,7 +268,7 @@ class MainActivity : ComponentActivity() {
     private fun fontScale(): Float = appearanceRuntimeFeature.fontScale()
     private fun fontFamilyName(): String = appearanceRuntimeFeature.fontFamilyName()
 
-    private val libraryRuntimeFeature by lazy {
+    private val libraryRuntimeFeature: MainLibraryRuntimeFeature by lazy {
         MainLibraryRuntimeFeature(
             activity = this,
             context = this,
@@ -303,7 +309,7 @@ class MainActivity : ComponentActivity() {
     private fun createInterface() = libraryRuntimeFeature.create()
     private fun renderGames() = libraryRuntimeFeature.renderGames()
 
-    private val gameExperienceFeature by lazy {
+    private val gameExperienceFeature: GameExperienceRuntimeFeature by lazy {
         GameExperienceRuntimeFeature(
             activity = this,
             games = games,
