@@ -21,7 +21,6 @@ import com.marcorx6.library.ui.GoogleAccountRuntimeFeature
 import com.marcorx6.library.ui.LanguageFeature
 import com.marcorx6.library.ui.MotionPreferencesApplier
 import com.marcorx6.library.ui.MainLibraryRuntimeFeature
-import com.marcorx6.library.ui.OfflineCatalogLoader
 import com.marcorx6.library.ui.PlatformCorrectionController
 import com.marcorx6.library.ui.ProfileFeature
 import com.marcorx6.library.ui.ProfilePreferences
@@ -69,7 +68,7 @@ class MainActivity : ComponentActivity() {
             .also { coverRuntimeFeatureCreated = true }
     }
 
-    private val libraryViewState = MainLibraryViewState()
+    private val libraryViewState get() = libraryRuntimeFeature.viewState
     private fun postToUi(action: () -> Unit) = activityServicesRuntimeFeature.postToUi(action)
 
     private val ioExecutor get() = activityServicesRuntimeFeature.ioExecutor
@@ -206,10 +205,6 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private val gamePersistenceController by lazy {
-        GamePersistenceController(gameRepository, games) { loadOfflineCatalog() }
-    }
-    private val gameLibraryStore by lazy { GameLibraryStore(games) { saveGames() } }
     private val SIGN_IN_REQUEST = 1002
 
     private val activityResultRuntimeFeature = ActivityResultRuntimeFeature(
