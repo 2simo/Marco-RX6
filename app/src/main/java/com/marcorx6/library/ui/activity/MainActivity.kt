@@ -220,48 +220,55 @@ class MainActivity : ComponentActivity() {
     private val bloggerFeedUrl =
         "https://marcorx6.blogspot.com/feeds/posts/default?alt=json&max-results=100"
 
+    private val lifecycleCoordinator by lazy {
+        MainActivityLifecycleCoordinator(
+            activity = this,
+            initializePreferredPlatform = {
+                libraryViewState.selected = getSharedPreferences("app_settings", MODE_PRIVATE)
+                    .getString("preferred_platform", "ALL")
+                    ?.takeIf { it in listOf("PS2", "PS3", "PS4") } ?: "ALL"
+            },
+            applySystemBarAppearance = ::applySystemBarAppearance,
+            createNotificationChannel = ::createNotificationChannel,
+            loadGames = ::loadGames,
+            restoreAdminSession = ::restoreAdminSession,
+            createInterface = ::createInterface,
+            showStartupExperience = ::showStartupExperience,
+            setupCompleted = {
+                getSharedPreferences("app_settings", MODE_PRIVATE)
+                    .getBoolean("setup_completed", false)
+            },
+            notificationsEnabled = ::areNotificationsEnabled,
+            scheduleNotifications = ::scheduleNotifications,
+            requestNotificationPermission = ::requestNotificationPermissionIfNeeded,
+            syncFromBlog = { syncFromBlog(showResult = false) },
+            dismissUserExperience = { userExperienceRuntimeFeature.dismiss() },
+            disposeLibrary = { libraryRuntimeFeature.dispose() },
+            shutdownServices = { activityServicesRuntimeFeature.shutdown() },
+            closeCoverRuntime = {
+                if (coverRuntimeFeatureCreated) coverRuntimeFeature.close()
+            }
+        )
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        libraryViewState.selected = getSharedPreferences("app_settings", MODE_PRIVATE)
-            .getString("preferred_platform", "ALL")
-            ?.takeIf { it in listOf("PS2", "PS3", "PS4") } ?: "ALL"
-
-        applySystemBarAppearance()
-
-        activityServicesRuntimeFeature.createNotificationChannel()
-        loadGames()
-        restoreAdminSession()
-        createInterface()
-        showStartupExperience()
-        // Keep background prompts and sync away from the full-screen first-run setup.
-        // They resume on the next activity creation after setup has been completed.
-        val setupCompleted = getSharedPreferences("app_settings", MODE_PRIVATE)
-            .getBoolean("setup_completed", false)
-        if (setupCompleted) {
-            if (activityServicesRuntimeFeature.areNotificationsEnabled()) {
-                activityServicesRuntimeFeature.scheduleNotifications()
-                requestNotificationPermissionIfNeeded()
-            }
-            syncFromBlog(showResult = false)
-        }
+        lifecycleCoordinator.onCreate()
     }
 
     override fun onResume() {
         super.onResume()
-        applySystemBarAppearance()
-        WindowInsetsControllerCompat(window, window.decorView)
-            .show(WindowInsetsCompat.Type.systemBars())
-        ViewCompat.requestApplyInsets(window.decorView)
+        lifecycleCoordinator.onResume()
     }
 
     override fun onDestroy() {
-        userExperienceRuntimeFeature.dismiss()
-        libraryRuntimeFeature.dispose()
-        activityServicesRuntimeFeature.shutdown()
-        if (coverRuntimeFeatureCreated) coverRuntimeFeature.close()
+        lifecycleCoordinator.onDestroy()
         super.onDestroy()
     }
+
+    private fun createNotificationChannel() = activityServicesRuntimeFeature.createNotificationChannel()
+    private fun areNotificationsEnabled(): Boolean = activityServicesRuntimeFeature.areNotificationsEnabled()
+    private fun scheduleNotifications() = activityServicesRuntimeFeature.scheduleNotifications()
 
     private fun restoreAdminSession() {
         isAdminSession = false
