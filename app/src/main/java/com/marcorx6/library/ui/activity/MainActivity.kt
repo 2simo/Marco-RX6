@@ -8,6 +8,7 @@ import com.marcorx6.library.ui.AppearancePreferencesStore
 import com.marcorx6.library.ui.BlogSyncFeature
 import com.marcorx6.library.ui.BloggerAccessFeature
 import com.marcorx6.library.ui.BloggerHtmlBuilder
+import com.marcorx6.library.ui.BloggerPostFeature
 import com.marcorx6.library.ui.BloggerServices
 import com.marcorx6.library.ui.CoverFeature
 import com.marcorx6.library.ui.CoverUploadState
@@ -266,7 +267,7 @@ class MainActivity : ComponentActivity() {
         refreshBloggerAccess()
     }
 
-    private fun refreshBloggerAccess() = bloggerAccessFeature.refresh()
+    private fun refreshBloggerAccess(): Unit { bloggerAccessFeature.refresh() }
     private fun startGoogleSignIn() = googleSignInLauncher.launch(googleAdminFeature.accountController.signInIntent())
     private fun signOutAdmin() {
         googleAdminFeature.accountController.signOut {
