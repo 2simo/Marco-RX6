@@ -647,7 +647,8 @@ class MainActivity : ComponentActivity() {
             view.setPadding(0, safeAreas.top, 0, safeAreas.bottom)
             insets
         }
-        applyMotionPreferences(menuScroll)        applyUnifiedSkin(menuScroll)
+        applyMotionPreferences(menuScroll)
+        applyUnifiedSkin(menuScroll)
         drawer.setContentView(menuScroll)
         val drawerWidth = minOf(dp(360), resources.displayMetrics.widthPixels - dp(24))
         drawer.window?.let { w ->
@@ -1140,7 +1141,9 @@ class MainActivity : ComponentActivity() {
     private fun showPlatformWarnings(
         warnings: List<Pair<Game, String>>
     ) {
-        if (warnings.isEmpty() || isFinishing) return
+        val setupFinished = getSharedPreferences("app_settings", MODE_PRIVATE)
+            .getBoolean("setup_completed", false)
+        if (warnings.isEmpty() || isFinishing || !setupFinished) return
 
         val (game, detected) = warnings.first()
 
@@ -1440,7 +1443,7 @@ class MainActivity : ComponentActivity() {
         var notificationsEnabled = notificationScheduler.isEnabled()
 
         val steps = listOf(
-            "منصة المكتبة", "لغة التطبيق", "المظهر", "لون الواجهة", "الإشعارات"
+            "منصة المكتبة", "لغة التطبيق", "المظهر", "لون الواجهة", "الإشعارات", "جاهز للانطلاق"
         )
         val dialog = Dialog(this, android.R.style.Theme_Material_NoActionBar)
         val root = LinearLayout(this).apply {
@@ -1481,6 +1484,7 @@ class MainActivity : ComponentActivity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
+        lateinit var renderStep: (Int, Boolean) -> Unit
         val back = Button(this).apply { text = "السابق"; setOnClickListener { renderStep(step - 1, true) } }
         val next = Button(this).apply { text = "التالي"; tag = "marco_primary_action" }
         footer.addView(back, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(8) })
@@ -1515,7 +1519,7 @@ class MainActivity : ComponentActivity() {
                 .setInterpolator(android.view.animation.DecelerateInterpolator()).start()
         }
 
-        fun renderStep(target: Int, animate: Boolean) {
+        renderStep = { target: Int, animate: Boolean ->
             step = target.coerceIn(0, steps.lastIndex)
             stepCount.text = "${step + 1} / ${steps.size}"
             progressFill.layoutParams = LinearLayout.LayoutParams(0, dp(5), (step + 1).toFloat())
@@ -1540,7 +1544,8 @@ class MainActivity : ComponentActivity() {
                 1 -> "اختر اللغة التي تناسبك لعرض واجهة MARCO RX6."
                 2 -> "اختر المظهر الذي يريح عينيك أثناء التصفح."
                 3 -> "اختر اللون الذي سيظهر في الأزرار والعناصر التفاعلية."
-                else -> "هل ترغب في تلقي إشعار عند نشر مقالات جديدة في المدونة؟"
+                4 -> "هل ترغب في تلقي إشعار عند نشر مقالات جديدة في المدونة؟"
+                else -> "تم إعداد مكتبتك. اختياراتك محفوظة ويمكنك تغييرها لاحقاً من الإعدادات."
             }
             page.addView(makeText(description, 13f, Color.rgb(164, 184, 207)).apply {
                 setPadding(0, 0, 0, dp(24))
@@ -1595,6 +1600,11 @@ class MainActivity : ComponentActivity() {
                 4 -> {
                     addChoice("تفعيل الإشعارات", "تنبيه عند وصول مقال جديد", notificationsEnabled) { notificationsEnabled = true }
                     addChoice("إيقاف الإشعارات", "يمكنك تفعيلها لاحقاً من الإعدادات", !notificationsEnabled) { notificationsEnabled = false }
+                }
+                5 -> {
+                    val readyCard = optionCard("مكتبتك جاهزة!", true, "تم حفظ المنصة واللغة والمظهر واللون والإشعارات.")
+                    choices.addView(readyCard, LinearLayout.LayoutParams(-1, -2))
+                    if (animate) animateIn(readyCard)
                 }
             }
             val scroll = ScrollView(this).apply {
