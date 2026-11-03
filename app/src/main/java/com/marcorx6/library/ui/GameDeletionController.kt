@@ -4,7 +4,6 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.widget.Toast
 import com.marcorx6.library.data.Game
-import java.util.concurrent.Executor
 
 internal class GameDeletionController(
     private val activity: Activity,
