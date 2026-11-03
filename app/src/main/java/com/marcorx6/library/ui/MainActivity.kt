@@ -883,93 +883,38 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private fun showDetails(game: Game) {
-        val reader = android.app.Dialog(this)
-        val root = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundColor(bg)
-        }
-        ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
-            val safeAreas = insets.getInsets(
-                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
-            )
-            view.setPadding(0, safeAreas.top, 0, safeAreas.bottom)
-            insets
-        }
-
-        val topBar = gameDetailsTopBarFactory.create(game) { reader.dismiss() }
-        root.addView(topBar)
-
-        val identity = gameDetailsIdentityViewFactory.create(game)
-        root.addView(identity, LinearLayout.LayoutParams(-1, -2).apply {
-            setMargins(dp(14), dp(12), dp(14), dp(12))
-        })
-
-        gameSimilarGamesViewFactory.create(game, games) { item ->
-            reader.dismiss()
-            showDetails(item)
-        }?.let(root::addView)
-
-        val articleWebView = gameArticleWebViewFactory.create(
-            backgroundColor = bg,
-            gameUrl = game.url,
-            gameName = game.name,
-            bloggerHtml = game.bloggerHtml.ifBlank { "<h2>${game.name}</h2><p>${game.description}</p>" },
-            darkMode = isDarkMode(),
-            fontFamily = fontFamilyName(),
-            fontSize = (17 * fontScale()).toInt(),
-            onDownload = { url, userAgent, contentDisposition, mimeType, pageUrl ->
-                enqueueGameDownload(url, game.name, userAgent.orEmpty(), contentDisposition.orEmpty(), mimeType.orEmpty(), pageUrl)
-            }
+    private val gameDetailsController by lazy {
+        GameDetailsController(
+            activity = this,
+            games = { games },
+            bg = { bg },
+            dp = ::dp,
+            isDarkMode = ::isDarkMode,
+            fontFamilyName = ::fontFamilyName,
+            fontScale = ::fontScale,
+            enqueueGameDownload = ::enqueueGameDownload,
+            topBarFactory = gameDetailsTopBarFactory,
+            identityViewFactory = gameDetailsIdentityViewFactory,
+            similarGamesViewFactory = gameSimilarGamesViewFactory,
+            articleWebViewFactory = gameArticleWebViewFactory,
+            downloadLinksViewFactory = gameDownloadLinksViewFactory,
+            bottomBarFactory = gameDetailsBottomBarFactory,
+            offlineArchiveController = gameOfflineArchiveController,
+            filesDir = filesDir,
+            stableCacheName = coverRepository::stableCacheName,
+            isAdmin = { isAdminSession },
+            postToUi = ::postToUi,
+            openGameLink = ::openGameLink,
+            showGameDialog = { showGameDialog(it) },
+            deleteGame = ::deleteGame,
+            applyMotionPreferences = ::applyMotionPreferences,
+            applyUnifiedSkin = ::applyUnifiedSkin,
+            rounded = ::rounded
         )
-        root.addView(articleWebView, LinearLayout.LayoutParams(-1, 0, 1f))
-        gameDownloadLinksViewFactory.create(game.downloadLinks, game.name)?.let(root::addView)
-
-        val archiveFolder = File(filesDir, "reader_cache").apply { mkdirs() }
-        val archiveFile = File(archiveFolder, coverRepository.stableCacheName(game.url.ifBlank { game.name }) + ".mht")
-
-        val bottom = gameDetailsBottomBarFactory.create(
-            offlineLabel = gameOfflineArchiveController.buttonLabel(archiveFile),
-            isAdmin = isAdminSession,
-            onOffline = {
-                gameOfflineArchiveController.openOrSave(
-                    webView = articleWebView,
-                    archiveFile = archiveFile,
-                    postToUi = ::postToUi
-                )
-            },
-            onShare = {
-                val send = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/plain"
-                    putExtra(Intent.EXTRA_SUBJECT, game.name)
-                    putExtra(Intent.EXTRA_TEXT, game.name + "\n" + game.url)
-                }
-                startActivity(Intent.createChooser(send, "مشاركة مقال من MARCO RX6"))
-            },
-            onComments = { if (game.url.isNotBlank()) openGameLink(game.url) },
-            onEdit = { reader.dismiss(); showGameDialog(game) },
-            onDelete = { reader.dismiss(); deleteGame(game) }
-        )
-        root.addView(bottom)
-        applyMotionPreferences(root)
-        applyUnifiedSkin(root)
-        reader.setContentView(root)
-        reader.window?.setBackgroundDrawableResource(android.R.color.transparent)
-        reader.show()
-        reader.window?.let { readerWindow ->
-            WindowCompat.setDecorFitsSystemWindows(readerWindow, false)
-            readerWindow.statusBarColor = Color.TRANSPARENT
-            readerWindow.navigationBarColor = Color.TRANSPARENT
-            WindowInsetsControllerCompat(readerWindow, readerWindow.decorView).apply {
-                isAppearanceLightStatusBars = !isDarkMode()
-                isAppearanceLightNavigationBars = !isDarkMode()
-            }
-            readerWindow.setLayout(-1, -1)
-            ViewCompat.requestApplyInsets(readerWindow.decorView)
-        }
-        reader.window?.setBackgroundDrawable(rounded(if (isDarkMode()) Color.rgb(7, 13, 25) else Color.rgb(245, 247, 251), 0))
-        reader.setOnDismissListener { articleWebView.stopLoading(); articleWebView.destroy() }
     }
+
+    private fun showDetails(game: Game) = gameDetailsController.show(game)
+
 
     // BLOG POST COMPOSER: reusable article template published directly to Blogger
     private fun showGameDialog(existing: Game? = null) {
