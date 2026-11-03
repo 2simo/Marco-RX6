@@ -9,9 +9,9 @@ import java.io.File
 internal class DriveServices(
     filesDir: File,
     contentResolver: ContentResolver,
-    accessToken: () -> String,
-    executeIo: (() -> Unit) -> Unit,
-    postToUi: (() -> Unit) -> Unit
+    private val accessToken: () -> String,
+    private val executeIo: (() -> Unit) -> Unit,
+    private val postToUi: (() -> Unit) -> Unit
 ) {
     private val repository = CoverUploadRepository(
         filesDir = filesDir,
