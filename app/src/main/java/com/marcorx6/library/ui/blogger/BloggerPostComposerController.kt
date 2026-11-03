@@ -209,8 +209,8 @@ internal class BloggerPostComposerController(
                     labels = selectedLabels.toList(),
                     existing = existing,
                     onSuccess = { saved ->
-                        deleteCoverFileIfUnused(existing?.coverLocalPath.orEmpty())
                         upsertGame(saved, existing)
+                        deleteCoverFileIfUnused(existing?.coverLocalPath.orEmpty())
                         setPendingCoverLocalPath("")
                         setPendingCoverPublicUrl("")
                         resetCoverUploadFailed()
