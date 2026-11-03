@@ -1394,7 +1394,9 @@ class MainActivity : ComponentActivity() {
                     driveToken()
                 ) { localFile ->
                     mainHandler.post {
+                        val previousPendingPath = pendingCoverLocalPath
                         pendingCoverLocalPath = localFile.absolutePath
+                        deleteCoverFileIfUnused(previousPendingPath)
                         coverUrlField?.setText("")
                         coverPreview?.let { loadCover(it, pendingCoverLocalPath, "") }
                         Toast.makeText(this, "تم اختيار الصورة، جارٍ رفعها للموقع...", Toast.LENGTH_SHORT).show()
