@@ -464,7 +464,7 @@ class MainActivity : Activity() {
             window.addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
             window.attributes = window.attributes.apply { dimAmount = 0.66f }
         }
-        dialog.findViewById<TextView>(android.R.id.alertTitle)?.apply {
+        dialog.findViewById<TextView>(resources.getIdentifier("alertTitle", "id", "android"))?.apply {
             setTextColor(white)
             textSize = 18f
             typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
