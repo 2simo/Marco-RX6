@@ -127,7 +127,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     private var googleSignInClient: com.google.android.gms.auth.api.signin.GoogleSignInClient? = null
-    private val googleTokenProvider by lazy { GoogleTokenProvider(this) { isAdminSession } }
+    private val googleTokenProvider by lazy { GoogleTokenProvider(this, adminSessionState) }
     private val bloggerApiClient by lazy { BloggerApiClient { googleBloggerToken() } }
     private val bloggerPostRepository by lazy {
         BloggerPostRepository(bloggerApiClient, { bloggerBlogId }, { isAdminSession })
