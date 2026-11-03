@@ -152,6 +152,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        selected = getSharedPreferences("app_settings", MODE_PRIVATE)
+            .getString("preferred_platform", "ALL")
+            ?.takeIf { it in listOf("PS2", "PS3", "PS4") } ?: "ALL"
+
         applySystemBarAppearance()
 
         notificationScheduler.createNotificationChannel()
@@ -1433,6 +1437,45 @@ class MainActivity : ComponentActivity() {
         fun heading(value: String) {
             box.addView(makeText(value, 12f, red, true).apply { setPadding(0, dp(12), 0, dp(5)) })
         }
+        heading("اختر منصة مكتبتك المفضلة")
+        box.addView(makeText("سنبدأ بعرض ألعاب المنصة التي تختارها، ويمكنك تغييرها لاحقاً.", 11f, gray).apply {
+            setPadding(0, 0, 0, dp(8))
+        })
+        var preferredPlatform = "PS3"
+        val platformCards = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        val platformOptions = listOf("PS2", "PS3", "PS4")
+        val platformViews = mutableMapOf<String, TextView>()
+        fun refreshPlatformCards() {
+            platformViews.forEach { (platform, view) ->
+                val active = platform == preferredPlatform
+                view.background = GradientDrawable().apply {
+                    cornerRadius = dp(14).toFloat()
+                    setColor(if (active) Color.rgb(12, 48, 83) else panel)
+                    setStroke(dp(if (active) 2 else 1), if (active) Color.rgb(42, 145, 255) else gray)
+                }
+                view.setTextColor(if (active) Color.WHITE else white)
+                view.text = if (active) "✓     $platform" else platform
+            }
+        }
+        platformOptions.forEach { platform ->
+            val card = TextView(this).apply {
+                textSize = 16f
+                typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(18), dp(15), dp(18), dp(15))
+                minHeight = dp(54)
+                setOnClickListener {
+                    preferredPlatform = platform
+                    refreshPlatformCards()
+                }
+            }
+            platformViews[platform] = card
+            platformCards.addView(card, LinearLayout.LayoutParams(-1, -2).apply {
+                bottomMargin = dp(8)
+            })
+        }
+        refreshPlatformCards()
+        box.addView(platformCards)
         heading("لغة التطبيق")
         val language = themedSpinner(listOf("العربية", "English", "Français", "Español"), listOf("ar", "en", "fr", "es").indexOf(currentLanguage()).coerceAtLeast(0))
         box.addView(language)
@@ -1458,10 +1501,13 @@ class MainActivity : ComponentActivity() {
             .setPositiveButton("حفظ وابدأ") { _, _ ->
                 val languageCode = listOf("ar", "en", "fr", "es")[language.selectedItemPosition]
                 getSharedPreferences("app_settings", MODE_PRIVATE).edit()
-                    .putString("language", languageCode).putBoolean("setup_completed", true).apply()
+                     .putString("language", languageCode)
+                    .putString("preferred_platform", preferredPlatform)
+                    .putBoolean("setup_completed", true).apply()
                 appearancePreferences().edit()
                     .putBoolean("dark_mode", mode.selectedItemPosition == 0)
                     .putString("accent", themeKeys[theme.selectedItemPosition]).apply()
+                selected = preferredPlatform
                 notificationScheduler.setEnabled(notifications.isChecked)
                 if (notifications.isChecked) {
                     notificationScheduler.schedule()
@@ -1470,9 +1516,6 @@ class MainActivity : ComponentActivity() {
                     notificationScheduler.cancel()
                 }
                 recreate()
-            }
-            .setNegativeButton("لاحقاً") { _, _ ->
-                getSharedPreferences("app_settings", MODE_PRIVATE).edit().putBoolean("setup_completed", true).apply()
             }
             .setCancelable(false)
             .create().apply { setOnShowListener { styleAlertDialog(this) } }.show()
