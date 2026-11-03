@@ -462,22 +462,13 @@ class MainActivity : ComponentActivity() {
 
 
     private fun showAppearanceSettings() {
-        val choices = arrayOf("بنفسجي", "أزرق", "أخضر", "ذهبي", "وردي")
-        val keys = arrayOf("violet", "blue", "green", "gold", "rose")
-        val selectedIndex = keys.indexOf(appearancePreferences().getString("accent", "blue")).coerceAtLeast(0)
-        AlertDialog.Builder(this).setTitle("تخصيص المظهر")
-            .setSingleChoiceItems(choices, selectedIndex) { dialog, which ->
-                appearancePreferences().edit().putString("accent", keys[which]).apply()
-                dialog.dismiss()
-                recreate()
-            }
-            .setNeutralButton(if (appearancePreferences().getBoolean("animations", true)) "إيقاف الحركات" else "تفعيل الحركات") { _, _ ->
-                val enabled = !appearancePreferences().getBoolean("animations", true)
-                appearancePreferences().edit().putBoolean("animations", enabled).apply()
-                applyMotionPreferences(window.decorView)
-                Toast.makeText(this, if (enabled) "تم تفعيل انتقالات الواجهة" else "تم إيقاف انتقالات الواجهة", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("إغلاق", null).show().also { styleAlertDialog(it) }
+        AppearanceSettingsController(
+            activity = this,
+            preferences = appearancePreferences(),
+            applyMotionPreferences = ::applyMotionPreferences,
+            styleDialog = ::styleAlertDialog,
+            recreateActivity = ::recreate
+        ).show()
     }
 
     private fun showTypographySettings() {
