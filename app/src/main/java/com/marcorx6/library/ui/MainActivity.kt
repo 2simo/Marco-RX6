@@ -219,16 +219,13 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private val blogSyncController by lazy {
-        BlogSyncController(
-            context = this,
+    private val blogSyncFeature by lazy {
+        BlogSyncFeature(
             executor = ioExecutor,
             isSyncing = { isSyncing },
             setSyncing = { isSyncing = it },
-            fetch = {
-                val result = BloggerFeedClient(bloggerFeedUrl).fetch()
-                result.blogId to result.games
-            },
+            blogId = { bloggerBlogId },
+            feedUrl = bloggerFeedUrl,
             postToUi = ::postToUi,
             merge = ::mergeImportedGames,
             setBlogId = { bloggerBlogId = it },
@@ -518,7 +515,7 @@ class MainActivity : ComponentActivity() {
 
     private fun createInterface() = mainLibraryInterfaceController.create()
 
-    private fun syncFromBlog(showResult: Boolean) = blogSyncController.sync(showResult)
+    private fun syncFromBlog(showResult: Boolean) = blogSyncFeature.sync(showResult)
 
     private fun mergeImportedGames(imported: List<Game>): Pair<Int, Int> =
         GameImportMerger.merge(gameLibraryStore, imported)
