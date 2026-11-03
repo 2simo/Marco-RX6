@@ -21,7 +21,7 @@ internal class UserExperienceRuntimeFeature(
     filesDir: File,
     executor: Executor,
     postToUi: (() -> Unit) -> Unit,
-    settings: SharedPreferences,
+    private val settings: SharedPreferences,
     appearancePreferences: () -> SharedPreferences,
     games: () -> List<Game>,
     dp: (Int) -> Int,
@@ -119,6 +119,8 @@ internal class UserExperienceRuntimeFeature(
         }
         launchAvatarPicker(intent)
     }
+
+    fun isSetupCompleted(): Boolean = settings.getBoolean("setup_completed", false)
 
     val avatarController get() = profileFeature.avatarController
 
