@@ -7,7 +7,6 @@ import android.widget.ImageView
 import android.widget.TextView
 import com.marcorx6.library.data.Game
 import com.marcorx6.library.data.GameLibraryStore
-import java.util.concurrent.Executor
 
 /** Composition root for Blogger post composition, labels, saving, and deletion UI. */
 internal class BloggerPostFeature(
@@ -24,7 +23,7 @@ internal class BloggerPostFeature(
     gray: () -> Int,
     red: () -> Int,
     makeText: (String, Float, Int, Boolean) -> TextView,
-    makeInput: (String) -> android.widget.EditText,
+    makeInput: (String) -> EditText,
     rounded: (Int, Int) -> GradientDrawable,
     accentForeground: () -> Int,
     executeIo: (() -> Unit) -> Unit,
