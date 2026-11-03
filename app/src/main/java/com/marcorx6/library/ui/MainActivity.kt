@@ -924,6 +924,14 @@ class MainActivity : ComponentActivity() {
 
     private val gameOfflineArchiveController by lazy { GameOfflineArchiveController(this) }
 
+    private val bloggerArticlePreviewFactory by lazy {
+        BloggerArticlePreviewFactory(
+            activity = this,
+            backgroundColor = { bg },
+            isDarkMode = ::isDarkMode
+        )
+    }
+
     private val gamePostLabelsController by lazy {
         GamePostLabelsController(
             activity = this,
@@ -1221,15 +1229,15 @@ class MainActivity : ComponentActivity() {
         val dialog = AlertDialog.Builder(this).setTitle(if (existing == null) "إنشاء مقال جديد" else "تعديل المقال").setView(scroll).setNegativeButton("إغلاق", null).setNeutralButton("معاينة", null).setPositiveButton(if (existing == null) "نشر المقال" else "حفظ التعديلات", null).create()
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
-                val previewTitle = title.text.toString().trim().ifBlank { "معاينة المقال" }
-                val previewHtml = "<html><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><body style=\"background:${if (isDarkMode()) "#0a0b11" else "#f5f7fb"};color:${if (isDarkMode()) "#f4f4f8" else "#202638"};padding:12px;\">" +
-                    BloggerArticleBuilder.build(previewTitle, selectedLabels.joinToString("، "), genre.text.toString(), releaseYear.text.toString(), body.text.toString(), coverUrl.text.toString(), link.text.toString()) +
-                    "</body></html>"
-                val web = WebView(this).apply {
-                    setBackgroundColor(bg)
-                    settings.javaScriptEnabled = false
-                    loadDataWithBaseURL(null, previewHtml, "text/html", "UTF-8", null)
-                }
+                val web = bloggerArticlePreviewFactory.create(
+                    title = title.text.toString(),
+                    labels = selectedLabels.joinToString("، "),
+                    genre = genre.text.toString(),
+                    releaseYear = releaseYear.text.toString(),
+                    body = body.text.toString(),
+                    coverUrl = coverUrl.text.toString(),
+                    relatedLink = link.text.toString()
+                )
                 AlertDialog.Builder(this).setTitle("معاينة قبل النشر").setView(web)
                     .setPositiveButton("إغلاق", null).show().also { styleAlertDialog(it) }
             }
