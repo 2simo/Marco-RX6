@@ -1051,27 +1051,10 @@ class MainActivity : ComponentActivity() {
         identity.addView(info, LinearLayout.LayoutParams(0, -2, 1f))
         root.addView(identity, LinearLayout.LayoutParams(-1, -2).apply { setMargins(dp(14), dp(12), dp(14), dp(12)) })
 
-        val similar = games.filter { it.name != game.name && (it.platform == game.platform || it.blogImported == game.blogImported) }.take(5)
-        if (similar.isNotEmpty()) {
-            val similarBox = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(14), dp(5), dp(14), dp(9)) }
-            similarBox.addView(makeText("اكتشف المزيد  •  قد يعجبك أيضاً", 12f, if (isDarkMode()) Color.rgb(111, 194, 255) else Color.rgb(30, 139, 235), true).apply { setPadding(0, 0, 0, dp(9)) })
-            val similarRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-            similar.forEach { item ->
-                similarRow.addView(TextView(this).apply {
-                    text = item.name
-                    textSize = 10f
-                    maxLines = 1
-                    ellipsize = android.text.TextUtils.TruncateAt.END
-                    setTextColor(if (isDarkMode()) white else Color.rgb(48, 57, 77))
-                    background = rounded(if (isDarkMode()) Color.rgb(35, 40, 57) else Color.rgb(232, 236, 245), 10)
-                    setPadding(dp(10), dp(9), dp(10), dp(9))
-                    setOnClickListener { reader.dismiss(); showDetails(item) }
-                }, LinearLayout.LayoutParams(dp(118), -2).apply { marginEnd = dp(7) })
-            }
-            val scroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false; addView(similarRow) }
-            similarBox.addView(scroll)
-            root.addView(similarBox)
-        }
+        gameSimilarGamesViewFactory.create(game, games) { item ->
+            reader.dismiss()
+            showDetails(item)
+        }?.let(root::addView)
 
         val articleWebView = gameArticleWebViewFactory.create(
             backgroundColor = bg,
