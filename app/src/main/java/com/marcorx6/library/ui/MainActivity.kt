@@ -292,7 +292,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         startupExperienceController.dismiss()
-        mainLibraryInterfaceController.dispose()
+        mainLibraryFeature.dispose()
         firstRunSetupFeature.dismiss()
         ioExecutor.shutdownNow()
         if (coverRepositoryCreated) coverRepository.close()
@@ -475,13 +475,13 @@ class MainActivity : ComponentActivity() {
 
     private fun showAdvancedFilters() = advancedFiltersFeature.show()
 
-    private val mainLibraryInterfaceController by lazy {
-        MainLibraryInterfaceController(
+    private val mainLibraryFeature by lazy {
+        MainLibraryFeature(
             activity = this,
             darkMode = ::isDarkMode,
             currentLanguage = ::currentLanguage,
             dp = ::dp,
-            tr = ::tr,
+            translate = ::tr,
             rounded = ::rounded,
             createText = { value, size, color, bold -> makeText(value, size, color, bold) },
             games = { games },
@@ -503,7 +503,7 @@ class MainActivity : ComponentActivity() {
             showNotificationSettings = ::showNotificationSettings,
             showAppearanceSettings = ::showAppearanceSettings,
             showAdvancedFilters = ::showAdvancedFilters,
-            showGameDialog = ::showGameDialog,
+            showGameDialog = { showGameDialog() },
             showProfile = ::showProfile,
             showSideMenu = ::showSideMenu,
             applyTypography = ::applyTypography,
@@ -512,7 +512,7 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private fun createInterface() = mainLibraryInterfaceController.create()
+    private fun createInterface() = mainLibraryFeature.create()
 
     private fun syncFromBlog(showResult: Boolean) = blogSyncFeature.sync(showResult)
 
