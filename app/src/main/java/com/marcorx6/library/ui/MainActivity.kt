@@ -978,7 +978,6 @@ class MainActivity : ComponentActivity() {
             makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
             isDarkMode = ::isDarkMode,
             white = { white },
-            red = { red },
             gray = { gray },
             loadCover = ::loadCover,
             watchlistViewFactory = gameWatchlistViewFactory
