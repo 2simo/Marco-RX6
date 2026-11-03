@@ -37,7 +37,7 @@ internal class UserExperienceRuntimeFeature(
     gray: () -> Int,
     showLanguagePicker: () -> Unit,
     showNotificationSettings: () -> Unit,
-    chooseAvatar: () -> Unit,
+    launchAvatarPicker: (Intent) -> Unit,
     styleAlertDialog: (android.app.AlertDialog) -> Unit,
     applyUnifiedSkin: (View) -> Unit,
     onAvatarSaved: () -> Unit,
@@ -73,7 +73,7 @@ internal class UserExperienceRuntimeFeature(
             gray = gray,
             showLanguagePicker = showLanguagePicker,
             showNotificationSettings = showNotificationSettings,
-            chooseAvatar = chooseAvatar,
+            chooseAvatar = ::chooseAvatar,
             styleAlertDialog = styleAlertDialog,
             applyUnifiedSkin = applyUnifiedSkin,
             onAvatarSaved = onAvatarSaved,
@@ -110,6 +110,14 @@ internal class UserExperienceRuntimeFeature(
             showFirstRunSetup = showFirstRunSetup,
             showProfile = showProfileForStartup
         )
+    }
+
+    private fun chooseAvatar() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "image/*"
+        }
+        launchAvatarPicker(intent)
     }
 
     val avatarController get() = profileFeature.avatarController
