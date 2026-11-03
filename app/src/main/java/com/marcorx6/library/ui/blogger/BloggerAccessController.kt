@@ -6,6 +6,7 @@ internal class BloggerAccessController(
     private val executor: Executor,
     private val checkAccess: (String) -> Boolean,
     private val currentAccountId: () -> String?,
+    private val currentBlogId: () -> String,
     private val setAdmin: (Boolean) -> Unit,
     private val postToUi: (() -> Unit) -> Unit,
     private val refreshUi: () -> Unit,
@@ -29,7 +30,7 @@ internal class BloggerAccessController(
                 false
             }
             postToUi {
-                if (version == requestVersion && currentAccountId() == accountId) {
+                if (version == requestVersion && currentAccountId() == accountId && currentBlogId() == blogId) {
                     setAdmin(allowed)
                     refreshUi()
                     if (!allowed) onDenied()
