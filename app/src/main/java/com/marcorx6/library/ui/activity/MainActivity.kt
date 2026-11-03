@@ -162,31 +162,53 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private val bloggerAccessFeature by lazy {
-        BloggerAccessFeature(
-            context = this,
+    private val bloggerRuntimeFeature by lazy {
+        BloggerRuntimeFeature(
+            activity = this,
             services = bloggerServices,
             executor = ioExecutor,
             currentAccount = { GoogleSignIn.getLastSignedInAccount(this) },
             currentBlogId = { bloggerBlogId },
             setAdmin = { isAdminSession = it },
-            postToUi = ::postToUi,
-            refreshUi = ::createInterface
-        )
-    }
-
-    private val blogSyncFeature by lazy {
-        BlogSyncFeature(
-            context = this,
-            executor = ioExecutor,
+            isAdminSession = { isAdminSession },
             isSyncing = { isSyncing },
             setSyncing = { isSyncing = it },
             feedUrl = bloggerFeedUrl,
             postToUi = ::postToUi,
+            refreshUi = ::createInterface,
             merge = ::mergeImportedGames,
             setBlogId = { bloggerBlogId = it },
             refreshAccess = ::refreshBloggerAccess,
-            renderGames = ::renderGames
+            renderGames = ::renderGames,
+            gameLibraryStore = gameLibraryStore,
+            dp = ::dp,
+            bg = { bg },
+            isDarkMode = ::isDarkMode,
+            panel = { panel },
+            white = { white },
+            gray = { gray },
+            red = { red },
+            makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
+            makeInput = ::makeInput,
+            rounded = ::rounded,
+            accentForeground = ::accentForeground,
+            executeIo = { task -> ioExecutor.execute { task() } },
+            styleAlertDialog = ::styleAlertDialog,
+            applyUnifiedSkin = ::applyUnifiedSkin,
+            setCoverFields = { url, preview ->
+                coverUploadState.urlField = url
+                coverUploadState.preview = preview
+            },
+            pendingCoverLocalPath = { coverUploadState.pendingLocalPath },
+            setPendingCoverLocalPath = { coverUploadState.pendingLocalPath = it },
+            pendingCoverPublicUrl = { coverUploadState.pendingPublicUrl },
+            setPendingCoverPublicUrl = { coverUploadState.pendingPublicUrl = it },
+            coverUploadInProgress = { coverUploadState.inProgress },
+            loadCover = ::loadCover,
+            chooseCover = ::chooseCover,
+            deleteCoverFileIfUnused = ::deleteCoverFileIfUnused,
+            resetCoverUploadFailed = { coverUploadState.resetFailure() },
+            saveGames = ::saveGames
         )
     }
 
@@ -261,7 +283,7 @@ class MainActivity : ComponentActivity() {
         refreshBloggerAccess()
     }
 
-    private fun refreshBloggerAccess(): Unit { bloggerAccessFeature.refresh() }
+    private fun refreshBloggerAccess() = bloggerRuntimeFeature.refreshAccess()
     private fun startGoogleSignIn() = googleSignInLauncher.launch(googleAdminFeature.accountController.signInIntent())
     private fun signOutAdmin() {
         googleAdminFeature.accountController.signOut {
@@ -374,7 +396,7 @@ class MainActivity : ComponentActivity() {
     private fun createInterface() = libraryRuntimeFeature.create()
     private fun renderGames() = libraryRuntimeFeature.renderGames()
 
-    private fun syncFromBlog(showResult: Boolean) = blogSyncFeature.sync(showResult)
+    private fun syncFromBlog(showResult: Boolean) = bloggerRuntimeFeature.sync(showResult)
 
     private fun mergeImportedGames(imported: List<Game>): Pair<Int, Int> =
         GameImportMerger.merge(gameLibraryStore, imported)
@@ -467,46 +489,6 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private val bloggerPostFeature by lazy {
-        BloggerPostFeature(
-            activity = this,
-            services = bloggerServices,
-            gameLibraryStore = gameLibraryStore,
-            isAdminSession = { isAdminSession },
-            bloggerBlogId = { bloggerBlogId },
-            dp = ::dp,
-            bg = { bg },
-            isDarkMode = ::isDarkMode,
-            panel = { panel },
-            white = { white },
-            gray = { gray },
-            red = { red },
-            makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
-            makeInput = ::makeInput,
-            rounded = ::rounded,
-            accentForeground = ::accentForeground,
-            executeIo = { task -> ioExecutor.execute { task() } },
-            postToUi = ::postToUi,
-            styleAlertDialog = ::styleAlertDialog,
-            applyUnifiedSkin = ::applyUnifiedSkin,
-            setCoverFields = { url, preview ->
-                coverUploadState.urlField = url
-                coverUploadState.preview = preview
-            },
-            pendingCoverLocalPath = { coverUploadState.pendingLocalPath },
-            setPendingCoverLocalPath = { coverUploadState.pendingLocalPath = it },
-            pendingCoverPublicUrl = { coverUploadState.pendingPublicUrl },
-            setPendingCoverPublicUrl = { coverUploadState.pendingPublicUrl = it },
-            coverUploadInProgress = { coverUploadState.inProgress },
-            loadCover = ::loadCover,
-            chooseCover = ::chooseCover,
-            deleteCoverFileIfUnused = ::deleteCoverFileIfUnused,
-            resetCoverUploadFailed = { coverUploadState.resetFailure() },
-            saveGames = ::saveGames,
-            renderGames = ::renderGames
-        )
-    }
-
     private val gameExperienceFeature by lazy {
         GameExperienceRuntimeFeature(
             activity = this,
@@ -543,10 +525,9 @@ class MainActivity : ComponentActivity() {
 
     private fun showDetails(game: Game) = gameExperienceFeature.showDetails(game)
 
-    private fun showGameDialog(existing: Game? = null) =
-        bloggerPostFeature.showComposer(existing)
+    private fun showGameDialog(existing: Game? = null) = bloggerRuntimeFeature.showComposer(existing)
 
-    private fun deleteGame(game: Game) = bloggerPostFeature.delete(game)
+    private fun deleteGame(game: Game) = bloggerRuntimeFeature.delete(game)
 
     private fun showGameOfTheDay() = gameExperienceFeature.showGameOfTheDay()
 
