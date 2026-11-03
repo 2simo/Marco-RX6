@@ -8,7 +8,7 @@ import com.marcorx6.library.data.Game
 
 internal class GameWatchlistViewFactory(
     private val activity: Activity,
-    private val games: () -> List<Game>,
+    private val games: MutableList<Game>,
     private val dp: (Int) -> Int,
     private val rounded: (Int, Int) -> Drawable,
     private val white: () -> Int,
@@ -39,10 +39,9 @@ internal class GameWatchlistViewFactory(
                 AlertDialog.Builder(activity)
                     .setTitle("قائمة متابعة الألعاب")
                     .setSingleChoiceItems(watchlistNames, current) { dialog, which ->
-                        val index = games().indexOfFirst { it.name == game.name && it.url == game.url }
-                        if (index >= 0 && games() is MutableList<Game>) {
-                            val mutableGames = games() as MutableList<Game>
-                            mutableGames[index] = mutableGames[index].copy(playStatus = watchlistKeys[which])
+                        val index = games.indexOfFirst { it.name == game.name && it.url == game.url }
+                        if (index >= 0) {
+                            games[index] = games[index].copy(playStatus = watchlistKeys[which])
                             saveGames()
                             text = "＋  " + watchlistLabel(watchlistKeys[which])
                             renderGames()
