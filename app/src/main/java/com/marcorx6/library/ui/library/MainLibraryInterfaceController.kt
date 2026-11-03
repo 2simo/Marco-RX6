@@ -1,6 +1,6 @@
 package com.marcorx6.library.ui
 
-import com.marcorx6.library.ui.activity.MainActivity
+import android.content.Context
 
 import android.graphics.Color
 import android.graphics.Typeface
@@ -17,7 +17,8 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
 internal class MainLibraryInterfaceController(
-    private val activity: MainActivity,
+    private val context: Context,
+    private val setContentView: (View) -> Unit,
     private val darkMode: () -> Boolean,
     private val currentLanguage: () -> String,
     private val dp: (Int) -> Int,
@@ -81,7 +82,7 @@ internal class MainLibraryInterfaceController(
         val violet = red
         val ink = bg
         val glass = panel
-        val root = LinearLayout(activity).apply {
+        val root = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             layoutDirection = if (currentLanguage() == "ar") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
             textDirection = if (currentLanguage() == "ar") View.TEXT_DIRECTION_RTL else View.TEXT_DIRECTION_LTR
@@ -96,19 +97,19 @@ internal class MainLibraryInterfaceController(
             insets
         }
 
-        val header = LinearLayout(activity).apply {
+        val header = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(2), dp(3), dp(2), dp(17))
         }
-        val brand = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
+        val brand = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
         brand.addView(makeText("MARCO RX6  /  OFFICIAL GAME HUB", 9f, if (isDarkMode()) Color.rgb(111, 190, 255) else Color.rgb(30, 116, 204), true).apply { letterSpacing = 0.08f })
         brand.addView(makeText("مكتبة الألعاب", 21f, silver, true).apply {
             typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
             letterSpacing = 0.01f
         })
         header.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
-        fun headerAction(icon: String, label: String, action: () -> Unit) = TextView(activity).apply {
+        fun headerAction(icon: String, label: String, action: () -> Unit) = TextView(context).apply {
             text = icon
             textSize = 19f
             gravity = Gravity.CENTER
@@ -133,7 +134,7 @@ internal class MainLibraryInterfaceController(
 
         // Compact game-first layout: the reference has no promotional hero banner.
 
-        val searchWrap = LinearLayout(activity).apply {
+        val searchWrap = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
@@ -146,7 +147,7 @@ internal class MainLibraryInterfaceController(
             elevation = if (isDarkMode()) 0f else dp(2).toFloat()
         }
         searchWrap.addView(makeText("⌕", 26f, if (isDarkMode()) silver else Color.rgb(73, 84, 105), true))
-        search = AutoCompleteTextView(activity).apply {
+        search = AutoCompleteTextView(context).apply {
             hint = tr("ابحث عن الألعاب والمقالات...")
             textSize = 14f
             typeface = Typeface.create("sans-serif", Typeface.NORMAL)
@@ -156,7 +157,7 @@ internal class MainLibraryInterfaceController(
             setHintTextColor(if (isDarkMode()) gray else Color.rgb(105, 115, 134))
             background = null
             setPadding(dp(10), 0, dp(6), 0)
-            setAdapter(ArrayAdapter(activity, android.R.layout.simple_dropdown_item_1line,
+            setAdapter(ArrayAdapter(context, android.R.layout.simple_dropdown_item_1line,
                 games().map { it.name }.distinct().take(80)))
             setOnFocusChangeListener { _, focused ->
                 if (focused && text.isNotEmpty()) showDropDown()
@@ -165,17 +166,17 @@ internal class MainLibraryInterfaceController(
         searchWrap.addView(search, LinearLayout.LayoutParams(0, dp(52), 1f))
         root.addView(searchWrap, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(13) })
 
-        val filterScroll = HorizontalScrollView(activity).apply {
+        val filterScroll = HorizontalScrollView(context).apply {
             isHorizontalScrollBarEnabled = false
             clipToPadding = false
             overScrollMode = View.OVER_SCROLL_NEVER
         }
-        filters = LinearLayout(activity).apply {
+        filters = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
         listOf("ALL", "PS4", "PS3", "PS2", "BLOG", "FAVORITES", "WANT_TO_PLAY", "PLAYING", "COMPLETED").forEach { category ->
-            val chip = TextView(activity).apply {
+            val chip = TextView(context).apply {
                 text = when (category) {
                     "ALL" -> tr("الكل")
                     "PS4" -> "PS4"
@@ -206,17 +207,17 @@ internal class MainLibraryInterfaceController(
         filterScroll.addView(filters)
         root.addView(filterScroll, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(17) })
 
-        val section = LinearLayout(activity).apply {
+        val section = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        val titles = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
+        val titles = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
         titles.addView(makeText("MARCO RX6  /  GAMES", 8f, violet, true).apply { letterSpacing = 0.14f })
         titles.addView(makeText(tr("اكتشف الألعاب"), 21f, silver, true))
         section.addView(titles, LinearLayout.LayoutParams(0, -2, 1f))
         countText = makeText("0 " + tr("مقال"), 10f, muted, true)
         section.addView(countText)
-        val sort = TextView(activity).apply {
+        val sort = TextView(context).apply {
             text = "⇅"
             textSize = 19f
             gravity = Gravity.CENTER
@@ -229,13 +230,13 @@ internal class MainLibraryInterfaceController(
             setOnClickListener {
                 sortMode = when (sortMode) { "LATEST" -> "NEW"; "NEW" -> "A-Z"; "A-Z" -> "FAVORITES"; else -> "LATEST" }
                 renderGames()
-                Toast.makeText(activity, "الترتيب: " + when (sortMode) {
+                Toast.makeText(context, "الترتيب: " + when (sortMode) {
                     "LATEST" -> "الأحدث"; "NEW" -> "المضاف حديثاً"; "A-Z" -> "أبجدياً"; else -> "المفضلة"
                 }, Toast.LENGTH_SHORT).show()
             }
         }
         section.addView(sort, LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(9) })
-        val advancedFilter = TextView(activity).apply {
+        val advancedFilter = TextView(context).apply {
             text = "⚙"
             textSize = 17f
             gravity = Gravity.CENTER
@@ -250,12 +251,12 @@ internal class MainLibraryInterfaceController(
         section.addView(advancedFilter, LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(7) })
         root.addView(section, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
 
-        gameList = LinearLayout(activity).apply {
+        gameList = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(0, dp(4), 0, dp(18))
         }
 
-        // Publish the newly created views to MainActivity before the first render.
+        // Publish the newly created views to the host before the first render.
         // renderGames() reads these fields, so leaving them unwired causes a lateinit crash.
         setSearch(search)
         setFilters(filters)
@@ -265,7 +266,7 @@ internal class MainLibraryInterfaceController(
         root.addView(gameList, LinearLayout.LayoutParams(-1, -2))
 
         if (adminSession()) {
-            val publish = TextView(activity).apply {
+            val publish = TextView(context).apply {
                 text = tr("＋  نشر")
                 textSize = 11f
                 setTextColor(Color.WHITE)
@@ -283,17 +284,17 @@ internal class MainLibraryInterfaceController(
 
         applyTypography(root)
         applyUnifiedSkin(root)
-        val pageScroll = ScrollView(activity).apply {
+        val pageScroll = ScrollView(context).apply {
             isFillViewport = true
             isVerticalScrollBarEnabled = false
             clipToPadding = false
             addView(root, ViewGroup.LayoutParams(-1, -2))
         }
-        val shell = FrameLayout(activity).apply {
+        val shell = FrameLayout(context).apply {
             setBackgroundColor(ink)
             addView(pageScroll, FrameLayout.LayoutParams(-1, -1))
         }
-        val dock = LinearLayout(activity).apply {
+        val dock = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
             background = if (isDarkMode()) GradientDrawable(GradientDrawable.Orientation.TL_BR,
@@ -309,7 +310,7 @@ internal class MainLibraryInterfaceController(
             setPadding(dp(7), dp(7), dp(7), dp(7))
         }
         fun dockItem(icon: String, label: String, action: () -> Unit) {
-            val item = LinearLayout(activity).apply {
+            val item = LinearLayout(context).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
                 setPadding(dp(5), dp(5), dp(5), dp(5))
@@ -331,7 +332,7 @@ internal class MainLibraryInterfaceController(
         dockItem("⌂", tr("الرئيسية")) { selected = "ALL"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
         dockItem("♡", tr("المفضلة")) { selected = "FAVORITES"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
         dockItem("◷", "متابعتي") { selected = "WANT_TO_PLAY"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
-        dockItem("⌕", "بحث") { search.requestFocus(); pageScroll.smoothScrollTo(0, 0); (activity.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager).showSoftInput(search, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT) }
+        dockItem("⌕", "بحث") { search.requestFocus(); pageScroll.smoothScrollTo(0, 0); (context.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager).showSoftInput(search, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT) }
         dockItem("♙", tr("حسابي")) { showProfile() }
         val dockParams = FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply {
             leftMargin = dp(16); rightMargin = dp(16); bottomMargin = dp(12)
@@ -345,7 +346,7 @@ internal class MainLibraryInterfaceController(
             dock.layoutParams = dockParams
             insets
         }
-        activity.setContentView(shell)
+        setContentView(shell)
         applyMotionPreferences(shell)
         root.requestApplyInsets()
         search.addTextChangedListener(object : TextWatcher {
