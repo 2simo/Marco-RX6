@@ -943,6 +943,18 @@ class MainActivity : ComponentActivity() {
         )
     }
 
+    private val gameDetailsBottomBarFactory by lazy {
+        GameDetailsBottomBarFactory(
+            activity = this,
+            dp = ::dp,
+            rounded = ::rounded,
+            isDarkMode = ::isDarkMode,
+            white = { white },
+            panel = { panel },
+            translate = ::tr
+        )
+    }
+
     private val gameDetailsTopBarFactory by lazy {
         GameDetailsTopBarFactory(
             activity = this,
@@ -1077,48 +1089,28 @@ class MainActivity : ComponentActivity() {
         val archiveFolder = File(filesDir, "reader_cache").apply { mkdirs() }
         val archiveFile = File(archiveFolder, coverRepository.stableCacheName(game.url.ifBlank { game.name }) + ".mht")
 
-        val bottom = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(12), dp(9), dp(12), dp(9))
-            setBackgroundColor(panel)
-        }
-        fun readerAction(label: String, action: () -> Unit) = TextView(this).apply {
-            text = label
-            textSize = 12f
-            setTextColor(if (isDarkMode()) white else Color.rgb(48, 57, 77))
-            gravity = Gravity.CENTER
-            setTypeface(null, Typeface.BOLD)
-            background = rounded(if (isDarkMode()) Color.rgb(48, 53, 70) else Color.rgb(230, 235, 245), 11)
-            setPadding(dp(12), dp(12), dp(12), dp(12))
-            minHeight = dp(48)
-            setOnClickListener { action() }
-        }
-        val offline = readerAction(gameOfflineArchiveController.buttonLabel(archiveFile)) {
-            gameOfflineArchiveController.openOrSave(
-                webView = articleWebView,
-                archiveFile = archiveFile,
-                postToUi = ::postToUi
-            )
-        }
-        bottom.addView(offline, LinearLayout.LayoutParams(0, -2, 1.2f).apply { rightMargin = dp(6) })
-
-        val share = readerAction(tr("مشاركة")) {
-            val send = Intent(Intent.ACTION_SEND).apply {
-                type = "text/plain"; putExtra(Intent.EXTRA_SUBJECT, game.name)
-                putExtra(Intent.EXTRA_TEXT, game.name + "\n" + game.url)
-            }
-            startActivity(Intent.createChooser(send, "مشاركة مقال من MARCO RX6"))
-        }
-        bottom.addView(share, LinearLayout.LayoutParams(0, -2, 1f))
-        val comments = readerAction(tr("التعليقات")) { if (game.url.isNotBlank()) openGameLink(game.url) }
-        bottom.addView(comments, LinearLayout.LayoutParams(0, -2, 1f).apply { leftMargin = dp(6) })
-        if (isAdminSession) {
-            val edit = readerAction("تعديل") { reader.dismiss(); showGameDialog(game) }
-            bottom.addView(edit, LinearLayout.LayoutParams(-2, -2).apply { leftMargin = dp(8) })
-            val delete = readerAction("حذف") { reader.dismiss(); deleteGame(game) }
-            bottom.addView(delete, LinearLayout.LayoutParams(-2, -2).apply { leftMargin = dp(8) })
-        }
+        val bottom = gameDetailsBottomBarFactory.create(
+            offlineLabel = gameOfflineArchiveController.buttonLabel(archiveFile),
+            isAdmin = isAdminSession,
+            onOffline = {
+                gameOfflineArchiveController.openOrSave(
+                    webView = articleWebView,
+                    archiveFile = archiveFile,
+                    postToUi = ::postToUi
+                )
+            },
+            onShare = {
+                val send = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_SUBJECT, game.name)
+                    putExtra(Intent.EXTRA_TEXT, game.name + "\n" + game.url)
+                }
+                startActivity(Intent.createChooser(send, "مشاركة مقال من MARCO RX6"))
+            },
+            onComments = { if (game.url.isNotBlank()) openGameLink(game.url) },
+            onEdit = { reader.dismiss(); showGameDialog(game) },
+            onDelete = { reader.dismiss(); deleteGame(game) }
+        )
         root.addView(bottom)
         applyMotionPreferences(root)
         applyUnifiedSkin(root)
