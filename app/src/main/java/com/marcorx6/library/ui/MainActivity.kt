@@ -16,14 +16,11 @@ import com.marcorx6.library.data.BackupFileRepository
 import com.marcorx6.library.data.ProfileAvatarRepository
 import com.marcorx6.library.data.BloggerPostRepository
 import com.marcorx6.library.data.DownloadRepository
-import com.marcorx6.library.data.DownloadStartResult
-import com.marcorx6.library.network.SecureUrlPolicy
 import com.marcorx6.library.network.BloggerApiClient
 import com.marcorx6.library.network.BloggerFeedClient
 import com.marcorx6.library.network.BloggerArticleBuilder
 import com.marcorx6.library.notification.BlogNotificationScheduler
 import com.marcorx6.library.network.BloggerFeedParser
-import android.app.DownloadManager
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Intent
@@ -64,6 +61,9 @@ class MainActivity : ComponentActivity() {
 
     private val notificationScheduler by lazy { BlogNotificationScheduler(applicationContext) }
     private val downloadRepository by lazy { DownloadRepository(applicationContext) }
+    private val downloadUiController by lazy {
+        DownloadUiController(this, downloadRepository) { dialog -> styleAlertDialog(dialog) }
+    }
     private val backupFileRepository by lazy { BackupFileRepository(contentResolver) }
     private val profileAvatarRepository by lazy { ProfileAvatarRepository(contentResolver, filesDir) }
 
@@ -2373,102 +2373,17 @@ class MainActivity : ComponentActivity() {
         hintedMimeType: String = "",
         referrer: String = ""
     ) {
-        val secureLink = SecureUrlPolicy.toHttpsUrl(link)
-        if (secureLink == null) {
-            Toast.makeText(this, "رابط التنزيل غير آمن أو غير صالح؛ يجب استخدام HTTPS", Toast.LENGTH_LONG).show()
-            return
-        }
-        Toast.makeText(this, "جارٍ التحقق من رابط الملف…", Toast.LENGTH_SHORT).show()
-        downloadRepository.enqueue(
-            secureLink, title, userAgent, contentDisposition, hintedMimeType, referrer
-        ) { result ->
-            mainHandler.post {
-                when (result) {
-                    is DownloadStartResult.Enqueued ->
-                        Toast.makeText(this, "تم التحقق من الملف وإضافته إلى مدير التنزيلات", Toast.LENGTH_LONG).show()
-                    is DownloadStartResult.OpenInBrowser -> {
-                        Toast.makeText(this, "هذا رابط صفحة أو تعذّر التأكد أنه ملف مباشر؛ سيتم فتحه في المتصفح", Toast.LENGTH_LONG).show()
-                        openGameLink(result.finalUrl)
-                    }
-                    is DownloadStartResult.Failed ->
-                        Toast.makeText(this, result.message, Toast.LENGTH_LONG).show()
-                }
-            }
-        }
+        downloadUiController.enqueueGameDownload(
+            link, title, userAgent, contentDisposition, hintedMimeType, referrer
+        )
     }
 
     private fun showDownloadManager() {
-        val entries = try {
-            downloadRepository.getDownloads().map { item ->
-                val statusText = when (item.status) {
-                    DownloadManager.STATUS_PENDING -> "في الانتظار"
-                    DownloadManager.STATUS_RUNNING -> "قيد التنزيل"
-                    DownloadManager.STATUS_PAUSED -> "متوقف مؤقتاً"
-                    DownloadManager.STATUS_SUCCESSFUL -> "اكتمل"
-                    DownloadManager.STATUS_FAILED -> "فشل"
-                    else -> "غير معروف"
-                }
-                val progress = if (item.totalBytes > 0L) " • ${(item.downloadedBytes * 100L / item.totalBytes).coerceIn(0L, 100L)}%" else ""
-                "${item.title}\\n$statusText$progress"
-            }
-        } catch (e: Exception) {
-            Toast.makeText(this, "تعذر قراءة التنزيلات: ${e.message}", Toast.LENGTH_LONG).show()
-            return
-        }
-        val message = if (entries.isEmpty()) "لا توجد تنزيلات مسجلة حتى الآن. افتح تفاصيل لعبة واضغط على رابط التنزيل لإضافته هنا."
-            else entries.joinToString("\n\n")
-        val dialog = AlertDialog.Builder(this)
-            .setTitle("مدير التنزيلات • ${entries.size}")
-            .setMessage(message)
-            .setPositiveButton("تحديث", null)
-            .setNeutralButton("فتح التنزيلات", null)
-            .setNegativeButton("إغلاق", null)
-            .create().apply {
-                setOnShowListener {
-                    getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                        dismiss()
-                        showDownloadManager()
-                    }
-                    getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
-                        try {
-                            startActivity(Intent(DownloadManager.ACTION_VIEW_DOWNLOADS))
-                        } catch (_: Exception) {
-                            Toast.makeText(this@MainActivity, "تعذر فتح مدير تنزيلات النظام", Toast.LENGTH_SHORT).show()
-                        }
-                        dismiss()
-                    }
-                }
-            }
-        dialog.show()
-        styleAlertDialog(dialog)
+        downloadUiController.showDownloadManager()
     }
 
     private fun openGameLink(link: String) {
-
-        if (link.isBlank()) {
-            Toast.makeText(
-                this,
-                "لا يوجد رابط متاح",
-                Toast.LENGTH_SHORT
-            ).show()
-            return
-        }
-
-        try {
-            val secureLink = SecureUrlPolicy.upgradeToHttps(link)
-            startActivity(
-                Intent(
-                    Intent.ACTION_VIEW,
-                    Uri.parse(secureLink)
-                )
-            )
-        } catch (_: Exception) {
-            Toast.makeText(
-                this,
-                "تعذر فتح هذا الرابط",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
+        downloadUiController.openGameLink(link)
     }
 
     /**
