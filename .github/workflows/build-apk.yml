@@ -6,7 +6,6 @@ on:
     branches:
       - main
       - redesign/game-catalog-ui
-      - refactor/split-mainactivity
 
 permissions:
   contents: read
@@ -85,14 +84,3 @@ jobs:
           test -n "$RELEASE_CERT"
           test "$DEBUG_CERT" = "$RELEASE_CERT"
 
-      - name: Upload Debug APK
-        uses: actions/upload-artifact@v7
-        with:
-          name: marco-rx6-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
-
-      - name: Upload Release APK
-        uses: actions/upload-artifact@v7
-        with:
-          name: marco-rx6-signed-release-apk
-          path: app/build/outputs/apk/release/app-release.apk
