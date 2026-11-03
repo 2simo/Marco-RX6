@@ -259,8 +259,6 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    private fun bloggerRuntimeFeature.refreshAccess() = bloggerRuntimeFeature.refreshAccess()
-
 
     private val appearanceRuntimeFeature by lazy {
         AppearanceRuntimeFeature(
