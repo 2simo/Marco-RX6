@@ -221,10 +221,10 @@ class MainActivity : ComponentActivity() {
 
     private val blogSyncFeature by lazy {
         BlogSyncFeature(
+            context = this,
             executor = ioExecutor,
             isSyncing = { isSyncing },
             setSyncing = { isSyncing = it },
-            blogId = { bloggerBlogId },
             feedUrl = bloggerFeedUrl,
             postToUi = ::postToUi,
             merge = ::mergeImportedGames,
