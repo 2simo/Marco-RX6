@@ -10,19 +10,19 @@ import android.graphics.drawable.GradientDrawable
 /** Groups appearance dialogs and typography preferences under one feature boundary. */
 internal class AppearanceFeature(
     private val activity: Activity,
-    appearancePreferences: () -> SharedPreferences,
-    dp: (Int) -> Int,
-    makeText: (String, Float, Int, Boolean) -> TextView,
-    panelColor: () -> Int,
-    redColor: () -> Int,
-    whiteColor: () -> Int,
-    grayColor: () -> Int,
-    roundedBackground: (Int, Int) -> GradientDrawable,
-    themedSpinner: (List<String>, Int) -> Spinner,
-    applyMotionPreferences: (View) -> Unit,
-    styleDialog: (android.app.AlertDialog) -> Unit,
-    recreateActivity: () -> Unit,
-    recreateInterface: () -> Unit
+    private val appearancePreferences: () -> SharedPreferences,
+    private val dp: (Int) -> Int,
+    private val makeText: (String, Float, Int, Boolean) -> TextView,
+    private val panelColor: () -> Int,
+    private val redColor: () -> Int,
+    private val whiteColor: () -> Int,
+    private val grayColor: () -> Int,
+    private val roundedBackground: (Int, Int) -> GradientDrawable,
+    private val themedSpinner: (List<String>, Int) -> Spinner,
+    private val applyMotionPreferences: (View) -> Unit,
+    private val styleDialog: (android.app.AlertDialog) -> Unit,
+    private val recreateActivity: () -> Unit,
+    private val recreateInterface: () -> Unit
 ) {
     private fun typographyPreferences() = AppearancePreferencesStore.typography(activity)
     fun fontScale(): Float = TypographyPreferences.scale(typographyPreferences())
