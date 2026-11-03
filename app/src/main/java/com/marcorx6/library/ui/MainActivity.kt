@@ -274,7 +274,7 @@ class MainActivity : ComponentActivity() {
     }
     private fun startGoogleSignIn() = googleSignInLauncher.launch(googleAdminFeature.accountController.signInIntent())
     private fun signOutAdmin() {
-        googleAccountController.signOut {
+        googleAdminFeature.accountController.signOut {
             isAdminSession = false
             createInterface()
         }
@@ -500,7 +500,7 @@ class MainActivity : ComponentActivity() {
             avatarRequestCode = 1005,
             coverRequestCode = PICK_IMAGE_REQUEST,
             onGoogleSignInResult = { data ->
-                googleAccountController.handleSignInResult(
+                googleAdminFeature.accountController.handleSignInResult(
                     data = data,
                     onSuccess = {
                         isAdminSession = false
