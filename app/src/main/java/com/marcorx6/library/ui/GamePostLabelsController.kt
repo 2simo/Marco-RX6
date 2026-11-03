@@ -4,7 +4,7 @@ import android.app.Activity
 import android.graphics.drawable.Drawable
 import android.widget.Button
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
+import android.app.AlertDialog
 
 internal data class GamePostLabelsUi(
     val button: Button,
