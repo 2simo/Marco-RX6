@@ -39,7 +39,10 @@ internal class BloggerPostRepository(
 
     fun savePost(post: Game, labels: List<String>, existingPostId: String?): JSONObject {
         val blogId = requireBlogId()
-        if (!existingPostId.isNullOrBlank()) {
+        if (existingPostId != null) {
+            require(existingPostId.isNotBlank()) {
+                "لا يملك هذا المقال معرّف Blogger. زامن المدونة ثم حاول مجدداً."
+            }
             return request(
                 "PUT",
                 "blogs/$blogId/posts/$existingPostId",
@@ -59,7 +62,7 @@ internal class BloggerPostRepository(
         .put("kind", "blogger#post")
         .put("title", post.name)
         .put("content", post.bloggerHtml)
-        .put("labels", JSONArray().apply { labels.forEach(::put) })
+        .put("labels", JSONArray().apply { labels.forEach { put(it) } })
 
     private fun request(method: String, path: String, payload: JSONObject? = null): JSONObject {
         if (!authorizationCheck()) {
