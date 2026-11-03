@@ -174,6 +174,15 @@ class MainActivity : Activity() {
     }
 
 
+    override fun onResume() {
+        super.onResume()
+        // Reassert visible system bars whenever the activity returns to the foreground.
+        applySystemBarAppearance()
+        WindowInsetsControllerCompat(window, window.decorView)
+            .show(WindowInsetsCompat.Type.systemBars())
+        ViewCompat.requestApplyInsets(window.decorView)
+    }
+
     override fun onDestroy() {
         searchRenderRunnable?.let { mainHandler.removeCallbacks(it) }
         imageExecutor.shutdownNow()
