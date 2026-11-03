@@ -65,6 +65,12 @@ internal class MainLibraryInterfaceController(
     private fun makeText(value: String, size: Float, color: Int, bold: Boolean = false): TextView =
         createText(value, size, color, bold)
 
+    fun dispose() {
+        searchRenderRunnable?.let(mainHandler::removeCallbacks)
+        searchRenderRunnable = null
+        mainHandler.removeCallbacksAndMessages(null)
+    }
+
     fun create() {
         // RX6 GAME HUB: unified midnight-blue surfaces, electric-blue accents and clear game-first hierarchy.
         val silver = if (isDarkMode()) Color.rgb(226, 232, 242) else Color.rgb(43, 52, 68)
@@ -146,7 +152,7 @@ internal class MainLibraryInterfaceController(
             background = null
             setPadding(dp(10), 0, dp(6), 0)
             setAdapter(ArrayAdapter(activity, android.R.layout.simple_dropdown_item_1line,
-                games.map { it.name }.distinct().take(80)))
+                games().map { it.name }.distinct().take(80)))
             setOnFocusChangeListener { _, focused ->
                 if (focused && text.isNotEmpty()) showDropDown()
             }
