@@ -96,8 +96,7 @@ class MainActivity : ComponentActivity() {
     private val panel: Int get() = if (isDarkMode()) Color.rgb(16, 27, 45) else Color.rgb(229, 234, 243)
     private val red: Int get() = accentColor()
     private val white: Int get() = if (isDarkMode()) Color.WHITE else Color.rgb(24, 29, 42)
-    private fun accentForeground(): Int =
-        if (appearancePreferences().getString("accent", "blue") == "violet") Color.WHITE else Color.rgb(24, 29, 42)
+    private fun accentForeground(): Int = Color.WHITE
     private val gray: Int get() = if (isDarkMode()) Color.LTGRAY else Color.rgb(86, 96, 115)
     private val BACKUP_EXPORT_REQUEST = 1003
     private val BACKUP_IMPORT_REQUEST = 1004
@@ -939,7 +938,7 @@ class MainActivity : ComponentActivity() {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                if (isDarkMode()) intArrayOf(Color.rgb(105, 115, 139), Color.rgb(44, 52, 73), Color.rgb(17, 22, 36), Color.rgb(49, 35, 83))
+                if (isDarkMode()) intArrayOf(Color.rgb(18, 83, 151), Color.rgb(12, 37, 67), Color.rgb(8, 19, 35), Color.rgb(10, 82, 116))
                 else intArrayOf(Color.rgb(250, 251, 255), Color.rgb(226, 234, 247), Color.rgb(246, 241, 255), Color.rgb(226, 215, 247))).apply {
                 cornerRadius = dp(24).toFloat()
                 setStroke(dp(1), if (isDarkMode()) Color.rgb(130, 143, 170) else Color.rgb(157, 166, 190))
@@ -1519,7 +1518,7 @@ class MainActivity : ComponentActivity() {
         val progressFill = View(this).apply {
             background = GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(splashAccent, Color.rgb(178, 112, 255), Color.rgb(95, 210, 220))
+                intArrayOf(splashAccent, Color.rgb(52, 174, 255), Color.rgb(35, 210, 224))
             ).apply { cornerRadius = dp(20).toFloat() }
         }
         progressTrack.addView(progressFill, FrameLayout.LayoutParams(0, -1, Gravity.START))
@@ -1865,7 +1864,7 @@ class MainActivity : ComponentActivity() {
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(15), dp(14), dp(15), dp(14))
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                if (isDarkMode()) intArrayOf(Color.rgb(66, 74, 96), Color.rgb(25, 30, 46), Color.rgb(35, 27, 58))
+                if (isDarkMode()) intArrayOf(Color.rgb(20, 83, 145), Color.rgb(13, 34, 58), Color.rgb(8, 61, 83))
                 else intArrayOf(Color.WHITE, Color.rgb(235, 239, 248), Color.rgb(244, 239, 252))).apply {
                 cornerRadius = dp(20).toFloat()
                 setStroke(dp(1), if (isDarkMode()) Color.rgb(91, 105, 133) else Color.rgb(199, 207, 224))
