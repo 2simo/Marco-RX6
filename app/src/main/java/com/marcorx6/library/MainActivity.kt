@@ -903,20 +903,6 @@ class MainActivity : Activity() {
             }.show().also { styleAlertDialog(it) }
     }
 
-    // Ask Android for the device's fastest supported mode (up to 144 Hz).
-    // Android may still enforce a lower rate for power or device policy.
-    @Suppress("DEPRECATION")
-    private fun requestHighRefreshRate() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
-        val modes = windowManager.defaultDisplay.supportedModes
-        val refreshRate = modes.maxOfOrNull { it.refreshRate } ?: return
-        if (refreshRate > 60f) {
-            window.attributes = window.attributes.apply {
-                preferredRefreshRate = refreshRate.coerceAtMost(144f)
-            }
-        }
-    }
-
     private fun showAdvancedFilters() {
         val genreValues = listOf("كل الأنواع") + games.map { it.genre.trim() }.filter { it.isNotBlank() }.distinct().sorted()
         val yearValues = listOf("كل السنوات") + games.map { it.releaseYear.trim() }.filter { it.isNotBlank() }.distinct().sortedDescending()
@@ -999,6 +985,8 @@ class MainActivity : Activity() {
                 setStroke(dp(1), if (isDarkMode()) Color.rgb(93, 105, 130) else Color.rgb(190, 199, 215))
             }
             setPadding(dp(15), dp(10), dp(15), dp(10))
+            minWidth = dp(48)
+            minHeight = dp(48)
             contentDescription = "القائمة الجانبية"
             setOnClickListener { showSideMenu() }
         }
@@ -1014,6 +1002,8 @@ class MainActivity : Activity() {
                 setStroke(dp(1), if (isDarkMode()) Color.rgb(111, 126, 157) else Color.rgb(235, 181, 83))
             }
             setPadding(dp(13), dp(9), dp(13), dp(9))
+            minWidth = dp(48)
+            minHeight = dp(48)
             contentDescription = if (isDarkMode()) "التبديل إلى الوضع النهاري" else "التبديل إلى الوضع الليلي"
             setOnClickListener {
                 val nextDarkMode = !isDarkMode()
@@ -1166,6 +1156,8 @@ class MainActivity : Activity() {
             setTextColor(silver)
             background = rounded(glass, 13)
             setPadding(dp(12), dp(7), dp(12), dp(7))
+            minWidth = dp(48)
+            minHeight = dp(48)
             contentDescription = tr("ترتيب المقالات")
             setOnClickListener {
                 sortMode = when (sortMode) { "LATEST" -> "NEW"; "NEW" -> "A-Z"; "A-Z" -> "FAVORITES"; else -> "LATEST" }
@@ -1183,6 +1175,8 @@ class MainActivity : Activity() {
             setTextColor(silver)
             background = rounded(glass, 13)
             setPadding(dp(12), dp(8), dp(12), dp(8))
+            minWidth = dp(48)
+            minHeight = dp(48)
             contentDescription = "الفلاتر المتقدمة"
             setOnClickListener { showAdvancedFilters() }
         }
@@ -1277,7 +1271,6 @@ class MainActivity : Activity() {
         }
         setContentView(shell)
         applyMotionPreferences(shell)
-        requestHighRefreshRate()
         root.requestApplyInsets()
         search.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -2394,7 +2387,7 @@ class MainActivity : Activity() {
                         background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
                             if (isDarkMode()) intArrayOf(Color.rgb(42, 48, 67), Color.rgb(22, 27, 42))
                             else intArrayOf(Color.WHITE, Color.rgb(239, 243, 250))).apply {
-                            cornerRadius = dp(16).toFloat()
+                            cornerRadius = dp(18).toFloat()
                             setStroke(dp(1), if (isDarkMode()) Color.rgb(73, 84, 111) else Color.rgb(205, 213, 228))
                         }
                         setPadding(dp(4), dp(4), dp(4), dp(5))
@@ -2406,7 +2399,7 @@ class MainActivity : Activity() {
                     val frame = FrameLayout(this).apply {
                         background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
                             if (isDarkMode()) intArrayOf(Color.rgb(116, 127, 151), Color.rgb(35, 41, 59)) else intArrayOf(Color.rgb(235, 239, 247), Color.rgb(211, 220, 234))).apply {
-                            cornerRadius = dp(12).toFloat()
+                            cornerRadius = dp(14).toFloat()
                             setStroke(dp(1), if (isDarkMode()) Color.rgb(125, 139, 169) else Color.rgb(174, 185, 207))
                         }
                         clipToOutline = true
@@ -2431,7 +2424,7 @@ class MainActivity : Activity() {
                     }
                     card.addView(frame, LinearLayout.LayoutParams(dp(142), dp(190)))
 
-                    val title = makeText(post.name, 11f, if (isDarkMode()) Color.rgb(238, 241, 248) else Color.rgb(43, 51, 68), true).apply {
+                    val title = makeText(post.name, 12f, if (isDarkMode()) Color.rgb(238, 241, 248) else Color.rgb(43, 51, 68), true).apply {
                         gravity = Gravity.CENTER
                         maxLines = 1
                         ellipsize = android.text.TextUtils.TruncateAt.END
@@ -2439,7 +2432,7 @@ class MainActivity : Activity() {
                         isClickable = true
                         setOnClickListener { showDetails(post) }
                     }
-                    card.addView(title, LinearLayout.LayoutParams(dp(142), dp(27)))
+                    card.addView(title, LinearLayout.LayoutParams(dp(142), dp(30)))
 
                     row.addView(card, LinearLayout.LayoutParams(dp(150), -2).apply {
                         marginEnd = dp(11)
