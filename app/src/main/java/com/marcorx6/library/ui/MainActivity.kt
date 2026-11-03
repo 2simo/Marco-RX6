@@ -1336,7 +1336,7 @@ class MainActivity : ComponentActivity() {
             elevation = dp(18).toFloat()
         }
         val logo = ImageView(this).apply {
-            setImageResource(R.drawable.marco_rx6_brand)
+            setImageResource(R.drawable.marco_rx6_dragon)
             scaleType = ImageView.ScaleType.FIT_CENTER
             contentDescription = "MARCO RX6"
             setPadding(dp(15), dp(15), dp(15), dp(15))
