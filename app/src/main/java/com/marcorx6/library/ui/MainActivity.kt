@@ -678,13 +678,6 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    // Dedicated immersive article reader; the WebView owns its scroll instead of nesting inside ScrollView.
-    private val gameArticleWebViewFactory by lazy { GameArticleWebViewFactory(this) }
-
-    private val gameOfflineArchiveController by lazy { GameOfflineArchiveController(this) }
-
-    private val bloggerGamePostFactory by lazy { BloggerGamePostFactory() }
-
     private val firstRunSetupCompletionController by lazy {
         FirstRunSetupCompletionController(
             settings = getSharedPreferences("app_settings", MODE_PRIVATE),
@@ -750,70 +743,6 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private val gameDetailsBottomBarFactory by lazy {
-        GameDetailsBottomBarFactory(
-            activity = this,
-            dp = ::dp,
-            rounded = ::rounded,
-            isDarkMode = ::isDarkMode,
-            white = { white },
-            panel = { panel },
-            translate = ::tr
-        )
-    }
-
-    private val gameDetailsTopBarFactory by lazy {
-        GameDetailsTopBarFactory(
-            activity = this,
-            dp = ::dp,
-            makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
-            isDarkMode = ::isDarkMode,
-            white = { white },
-            red = { red },
-            favoriteToggleFactory = gameFavoriteToggleFactory
-        )
-    }
-
-    private val gameDetailsIdentityViewFactory by lazy {
-        GameDetailsIdentityViewFactory(
-            activity = this,
-            dp = ::dp,
-            rounded = ::rounded,
-            makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
-            isDarkMode = ::isDarkMode,
-            white = { white },
-            gray = { gray },
-            loadCover = ::loadCover,
-            watchlistViewFactory = gameWatchlistViewFactory
-        )
-    }
-
-    private val gameFavoriteToggleFactory by lazy {
-        GameFavoriteToggleFactory(
-            activity = this,
-            games = games,
-            dp = ::dp,
-            white = { white },
-            red = { red },
-            saveGames = ::saveGames,
-            renderGames = ::renderGames
-        )
-    }
-
-    private val gameWatchlistViewFactory by lazy {
-        GameWatchlistViewFactory(
-            activity = this,
-            games = games,
-            dp = ::dp,
-            rounded = ::rounded,
-            white = { white },
-            panel = { panel },
-            saveGames = ::saveGames,
-            renderGames = ::renderGames,
-            styleAlertDialog = ::styleAlertDialog
-        )
-    }
-
     private val gamePostLabelsController by lazy {
         GamePostLabelsController(
             activity = this,
@@ -827,46 +756,27 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private val gameDownloadLinksViewFactory by lazy {
-        GameDownloadLinksViewFactory(
+    private val gameDetailsFeature by lazy {
+        GameDetailsFeature(
             activity = this,
-            dp = ::dp,
-            rounded = ::rounded,
-            panel = { panel },
-            red = { red },
-            white = { white },
-            enqueueDownload = { url, label -> enqueueGameDownload(url, label) }
-        )
-    }
-
-    private val gameSimilarGamesViewFactory by lazy {
-        GameSimilarGamesViewFactory(
-            activity = this,
+            games = games,
+            bg = { bg },
             dp = ::dp,
             rounded = ::rounded,
             makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
             isDarkMode = ::isDarkMode,
-            white = { white }
-        )
-    }
-
-    private val gameDetailsController by lazy {
-        GameDetailsController(
-            activity = this,
-            games = { games },
-            bg = { bg },
-            dp = ::dp,
-            isDarkMode = ::isDarkMode,
             fontFamilyName = ::fontFamilyName,
             fontScale = ::fontScale,
             enqueueGameDownload = ::enqueueGameDownload,
-            topBarFactory = gameDetailsTopBarFactory,
-            identityViewFactory = gameDetailsIdentityViewFactory,
-            similarGamesViewFactory = gameSimilarGamesViewFactory,
-            articleWebViewFactory = gameArticleWebViewFactory,
-            downloadLinksViewFactory = gameDownloadLinksViewFactory,
-            bottomBarFactory = gameDetailsBottomBarFactory,
-            offlineArchiveController = gameOfflineArchiveController,
+            white = { white },
+            red = { red },
+            gray = { gray },
+            panel = { panel },
+            tr = ::tr,
+            loadCover = ::loadCover,
+            saveGames = ::saveGames,
+            renderGames = ::renderGames,
+            styleAlertDialog = ::styleAlertDialog,
             filesDir = filesDir,
             stableCacheName = coverRepository::stableCacheName,
             isAdmin = { isAdminSession },
@@ -875,12 +785,11 @@ class MainActivity : ComponentActivity() {
             showGameDialog = { showGameDialog(it) },
             deleteGame = ::deleteGame,
             applyMotionPreferences = ::applyMotionPreferences,
-            applyUnifiedSkin = ::applyUnifiedSkin,
-            rounded = ::rounded
+            applyUnifiedSkin = ::applyUnifiedSkin
         )
     }
 
-    private fun showDetails(game: Game) = gameDetailsController.show(game)
+    private fun showDetails(game: Game) = gameDetailsFeature.show(game)
 
 
     // BLOG POST COMPOSER: reusable article template published directly to Blogger
