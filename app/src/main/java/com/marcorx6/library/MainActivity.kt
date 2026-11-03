@@ -459,7 +459,8 @@ class MainActivity : Activity() {
                 view.setTextColor(white)
                 view.setHintTextColor(gray)
             }
-            is Button -> stylePrimaryButton(view, view.tag == "marco_primary_action")
+            // CompoundButton subclasses Button, so handle them first to avoid
+            // applying the generic button background to checkboxes and radio buttons.
             is CheckBox -> {
                 view.setTextColor(white)
                 view.buttonTintList = android.content.res.ColorStateList.valueOf(red)
@@ -470,6 +471,7 @@ class MainActivity : Activity() {
                 view.buttonTintList = android.content.res.ColorStateList.valueOf(red)
                 view.minHeight = dp(48)
             }
+            is Button -> stylePrimaryButton(view, view.tag == "marco_primary_action")
             is SeekBar -> {
                 view.progressTintList = android.content.res.ColorStateList.valueOf(red)
                 view.thumbTintList = android.content.res.ColorStateList.valueOf(red)
