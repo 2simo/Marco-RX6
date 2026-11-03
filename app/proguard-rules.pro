@@ -1,6 +1,9 @@
-# WorkManager creates workers by class name at runtime. Keep the worker and
-# the constructor used by its default WorkerFactory while allowing other code
-# to be optimized and obfuscated.
+# WorkManager persists worker class names. Keep both the current class and
+# the legacy fully-qualified name so work enqueued by older app versions can
+# still be instantiated after this package refactor.
+-keep class com.marcorx6.library.notification.BlogNotificationWorker {
+    public <init>(android.content.Context, androidx.work.WorkerParameters);
+}
 -keep class com.marcorx6.library.BlogNotificationWorker {
     public <init>(android.content.Context, androidx.work.WorkerParameters);
 }
