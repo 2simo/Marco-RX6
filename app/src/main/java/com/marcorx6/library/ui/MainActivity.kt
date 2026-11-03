@@ -10,6 +10,7 @@ import com.marcorx6.library.BlogNotificationWorker
 import com.marcorx6.library.data.Game
 import com.marcorx6.library.data.GameRepository
 import com.marcorx6.library.network.SecureUrlPolicy
+import com.marcorx6.library.network.BloggerApiClient
 import android.app.DownloadManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
