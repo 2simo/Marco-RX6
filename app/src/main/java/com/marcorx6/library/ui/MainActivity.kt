@@ -1969,41 +1969,25 @@ class MainActivity : ComponentActivity() {
             .show()
     }
 
-    private fun showGameOfTheDay() {
-        if (games.isEmpty()) {
-            Toast.makeText(this, "لا توجد ألعاب متاحة لاختيار لعبة اليوم", Toast.LENGTH_SHORT).show()
-            return
-        }
-        val game = GameOfDaySelector.select(games, Calendar.getInstance()) ?: return
-        val box = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(18), dp(6), dp(18), dp(4))
-        }
-        val cover = ImageView(this).apply {
-            scaleType = ImageView.ScaleType.CENTER_CROP
-            background = rounded(panel, 14)
-            contentDescription = game.name
-        }
-        if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) {
-            loadCover(cover, game.coverLocalPath, game.coverUrl)
-        } else {
-            cover.setImageResource(android.R.drawable.ic_menu_gallery)
-            cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
-        }
-        box.addView(cover, LinearLayout.LayoutParams(-1, dp(190)))
-        box.addView(makeText(game.name, 18f, white, true).apply { setPadding(0, dp(12), 0, dp(5)) })
-        box.addView(makeText(game.platform + if (game.genre.isNotBlank()) " • ${game.genre}" else "", 11f, red, true))
-        val summary = game.description.ifBlank { "اكتشف تفاصيل هذه اللعبة وروابطها داخل مكتبة MARCO RX6." }
-        box.addView(makeText(summary, 12f, gray).apply { setPadding(0, dp(8), 0, 0); maxLines = 5; ellipsize = android.text.TextUtils.TruncateAt.END })
-        AlertDialog.Builder(this)
-            .setTitle("✧ لعبة اليوم")
-            .setView(box)
-            .setPositiveButton("تفاصيل اللعبة") { _, _ -> showDetails(game) }
-            .setNeutralButton("فتح الرابط") { _, _ -> openGameLink(game.url) }
-            .setNegativeButton("إغلاق", null)
-            .create().apply { setOnShowListener { styleAlertDialog(this) } }
-            .show()
+    private val gameOfTheDayController by lazy {
+        GameOfTheDayController(
+            activity = this,
+            games = { games },
+            dp = ::dp,
+            rounded = ::rounded,
+            panel = { panel },
+            white = { white },
+            red = { red },
+            gray = { gray },
+            makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
+            loadCover = ::loadCover,
+            showDetails = ::showDetails,
+            openGameLink = ::openGameLink,
+            styleAlertDialog = ::styleAlertDialog
+        )
     }
+
+    private fun showGameOfTheDay() = gameOfTheDayController.show()
 
     private fun enqueueGameDownload(
         link: String,
