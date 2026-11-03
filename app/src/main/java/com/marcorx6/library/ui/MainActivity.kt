@@ -924,6 +924,18 @@ class MainActivity : ComponentActivity() {
 
     private val gameOfflineArchiveController by lazy { GameOfflineArchiveController(this) }
 
+    private val gameDownloadLinksViewFactory by lazy {
+        GameDownloadLinksViewFactory(
+            activity = this,
+            dp = ::dp,
+            rounded = ::rounded,
+            panel = { panel },
+            red = { red },
+            white = { white },
+            enqueueDownload = { url, label -> enqueueGameDownload(url, label) }
+        )
+    }
+
     private val gameSimilarGamesViewFactory by lazy {
         GameSimilarGamesViewFactory(
             activity = this,
@@ -1080,25 +1092,7 @@ class MainActivity : ComponentActivity() {
             }
         )
         root.addView(articleWebView, LinearLayout.LayoutParams(-1, 0, 1f))
-        val downloads = try { JSONArray(game.downloadLinks) } catch (_: Exception) { JSONArray() }
-        if (downloads.length() > 0) {
-            val downloadScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false; setBackgroundColor(panel) }
-            val downloadRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(dp(12), dp(9), dp(12), dp(9)) }
-            for (i in 0 until downloads.length()) {
-                val item = downloads.optJSONObject(i) ?: continue
-                val target = item.optString("url")
-                if (!target.startsWith("https://")) continue
-                downloadRow.addView(TextView(this).apply {
-                    text = "⬇  " + item.optString("label").ifBlank { "تحميل " + (i + 1) }
-                    textSize = 12f; setTextColor(white); gravity = Gravity.CENTER; setTypeface(null, Typeface.BOLD)
-                    background = rounded(red, 11)
-                    setPadding(dp(13), dp(12), dp(13), dp(12))
-                    setOnClickListener { enqueueGameDownload(target, item.optString("label").ifBlank { game.name }) }
-                }, LinearLayout.LayoutParams(-2, -2).apply { rightMargin = dp(8) })
-            }
-            downloadScroll.addView(downloadRow)
-            root.addView(downloadScroll)
-        }
+        gameDownloadLinksViewFactory.create(game.downloadLinks, game.name)?.let(root::addView)
 
         val archiveFolder = File(filesDir, "reader_cache").apply { mkdirs() }
         val archiveFile = File(archiveFolder, coverRepository.stableCacheName(game.url.ifBlank { game.name }) + ".mht")
