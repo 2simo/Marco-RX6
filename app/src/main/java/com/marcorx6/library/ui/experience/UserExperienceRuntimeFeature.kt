@@ -83,7 +83,7 @@ internal class UserExperienceRuntimeFeature(
         )
     }
 
-    private val firstRunSetupFeature by lazy {
+    private val firstRunSetupFeatureDelegate = lazy {
         FirstRunSetupFeature(
             activity = activity,
             settings = settings,
@@ -103,6 +103,8 @@ internal class UserExperienceRuntimeFeature(
             recreateActivity = recreateActivity
         )
     }
+
+    private val firstRunSetupFeature by firstRunSetupFeatureDelegate
 
     private val startupExperienceController by lazy {
         StartupExperienceController(
@@ -132,6 +134,8 @@ internal class UserExperienceRuntimeFeature(
 
     fun dismiss() {
         startupExperienceController.dismiss()
-        firstRunSetupFeature.dismiss()
+        if (firstRunSetupFeatureDelegate.isInitialized()) {
+            firstRunSetupFeature.dismiss()
+        }
     }
 }
