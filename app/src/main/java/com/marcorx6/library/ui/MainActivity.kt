@@ -60,16 +60,18 @@ class MainActivity : ComponentActivity() {
     private val ioExecutor = Executors.newCachedThreadPool()
     private var searchRenderRunnable: Runnable? = null
     private val PICK_IMAGE_REQUEST = 1001
+    private val coverUploadState = CoverUploadState()
     private val coverFeature by lazy {
         CoverFeature(
             context = this,
             filesDir = filesDir,
             contentResolver = contentResolver,
             accessToken = ::driveToken,
+            state = coverUploadState,
             executeIo = { task -> ioExecutor.execute { task() } },
             postToUi = ::postToUi,
-            coverUrlField = { coverFeature.state.urlField },
-            coverPreview = { coverFeature.state.preview },
+            coverUrlField = { coverUploadState.urlField },
+            coverPreview = { coverUploadState.preview },
             loadCover = ::loadCover,
             deleteCoverFileIfUnused = ::deleteCoverFileIfUnused,
             dp = ::dp,
@@ -577,18 +579,18 @@ class MainActivity : ComponentActivity() {
             styleAlertDialog = ::styleAlertDialog,
             applyUnifiedSkin = ::applyUnifiedSkin,
             setCoverFields = { url, preview ->
-                coverFeature.state.urlField = url
-                coverFeature.state.preview = preview
+                coverUploadState.urlField = url
+                coverUploadState.preview = preview
             },
-            pendingCoverLocalPath = { coverFeature.state.pendingLocalPath },
+            pendingCoverLocalPath = { coverUploadState.pendingLocalPath },
             setPendingCoverLocalPath = { coverFeature.state.pendingLocalPath = it },
-            pendingCoverPublicUrl = { coverFeature.state.pendingPublicUrl },
+            pendingCoverPublicUrl = { coverUploadState.pendingPublicUrl },
             setPendingCoverPublicUrl = { coverFeature.state.pendingPublicUrl = it },
-            coverUploadInProgress = { coverFeature.state.inProgress },
+            coverUploadInProgress = { coverUploadState.inProgress },
             loadCover = ::loadCover,
             chooseCover = ::chooseCover,
             deleteCoverFileIfUnused = ::deleteCoverFileIfUnused,
-            resetCoverUploadFailed = { coverFeature.state.resetFailure() },
+            resetCoverUploadFailed = { coverUploadState.resetFailure() },
             saveGames = ::saveGames,
             renderGames = ::renderGames
         )
