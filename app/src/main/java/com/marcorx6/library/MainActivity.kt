@@ -436,7 +436,7 @@ class MainActivity : Activity() {
         }
         button.setTextColor(if (primary) accentForeground() else white)
         button.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
-        button.textSize = 13f
+        button.textSize = 13.5f
         button.minHeight = dp(48)
         button.minWidth = dp(48)
         button.setPadding(dp(16), dp(10), dp(16), dp(10))
@@ -452,6 +452,8 @@ class MainActivity : Activity() {
                     setStroke(dp(1), if (isDarkMode()) Color.rgb(67, 76, 104) else Color.rgb(211, 219, 232))
                 }
                 view.setPadding(dp(14), dp(12), dp(14), dp(12))
+                view.minHeight = dp(52)
+                view.textSize = 14f
                 view.setTextColor(white)
                 view.setHintTextColor(gray)
             }
@@ -536,6 +538,7 @@ class MainActivity : Activity() {
         EditText(this).apply {
             hint = hintText
             textSize = 14f
+            minHeight = dp(52)
             setTextColor(white)
             setHintTextColor(gray)
             background = rounded(panel, 12)
@@ -961,14 +964,14 @@ class MainActivity : Activity() {
             orientation = LinearLayout.VERTICAL
             layoutDirection = if (currentLanguage() == "ar") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
             textDirection = if (currentLanguage() == "ar") View.TEXT_DIRECTION_RTL else View.TEXT_DIRECTION_LTR
-            setPadding(dp(18), dp(12), dp(18), dp(96))
+            setPadding(dp(16), dp(10), dp(16), dp(104))
             setBackgroundColor(ink)
         }
         ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
             val safeAreas = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
             )
-            view.setPadding(dp(18), dp(12) + safeAreas.top, dp(18), dp(96) + safeAreas.bottom)
+            view.setPadding(dp(16), dp(10) + safeAreas.top, dp(16), dp(104) + safeAreas.bottom)
             insets
         }
 
@@ -1041,11 +1044,11 @@ class MainActivity : Activity() {
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
                 if (isDarkMode()) intArrayOf(Color.rgb(105, 115, 139), Color.rgb(44, 52, 73), Color.rgb(17, 22, 36), Color.rgb(49, 35, 83))
                 else intArrayOf(Color.rgb(250, 251, 255), Color.rgb(226, 234, 247), Color.rgb(246, 241, 255), Color.rgb(226, 215, 247))).apply {
-                cornerRadius = dp(27).toFloat()
+                cornerRadius = dp(24).toFloat()
                 setStroke(dp(1), if (isDarkMode()) Color.rgb(130, 143, 170) else Color.rgb(157, 166, 190))
             }
             elevation = dp(5).toFloat()
-            setPadding(dp(20), dp(22), dp(20), dp(22))
+            setPadding(dp(20), dp(20), dp(20), dp(20))
         }
         hero.addView(makeText("✧  PREMIUM GAME LIBRARY", 9f, if (isDarkMode()) silver else Color.rgb(62, 72, 94), true).apply {
             letterSpacing = 0.12f
@@ -1074,7 +1077,7 @@ class MainActivity : Activity() {
             setPadding(0, dp(8), 0, 0)
         })
         hero.addView(stats)
-        root.addView(hero, LinearLayout.LayoutParams(-1, dp(226)).apply {
+        root.addView(hero, LinearLayout.LayoutParams(-1, dp(212)).apply {
             gravity = Gravity.CENTER_HORIZONTAL
             bottomMargin = dp(18)
         })
@@ -1094,7 +1097,7 @@ class MainActivity : Activity() {
         searchWrap.addView(makeText("⌕", 26f, if (isDarkMode()) silver else Color.rgb(73, 84, 105), true))
         search = AutoCompleteTextView(this).apply {
             hint = tr("ابحث عن الألعاب والمقالات...")
-            textSize = 13f
+            textSize = 14f
             typeface = Typeface.create("sans-serif", Typeface.NORMAL)
             setSingleLine(true)
             threshold = 1
@@ -1132,9 +1135,10 @@ class MainActivity : Activity() {
                     else -> category
                 }
                 tag = category
-                textSize = 10f
+                textSize = 11f
                 typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
                 gravity = Gravity.CENTER
+                minHeight = dp(44)
                 setPadding(dp(16), dp(10), dp(16), dp(10))
                 background = rounded(glass, 18)
                 setTextColor(muted)
@@ -1151,7 +1155,7 @@ class MainActivity : Activity() {
         }
         val titles = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         titles.addView(makeText("DISCOVER", 8f, violet, true).apply { letterSpacing = 0.14f })
-        titles.addView(makeText(tr("أحدث المقالات"), 20f, silver, true))
+        titles.addView(makeText(tr("أحدث المقالات"), 21f, silver, true))
         section.addView(titles, LinearLayout.LayoutParams(0, -2, 1f))
         countText = makeText("0 " + tr("مقال"), 10f, muted, true)
         section.addView(countText)
