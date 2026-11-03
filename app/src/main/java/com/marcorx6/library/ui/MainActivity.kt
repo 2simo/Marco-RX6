@@ -8,6 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import com.marcorx6.library.R
 import com.marcorx6.library.BlogNotificationWorker
 import com.marcorx6.library.data.Game
+import com.marcorx6.library.data.GameRepository
 import com.marcorx6.library.network.SecureUrlPolicy
 import android.app.DownloadManager
 import android.app.NotificationChannel
@@ -128,6 +129,7 @@ class MainActivity : ComponentActivity() {
     private var bloggerBlogId = ""
     private var googleSignInClient: com.google.android.gms.auth.api.signin.GoogleSignInClient? = null
     private val bloggerApiClient by lazy { BloggerApiClient { googleBloggerToken() } }
+    private val gameRepository by lazy { GameRepository(applicationContext) }
     private val SIGN_IN_REQUEST = 1002
 
     private val googleSignInLauncher =
@@ -3263,100 +3265,38 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun saveGames() {
-
-        val array = JSONArray()
-
-        games.forEach { game ->
-
-            array.put(
-                JSONObject()
-                    .put("name", game.name)
-                    .put("platform", game.platform)
-                    .put("description", game.description)
-                    .put("url", game.url)
-                    .put("coverUrl", game.coverUrl)
-                    .put("coverLocalPath", game.coverLocalPath)
-                    .put("sourcePostUrl", game.sourcePostUrl)
-                    .put("downloadLinks", game.downloadLinks)
-                    .put("blogImported", game.blogImported)
-                    .put(
-                        "platformManuallyCorrected",
-                        game.platformManuallyCorrected
-                    )
-                    .put("isFavorite", game.isFavorite)
-                    .put("bloggerPostId", game.bloggerPostId)
-                    .put("bloggerHtml", game.bloggerHtml)
-                    .put("playStatus", game.playStatus)
-                    .put("genre", game.genre)
-                    .put("releaseYear", game.releaseYear)
-            )
-        }
-
-        getSharedPreferences(
-            "games_library",
-            MODE_PRIVATE
-        ).edit()
-            .putString("games", array.toString())
-            .apply()
+        gameRepository.save(games)
     }
 
     private fun loadGames() {
-        val preferences = getSharedPreferences("games_library", MODE_PRIVATE)
-        val saved = preferences.getString("games", null)
+        games.clear()
         try {
-            if (saved.isNullOrBlank()) {
-                val offlineCatalog = assets.open("offline_catalog.json")
-                    .bufferedReader(Charsets.UTF_8).use { it.readText() }
-                val entries = JSONArray(offlineCatalog)
-                for (i in 0 until entries.length()) {
-                    val entry = entries.optJSONObject(i) ?: continue
-                    parseBlogEntry(entry)?.let { games.add(it) }
-                }
-                if (games.isNotEmpty()) saveGames()
+            val savedGames = gameRepository.load()
+            if (savedGames != null) {
+                games.addAll(savedGames)
                 return
             }
-
-            val array = JSONArray(saved)
-            for (i in 0 until array.length()) {
-                val item = array.getJSONObject(i)
-                games.add(
-                    Game(
-                        item.optString("name"),
-                        item.optString("platform"),
-                        item.optString("description"),
-                        item.optString("url"),
-                        item.optString("coverUrl", ""),
-                        item.optString("coverLocalPath", ""),
-                        item.optString("sourcePostUrl", ""),
-                        item.optString("downloadLinks", ""),
-                        item.optBoolean("blogImported", false),
-                        item.optBoolean("platformManuallyCorrected", false),
-                        item.optBoolean("isFavorite", false),
-                        item.optString("bloggerPostId", ""),
-                        item.optString("bloggerHtml", ""),
-                        item.optString("playStatus", ""),
-                        item.optString("genre", ""),
-                        item.optString("releaseYear", "")
-                    )
-                )
-            }
+            loadOfflineCatalog()
         } catch (_: Exception) {
-            // Recover the bundled starter catalog if saved preferences are malformed.
-            // Never leave the library half-loaded after a JSON parsing failure.
+            // Recover the bundled starter catalog if persisted data is malformed.
             games.clear()
             try {
-                val offlineCatalog = assets.open("offline_catalog.json")
-                    .bufferedReader(Charsets.UTF_8).use { it.readText() }
-                val entries = JSONArray(offlineCatalog)
-                for (i in 0 until entries.length()) {
-                    val entry = entries.optJSONObject(i) ?: continue
-                    parseBlogEntry(entry)?.let { games.add(it) }
-                }
-                if (games.isNotEmpty()) saveGames()
+                loadOfflineCatalog()
             } catch (_: Exception) {
                 games.clear()
             }
         }
+    }
+
+    private fun loadOfflineCatalog() {
+        val offlineCatalog = assets.open("offline_catalog.json")
+            .bufferedReader(Charsets.UTF_8).use { it.readText() }
+        val entries = JSONArray(offlineCatalog)
+        for (i in 0 until entries.length()) {
+            val entry = entries.optJSONObject(i) ?: continue
+            parseBlogEntry(entry)?.let { games.add(it) }
+        }
+        if (games.isNotEmpty()) saveGames()
     }
 
 
