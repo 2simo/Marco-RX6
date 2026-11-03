@@ -2475,7 +2475,7 @@ class MainActivity : Activity() {
             textSize = 12f
             setTextColor(red)
             gravity = Gravity.CENTER
-            background = rounded(bg, 9)
+            background = rounded(if (isDarkMode()) Color.rgb(25, 29, 43) else Color.rgb(232, 236, 245), 9)
             setPadding(dp(8), dp(8), dp(8), dp(8))
             setOnClickListener { action() }
         }
@@ -2502,9 +2502,10 @@ class MainActivity : Activity() {
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(15), dp(14), dp(15), dp(14))
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(66, 74, 96), Color.rgb(25, 30, 46), Color.rgb(35, 27, 58))).apply {
+                if (isDarkMode()) intArrayOf(Color.rgb(66, 74, 96), Color.rgb(25, 30, 46), Color.rgb(35, 27, 58))
+                else intArrayOf(Color.WHITE, Color.rgb(235, 239, 248), Color.rgb(244, 239, 252))).apply {
                 cornerRadius = dp(20).toFloat()
-                setStroke(dp(1), Color.rgb(91, 105, 133))
+                setStroke(dp(1), if (isDarkMode()) Color.rgb(91, 105, 133) else Color.rgb(199, 207, 224))
             }
         }
         val cover = ImageView(this).apply {
@@ -2571,7 +2572,7 @@ class MainActivity : Activity() {
                     maxLines = 1
                     ellipsize = android.text.TextUtils.TruncateAt.END
                     setTextColor(white)
-                    background = rounded(Color.rgb(35, 40, 57), 10)
+                    background = rounded(if (isDarkMode()) Color.rgb(35, 40, 57) else Color.rgb(232, 236, 245), 10)
                     setPadding(dp(10), dp(9), dp(10), dp(9))
                     setOnClickListener { reader.dismiss(); showDetails(item) }
                 }, LinearLayout.LayoutParams(dp(118), -2).apply { marginEnd = dp(7) })
@@ -2657,7 +2658,7 @@ class MainActivity : Activity() {
             setTextColor(white)
             gravity = Gravity.CENTER
             setTypeface(null, Typeface.BOLD)
-            background = rounded(Color.rgb(48, 53, 70), 11)
+            background = rounded(if (isDarkMode()) Color.rgb(48, 53, 70) else Color.rgb(230, 235, 245), 11)
             setPadding(dp(12), dp(12), dp(12), dp(12))
             setOnClickListener { action() }
         }
