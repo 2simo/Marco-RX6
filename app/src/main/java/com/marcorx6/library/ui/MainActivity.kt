@@ -551,8 +551,6 @@ class MainActivity : ComponentActivity() {
         coverPickerLauncher.launch(intent)
     }
 
-    private val googleSignInResultHandler by lazy { GoogleSignInResultHandler() }
-
     private val coverUploadController by lazy {
         driveServices.createCoverUploadController()
     }
@@ -582,7 +580,7 @@ class MainActivity : ComponentActivity() {
             avatarRequestCode = 1005,
             coverRequestCode = PICK_IMAGE_REQUEST,
             onGoogleSignInResult = { data ->
-                googleSignInResultHandler.handle(
+                googleAccountController.handleSignInResult(
                     data = data,
                     onSuccess = {
                         isAdminSession = false
