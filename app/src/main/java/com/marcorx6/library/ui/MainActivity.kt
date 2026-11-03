@@ -514,6 +514,15 @@ class MainActivity : ComponentActivity() {
 
     private val googleSignInResultHandler by lazy { GoogleSignInResultHandler() }
 
+    private val coverUploadController by lazy {
+        CoverUploadController(
+            repository = coverUploadRepository,
+            accessToken = ::driveToken,
+            executeIo = { task -> ioExecutor.execute { task() } },
+            postToUi = ::postToUi
+        )
+    }
+
     private fun handleActivityResult(
         requestCode: Int,
         resultCode: Int,
@@ -550,60 +559,53 @@ class MainActivity : ComponentActivity() {
         pendingCoverPublicUrl = ""
         coverUrlField?.setText("")
 
-        ioExecutor.execute {
-            try {
-                val uploadResult = coverUploadRepository.saveAndUploadCover(
-                    uri,
-                    driveToken()
-                ) { localFile ->
-                    postToUi {
-                        val previousPendingPath = pendingCoverLocalPath
-                        pendingCoverLocalPath = localFile.absolutePath
-                        deleteCoverFileIfUnused(previousPendingPath)
-                        coverUrlField?.setText("")
-                        coverPreview?.let { loadCover(it, pendingCoverLocalPath, "") }
-                        Toast.makeText(this, "تم اختيار الصورة، جارٍ رفعها للموقع...", Toast.LENGTH_SHORT).show()
-                    }
+        coverUploadController.upload(
+            uri = uri,
+            onLocalFileSaved = { localFile ->
+                val previousPendingPath = pendingCoverLocalPath
+                pendingCoverLocalPath = localFile.absolutePath
+                deleteCoverFileIfUnused(previousPendingPath)
+                coverUrlField?.setText("")
+                coverPreview?.let { loadCover(it, pendingCoverLocalPath, "") }
+                Toast.makeText(this, "تم اختيار الصورة، جارٍ رفعها للموقع...", Toast.LENGTH_SHORT).show()
+            },
+            onSuccess = { uploadResult ->
+                pendingCoverLocalPath = uploadResult.localFile.absolutePath
+                pendingCoverPublicUrl = uploadResult.publicUrl
+                coverUploadInProgress = false
+                coverUploadFailed = false
+                coverUrlField?.setText(uploadResult.publicUrl)
+                coverPreview?.let { loadCover(it, pendingCoverLocalPath, uploadResult.publicUrl) }
+                Toast.makeText(this, "تم رفع الغلاف بنجاح وأصبح جاهزاً للنشر", Toast.LENGTH_LONG).show()
+            },
+            onFailure = { error ->
+                coverUploadInProgress = false
+                coverUploadFailed = true
+                val details = (error.message ?: error.javaClass.simpleName).ifBlank { "خطأ غير معروف" }
+                val detailsView = TextView(this).apply {
+                    text = details
+                    setTextIsSelectable(true)
+                    setTextColor(white)
+                    textSize = 13f
+                    setPadding(dp(16), dp(12), dp(16), dp(12))
                 }
-                postToUi {
-                    pendingCoverLocalPath = uploadResult.localFile.absolutePath
-                    pendingCoverPublicUrl = uploadResult.publicUrl
-                    coverUploadInProgress = false
-                    coverUploadFailed = false
-                    coverUrlField?.setText(uploadResult.publicUrl)
-                    coverPreview?.let { loadCover(it, pendingCoverLocalPath, uploadResult.publicUrl) }
-                    Toast.makeText(this, "تم رفع الغلاف بنجاح وأصبح جاهزاً للنشر", Toast.LENGTH_LONG).show()
+                val scroll = ScrollView(this).apply {
+                    addView(detailsView)
+                    setPadding(dp(8), 0, dp(8), 0)
                 }
-
-            } catch (e: Exception) {
-                postToUi {
-                    coverUploadInProgress = false
-                    coverUploadFailed = true
-                    val details = (e.message ?: e.javaClass.simpleName).ifBlank { "خطأ غير معروف" }
-                    val detailsView = TextView(this).apply {
-                        text = details
-                        setTextIsSelectable(true)
-                        setTextColor(white)
-                        textSize = 13f
-                        setPadding(dp(16), dp(12), dp(16), dp(12))
+                AlertDialog.Builder(this)
+                    .setTitle("فشل رفع الغلاف")
+                    .setMessage("التفاصيل الكاملة لخطأ Google Drive:")
+                    .setView(scroll)
+                    .setPositiveButton("نسخ التفاصيل") { _, _ ->
+                        val clipboard = getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Google Drive error", details))
+                        Toast.makeText(this, "تم نسخ تفاصيل الخطأ", Toast.LENGTH_SHORT).show()
                     }
-                    val scroll = ScrollView(this).apply {                        addView(detailsView)
-                        setPadding(dp(8), 0, dp(8), 0)
-                    }
-                    AlertDialog.Builder(this)
-                        .setTitle("فشل رفع الغلاف")
-                        .setMessage("التفاصيل الكاملة لخطأ Google Drive:")
-                        .setView(scroll)
-                        .setPositiveButton("نسخ التفاصيل") { _, _ ->
-                            val clipboard = getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                            clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Google Drive error", details))
-                            Toast.makeText(this, "تم نسخ تفاصيل الخطأ", Toast.LENGTH_SHORT).show()
-                        }
-                        .setNegativeButton("إغلاق", null)
-                        .show().also { styleAlertDialog(it) }
-                }
+                    .setNegativeButton("إغلاق", null)
+                    .show().also { styleAlertDialog(it) }
             }
-        }
+        )
     }
 
 
