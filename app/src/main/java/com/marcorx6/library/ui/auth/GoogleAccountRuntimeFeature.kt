@@ -2,11 +2,13 @@ package com.marcorx6.library.ui
 
 import android.content.Context
 import android.content.Intent
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 
 /**
  * Owns Google account/session operations and the Blogger service composition that depends on them.
  */
-internal class GoogleAccountRuntimeFeature(context: Context) {
+internal class GoogleAccountRuntimeFeature(private val context: Context) {
     private val googleAdminFeature = GoogleAdminFeature(context)
 
     val tokenProvider get() = googleAdminFeature.tokenProvider
@@ -26,6 +28,8 @@ internal class GoogleAccountRuntimeFeature(context: Context) {
             isAdminSession = { isAdminSession }
         )
     }
+
+    fun currentAccount(): GoogleSignInAccount? = GoogleSignIn.getLastSignedInAccount(context)
 
     fun signInIntent(): Intent = googleAdminFeature.accountController.signInIntent()
 
