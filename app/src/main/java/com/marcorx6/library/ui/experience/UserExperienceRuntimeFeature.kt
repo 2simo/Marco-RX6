@@ -106,7 +106,7 @@ internal class UserExperienceRuntimeFeature(
 
     private val firstRunSetupFeature by firstRunSetupFeatureDelegate
 
-    private val startupExperienceController by lazy {
+    private val startupExperienceControllerDelegate = lazy {
         StartupExperienceController(
             activity = activity,
             dp = dp,
@@ -115,6 +115,7 @@ internal class UserExperienceRuntimeFeature(
             showProfile = showProfileForStartup
         )
     }
+    private val startupExperienceController by startupExperienceControllerDelegate
 
     private fun chooseAvatar() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
@@ -133,7 +134,9 @@ internal class UserExperienceRuntimeFeature(
     fun showStartupExperience() = startupExperienceController.show()
 
     fun dismiss() {
-        startupExperienceController.dismiss()
+        if (startupExperienceControllerDelegate.isInitialized()) {
+            startupExperienceController.dismiss()
+        }
         if (firstRunSetupFeatureDelegate.isInitialized()) {
             firstRunSetupFeature.dismiss()
         }
