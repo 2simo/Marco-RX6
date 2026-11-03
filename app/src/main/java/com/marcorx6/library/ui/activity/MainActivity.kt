@@ -175,7 +175,7 @@ class MainActivity : ComponentActivity() {
             setPendingCoverPublicUrl = { coverFeature.state.pendingPublicUrl = it },
             coverUploadInProgress = { coverFeature.state.inProgress },
             loadCover = coverRuntimeFeature::load,
-            chooseCover = ::chooseCover,
+            chooseCover = coverFeature::chooseCover,
             deleteCoverFileIfUnused = coverRuntimeFeature::deleteIfUnused,
             resetCoverUploadFailed = { coverFeature.state.resetFailure() },
             saveGames = gameDataRuntimeFeature::saveGames
@@ -338,19 +338,11 @@ class MainActivity : ComponentActivity() {
 
 
 
+    private fun showFirstRunSetup() = userExperienceRuntimeFeature.showFirstRunSetup()
+    private fun showStartupExperience() = userExperienceRuntimeFeature.showStartupExperience()
+
     private fun createInterface() = libraryRuntimeFeature.create()
     private fun renderGames() = libraryRuntimeFeature.renderGames()
-
-    // COVER RUNTIME
-    private fun chooseCover() {
-
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = "image/*"
-        }
-
-        activityResultRuntimeFeature.launchCoverPicker(intent)
-    }
 
     private val gameExperienceFeature by lazy {
         GameExperienceRuntimeFeature(
