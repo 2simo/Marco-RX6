@@ -2,9 +2,8 @@
 package com.marcorx6.library.ui.activity
 
 import com.marcorx6.library.ui.ActivityServicesRuntimeFeature
-import com.marcorx6.library.ui.AccentPalette
 import com.marcorx6.library.ui.AppearanceRuntimeFeature
-import com.marcorx6.library.ui.AppearancePreferencesStore
+import com.marcorx6.library.ui.AppearancePaletteRuntimeFeature
 import com.marcorx6.library.ui.BloggerRuntimeFeature
 import com.marcorx6.library.ui.CoverRuntimeFeature
 import com.marcorx6.library.ui.CoverUploadRuntimeFeature
@@ -32,17 +31,19 @@ class MainActivity : ComponentActivity() {
         ActivityServicesRuntimeFeature(this, ::styleAlertDialog, ::isDarkMode)
     }
 
-    private fun appearancePreferences() = AppearancePreferencesStore.appearance(this)
-    private fun isDarkMode() = AppearancePreferencesStore.isDarkMode(appearancePreferences())
+    private val appearancePaletteFeature by lazy { AppearancePaletteRuntimeFeature(this) }
 
+    private fun appearancePreferences() = appearancePaletteFeature.preferences()
+    private fun isDarkMode() = appearancePaletteFeature.isDarkMode()
     private fun applySystemBarAppearance() = activityServicesRuntimeFeature.applySystemBarAppearance()
-    private fun accentColor(): Int = AccentPalette.color(appearancePreferences().getString("accent", "blue"))
-    private val bg: Int get() = if (isDarkMode()) Color.rgb(7, 13, 25) else Color.rgb(245, 247, 251)
-    private val panel: Int get() = if (isDarkMode()) Color.rgb(16, 27, 45) else Color.rgb(229, 234, 243)
-    private val red: Int get() = accentColor()
-    private val white: Int get() = if (isDarkMode()) Color.WHITE else Color.rgb(24, 29, 42)
-    private fun accentForeground(): Int = AccentPalette.foreground()
-    private val gray: Int get() = if (isDarkMode()) Color.LTGRAY else Color.rgb(86, 96, 115)
+    private fun accentColor(): Int = appearancePaletteFeature.accentColor()
+    private val bg: Int get() = appearancePaletteFeature.bg
+    private val panel: Int get() = appearancePaletteFeature.panel
+    private val red: Int get() = appearancePaletteFeature.red
+    private val white: Int get() = appearancePaletteFeature.white
+    private fun accentForeground(): Int = appearancePaletteFeature.accentForeground()
+    private val gray: Int get() = appearancePaletteFeature.gray
+
     private val games get() = runtimeState.games
     private var coverRuntimeFeatureCreated = false
     private val coverRuntimeFeature by lazy {
