@@ -417,7 +417,7 @@ class MainActivity : ComponentActivity() {
             showProfile = ::showProfile,
             signOut = ::signOutAdmin,
             signIn = ::startGoogleSignIn,
-            showGameDialog = ::showGameDialog,
+            showGameDialog = { showGameDialog() },
             showGameOfDay = ::showGameOfTheDay,
             showLanguage = ::showLanguagePicker,
             showAppearance = ::showAppearanceSettings,
