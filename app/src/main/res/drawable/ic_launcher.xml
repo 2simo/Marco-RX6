@@ -3,8 +3,8 @@
     <item android:drawable="@color/marco_rx6_icon_background" />
     <item
         android:drawable="@drawable/marco_rx6_dragon"
-        android:left="18%"
-        android:top="18%"
-        android:right="18%"
-        android:bottom="18%" />
+        android:left="18dp"
+        android:top="18dp"
+        android:right="18dp"
+        android:bottom="18dp" />
 </layer-list>
