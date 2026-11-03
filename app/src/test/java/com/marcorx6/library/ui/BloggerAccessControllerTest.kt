@@ -17,6 +17,7 @@ class BloggerAccessControllerTest {
             executor = directExecutor,
             checkAccess = { it == "blog-1" },
             currentAccountId = { "account-1" },
+            currentBlogId = { "blog-1" },
             setAdmin = { admin = it },
             postToUi = { it() },
             refreshUi = { refreshed++ },
@@ -41,6 +42,7 @@ class BloggerAccessControllerTest {
             executor = directExecutor,
             checkAccess = { true },
             currentAccountId = { currentAccount },
+            currentBlogId = { "blog-1" },
             setAdmin = { admin = it },
             postToUi = { action -> uiAction = action },
             refreshUi = { refreshed++ },
@@ -64,6 +66,7 @@ class BloggerAccessControllerTest {
             executor = directExecutor,
             checkAccess = { it == "blog-1" },
             currentAccountId = { "account-1" },
+            currentBlogId = { "blog-1" },
             setAdmin = { admin = it },
             postToUi = { action -> queuedUiActions.add(action) },
             refreshUi = {},
@@ -78,6 +81,31 @@ class BloggerAccessControllerTest {
 
         queuedUiActions[1].invoke()
         assertEquals(false, admin)
+    }
+
+    @Test
+    fun rejectsOldBlogResultEvenBeforeNextAccessCheckStarts() {
+        var admin = false
+        var refreshed = 0
+        var currentBlog = "blog-1"
+        var uiAction: (() -> Unit)? = null
+        val controller = BloggerAccessController(
+            executor = directExecutor,
+            checkAccess = { true },
+            currentAccountId = { "account-1" },
+            currentBlogId = { currentBlog },
+            setAdmin = { admin = it },
+            postToUi = { action -> uiAction = action },
+            refreshUi = { refreshed++ },
+            onDenied = {}
+        )
+
+        controller.refresh("blog-1", "account-1", true)
+        currentBlog = "blog-2"
+        uiAction?.invoke()
+
+        assertEquals(false, admin)
+        assertEquals(0, refreshed)
     }
 
     @Test
