@@ -2490,6 +2490,13 @@ class MainActivity : Activity() {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(bg)
         }
+        ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
+            val safeAreas = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            view.setPadding(0, safeAreas.top, 0, safeAreas.bottom)
+            insets
+        }
 
         val topBar = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -2504,7 +2511,9 @@ class MainActivity : Activity() {
             gravity = Gravity.CENTER
             setOnClickListener { reader.dismiss() }
         }
-        topBar.addView(close, LinearLayout.LayoutParams(dp(42), dp(44)))
+        close.minWidth = dp(48)
+        close.minHeight = dp(48)
+        topBar.addView(close, LinearLayout.LayoutParams(dp(48), dp(48)))
         val heading = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         heading.addView(makeText(game.name, 16f, white, true).apply {
             maxLines = 1
@@ -2518,6 +2527,8 @@ class MainActivity : Activity() {
             gravity = Gravity.CENTER
             setTextColor(if (game.isFavorite) red else white)
             setPadding(dp(8), dp(4), dp(8), dp(4))
+            minWidth = dp(48)
+            minHeight = dp(48)
             setOnClickListener {
                 val index = games.indexOfFirst { it.name == game.name && it.url == game.url }
                 if (index >= 0) {
@@ -2696,6 +2707,7 @@ class MainActivity : Activity() {
             setTypeface(null, Typeface.BOLD)
             background = rounded(if (isDarkMode()) Color.rgb(48, 53, 70) else Color.rgb(230, 235, 245), 11)
             setPadding(dp(12), dp(12), dp(12), dp(12))
+            minHeight = dp(48)
             setOnClickListener { action() }
         }
         val offline = readerAction(if (archiveFile.isFile) "قراءة دون إنترنت" else "حفظ دون إنترنت") {
@@ -2739,7 +2751,17 @@ class MainActivity : Activity() {
         reader.setContentView(root)
         reader.window?.setBackgroundDrawableResource(android.R.color.transparent)
         reader.show()
-        reader.window?.setLayout(-1, -1)
+        reader.window?.let { readerWindow ->
+            WindowCompat.setDecorFitsSystemWindows(readerWindow, false)
+            readerWindow.statusBarColor = Color.TRANSPARENT
+            readerWindow.navigationBarColor = Color.TRANSPARENT
+            WindowInsetsControllerCompat(readerWindow, readerWindow.decorView).apply {
+                isAppearanceLightStatusBars = !isDarkMode()
+                isAppearanceLightNavigationBars = !isDarkMode()
+            }
+            readerWindow.setLayout(-1, -1)
+            ViewCompat.requestApplyInsets(readerWindow.decorView)
+        }
         reader.window?.setBackgroundDrawable(rounded(if (isDarkMode()) Color.rgb(9, 10, 22) else Color.rgb(245, 247, 251), 0))
         reader.setOnDismissListener { articleWebView.stopLoading(); articleWebView.destroy() }
     }
