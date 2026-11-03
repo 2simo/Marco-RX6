@@ -63,7 +63,8 @@ class MainActivity : ComponentActivity() {
             deleteCoverFileIfUnused = coverRuntimeFeature::deleteIfUnused,
             dp = ::dp,
             white = { white },
-            styleDialog = ::styleAlertDialog
+            styleDialog = ::styleAlertDialog,
+            launchCoverPicker = activityResultRuntimeFeature::launchCoverPicker
         )
     }
 
