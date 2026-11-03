@@ -75,15 +75,6 @@ class MainActivity : ComponentActivity() {
     private val gray: Int get() = if (isDarkMode()) Color.LTGRAY else Color.rgb(86, 96, 115)
     private val platforms = listOf("الكل", "BLOG", "FAVORITES", "PS2", "PS3", "PS4")
     private val games = mutableListOf<Game>()
-    private val driveServices by lazy {
-        DriveServices(
-            filesDir = filesDir,
-            contentResolver = contentResolver,
-            accessToken = ::driveToken,
-            executeIo = { task -> ioExecutor.execute { task() } },
-            postToUi = ::postToUi
-        )
-    }
     private val coverRepository by lazy { com.marcorx6.library.data.CoverRepository(applicationContext).also { coverRepositoryCreated = true } }
     private var coverRepositoryCreated = false
 
@@ -102,7 +93,24 @@ class MainActivity : ComponentActivity() {
     private val ioExecutor = Executors.newCachedThreadPool()
     private var searchRenderRunnable: Runnable? = null
     private val PICK_IMAGE_REQUEST = 1001
-    private val coverUploadState = CoverUploadState()
+    private val coverFeature by lazy {
+        CoverFeature(
+            context = this,
+            filesDir = filesDir,
+            contentResolver = contentResolver,
+            accessToken = ::driveToken,
+            executeIo = { task -> ioExecutor.execute { task() } },
+            postToUi = ::postToUi,
+            coverUrlField = { coverUrlField },
+            coverPreview = { coverPreview },
+            loadCover = ::loadCover,
+            deleteCoverFileIfUnused = ::deleteCoverFileIfUnused,
+            dp = ::dp,
+            white = { white },
+            styleDialog = ::styleAlertDialog
+        )
+    }
+    private val coverUploadState get() = coverFeature.state
     private var pendingCoverLocalPath: String
         get() = coverUploadState.pendingLocalPath
         set(value) { coverUploadState.pendingLocalPath = value }
@@ -572,25 +580,6 @@ class MainActivity : ComponentActivity() {
         coverPickerLauncher.launch(intent)
     }
 
-    private val coverUploadController by lazy {
-        driveServices.createCoverUploadController()
-    }
-
-    private val coverSelectionController: CoverSelectionController by lazy {
-        CoverSelectionController(
-            context = this,
-            uploadController = coverUploadController,
-            state = coverUploadState,
-            coverUrlField = { coverUrlField },
-            coverPreview = { coverPreview },
-            loadCover = ::loadCover,
-            deleteCoverFileIfUnused = ::deleteCoverFileIfUnused,
-            dp = ::dp,
-            white = { white },
-            styleDialog = ::styleAlertDialog
-        )
-    }
-
     private val activityResultController: MainActivityResultController by lazy {
         MainActivityResultController(
             signInRequestCode = SIGN_IN_REQUEST,
@@ -613,7 +602,7 @@ class MainActivity : ComponentActivity() {
                 )
             },
             onAvatarSelected = profileFeature.avatarController::handle,
-            onCoverSelected = coverSelectionController::handle
+            onCoverSelected = coverFeature.selectionController::handle
         )
     }
 
