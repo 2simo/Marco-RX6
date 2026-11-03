@@ -21,6 +21,7 @@ import com.marcorx6.library.ui.GamePersistenceController
 import com.marcorx6.library.ui.GoogleAdminFeature
 import com.marcorx6.library.ui.LanguageFeature
 import com.marcorx6.library.ui.MotionPreferencesApplier
+import com.marcorx6.library.ui.MainLibraryRuntimeFeature
 import com.marcorx6.library.ui.NotificationsFeature
 import com.marcorx6.library.ui.OfflineCatalogLoader
 import com.marcorx6.library.ui.PlatformCorrectionController
@@ -79,7 +80,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private val libraryViewState = MainLibraryViewState()
-    private val libraryFilterState get() = runtimeState.libraryFilterState
     private val uiThreadDispatcher by lazy { UiThreadDispatcher(this) }
     private fun postToUi(action: () -> Unit) = uiThreadDispatcher.post(action)
 
