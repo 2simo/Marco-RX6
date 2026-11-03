@@ -245,13 +245,12 @@ class MainActivity : ComponentActivity() {
 
     private fun bloggerHtml(game: Game): String = BloggerHtmlBuilder.build(game)
 
-    private fun requestNotificationPermissionIfNeeded() {
-        if (Build.VERSION.SDK_INT >= 33 &&
-            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-        ) {
-            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 2002)
-        }
+    private val notificationPermissionController by lazy {
+        NotificationPermissionController(this)
     }
+
+    private fun requestNotificationPermissionIfNeeded() =
+        notificationPermissionController.requestIfNeeded()
 
     private val notificationSettingsController by lazy {
         NotificationSettingsController(this, notificationScheduler, ::styleAlertDialog) {
