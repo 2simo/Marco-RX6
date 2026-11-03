@@ -23,9 +23,6 @@ import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.widget.*
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 
 class MainActivity : ComponentActivity() {
 
@@ -276,9 +273,9 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun refreshBloggerAccess() = bloggerRuntimeFeature.refreshAccess()
-    private fun startGoogleSignIn() = activityResultRuntimeFeature.launchGoogleSignIn(googleAdminFeature.accountController.signInIntent())
+    private fun startGoogleSignIn() = activityResultRuntimeFeature.launchGoogleSignIn(googleAccountRuntimeFeature.accountController.signInIntent())
     private fun signOutAdmin() {
-        googleAdminFeature.accountController.signOut {
+        googleAccountRuntimeFeature.accountController.signOut {
             isAdminSession = false
             createInterface()
         }
