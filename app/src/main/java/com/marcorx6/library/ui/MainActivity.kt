@@ -114,6 +114,12 @@ class MainActivity : ComponentActivity() {
     private var selectedGenre = ""
     private var selectedYear = ""
     private val mainHandler = Handler(Looper.getMainLooper())
+    private fun postToUi(action: () -> Unit) {
+        mainHandler.post {
+            if (!isFinishing && !isDestroyed) action()
+        }
+    }
+
     private val ioExecutor = Executors.newCachedThreadPool()
     private var startupAnimator: ValueAnimator? = null
     private var startupRunnable: Runnable? = null
@@ -230,7 +236,7 @@ class MainActivity : ComponentActivity() {
             } catch (_: Exception) {
                 false
             }
-            mainHandler.post {
+            postToUi {
                 val current = GoogleSignIn.getLastSignedInAccount(this)
                 if (bloggerBlogId == blogId && current?.id == account.id) {
                     isAdminSession = allowed
@@ -1118,7 +1124,7 @@ class MainActivity : ComponentActivity() {
                 val feedResult = BloggerFeedClient(bloggerFeedUrl).fetch()
                 val imported = feedResult.games
 
-                mainHandler.post {
+                postToUi {
                     bloggerBlogId = feedResult.blogId
                     val result = mergeImportedGames(imported)
                     isSyncing = false
@@ -1135,7 +1141,7 @@ class MainActivity : ComponentActivity() {
                 }
 
             } catch (e: Exception) {
-                mainHandler.post {
+                postToUi {
                     isSyncing = false
 
                     if (showResult) {
@@ -1237,12 +1243,12 @@ class MainActivity : ComponentActivity() {
                 try {
                     val destination = profileAvatarRepository.save(uri)
                     profilePreferences().edit().putString("avatar_path", destination.absolutePath).apply()
-                    mainHandler.post {
+                    postToUi {
                         Toast.makeText(this, "تم تحديث صورة الملف الشخصي", Toast.LENGTH_SHORT).show()
                         showProfile()
                     }
                 } catch (e: Exception) {
-                    mainHandler.post { Toast.makeText(this, "تعذر حفظ الصورة: ${e.message}", Toast.LENGTH_LONG).show() }
+                    postToUi { Toast.makeText(this, "تعذر حفظ الصورة: ${e.message}", Toast.LENGTH_LONG).show() }
                 }
             }
             return
@@ -1261,7 +1267,7 @@ class MainActivity : ComponentActivity() {
                     uri,
                     driveToken()
                 ) { localFile ->
-                    mainHandler.post {
+                    postToUi {
                         val previousPendingPath = pendingCoverLocalPath
                         pendingCoverLocalPath = localFile.absolutePath
                         deleteCoverFileIfUnused(previousPendingPath)
@@ -1270,7 +1276,7 @@ class MainActivity : ComponentActivity() {
                         Toast.makeText(this, "تم اختيار الصورة، جارٍ رفعها للموقع...", Toast.LENGTH_SHORT).show()
                     }
                 }
-                mainHandler.post {
+                postToUi {
                     pendingCoverLocalPath = uploadResult.localFile.absolutePath
                     pendingCoverPublicUrl = uploadResult.publicUrl
                     coverUploadInProgress = false
@@ -1281,7 +1287,7 @@ class MainActivity : ComponentActivity() {
                 }
 
             } catch (e: Exception) {
-                mainHandler.post {
+                postToUi {
                     coverUploadInProgress = false
                     coverUploadFailed = true
                     val details = (e.message ?: e.javaClass.simpleName).ifBlank { "خطأ غير معروف" }
@@ -2095,7 +2101,7 @@ class MainActivity : ComponentActivity() {
                 Toast.makeText(this, "تم فتح النسخة المحفوظة", Toast.LENGTH_SHORT).show()
             } else {
                 articleWebView.saveWebArchive(archiveFile.absolutePath, false) { savedPath ->
-                    mainHandler.post {
+                    postToUi {
                         if (!savedPath.isNullOrBlank() && File(savedPath).isFile) {
                             Toast.makeText(this, "تم حفظ المقال للقراءة دون اتصال", Toast.LENGTH_LONG).show()                        } else {
                             Toast.makeText(this, "تعذر حفظ المقال. انتظر اكتمال تحميل الصور ثم حاول مجدداً.", Toast.LENGTH_LONG).show()
@@ -2171,12 +2177,12 @@ class MainActivity : ComponentActivity() {
                     ioExecutor.execute {
                         try {
                             val latest = bloggerPostRepository.fetchLabels()
-                            mainHandler.post {
+                            postToUi {
                                 availableLabels.clear(); availableLabels.addAll(latest)
                                 selectedLabels.retainAll(availableLabels.toSet()); refreshLabelButton()
                                 Toast.makeText(this, "تم تحديث ${latest.size} تسمية من المدونة", Toast.LENGTH_SHORT).show()
                             }
-                        } catch (e: Exception) { mainHandler.post { Toast.makeText(this, e.message ?: "تعذر تحديث التسميات", Toast.LENGTH_LONG).show() } }
+                        } catch (e: Exception) { postToUi { Toast.makeText(this, e.message ?: "تعذر تحديث التسميات", Toast.LENGTH_LONG).show() } }
                     }
                 }.show().also { styleAlertDialog(it) }
         }
@@ -2209,7 +2215,7 @@ class MainActivity : ComponentActivity() {
         ioExecutor.execute {
             try {
                 val labels = bloggerPostRepository.fetchLabels()
-                mainHandler.post {
+                postToUi {
                     availableLabels.clear(); availableLabels.addAll(labels)
                     if (existing == null && selectedLabels.isEmpty() && labels.isNotEmpty()) selectedLabels.add(labels.first())
                     refreshLabelButton()
@@ -2217,7 +2223,7 @@ class MainActivity : ComponentActivity() {
                     if (labels.isEmpty()) categoryButton.text = "لا توجد Labels في المقالات المنشورة"
                 }
             } catch (e: Exception) {
-                mainHandler.post { categoryButton.text = "تعذر تحميل Labels • حاول التحديث"; categoryButton.isEnabled = true }
+                postToUi { categoryButton.text = "تعذر تحميل Labels • حاول التحديث"; categoryButton.isEnabled = true }
             }
         }
         box.addView(genre); box.addView(releaseYear); box.addView(title)
@@ -2260,7 +2266,7 @@ class MainActivity : ComponentActivity() {
                             selectedLabels.toList(),
                             existing?.bloggerPostId
                         )
-                        mainHandler.post {
+                        postToUi {
                             val saved = post.copy(bloggerPostId = result.optString("id", post.bloggerPostId), bloggerHtml = result.optString("content", htmlContent), url = result.optString("url", post.url), sourcePostUrl = result.optString("url", post.sourcePostUrl), blogImported = true)
                             val previousCoverPath = existing?.coverLocalPath.orEmpty()
                             gameLibraryStore.upsert(saved, existing)
@@ -2268,7 +2274,7 @@ class MainActivity : ComponentActivity() {
                             pendingCoverLocalPath = ""; pendingCoverPublicUrl = ""; coverUploadFailed = false
                             saveGames(); renderGames(); dialog.dismiss(); Toast.makeText(this, "تم نشر المقال على Blogger", Toast.LENGTH_LONG).show()
                         }
-                    } catch (e: Exception) { mainHandler.post { dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true; Toast.makeText(this, e.message ?: "فشل نشر المقال", Toast.LENGTH_LONG).show() } }
+                    } catch (e: Exception) { postToUi { dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true; Toast.makeText(this, e.message ?: "فشل نشر المقال", Toast.LENGTH_LONG).show() } }
                 }
             }
         }
@@ -2290,14 +2296,14 @@ class MainActivity : ComponentActivity() {
                 if (!isAdminSession || bloggerBlogId.isBlank() || game.bloggerPostId.isBlank()) { Toast.makeText(this, "يلزم تسجيل دخول المسؤول ومعرّف المقال في Blogger", Toast.LENGTH_LONG).show(); return@setPositiveButton }
                 ioExecutor.execute { try {
                     bloggerPostRepository.deletePost(game.bloggerPostId)
-                    mainHandler.post {
+                    postToUi {
                         if (gameLibraryStore.remove(game)) {
                             deleteCoverFileIfUnused(game.coverLocalPath)
                         }
                         renderGames()
                         Toast.makeText(this, "تم الحذف من Blogger", Toast.LENGTH_SHORT).show()
                     }
-                } catch (e: Exception) { mainHandler.post { Toast.makeText(this, e.message ?: "تعذر حذف المقال من Blogger", Toast.LENGTH_LONG).show() } } }
+                } catch (e: Exception) { postToUi { Toast.makeText(this, e.message ?: "تعذر حذف المقال من Blogger", Toast.LENGTH_LONG).show() } } }
             }
             .create().apply { setOnShowListener { styleAlertDialog(this) } }
             .show()
