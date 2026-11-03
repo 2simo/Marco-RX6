@@ -482,8 +482,44 @@ class MainActivity : Activity() {
         dialog.listView?.let { list ->
             list.divider = android.graphics.drawable.ColorDrawable(if (isDarkMode()) Color.rgb(48, 55, 78) else Color.rgb(226, 231, 241))
             list.dividerHeight = dp(1)
+            list.post {
+                for (index in 0 until list.childCount) {
+                    val row = list.getChildAt(index)
+                    if (row is ViewGroup) {
+                        for (childIndex in 0 until row.childCount) {
+                            (row.getChildAt(childIndex) as? TextView)?.setTextColor(white)
+                        }
+                    } else {
+                        (row as? TextView)?.setTextColor(white)
+                    }
+                }
+            }
         }
         dialog.window?.decorView?.let { applyUnifiedSkin(it) }
+    }
+
+    private fun themedSpinner(items: List<String>, selectedIndex: Int = 0): Spinner {
+        val spinner = Spinner(this)
+        val adapter = object : ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, items) {
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                return (super.getView(position, convertView, parent) as TextView).apply {
+                    setTextColor(white)
+                    setPadding(dp(12), dp(10), dp(12), dp(10))
+                }
+            }
+            override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
+                return (super.getDropDownView(position, convertView, parent) as TextView).apply {
+                    setTextColor(white)
+                    setBackgroundColor(panel)
+                    setPadding(dp(14), dp(12), dp(14), dp(12))
+                }
+            }
+        }
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinner.adapter = adapter
+        spinner.setSelection(selectedIndex.coerceIn(0, (items.size - 1).coerceAtLeast(0)))
+        spinner.backgroundTintList = android.content.res.ColorStateList.valueOf(gray)
+        return spinner
     }
 
     private fun makeInput(hintText: String): EditText =
@@ -491,7 +527,7 @@ class MainActivity : Activity() {
             hint = hintText
             textSize = 14f
             setTextColor(white)
-            setHintTextColor(Color.GRAY)
+            setHintTextColor(gray)
             background = rounded(panel, 12)
             setPadding(dp(13), dp(10), dp(13), dp(10))
         }
@@ -598,7 +634,7 @@ class MainActivity : Activity() {
             setPadding(dp(12), 0, dp(12), 0); setOnClickListener { drawer.dismiss() }
         })
         panel.addView(top)
-        panel.addView(makeText("القائمة الرئيسية", 10f, Color.GRAY, true).apply {
+        panel.addView(makeText("القائمة الرئيسية", 10f, gray, true).apply {
             setPadding(0, dp(24), 0, dp(12))
         })
         fun menuItem(icon: String, label: String, detail: String = "", action: () -> Unit) {
@@ -833,9 +869,7 @@ class MainActivity : Activity() {
         val sizeLabel = makeText("حجم النص: " + (fontScale() * 100).toInt() + "%", 11f, gray)
         box.addView(sizeLabel)
         box.addView(makeText("نوع الخط", 13f, red, true).apply { setPadding(0, dp(16), 0, dp(5)) })
-        val family = Spinner(this)
-        family.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, listOf("واضح (افتراضي)", "كلاسيكي", "أحادي المسافة"))
-        family.setSelection(when (fontPreferences().getString("family", "sans")) { "serif" -> 1; "mono" -> 2; else -> 0 })
+        val family = themedSpinner(listOf("واضح (افتراضي)", "كلاسيكي", "أحادي المسافة"), when (fontPreferences().getString("family", "sans")) { "serif" -> 1; "mono" -> 2; else -> 0 })
         box.addView(family)
         size.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -1966,9 +2000,13 @@ class MainActivity : Activity() {
 
     private fun showStartupExperience() {
         val splash = Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+        val splashText = white
+        val splashMuted = gray
+        val splashAccent = red
         val content = FrameLayout(this).apply {
             setBackground(GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(20, 14, 39), Color.rgb(7, 10, 23), Color.rgb(4, 7, 16))))
+                if (isDarkMode()) intArrayOf(Color.rgb(20, 14, 39), Color.rgb(7, 10, 23), Color.rgb(4, 7, 16))
+                else intArrayOf(Color.rgb(248, 249, 253), Color.rgb(237, 241, 249), Color.rgb(229, 234, 244))))
         }
         val center = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -1980,9 +2018,10 @@ class MainActivity : Activity() {
             gravity = Gravity.CENTER
             setPadding(dp(24), dp(34), dp(24), dp(34))
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(22, 20, 47), Color.rgb(8, 12, 27), Color.rgb(18, 12, 39))).apply {
+                if (isDarkMode()) intArrayOf(Color.rgb(22, 20, 47), Color.rgb(8, 12, 27), Color.rgb(18, 12, 39))
+                else intArrayOf(Color.WHITE, Color.rgb(244, 246, 251), Color.rgb(232, 237, 247))).apply {
                 cornerRadius = dp(34).toFloat()
-                setStroke(dp(1), Color.rgb(93, 76, 155))
+                setStroke(dp(1), if (isDarkMode()) Color.rgb(93, 76, 155) else Color.rgb(199, 207, 224))
             }
             elevation = dp(28).toFloat()
         }
@@ -1993,8 +2032,8 @@ class MainActivity : Activity() {
             contentDescription = "MARCO RX6"
             background = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
-                setColor(Color.rgb(13, 10, 29))
-                setStroke(dp(1), Color.rgb(139, 92, 246))
+                setColor(if (isDarkMode()) Color.rgb(13, 10, 29) else Color.rgb(242, 244, 250))
+                setStroke(dp(1), splashAccent)
             }
             setPadding(dp(12), dp(12), dp(12), dp(12))
             alpha = 0f
@@ -2005,11 +2044,11 @@ class MainActivity : Activity() {
             bottomMargin = dp(18)
         })
 
-        contentCard.addView(makeText("MARCO RX6", 23f, Color.WHITE, true).apply {
+        contentCard.addView(makeText("MARCO RX6", 23f, splashText, true).apply {
             letterSpacing = 0.12f
             gravity = Gravity.CENTER
         })
-        contentCard.addView(makeText("GAME LIBRARY  •  BLOG HUB", 10f, Color.rgb(180, 165, 215), true).apply {
+        contentCard.addView(makeText("GAME LIBRARY  •  BLOG HUB", 10f, splashMuted, true).apply {
             letterSpacing = 0.13f
             gravity = Gravity.CENTER
             setPadding(0, dp(5), 0, dp(25))
@@ -2017,7 +2056,7 @@ class MainActivity : Activity() {
 
         val progressTrack = FrameLayout(this).apply {
             background = GradientDrawable().apply {
-                setColor(Color.rgb(42, 34, 63))
+                setColor(if (isDarkMode()) Color.rgb(42, 34, 63) else Color.rgb(220, 226, 237))
                 cornerRadius = dp(20).toFloat()
             }
             clipToOutline = true
@@ -2025,13 +2064,13 @@ class MainActivity : Activity() {
         val progressFill = View(this).apply {
             background = GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(Color.rgb(91, 63, 210), Color.rgb(178, 112, 255), Color.rgb(95, 210, 220))
+                intArrayOf(splashAccent, Color.rgb(178, 112, 255), Color.rgb(95, 210, 220))
             ).apply { cornerRadius = dp(20).toFloat() }
         }
         progressTrack.addView(progressFill, FrameLayout.LayoutParams(0, -1, Gravity.START))
         contentCard.addView(progressTrack, LinearLayout.LayoutParams(-1, dp(10)))
 
-        val loadingText = makeText("جارٍ تجهيز تجربتك...", 11f, Color.rgb(190, 184, 210)).apply {
+        val loadingText = makeText("جارٍ تجهيز تجربتك...", 11f, splashMuted).apply {
             gravity = Gravity.CENTER
             setPadding(0, dp(14), 0, 0)
         }
@@ -2097,26 +2136,14 @@ class MainActivity : Activity() {
             box.addView(makeText(value, 12f, red, true).apply { setPadding(0, dp(12), 0, dp(5)) })
         }
         heading("لغة التطبيق")
-        val language = Spinner(this).apply {
-            adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
-                listOf("العربية", "English", "Français", "Español"))
-            setSelection(listOf("ar", "en", "fr", "es").indexOf(currentLanguage()).coerceAtLeast(0))
-        }
+        val language = themedSpinner(listOf("العربية", "English", "Français", "Español"), listOf("ar", "en", "fr", "es").indexOf(currentLanguage()).coerceAtLeast(0))
         box.addView(language)
         heading("المظهر")
-        val mode = Spinner(this).apply {
-            adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
-                listOf("الوضع الليلي", "الوضع النهاري"))
-            setSelection(if (isDarkMode()) 0 else 1)
-        }
+        val mode = themedSpinner(listOf("الوضع الليلي", "الوضع النهاري"), if (isDarkMode()) 0 else 1)
         box.addView(mode)
         heading("لون واجهة MARCO RX6")
         val themeKeys = listOf("violet", "blue", "green", "gold", "rose")
-        val theme = Spinner(this).apply {
-            adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
-                listOf("بنفسجي", "أزرق", "أخضر", "ذهبي", "وردي"))
-            setSelection(themeKeys.indexOf(appearancePreferences().getString("accent", "violet")).coerceAtLeast(0))
-        }
+        val theme = themedSpinner(listOf("بنفسجي", "أزرق", "أخضر", "ذهبي", "وردي"), themeKeys.indexOf(appearancePreferences().getString("accent", "violet")).coerceAtLeast(0))
         box.addView(theme)
         heading("الإشعارات")
         val notifications = CheckBox(this).apply {
@@ -2155,7 +2182,6 @@ class MainActivity : Activity() {
 
     private var activeProfileDialog: AlertDialog? = null
     private fun profilePreferences() = getSharedPreferences("user_profile", MODE_PRIVATE)
-    private fun readerPreferences() = getSharedPreferences("reader_settings", MODE_PRIVATE)
     private fun showProfile() {
         val prefs = profilePreferences()
         val settings = getSharedPreferences("app_settings", MODE_PRIVATE)
@@ -2234,9 +2260,6 @@ class MainActivity : Activity() {
         box.addView(settingButton("♧  الإشعارات", "التحكم في تنبيهات المقالات الجديدة") {
             showNotificationSettings()
         }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
-        box.addView(settingButton("✦  وضع القراءة", "حجم الخط والوضع الليلي متاحان داخل المقال") {
-            Toast.makeText(this, "افتح أي مقال لتخصيص تجربة القراءة", Toast.LENGTH_SHORT).show()
-        })
 
         val dialog = AlertDialog.Builder(this)
             .setTitle(if (prefs.getBoolean("profile_created", false)) tr("ملفي الشخصي") else "إنشاء ملف اللاعب")
@@ -2364,7 +2387,7 @@ class MainActivity : Activity() {
                     }
                     val frame = FrameLayout(this).apply {
                         background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                            intArrayOf(Color.rgb(116, 127, 151), Color.rgb(35, 41, 59))).apply {
+                            if (isDarkMode()) intArrayOf(Color.rgb(116, 127, 151), Color.rgb(35, 41, 59)) else intArrayOf(Color.rgb(235, 239, 247), Color.rgb(211, 220, 234))).apply {
                             cornerRadius = dp(12).toFloat()
                             setStroke(dp(1), if (isDarkMode()) Color.rgb(125, 139, 169) else Color.rgb(174, 185, 207))
                         }
@@ -2376,7 +2399,7 @@ class MainActivity : Activity() {
                     }
                     val cover = ImageView(this).apply {
                         scaleType = ImageView.ScaleType.CENTER_CROP
-                        setBackgroundColor(Color.rgb(29, 32, 58))
+                        setBackgroundColor(if (isDarkMode()) Color.rgb(29, 32, 58) else Color.rgb(238, 241, 247))
                         contentDescription = post.name
                         isClickable = true
                         setOnClickListener { showDetails(post) }
@@ -2467,34 +2490,6 @@ class MainActivity : Activity() {
             }
         }
         topBar.addView(favorite)
-        val readerPrefs = readerPreferences()
-        var readerFontSize = readerPrefs.getInt("reader_font_size", 17).coerceIn(14, 24)
-        var readerLightMode = readerPrefs.getBoolean("reader_light_mode", false)
-        var articleView: android.webkit.WebView? = null
-        fun readerTool(label: String, action: () -> Unit) = TextView(this).apply {
-            text = label
-            textSize = 12f
-            setTextColor(red)
-            gravity = Gravity.CENTER
-            background = rounded(if (isDarkMode()) Color.rgb(25, 29, 43) else Color.rgb(232, 236, 245), 9)
-            setPadding(dp(8), dp(8), dp(8), dp(8))
-            setOnClickListener { action() }
-        }
-        topBar.addView(readerTool("A−") {
-            readerFontSize = (readerFontSize - 1).coerceAtLeast(14)
-            readerPrefs.edit().putInt("reader_font_size", readerFontSize).apply()
-            articleView?.reload()
-        })
-        topBar.addView(readerTool("A+") {
-            readerFontSize = (readerFontSize + 1).coerceAtMost(24)
-            readerPrefs.edit().putInt("reader_font_size", readerFontSize).apply()
-            articleView?.reload()
-        })
-        topBar.addView(readerTool(if (readerLightMode) "☾" else "☼") {
-            readerLightMode = !readerLightMode
-            readerPrefs.edit().putBoolean("reader_light_mode", readerLightMode).apply()
-            articleView?.reload()
-        })
         root.addView(topBar)
 
         // Liquid Metal 2.0 identity panel. Keep portrait cover proportions intact.
@@ -2605,16 +2600,17 @@ class MainActivity : Activity() {
                 <style>
                 *{box-sizing:border-box}
                 html,body{margin:0;padding:0;width:100%;max-width:100%;overflow-x:hidden}
-                body{background:${if (readerLightMode) "#f6f2e9" else "#0a0b11"};color:${if (readerLightMode) "#24221e" else "#f4f4f8"};font-family:${fontFamilyName()},Arial,sans-serif;font-size:${(readerFontSize * fontScale()).toInt()}px;line-height:1.9;padding:20px 17px 36px;overflow-wrap:anywhere;direction:rtl;text-align:right}
-                h1,h2,h3,h4{color:${if (readerLightMode) "#a78bfa" else "#8b5cf6"};line-height:1.4;margin:25px 0 12px}
+                body{background:${if (isDarkMode()) "#0a0b11" else "#f5f7fb"} !important;color:${if (isDarkMode()) "#f4f4f8" else "#202638"} !important;font-family:${fontFamilyName()},Arial,sans-serif;font-size:${(17 * fontScale()).toInt()}px;line-height:1.9;padding:20px 17px 36px;overflow-wrap:anywhere;direction:rtl;text-align:right}
+                body *{color:inherit !important;background-color:transparent !important}
+                body h1,body h2,body h3,body h4{color:${if (isDarkMode()) "#b9a2f5" else "#6842a5"} !important;line-height:1.4;margin:25px 0 12px}
                 p{margin:0 0 18px}
                 img{display:block;max-width:100%!important;height:auto!important;width:auto;margin:18px auto;border-radius:12px;object-fit:contain}
-                a{color:${if (readerLightMode) "#8b5cf6" else "#d3b170"};text-decoration:none;font-weight:700}
+                body a{color:${if (isDarkMode()) "#e2c17c" else "#6842a5"} !important;text-decoration:none;font-weight:700}
                 ul,ol{padding-left:25px;margin:10px 0 20px}
                 li{padding:4px 0}
-                blockquote{border-right:3px solid #d3b170;padding:8px 14px;margin:16px 0;background:${if (readerLightMode) "#eee7d9" else "#1b1d3b"}}
+                body blockquote{border-right:3px solid ${if (isDarkMode()) "#d3b170" else "#8b5cf6"};padding:8px 14px;margin:16px 0;background:${if (isDarkMode()) "#1b1d3b" else "#eee9f8"} !important}
                 table{display:block;max-width:100%;overflow-x:auto;border-collapse:collapse}
-                td,th{border:1px solid #444;padding:8px}
+                td,th{border:1px solid ${if (isDarkMode()) "#596174" else "#cbd2df"};padding:8px}
                 iframe,video{max-width:100%!important}
                 </style>
             """.trimIndent()
@@ -2622,7 +2618,6 @@ class MainActivity : Activity() {
                 "<!doctype html><html lang=\"ar\" dir=\"rtl\"><head>$style</head><body dir=\"rtl\">$articleHtml</body></html>",
                 "text/html", "UTF-8", null)
         }
-        articleView = articleWebView
         root.addView(articleWebView, LinearLayout.LayoutParams(-1, 0, 1f))
         val downloads = try { JSONArray(game.downloadLinks) } catch (_: Exception) { JSONArray() }
         if (downloads.length() > 0) {
@@ -2635,7 +2630,7 @@ class MainActivity : Activity() {
                 downloadRow.addView(TextView(this).apply {
                     text = "⬇  " + item.optString("label").ifBlank { "تحميل " + (i + 1) }
                     textSize = 12f; setTextColor(white); gravity = Gravity.CENTER; setTypeface(null, Typeface.BOLD)
-                    background = rounded(Color.rgb(190, 43, 68), 11)
+                    background = rounded(red, 11)
                     setPadding(dp(13), dp(12), dp(13), dp(12))
                     setOnClickListener { enqueueGameDownload(target, item.optString("label").ifBlank { game.name }) }
                 }, LinearLayout.LayoutParams(-2, -2).apply { rightMargin = dp(8) })
@@ -2844,11 +2839,11 @@ class MainActivity : Activity() {
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
                 val previewTitle = title.text.toString().trim().ifBlank { "معاينة المقال" }
-                val previewHtml = "<html><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><body style=\"background:#111;padding:12px;\">" +
+                val previewHtml = "<html><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><body style=\"background:${if (isDarkMode()) "#0a0b11" else "#f5f7fb"};color:${if (isDarkMode()) "#f4f4f8" else "#202638"};padding:12px;\">" +
                     buildBloggerArticleHtml(previewTitle, selectedLabels.joinToString("، "), genre.text.toString(), releaseYear.text.toString(), body.text.toString(), coverUrl.text.toString(), link.text.toString()) +
                     "</body></html>"
                 val web = WebView(this).apply {
-                    setBackgroundColor(android.graphics.Color.rgb(17, 17, 17))
+                    setBackgroundColor(bg)
                     settings.javaScriptEnabled = false
                     loadDataWithBaseURL(null, previewHtml, "text/html", "UTF-8", null)
                 }
