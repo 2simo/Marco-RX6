@@ -7,7 +7,7 @@ import com.marcorx6.library.data.Game
 internal class AdvancedFiltersFeature(
     activity: ComponentActivity,
     private val state: LibraryFilterState,
-    games: () -> List<Game>,
+    private val games: () -> List<Game>,
     dp: (Int) -> Int,
     red: () -> Int,
     makeText: (String, Float, Int, Boolean) -> android.widget.TextView,
