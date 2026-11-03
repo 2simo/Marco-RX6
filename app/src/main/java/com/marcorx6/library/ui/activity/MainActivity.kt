@@ -97,13 +97,13 @@ class MainActivity : ComponentActivity() {
             makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
             makeInput = ::makeInput,
             translate = ::tr,
-            currentLanguage = ::currentLanguage,
+            currentLanguage = appearanceRuntimeFeature::currentLanguage,
             isDarkMode = ::isDarkMode,
             panel = { panel },
             red = { red },
             white = { white },
             gray = { gray },
-            showLanguagePicker = ::showLanguagePicker,
+            showLanguagePicker = appearanceRuntimeFeature::showLanguagePicker,
             showNotificationSettings = activityServicesRuntimeFeature::showNotificationSettings,
             chooseAvatar = {
                 val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
@@ -116,7 +116,7 @@ class MainActivity : ComponentActivity() {
             applyUnifiedSkin = ::applyUnifiedSkin,
             onAvatarSaved = {
                 Toast.makeText(this, "تم تحديث صورة الملف الشخصي", Toast.LENGTH_SHORT).show()
-                showProfile()
+                userExperienceRuntimeFeature.showProfile()
             },
             onAvatarError = { message ->
                 Toast.makeText(this, "تعذر حفظ الصورة: $message", Toast.LENGTH_LONG).show()
@@ -129,7 +129,7 @@ class MainActivity : ComponentActivity() {
             onPlatformSelected = { libraryViewState.selected = it },
             recreateActivity = ::recreate,
             showFirstRunSetup = ::showFirstRunSetup,
-            showProfileForStartup = ::showProfile
+            showProfileForStartup = { userExperienceRuntimeFeature.userExperienceRuntimeFeature.showProfile() }
         )
     }
 
@@ -149,7 +149,7 @@ class MainActivity : ComponentActivity() {
             refreshUi = ::createInterface,
             merge = { imported -> GameImportMerger.merge(gameDataRuntimeFeature.libraryStore, imported) },
             setBlogId = { bloggerBlogId = it },
-            refreshAccess = ::refreshBloggerAccess,
+            refreshAccess = { bloggerRuntimeFeature.refreshAccess() },
             renderGames = ::renderGames,
             gameLibraryStore = gameDataRuntimeFeature.libraryStore,
             dp = ::dp,
@@ -196,7 +196,7 @@ class MainActivity : ComponentActivity() {
                 onSuccess = {
                     isAdminSession = false
                     createInterface()
-                    refreshBloggerAccess()
+                    bloggerRuntimeFeature.refreshAccess()
                     Toast.makeText(this, "تم ربط حساب Google؛ جارٍ التحقق من صلاحيات Blogger…", Toast.LENGTH_LONG).show()
                 },
                 onFailure = { message ->
@@ -224,7 +224,7 @@ class MainActivity : ComponentActivity() {
             applySystemBarAppearance = activityServicesRuntimeFeature::applySystemBarAppearance,
             createNotificationChannel = activityServicesRuntimeFeature::createNotificationChannel,
             loadGames = gameDataRuntimeFeature::loadGames,
-            restoreAdminSession = ::restoreAdminSession,
+            restoreAdminSession = { isAdminSession = false; bloggerRuntimeFeature.refreshAccess() },
             createInterface = ::createInterface,
             showStartupExperience = ::showStartupExperience,
             setupCompleted = {
@@ -234,7 +234,7 @@ class MainActivity : ComponentActivity() {
             notificationsEnabled = activityServicesRuntimeFeature::areNotificationsEnabled,
             scheduleNotifications = activityServicesRuntimeFeature::scheduleNotifications,
             requestNotificationPermission = activityServicesRuntimeFeature::requestNotificationPermissionIfNeeded,
-            syncFromBlog = { syncFromBlog(showResult = false) },
+            syncFromBlog = { bloggerRuntimeFeature.sync(showResult = false) },
             dismissUserExperience = { userExperienceRuntimeFeature.dismiss() },
             disposeLibrary = { libraryRuntimeFeature.dispose() },
             shutdownServices = { activityServicesRuntimeFeature.shutdown() },
@@ -260,19 +260,7 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    private fun restoreAdminSession() {
-        isAdminSession = false
-        refreshBloggerAccess()
-    }
-
-    private fun refreshBloggerAccess() = bloggerRuntimeFeature.refreshAccess()
-    private fun startGoogleSignIn() = activityResultRuntimeFeature.launchGoogleSignIn(googleAccountRuntimeFeature.accountController.signInIntent())
-    private fun signOutAdmin() {
-        googleAccountRuntimeFeature.accountController.signOut {
-            isAdminSession = false
-            createInterface()
-        }
-    }
+    private fun bloggerRuntimeFeature.refreshAccess() = bloggerRuntimeFeature.refreshAccess()
 
 
     private val appearanceRuntimeFeature by lazy {
@@ -288,14 +276,14 @@ class MainActivity : ComponentActivity() {
             accentForeground = ::accentForeground,
             isSyncing = { isSyncing },
             isAdminSession = { isAdminSession },
-            sync = { syncFromBlog(showResult = true) },
+            sync = { bloggerRuntimeFeature.sync(showResult = true) },
             showDownloads = activityServicesRuntimeFeature::showDownloadManager,
             showNotifications = activityServicesRuntimeFeature::showNotificationSettings,
-            showProfile = ::showProfile,
-            signOut = ::signOutAdmin,
-            signIn = ::startGoogleSignIn,
-            showGameDialog = { showGameDialog() },
-            showGameOfDay = ::showGameOfTheDay,
+            showProfile = { userExperienceRuntimeFeature.userExperienceRuntimeFeature.showProfile() },
+            signOut = { googleAccountRuntimeFeature.accountController.signOut { isAdminSession = false; createInterface() } },
+            signIn = { activityResultRuntimeFeature.launchGoogleSignIn(googleAccountRuntimeFeature.accountController.signInIntent()) },
+            showGameDialog = { bloggerRuntimeFeature.showComposer() },
+            showGameOfDay = { gameExperienceFeature.showGameOfTheDay() },
             openLink = activityServicesRuntimeFeature::openGameLink,
             applyUnifiedSkin = ::applyUnifiedSkin,
             recreateActivity = ::recreate,
@@ -330,7 +318,7 @@ class MainActivity : ComponentActivity() {
             setContentView = { view -> setContentView(view) },
             games = games,
             darkMode = ::isDarkMode,
-            currentLanguage = ::currentLanguage,
+            currentLanguage = appearanceRuntimeFeature::currentLanguage,
             dp = ::dp,
             translate = ::tr,
             rounded = ::rounded,
@@ -343,13 +331,13 @@ class MainActivity : ComponentActivity() {
             adminSession = { isAdminSession },
             accentForeground = ::accentForeground,
             loadCover = coverRuntimeFeature::load,
-            showDetails = ::showDetails,
+            showDetails = { game -> gameExperienceFeature.showDetails(game) },
             styleDialog = ::styleAlertDialog,
             showNotificationSettings = activityServicesRuntimeFeature::showNotificationSettings,
-            showAppearanceSettings = ::showAppearanceSettings,
-            showGameDialog = { showGameDialog() },
-            showProfile = ::showProfile,
-            showSideMenu = ::showSideMenu,
+            showAppearanceSettings = { appearanceRuntimeFeature.showAppearanceSettings() },
+            showGameDialog = { bloggerRuntimeFeature.showComposer() },
+            showProfile = { userExperienceRuntimeFeature.userExperienceRuntimeFeature.showProfile() },
+            showSideMenu = { appearanceRuntimeFeature.showSideMenu() },
             applyTypography = ::applyTypography,
             applyUnifiedSkin = ::applyUnifiedSkin,
             applyMotionPreferences = ::applyMotionPreferences
@@ -358,11 +346,8 @@ class MainActivity : ComponentActivity() {
 
     private val libraryViewState get() = libraryRuntimeFeature.viewState
 
-    private fun showAdvancedFilters() = libraryRuntimeFeature.showAdvancedFilters()
     private fun createInterface() = libraryRuntimeFeature.create()
     private fun renderGames() = libraryRuntimeFeature.renderGames()
-
-    private fun syncFromBlog(showResult: Boolean) = bloggerRuntimeFeature.sync(showResult)
 
     // COVER RUNTIME
     private fun chooseCover() {
@@ -375,7 +360,7 @@ class MainActivity : ComponentActivity() {
         activityResultRuntimeFeature.launchCoverPicker(intent)
     }
 
-    private fun showProfile(): Unit = userExperienceRuntimeFeature.showProfile()
+    private fun userExperienceRuntimeFeature.showProfile(): Unit = userExperienceRuntimeFeature.userExperienceRuntimeFeature.showProfile()
     private val gameExperienceFeature by lazy {
         GameExperienceRuntimeFeature(
             activity = this,
@@ -402,21 +387,17 @@ class MainActivity : ComponentActivity() {
             isAdmin = { isAdminSession },
             postToUi = activityServicesRuntimeFeature::postToUi,
             openGameLink = activityServicesRuntimeFeature::openGameLink,
-            showGameDialog = { showGameDialog(it) },
-            deleteGame = ::deleteGame,
+            showGameDialog = { game -> bloggerRuntimeFeature.showComposer(game) },
+            deleteGame = { game -> bloggerRuntimeFeature.delete(game) },
             applyMotionPreferences = ::applyMotionPreferences,
             applyUnifiedSkin = ::applyUnifiedSkin,
-            showDetailsForDay = ::showDetails
+            showDetailsForDay = { game -> gameExperienceFeature.showDetails(game) }
         )
     }
 
-    private fun showDetails(game: Game) = gameExperienceFeature.showDetails(game)
 
-    private fun showGameDialog(existing: Game? = null) = bloggerRuntimeFeature.showComposer(existing)
 
-    private fun deleteGame(game: Game) = bloggerRuntimeFeature.delete(game)
 
-    private fun showGameOfTheDay() = gameExperienceFeature.showGameOfTheDay()
 
 
 
