@@ -66,7 +66,7 @@ class MainActivity : ComponentActivity() {
     }
     private val profileAvatarRepository by lazy { ProfileAvatarRepository(contentResolver, filesDir) }
 
-    private fun appearancePreferences() = getSharedPreferences("appearance_settings", MODE_PRIVATE)
+    private fun appearancePreferences() = AppearancePreferencesStore.appearance(this)
     private fun isDarkMode() = appearancePreferences().getBoolean("dark_mode", true)
 
     private fun applySystemBarAppearance() {
