@@ -1,7 +1,6 @@
 package com.marcorx6.library.ui
 
 import android.app.Activity
-import android.graphics.Color
 import android.widget.TextView
 import com.marcorx6.library.data.Game
 
