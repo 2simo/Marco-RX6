@@ -16,7 +16,6 @@ import com.marcorx6.library.data.GameLibraryStore
 import com.marcorx6.library.data.DownloadRepository
 import com.marcorx6.library.network.BloggerFeedClient
 import com.marcorx6.library.network.BloggerArticleBuilder
-import com.marcorx6.library.notification.BlogNotificationScheduler
 import com.marcorx6.library.network.BloggerFeedParser
 import android.app.AlertDialog
 import android.content.Intent
