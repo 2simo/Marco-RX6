@@ -1,4 +1,6 @@
-package com.marcorx6.library.ui
+package com.marcorx6.library.ui.activity
+
+import com.marcorx6.library.ui.*
 
 import android.app.AlertDialog
 import androidx.activity.ComponentActivity
