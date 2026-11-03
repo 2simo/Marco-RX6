@@ -103,8 +103,8 @@ class MainActivity : ComponentActivity() {
             accessToken = ::driveToken,
             executeIo = { task -> ioExecutor.execute { task() } },
             postToUi = ::postToUi,
-            coverUrlField = { coverUrlField },
-            coverPreview = { coverPreview },
+            coverUrlField = { coverFeature.state.urlField },
+            coverPreview = { coverFeature.state.preview },
             loadCover = ::loadCover,
             deleteCoverFileIfUnused = ::deleteCoverFileIfUnused,
             dp = ::dp,
@@ -112,25 +112,6 @@ class MainActivity : ComponentActivity() {
             styleDialog = ::styleAlertDialog
         )
     }
-    private val coverUploadState get() = coverFeature.state
-    private var pendingCoverLocalPath: String
-        get() = coverUploadState.pendingLocalPath
-        set(value) { coverUploadState.pendingLocalPath = value }
-    private var pendingCoverPublicUrl: String
-        get() = coverUploadState.pendingPublicUrl
-        set(value) { coverUploadState.pendingPublicUrl = value }
-    private var coverUploadInProgress: Boolean
-        get() = coverUploadState.inProgress
-        set(value) { coverUploadState.inProgress = value }
-    private var coverUploadFailed: Boolean
-        get() = coverUploadState.failed
-        set(value) { coverUploadState.failed = value }
-    private var coverPreview: ImageView?
-        get() = coverUploadState.preview
-        set(value) { coverUploadState.preview = value }
-    private var coverUrlField: EditText?
-        get() = coverUploadState.urlField
-        set(value) { coverUploadState.urlField = value }
     private var isSyncing = false
     private val adminSessionState = AdminSessionState()
     private var bloggerBlogId: String
@@ -675,18 +656,18 @@ class MainActivity : ComponentActivity() {
             styleAlertDialog = ::styleAlertDialog,
             applyUnifiedSkin = ::applyUnifiedSkin,
             setCoverFields = { url, preview ->
-                coverUrlField = url
-                coverPreview = preview
+                coverFeature.state.urlField = url
+                coverFeature.state.preview = preview
             },
-            pendingCoverLocalPath = { pendingCoverLocalPath },
-            setPendingCoverLocalPath = { pendingCoverLocalPath = it },
-            pendingCoverPublicUrl = { pendingCoverPublicUrl },
-            setPendingCoverPublicUrl = { pendingCoverPublicUrl = it },
-            coverUploadInProgress = { coverUploadInProgress },
+            pendingCoverLocalPath = { coverFeature.state.pendingLocalPath },
+            setPendingCoverLocalPath = { coverFeature.state.pendingLocalPath = it },
+            pendingCoverPublicUrl = { coverFeature.state.pendingPublicUrl },
+            setPendingCoverPublicUrl = { coverFeature.state.pendingPublicUrl = it },
+            coverUploadInProgress = { coverFeature.state.inProgress },
             loadCover = ::loadCover,
             chooseCover = ::chooseCover,
             deleteCoverFileIfUnused = ::deleteCoverFileIfUnused,
-            resetCoverUploadFailed = { coverUploadFailed = false },
+            resetCoverUploadFailed = { coverFeature.state.resetFailure() },
             saveGames = ::saveGames,
             renderGames = ::renderGames
         )
