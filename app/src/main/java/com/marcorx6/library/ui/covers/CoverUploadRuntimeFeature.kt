@@ -23,7 +23,7 @@ internal class CoverUploadRuntimeFeature(
     dp: (Int) -> Int,
     white: () -> Int,
     styleDialog: (android.app.AlertDialog) -> Unit,
-    launchCoverPicker: (Intent) -> Unit
+    private val launchCoverPicker: (Intent) -> Unit
 ) {
     val state = CoverUploadState()
 
