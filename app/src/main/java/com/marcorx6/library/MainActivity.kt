@@ -2571,7 +2571,7 @@ class MainActivity : Activity() {
                     textSize = 10f
                     maxLines = 1
                     ellipsize = android.text.TextUtils.TruncateAt.END
-                    setTextColor(white)
+                    setTextColor(if (isDarkMode()) white else Color.rgb(48, 57, 77))
                     background = rounded(if (isDarkMode()) Color.rgb(35, 40, 57) else Color.rgb(232, 236, 245), 10)
                     setPadding(dp(10), dp(9), dp(10), dp(9))
                     setOnClickListener { reader.dismiss(); showDetails(item) }
@@ -2655,7 +2655,7 @@ class MainActivity : Activity() {
         fun readerAction(label: String, action: () -> Unit) = TextView(this).apply {
             text = label
             textSize = 12f
-            setTextColor(white)
+            setTextColor(if (isDarkMode()) white else Color.rgb(48, 57, 77))
             gravity = Gravity.CENTER
             setTypeface(null, Typeface.BOLD)
             background = rounded(if (isDarkMode()) Color.rgb(48, 53, 70) else Color.rgb(230, 235, 245), 11)
