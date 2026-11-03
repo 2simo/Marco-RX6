@@ -30,5 +30,16 @@ jobs:
       - name: Run unit tests
         run: gradle --no-daemon testDebugUnitTest
 
+      - name: Run Android lint
+        run: gradle --no-daemon lintDebug
+
       - name: Build debug APK
         run: gradle --no-daemon assembleDebug
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v6
+        with:
+          name: marco-rx6-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
