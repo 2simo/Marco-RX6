@@ -4,9 +4,6 @@ import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
 import android.view.ViewCompat
-import android.view.WindowInsetsControllerCompat
-import android.view.WindowInsets
-import android.view.WindowInsets.Type
 import android.widget.LinearLayout
 import com.marcorx6.library.data.Game
 import java.io.File
@@ -42,7 +39,7 @@ internal class GameDetailsController(
         val reader = android.app.Dialog(activity)
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(bg)
+            setBackgroundColor(bg())
         }
         ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
             val safeAreas = insets.getInsets(
@@ -52,21 +49,21 @@ internal class GameDetailsController(
             insets
         }
 
-        val topBar = gameDetailsTopBarFactory.create(game) { reader.dismiss() }
+        val topBar = topBarFactory.create(game) { reader.dismiss() }
         root.addView(topBar)
 
-        val identity = gameDetailsIdentityViewFactory.create(game)
+        val identity = identityViewFactory.create(game)
         root.addView(identity, LinearLayout.LayoutParams(-1, -2).apply {
             setMargins(dp(14), dp(12), dp(14), dp(12))
         })
 
-        gameSimilarGamesViewFactory.create(game, games) { item ->
+        similarGamesViewFactory.create(game, games()) { item ->
             reader.dismiss()
-            showDetails(item)
+            show(item)
         }?.let(root::addView)
 
-        val articleWebView = gameArticleWebViewFactory.create(
-            backgroundColor = bg,
+        val articleWebView = articleWebViewFactory.create(
+            backgroundColor = bg(),
             gameUrl = game.url,
             gameName = game.name,
             bloggerHtml = game.bloggerHtml.ifBlank { "<h2>${game.name}</h2><p>${game.description}</p>" },
@@ -78,19 +75,19 @@ internal class GameDetailsController(
             }
         )
         root.addView(articleWebView, LinearLayout.LayoutParams(-1, 0, 1f))
-        gameDownloadLinksViewFactory.create(game.downloadLinks, game.name)?.let(root::addView)
+        downloadLinksViewFactory.create(game.downloadLinks, game.name)?.let(root::addView)
 
         val archiveFolder = File(filesDir, "reader_cache").apply { mkdirs() }
-        val archiveFile = File(archiveFolder, coverRepository.stableCacheName(game.url.ifBlank { game.name }) + ".mht")
+        val archiveFile = File(archiveFolder, stableCacheName(game.url.ifBlank { game.name }) + ".mht")
 
-        val bottom = gameDetailsBottomBarFactory.create(
-            offlineLabel = gameOfflineArchiveController.buttonLabel(archiveFile),
-            isAdmin = isAdminSession,
+        val bottom = bottomBarFactory.create(
+            offlineLabel = offlineArchiveController.buttonLabel(archiveFile),
+            isAdmin = isAdmin(),
             onOffline = {
                 gameOfflineArchiveController.openOrSave(
                     webView = articleWebView,
                     archiveFile = archiveFile,
-                    postToUi = ::postToUi
+                    postToUi = postToUi
                 )
             },
             onShare = {
@@ -99,7 +96,7 @@ internal class GameDetailsController(
                     putExtra(Intent.EXTRA_SUBJECT, game.name)
                     putExtra(Intent.EXTRA_TEXT, game.name + "\n" + game.url)
                 }
-                startActivity(Intent.createChooser(send, "مشاركة مقال من MARCO RX6"))
+                activity.startActivity(Intent.createChooser(send, "مشاركة مقال من MARCO RX6"))
             },
             onComments = { if (game.url.isNotBlank()) openGameLink(game.url) },
             onEdit = { reader.dismiss(); showGameDialog(game) },
