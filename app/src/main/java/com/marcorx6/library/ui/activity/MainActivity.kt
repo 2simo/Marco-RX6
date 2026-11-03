@@ -35,7 +35,6 @@ class MainActivity : ComponentActivity() {
 
     private fun appearancePreferences() = appearancePaletteFeature.preferences()
     private fun isDarkMode() = appearancePaletteFeature.isDarkMode()
-    private fun applySystemBarAppearance() = activityServicesRuntimeFeature.applySystemBarAppearance()
     private fun accentColor(): Int = appearancePaletteFeature.accentColor()
     private val bg: Int get() = appearancePaletteFeature.bg
     private val panel: Int get() = appearancePaletteFeature.panel
@@ -52,26 +51,23 @@ class MainActivity : ComponentActivity() {
     }
 
     private val libraryViewState get() = libraryRuntimeFeature.viewState
-    private fun postToUi(action: () -> Unit) = activityServicesRuntimeFeature.postToUi(action)
 
-    private val ioExecutor get() = activityServicesRuntimeFeature.ioExecutor
     private val PICK_IMAGE_REQUEST = 1001
     private val coverFeature by lazy {
         CoverUploadRuntimeFeature(
             context = this,
             filesDir = filesDir,
             contentResolver = contentResolver,
-            accessToken = ::driveToken,
-            executeIo = { task -> ioExecutor.execute { task() } },
-            postToUi = ::postToUi,
-            loadCover = ::loadCover,
-            deleteCoverFileIfUnused = ::deleteCoverFileIfUnused,
+            accessToken = googleAccountRuntimeFeature::driveToken,
+            executeIo = { task -> activityServicesRuntimeFeature.ioExecutor.execute { task() } },
+            postToUi = activityServicesRuntimeFeature::postToUi,
+            loadCover = coverRuntimeFeature::load,
+            deleteCoverFileIfUnused = coverRuntimeFeature::deleteIfUnused,
             dp = ::dp,
             white = { white },
             styleDialog = ::styleAlertDialog
         )
     }
-    private val coverUploadState get() = coverFeature.state
 
     private var isSyncing: Boolean
         get() = runtimeState.isSyncing
@@ -92,7 +88,7 @@ class MainActivity : ComponentActivity() {
             activity = this,
             contentResolver = contentResolver,
             filesDir = filesDir,
-            executor = ioExecutor,
+            executor = activityServicesRuntimeFeature.ioExecutor,
             postToUi = ::postToUi,
             settings = getSharedPreferences("app_settings", MODE_PRIVATE),
             appearancePreferences = ::appearancePreferences,
@@ -130,7 +126,7 @@ class MainActivity : ComponentActivity() {
             setNotificationsEnabled = activityServicesRuntimeFeature::setNotificationsEnabled,
             scheduleNotifications = activityServicesRuntimeFeature::scheduleNotifications,
             cancelNotifications = activityServicesRuntimeFeature::cancelNotifications,
-            requestNotificationPermission = ::requestNotificationPermissionIfNeeded,
+            requestNotificationPermission = activityServicesRuntimeFeature::requestNotificationPermissionIfNeeded,
             onPlatformSelected = { libraryViewState.selected = it },
             recreateActivity = ::recreate,
             showFirstRunSetup = ::showFirstRunSetup,
@@ -152,7 +148,7 @@ class MainActivity : ComponentActivity() {
             feedUrl = bloggerFeedUrl,
             postToUi = ::postToUi,
             refreshUi = ::createInterface,
-            merge = ::mergeImportedGames,
+            merge = { imported -> GameImportMerger.merge(gameDataRuntimeFeature.libraryStore, imported) },
             setBlogId = { bloggerBlogId = it },
             refreshAccess = ::refreshBloggerAccess,
             renderGames = ::renderGames,
@@ -172,19 +168,19 @@ class MainActivity : ComponentActivity() {
             styleAlertDialog = ::styleAlertDialog,
             applyUnifiedSkin = ::applyUnifiedSkin,
             setCoverFields = { url, preview ->
-                coverUploadState.urlField = url
-                coverUploadState.preview = preview
+                coverFeature.state.urlField = url
+                coverFeature.state.preview = preview
             },
-            pendingCoverLocalPath = { coverUploadState.pendingLocalPath },
+            pendingCoverLocalPath = { coverFeature.state.pendingLocalPath },
             setPendingCoverLocalPath = { coverUploadState.pendingLocalPath = it },
-            pendingCoverPublicUrl = { coverUploadState.pendingPublicUrl },
+            pendingCoverPublicUrl = { coverFeature.state.pendingPublicUrl },
             setPendingCoverPublicUrl = { coverUploadState.pendingPublicUrl = it },
-            coverUploadInProgress = { coverUploadState.inProgress },
+            coverUploadInProgress = { coverFeature.state.inProgress },
             loadCover = ::loadCover,
             chooseCover = ::chooseCover,
             deleteCoverFileIfUnused = ::deleteCoverFileIfUnused,
-            resetCoverUploadFailed = { coverUploadState.resetFailure() },
-            saveGames = ::saveGames
+            resetCoverUploadFailed = { coverFeature.state.resetFailure() },
+            saveGames = gameDataRuntimeFeature::saveGames
         )
     }
 
@@ -226,9 +222,9 @@ class MainActivity : ComponentActivity() {
                     .getString("preferred_platform", "ALL")
                     ?.takeIf { it in listOf("PS2", "PS3", "PS4") } ?: "ALL"
             },
-            applySystemBarAppearance = ::applySystemBarAppearance,
-            createNotificationChannel = ::createNotificationChannel,
-            loadGames = ::loadGames,
+            applySystemBarAppearance = activityServicesRuntimeFeature::applySystemBarAppearance,
+            createNotificationChannel = activityServicesRuntimeFeature::createNotificationChannel,
+            loadGames = gameDataRuntimeFeature::loadGames,
             restoreAdminSession = ::restoreAdminSession,
             createInterface = ::createInterface,
             showStartupExperience = ::showStartupExperience,
@@ -236,8 +232,8 @@ class MainActivity : ComponentActivity() {
                 getSharedPreferences("app_settings", MODE_PRIVATE)
                     .getBoolean("setup_completed", false)
             },
-            notificationsEnabled = ::areNotificationsEnabled,
-            scheduleNotifications = ::scheduleNotifications,
+            notificationsEnabled = activityServicesRuntimeFeature::areNotificationsEnabled,
+            scheduleNotifications = activityServicesRuntimeFeature::scheduleNotifications,
             requestNotificationPermission = ::requestNotificationPermissionIfNeeded,
             syncFromBlog = { syncFromBlog(showResult = false) },
             dismissUserExperience = { userExperienceRuntimeFeature.dismiss() },
@@ -264,9 +260,6 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
     }
 
-    private fun createNotificationChannel() = activityServicesRuntimeFeature.createNotificationChannel()
-    private fun areNotificationsEnabled(): Boolean = activityServicesRuntimeFeature.areNotificationsEnabled()
-    private fun scheduleNotifications() = activityServicesRuntimeFeature.scheduleNotifications()
 
     private fun restoreAdminSession() {
         isAdminSession = false
@@ -281,7 +274,6 @@ class MainActivity : ComponentActivity() {
             createInterface()
         }
     }
-    private fun driveToken(): String = googleAccountRuntimeFeature.driveToken()
 
 
     private val appearanceRuntimeFeature by lazy {
@@ -298,14 +290,14 @@ class MainActivity : ComponentActivity() {
             isSyncing = { isSyncing },
             isAdminSession = { isAdminSession },
             sync = { syncFromBlog(showResult = true) },
-            showDownloads = ::showDownloadManager,
-            showNotifications = ::showNotificationSettings,
+            showDownloads = activityServicesRuntimeFeature::showDownloadManager,
+            showNotifications = activityServicesRuntimeFeature::showNotificationSettings,
             showProfile = ::showProfile,
             signOut = ::signOutAdmin,
             signIn = ::startGoogleSignIn,
             showGameDialog = { showGameDialog() },
             showGameOfDay = ::showGameOfTheDay,
-            openLink = ::openGameLink,
+            openLink = activityServicesRuntimeFeature::openGameLink,
             applyUnifiedSkin = ::applyUnifiedSkin,
             recreateActivity = ::recreate,
             recreateInterface = ::createInterface
@@ -373,13 +365,7 @@ class MainActivity : ComponentActivity() {
 
     private fun syncFromBlog(showResult: Boolean) = bloggerRuntimeFeature.sync(showResult)
 
-    private fun mergeImportedGames(imported: List<Game>): Pair<Int, Int> =
-        GameImportMerger.merge(gameDataRuntimeFeature.libraryStore, imported)
-
     // COVER RUNTIME
-    private fun loadCover(image: ImageView, localPath: String, imageUrl: String) =
-        coverRuntimeFeature.load(image, localPath, imageUrl)
-
     private fun chooseCover() {
 
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
@@ -402,7 +388,7 @@ class MainActivity : ComponentActivity() {
             isDarkMode = ::isDarkMode,
             fontFamilyName = ::fontFamilyName,
             fontScale = ::fontScale,
-            enqueueGameDownload = ::enqueueGameDownload,
+            enqueueGameDownload = activityServicesRuntimeFeature::enqueueGameDownload,
             white = { white },
             red = { red },
             gray = { gray },
@@ -416,7 +402,7 @@ class MainActivity : ComponentActivity() {
             stableCacheName = coverRuntimeFeature::stableCacheName,
             isAdmin = { isAdminSession },
             postToUi = ::postToUi,
-            openGameLink = ::openGameLink,
+            openGameLink = activityServicesRuntimeFeature::openGameLink,
             showGameDialog = { showGameDialog(it) },
             deleteGame = ::deleteGame,
             applyMotionPreferences = ::applyMotionPreferences,
@@ -432,34 +418,6 @@ class MainActivity : ComponentActivity() {
     private fun deleteGame(game: Game) = bloggerRuntimeFeature.delete(game)
 
     private fun showGameOfTheDay() = gameExperienceFeature.showGameOfTheDay()
-
-    private fun enqueueGameDownload(
-        link: String,
-        title: String,
-        userAgent: String = "",
-        contentDisposition: String = "",
-        hintedMimeType: String = "",
-        referrer: String = ""
-    ) {
-        activityServicesRuntimeFeature.enqueueGameDownload(
-            link, title, userAgent, contentDisposition, hintedMimeType, referrer
-        )
-    }
-
-    private fun showDownloadManager() {
-        activityServicesRuntimeFeature.showDownloadManager()
-    }
-
-    private fun openGameLink(link: String) {
-        activityServicesRuntimeFeature.openGameLink(link)
-    }
-
-    private fun deleteCoverFileIfUnused(path: String) =
-        coverRuntimeFeature.deleteIfUnused(path)
-
-    private fun saveGames() = gameDataRuntimeFeature.saveGames()
-
-    private fun loadGames() = gameDataRuntimeFeature.loadGames()
 
 
 
