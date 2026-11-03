@@ -513,39 +513,28 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun showAdvancedFilters() {
-        val genreValues = listOf("كل الأنواع") + games.map { it.genre.trim() }.filter { it.isNotBlank() }.distinct().sorted()
-        val yearValues = listOf("كل السنوات") + games.map { it.releaseYear.trim() }.filter { it.isNotBlank() }.distinct().sortedDescending()
-        val box = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(8), dp(20), dp(4))
-        }
-        box.addView(makeText("نوع اللعبة", 12f, red, true))
-        val genreSpinner = Spinner(this).apply {
-            adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, genreValues)
-            setSelection(genreValues.indexOf(selectedGenre.takeIf { it.isNotBlank() } ?: "كل الأنواع").coerceAtLeast(0))
-        }
-        box.addView(genreSpinner)
-        box.addView(makeText("سنة الإصدار", 12f, red, true).apply { setPadding(0, dp(12), 0, 0) })
-        val yearSpinner = Spinner(this).apply {
-            adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, yearValues)
-            setSelection(yearValues.indexOf(selectedYear.takeIf { it.isNotBlank() } ?: "كل السنوات").coerceAtLeast(0))
-        }
-        box.addView(yearSpinner)
-        AlertDialog.Builder(this)
-            .setTitle("الفلاتر المتقدمة")
-            .setView(box)
-            .setPositiveButton("تطبيق") { _, _ ->
-                selectedGenre = genreSpinner.selectedItem?.toString()?.takeUnless { it == "كل الأنواع" }.orEmpty()
-                selectedYear = yearSpinner.selectedItem?.toString()?.takeUnless { it == "كل السنوات" }.orEmpty()
+        AdvancedFiltersController(
+            activity = this,
+            dp = ::dp,
+            red = red,
+            makeText = ::makeText,
+            styleDialog = ::styleAlertDialog,
+            onApply = { genre, year ->
+                selectedGenre = genre
+                selectedYear = year
                 renderGames()
-            }
-            .setNeutralButton("مسح الفلاتر") { _, _ ->
+            },
+            onClear = {
                 selectedGenre = ""
                 selectedYear = ""
                 renderGames()
             }
-            .setNegativeButton("إغلاق", null)
-            .show().also { styleAlertDialog(it) }
+        ).show(
+            genres = games.map { it.genre.trim() }.filter { it.isNotBlank() }.distinct().sorted(),
+            years = games.map { it.releaseYear.trim() }.filter { it.isNotBlank() }.distinct().sortedDescending(),
+            selectedGenre = selectedGenre,
+            selectedYear = selectedYear
+        )
     }
 
     private fun createInterface() {
