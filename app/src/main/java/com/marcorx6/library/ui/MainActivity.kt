@@ -12,6 +12,7 @@ import com.marcorx6.library.data.GameRepository
 import com.marcorx6.library.data.GameLibraryManager
 import com.marcorx6.library.data.GameLibraryStore
 import com.marcorx6.library.data.BackupCodec
+import com.marcorx6.library.data.BackupFileRepository
 import com.marcorx6.library.data.BloggerPostRepository
 import com.marcorx6.library.data.DownloadRepository
 import com.marcorx6.library.data.DownloadStartResult
@@ -63,6 +64,7 @@ class MainActivity : ComponentActivity() {
 
     private val notificationScheduler by lazy { BlogNotificationScheduler(applicationContext) }
     private val downloadRepository by lazy { DownloadRepository(applicationContext) }
+    private val backupFileRepository by lazy { BackupFileRepository(contentResolver) }
 
     private fun appearancePreferences() = getSharedPreferences("appearance_settings", MODE_PRIVATE)
     private fun isDarkMode() = appearancePreferences().getBoolean("dark_mode", true)
@@ -748,13 +750,10 @@ class MainActivity : ComponentActivity() {
         val uri = data?.data ?: return true
         return try {
             if (requestCode == BACKUP_EXPORT_REQUEST) {
-                contentResolver.openOutputStream(uri)?.bufferedWriter(Charsets.UTF_8)?.use { it.write(backupExportPayload) }
-                    ?: throw IllegalStateException("تعذر إنشاء ملف النسخة الاحتياطية")
+                backupFileRepository.write(uri, backupExportPayload)
                 Toast.makeText(this, "تم تصدير النسخة الاحتياطية", Toast.LENGTH_LONG).show()
             } else if (requestCode == BACKUP_IMPORT_REQUEST) {
-                val raw = contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
-                    ?: throw IllegalStateException("تعذر قراءة الملف")
-                val backup = BackupCodec.decode(raw)
+                val backup = backupFileRepository.read(uri)
                 val restored = backup.games
                 AlertDialog.Builder(this).setTitle("استعادة النسخة الاحتياطية")
                     .setMessage("سيتم استبدال المكتبة الحالية بـ ${restored.size} عنصر. يُفضّل تصدير نسخة من بياناتك الحالية أولاً. هل تريد المتابعة؟")
