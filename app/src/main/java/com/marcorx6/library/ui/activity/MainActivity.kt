@@ -1,6 +1,7 @@
 
-package com.marcorx6.library.ui
+package com.marcorx6.library.ui.activity
 
+import com.marcorx6.library.ui.*
 import java.util.concurrent.Executors
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
