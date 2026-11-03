@@ -329,6 +329,9 @@ class MainActivity : ComponentActivity() {
     private fun currentLanguage(): String =
         getSharedPreferences("app_settings", MODE_PRIVATE).getString("language", "ar") ?: "ar"
 
+    private fun tr(value: String): String =
+        LanguageTranslator.translate(value, currentLanguage())
+
 
     private val sideMenuController by lazy {
         SideMenuController(
