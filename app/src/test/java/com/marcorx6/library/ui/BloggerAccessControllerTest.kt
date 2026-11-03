@@ -57,6 +57,30 @@ class BloggerAccessControllerTest {
     }
 
     @Test
+    fun ignoresOlderCheckWhenBlogChangesForSameAccount() {
+        var admin = false
+        val queuedUiActions = mutableListOf<() -> Unit>()
+        val controller = BloggerAccessController(
+            executor = directExecutor,
+            checkAccess = { it == "blog-1" },
+            currentAccountId = { "account-1" },
+            setAdmin = { admin = it },
+            postToUi = { action -> queuedUiActions.add(action) },
+            refreshUi = {},
+            onDenied = {}
+        )
+
+        controller.refresh("blog-1", "account-1", true)
+        controller.refresh("blog-2", "account-1", true)
+
+        queuedUiActions[0].invoke()
+        assertEquals(false, admin)
+
+        queuedUiActions[1].invoke()
+        assertEquals(false, admin)
+    }
+
+    @Test
     fun clearsAdminWhenAccountOrBlogIsMissing() {
         var admin = true
         var checks = 0
