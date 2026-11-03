@@ -2349,14 +2349,26 @@ class MainActivity : Activity() {
                     val card = LinearLayout(this).apply {
                         orientation = LinearLayout.VERTICAL
                         gravity = Gravity.CENTER_HORIZONTAL
+                        background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                            if (isDarkMode()) intArrayOf(Color.rgb(42, 48, 67), Color.rgb(22, 27, 42))
+                            else intArrayOf(Color.WHITE, Color.rgb(239, 243, 250))).apply {
+                            cornerRadius = dp(16).toFloat()
+                            setStroke(dp(1), if (isDarkMode()) Color.rgb(73, 84, 111) else Color.rgb(205, 213, 228))
+                        }
+                        setPadding(dp(4), dp(4), dp(4), dp(5))
+                        elevation = dp(3).toFloat()
                         isClickable = true
                         isFocusable = true
                         setOnClickListener { showDetails(post) }
                     }
                     val frame = FrameLayout(this).apply {
-                        background = rounded(Color.rgb(198, 204, 218), 13)
+                        background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                            intArrayOf(Color.rgb(116, 127, 151), Color.rgb(35, 41, 59))).apply {
+                            cornerRadius = dp(12).toFloat()
+                            setStroke(dp(1), if (isDarkMode()) Color.rgb(125, 139, 169) else Color.rgb(174, 185, 207))
+                        }
                         clipToOutline = true
-                        elevation = dp(4).toFloat()
+                        elevation = dp(2).toFloat()
                         isClickable = true
                         isFocusable = true
                         setOnClickListener { showDetails(post) }
@@ -2377,7 +2389,7 @@ class MainActivity : Activity() {
                     }
                     card.addView(frame, LinearLayout.LayoutParams(dp(142), dp(190)))
 
-                    val title = makeText(post.name, 11f, Color.rgb(238, 241, 248), true).apply {
+                    val title = makeText(post.name, 11f, if (isDarkMode()) Color.rgb(238, 241, 248) else Color.rgb(43, 51, 68), true).apply {
                         gravity = Gravity.CENTER
                         maxLines = 1
                         ellipsize = android.text.TextUtils.TruncateAt.END
@@ -2387,7 +2399,7 @@ class MainActivity : Activity() {
                     }
                     card.addView(title, LinearLayout.LayoutParams(dp(142), dp(27)))
 
-                    row.addView(card, LinearLayout.LayoutParams(dp(142), -2).apply {
+                    row.addView(card, LinearLayout.LayoutParams(dp(150), -2).apply {
                         marginEnd = dp(11)
                     })
                 }
