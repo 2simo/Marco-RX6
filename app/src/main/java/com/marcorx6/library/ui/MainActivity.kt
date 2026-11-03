@@ -78,8 +78,15 @@ class MainActivity : ComponentActivity() {
     private val gray: Int get() = if (isDarkMode()) Color.LTGRAY else Color.rgb(86, 96, 115)
     private val platforms = listOf("الكل", "BLOG", "FAVORITES", "PS2", "PS3", "PS4")
     private val games = mutableListOf<Game>()
-    private val googleDriveClient by lazy { com.marcorx6.library.network.GoogleDriveClient() }
-    private val coverUploadRepository by lazy { com.marcorx6.library.data.CoverUploadRepository(filesDir, contentResolver, googleDriveClient) }
+    private val driveServices by lazy {
+        DriveServices(
+            filesDir = filesDir,
+            contentResolver = contentResolver,
+            accessToken = ::driveToken,
+            executeIo = { task -> ioExecutor.execute { task() } },
+            postToUi = ::postToUi
+        )
+    }
     private val coverRepository by lazy { com.marcorx6.library.data.CoverRepository(applicationContext).also { coverRepositoryCreated = true } }
     private var coverRepositoryCreated = false
 
@@ -547,12 +554,7 @@ class MainActivity : ComponentActivity() {
     private val googleSignInResultHandler by lazy { GoogleSignInResultHandler() }
 
     private val coverUploadController by lazy {
-        CoverUploadController(
-            repository = coverUploadRepository,
-            accessToken = ::driveToken,
-            executeIo = { task -> ioExecutor.execute { task() } },
-            postToUi = ::postToUi
-        )
+        driveServices.createCoverUploadController()
     }
 
     private val coverSelectionController: CoverSelectionController by lazy {
