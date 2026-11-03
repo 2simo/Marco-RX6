@@ -2261,17 +2261,7 @@ class MainActivity : ComponentActivity() {
      * arbitrary paths restored from older or external backup files.
      */
     private fun deleteCoverFileIfUnused(path: String) {
-        if (path.isBlank()) return
-
-        val coversDirectory = File(filesDir, "covers").canonicalFile
-        val coverFile = runCatching { File(path).canonicalFile }.getOrNull() ?: return
-        if (coverFile.parentFile != coversDirectory || !coverFile.isFile) return
-
-        val stillReferenced = games.any { game ->
-            game.coverLocalPath.isNotBlank() &&
-                runCatching { File(game.coverLocalPath).canonicalFile == coverFile }.getOrDefault(false)
-        }
-        if (!stillReferenced) coverFile.delete()
+        CoverFileCleanup.deleteIfUnused(File(filesDir, "covers"), path, games.map { it.coverLocalPath })
     }
 
     private fun saveGames() {
