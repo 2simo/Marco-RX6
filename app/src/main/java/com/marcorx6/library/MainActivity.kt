@@ -393,7 +393,7 @@ class MainActivity : Activity() {
                 Toast.makeText(this, "تم إيقاف الإشعارات", Toast.LENGTH_SHORT).show()
             }
             .setNeutralButton("إغلاق", null)
-            .show()
+            .show().also { styleAlertDialog(it) }
     }
 
     private fun dp(v: Int): Int =
@@ -804,7 +804,7 @@ class MainActivity : Activity() {
                         }
                         recreate()
                         Toast.makeText(this, "تمت استعادة المكتبة", Toast.LENGTH_LONG).show()
-                    }.show()
+                    }.show().also { styleAlertDialog(it) }
             }
             true
         } catch (e: Exception) {
@@ -844,7 +844,7 @@ class MainActivity : Activity() {
                 fontPreferences().edit().putFloat("scale", 0.85f + size.progress * 0.05f).putString("family", familyValue).apply()
                 createInterface()
                 Toast.makeText(this, "تم حفظ إعدادات الخط", Toast.LENGTH_SHORT).show()
-            }.show()
+            }.show().also { styleAlertDialog(it) }
     }
 
     // Ask Android for the device's fastest supported mode (up to 144 Hz).
@@ -894,7 +894,7 @@ class MainActivity : Activity() {
                 renderGames()
             }
             .setNegativeButton("إغلاق", null)
-            .show()
+            .show().also { styleAlertDialog(it) }
     }
 
     private fun createInterface() {
@@ -1947,7 +1947,7 @@ class MainActivity : Activity() {
                             Toast.makeText(this, "تم نسخ تفاصيل الخطأ", Toast.LENGTH_SHORT).show()
                         }
                         .setNegativeButton("إغلاق", null)
-                        .show()
+                        .show().also { styleAlertDialog(it) }
                 }
             }
         }.start()
@@ -2140,7 +2140,7 @@ class MainActivity : Activity() {
                 getSharedPreferences("app_settings", MODE_PRIVATE).edit().putBoolean("setup_completed", true).apply()
             }
             .setCancelable(false)
-            .show()
+            .create().also { styleAlertDialog(it) }.show()
     }
 
     private var activeProfileDialog: AlertDialog? = null
@@ -2531,7 +2531,7 @@ class MainActivity : Activity() {
                         dialog.dismiss()
                     }
                     .setNegativeButton("إغلاق", null)
-                    .show()
+                    .show().also { styleAlertDialog(it) }
             }
         }
         info.addView(watchlistButton, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(7) })
@@ -2771,7 +2771,7 @@ class MainActivity : Activity() {
                             }
                         } catch (e: Exception) { mainHandler.post { Toast.makeText(this, e.message ?: "تعذر تحديث التسميات", Toast.LENGTH_LONG).show() } }
                     }.start()
-                }.show()
+                }.show().also { styleAlertDialog(it) }
         }
         if (existing != null && existing.platform.isNotBlank()) selectedLabels.add(existing.platform)
         val body = makeInput("وصف المقال — اكتب المعلومات فقط، وسيُنسّقها القالب تلقائياً").apply { minLines = 8; gravity = Gravity.TOP or Gravity.START; inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE or android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES; setPadding(dp(13), dp(12), dp(13), dp(12)) }
@@ -2830,7 +2830,7 @@ class MainActivity : Activity() {
                     loadDataWithBaseURL(null, previewHtml, "text/html", "UTF-8", null)
                 }
                 AlertDialog.Builder(this).setTitle("معاينة قبل النشر").setView(web)
-                    .setPositiveButton("إغلاق", null).show()
+                    .setPositiveButton("إغلاق", null).show().also { styleAlertDialog(it) }
             }
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 val postTitle = title.text.toString().trim(); val categoryName = selectedLabels.firstOrNull() ?: ""; val coverLink = coverUrl.text.toString().trim(); val relatedLink = link.text.toString().trim()
