@@ -123,7 +123,7 @@ internal class FirstRunSetupController(
                 4 -> "هل ترغب في تلقي إشعار عند نشر مقالات جديدة في المدونة؟"
                 else -> "تم إعداد مكتبتك. اختياراتك محفوظة ويمكنك تغييرها لاحقاً من الإعدادات."
             }
-            page.addView(makeText(description, 13f, Color.rgb(164, 184, 207)).apply {
+            page.addView(makeText(description, 13f, Color.rgb(164, 184, 207), false).apply {
                 setPadding(0, 0, 0, dp(24))
             })
 
@@ -166,21 +166,21 @@ internal class FirstRunSetupController(
                         "rose" -> Color.rgb(215, 90, 135)
                         else -> Color.rgb(42, 145, 255)
                     }
-                    val card = firstRunSetupViewFactory.optionCard(label, accentKey == key)
+                    val card = viewFactory.optionCard(label, accentKey == key)
                     val dot = View(activity).apply { background = rounded(swatchColor, 20) }
                     card.addView(dot, LinearLayout.LayoutParams(dp(24), dp(24)).apply { topMargin = dp(9) })
                     choices.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(9) })
                     card.setOnClickListener { accentKey = key; renderStep(step, false) }
-                    if (animate) firstRunSetupViewFactory.animateIn(card)
+                    if (animate) viewFactory.animateIn(card)
                 }
                 4 -> {
                     addChoice("تفعيل الإشعارات", "تنبيه عند وصول مقال جديد", notificationsEnabled) { notificationsEnabled = true }
                     addChoice("إيقاف الإشعارات", "يمكنك تفعيلها لاحقاً من الإعدادات", !notificationsEnabled) { notificationsEnabled = false }
                 }
                 5 -> {
-                    val readyCard = firstRunSetupViewFactory.optionCard("مكتبتك جاهزة!", true, "تم حفظ المنصة واللغة والمظهر واللون والإشعارات.")
+                    val readyCard = viewFactory.optionCard("مكتبتك جاهزة!", true, "تم حفظ المنصة واللغة والمظهر واللون والإشعارات.")
                     choices.addView(readyCard, LinearLayout.LayoutParams(-1, -2))
-                    if (animate) firstRunSetupViewFactory.animateIn(readyCard)
+                    if (animate) viewFactory.animateIn(readyCard)
                 }
             }
             val scroll = ScrollView(activity).apply {
@@ -190,7 +190,7 @@ internal class FirstRunSetupController(
             }
             page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
             content.addView(page, FrameLayout.LayoutParams(-1, -1))
-            if (animate) firstRunSetupViewFactory.animateIn(page)
+            if (animate) viewFactory.animateIn(page)
             next.setOnClickListener {
                 if (step < steps.lastIndex) {
                     val old = step
