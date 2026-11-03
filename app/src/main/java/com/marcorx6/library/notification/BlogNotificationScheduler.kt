@@ -3,7 +3,7 @@ package com.marcorx6.library.notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
-import com.marcorx6.library.BlogNotificationWorker
+import com.marcorx6.library.notification.BlogNotificationWorker
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
