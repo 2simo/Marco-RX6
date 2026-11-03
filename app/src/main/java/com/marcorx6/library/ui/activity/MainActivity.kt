@@ -8,7 +8,6 @@ import com.marcorx6.library.ui.BlogSyncFeature
 import com.marcorx6.library.ui.BloggerAccessFeature
 import com.marcorx6.library.ui.BloggerHtmlBuilder
 import com.marcorx6.library.ui.BloggerPostFeature
-import com.marcorx6.library.ui.BloggerServices
 import com.marcorx6.library.ui.BloggerRuntimeFeature
 import com.marcorx6.library.ui.CoverRuntimeFeature
 import com.marcorx6.library.ui.CoverUploadRuntimeFeature
@@ -18,7 +17,7 @@ import com.marcorx6.library.ui.GameExperienceRuntimeFeature
 import com.marcorx6.library.ui.GameImportMerger
 import com.marcorx6.library.ui.GameOfTheDayController
 import com.marcorx6.library.ui.GamePersistenceController
-import com.marcorx6.library.ui.GoogleAdminFeature
+import com.marcorx6.library.ui.GoogleAccountRuntimeFeature
 import com.marcorx6.library.ui.LanguageFeature
 import com.marcorx6.library.ui.MotionPreferencesApplier
 import com.marcorx6.library.ui.MainLibraryRuntimeFeature
@@ -106,20 +105,16 @@ class MainActivity : ComponentActivity() {
     private var isSyncing: Boolean
         get() = runtimeState.isSyncing
         set(value) { runtimeState.isSyncing = value }
-    private val googleAdminFeature by lazy { GoogleAdminFeature(this) }
-    private var bloggerBlogId: String
-        get() = googleAdminFeature.blogId
-        set(value) { googleAdminFeature.blogId = value }
-    private var isAdminSession: Boolean
-        get() = googleAdminFeature.isAdminSession
-        set(value) { googleAdminFeature.isAdminSession = value }
-    private val bloggerServices by lazy {
-        BloggerServices(
-            tokenProvider = googleAdminFeature.tokenProvider,
-            blogIdProvider = { bloggerBlogId },
-            isAdminSession = { isAdminSession }
-        )
+    private val googleAccountRuntimeFeature by lazy {
+        GoogleAccountRuntimeFeature(applicationContext)
     }
+    private var bloggerBlogId: String
+        get() = googleAccountRuntimeFeature.blogId
+        set(value) { googleAccountRuntimeFeature.blogId = value }
+    private var isAdminSession: Boolean
+        get() = googleAccountRuntimeFeature.isAdminSession
+        set(value) { googleAccountRuntimeFeature.isAdminSession = value }
+    private val bloggerServices get() = googleAccountRuntimeFeature.bloggerServices
     private val gameRepository by lazy { GameRepository(applicationContext) }
     private val userExperienceRuntimeFeature by lazy {
         UserExperienceRuntimeFeature(
@@ -234,7 +229,7 @@ class MainActivity : ComponentActivity() {
         avatarRequestCode = 1005,
         coverRequestCode = PICK_IMAGE_REQUEST,
         onGoogleSignInResult = { data ->
-            googleAdminFeature.accountController.handleSignInResult(
+            googleAccountRuntimeFeature.accountController.handleSignInResult(
                 data = data,
                 onSuccess = {
                     isAdminSession = false
@@ -312,7 +307,7 @@ class MainActivity : ComponentActivity() {
             createInterface()
         }
     }
-    private fun driveToken(): String = googleAdminFeature.driveToken()
+    private fun driveToken(): String = googleAccountRuntimeFeature.driveToken()
 
 
     private fun bloggerHtml(game: Game): String = BloggerHtmlBuilder.build(game)
