@@ -396,12 +396,12 @@ class MainActivity : ComponentActivity() {
     private fun showLanguagePicker() = languageFeature.showPicker()
 
 
-    private val sideMenuController by lazy {
-        SideMenuController(
+    private val sideMenuFeature by lazy {
+        SideMenuFeature(
             activity = this,
             dp = ::dp,
             makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
-            tr = ::tr,
+            translate = ::tr,
             isDark = ::isDarkMode,
             language = ::currentLanguage,
             gold = red,
@@ -428,7 +428,7 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private fun showSideMenu() = sideMenuController.show()
+    private fun showSideMenu() = sideMenuFeature.show()
 
     private val motionPreferencesApplier by lazy {
         MotionPreferencesApplier(::appearancePreferences)
