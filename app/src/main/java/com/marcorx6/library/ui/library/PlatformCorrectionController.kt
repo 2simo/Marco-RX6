@@ -3,7 +3,7 @@ package com.marcorx6.library.ui
 import android.app.Activity
 import android.app.AlertDialog
 import com.marcorx6.library.data.GameLibraryStore
-import com.marcorx6.library.model.Game
+import com.marcorx6.library.data.Game
 
 /** Presents platform correction and delegates persistence to GameLibraryStore. */
 internal class PlatformCorrectionController(
