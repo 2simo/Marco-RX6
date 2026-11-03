@@ -9,10 +9,7 @@ import com.marcorx6.library.ui.BlogSyncFeature
 import com.marcorx6.library.ui.BloggerAccessFeature
 import com.marcorx6.library.ui.BloggerHtmlBuilder
 import com.marcorx6.library.ui.BloggerServices
-import com.marcorx6.library.ui.CoverDisplayController
 import com.marcorx6.library.ui.CoverFeature
-import com.marcorx6.library.ui.CoverFileCleanup
-import com.marcorx6.library.ui.CoverKeyResolver
 import com.marcorx6.library.ui.CoverUploadState
 import com.marcorx6.library.ui.DownloadFeature
 import com.marcorx6.library.ui.FirstRunSetupFeature
@@ -42,7 +39,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import com.marcorx6.library.data.Game
 import com.marcorx6.library.data.GameRepository
 import com.marcorx6.library.data.GameLibraryStore
-import com.marcorx6.library.network.BloggerFeedParser
 import android.app.AlertDialog
 import android.content.Intent
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -50,7 +46,6 @@ import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.widget.*
-import java.io.File
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -77,8 +72,11 @@ class MainActivity : ComponentActivity() {
     private fun accentForeground(): Int = AccentPalette.foreground()
     private val gray: Int get() = if (isDarkMode()) Color.LTGRAY else Color.rgb(86, 96, 115)
     private val games = mutableListOf<Game>()
-    private val coverRepository by lazy { com.marcorx6.library.data.CoverRepository(applicationContext).also { coverRepositoryCreated = true } }
-    private var coverRepositoryCreated = false
+    private var coverRuntimeFeatureCreated = false
+    private val coverRuntimeFeature by lazy {
+        CoverRuntimeFeature(applicationContext, filesDir) { games }
+            .also { coverRuntimeFeatureCreated = true }
+    }
 
     private lateinit var gameList: LinearLayout
     private lateinit var search: EditText
@@ -258,7 +256,7 @@ class MainActivity : ComponentActivity() {
         mainLibraryFeature.dispose()
         firstRunSetupFeature.dismiss()
         ioExecutor.shutdownNow()
-        if (coverRepositoryCreated) coverRepository.close()
+        if (coverRuntimeFeatureCreated) coverRuntimeFeature.close()
         super.onDestroy()
     }
 
@@ -461,24 +459,9 @@ class MainActivity : ComponentActivity() {
             .show(game)
     }
 
-    // IMAGE LOADER
-    private val coverDisplayController by lazy {
-        CoverDisplayController(
-            normalizeUrl = BloggerFeedParser::normalizeBloggerImageUrl,
-            resolveKey = ::keyForCover,
-            loadBitmap = { localPath, imageUrl, callback ->
-                coverRepository.load(localPath, imageUrl, callback)
-            }
-        )
-    }
-
+    // COVER RUNTIME
     private fun loadCover(image: ImageView, localPath: String, imageUrl: String) =
-        coverDisplayController.load(image, localPath, imageUrl)
-
-    private fun keyForCover(localPath: String, imageUrl: String): String =
-        CoverKeyResolver.resolve(localPath, imageUrl, coverRepository::stableCacheName) { asset ->
-            try { assets.open(asset).use { true } } catch (_: Exception) { false }
-        }
+        coverRuntimeFeature.load(image, localPath, imageUrl)
 
     private fun chooseCover() {
 
@@ -651,7 +634,7 @@ class MainActivity : ComponentActivity() {
             renderGames = ::renderGames,
             styleAlertDialog = ::styleAlertDialog,
             filesDir = filesDir,
-            stableCacheName = coverRepository::stableCacheName,
+            stableCacheName = coverRuntimeFeature::stableCacheName,
             isAdmin = { isAdminSession },
             postToUi = ::postToUi,
             openGameLink = ::openGameLink,
@@ -711,14 +694,8 @@ class MainActivity : ComponentActivity() {
         downloadFeature.openGameLink(link)
     }
 
-    /**
-     * Deletes an app-managed cover only after no library entry references it.
-     * Restrict deletion to the private covers directory to avoid touching
-     * arbitrary paths restored from older or external backup files.
-     */
-    private fun deleteCoverFileIfUnused(path: String) {
-        CoverFileCleanup.deleteIfUnused(File(filesDir, "covers"), path, games.map { it.coverLocalPath })
-    }
+    private fun deleteCoverFileIfUnused(path: String) =
+        coverRuntimeFeature.deleteIfUnused(path)
 
     private fun saveGames() = gamePersistenceController.save()
 
