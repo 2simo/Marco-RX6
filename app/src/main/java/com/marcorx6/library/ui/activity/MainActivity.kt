@@ -121,7 +121,6 @@ class MainActivity : ComponentActivity() {
             currentBlogId = { googleAccountRuntimeFeature.blogId },
             setAdmin = { googleAccountRuntimeFeature.isAdminSession = it },
             isAdminSession = { googleAccountRuntimeFeature.isAdminSession },
-            feedUrl = bloggerFeedUrl,
             postToUi = activityServicesRuntimeFeature::postToUi,
             refreshUi = ::createInterface,
             merge = { imported -> GameImportMerger.merge(gameDataRuntimeFeature.libraryStore, imported) },
@@ -186,9 +185,6 @@ class MainActivity : ComponentActivity() {
         onAvatarSelected = { uri -> userExperienceRuntimeFeature.avatarController.handle(uri) },
         onCoverSelected = { uri -> coverFeature.selectionController.handle(uri) }
     )
-
-    private val bloggerFeedUrl =
-        "https://marcorx6.blogspot.com/feeds/posts/default?alt=json&max-results=100"
 
     private val lifecycleCoordinator by lazy {
         MainActivityLifecycleCoordinator(
