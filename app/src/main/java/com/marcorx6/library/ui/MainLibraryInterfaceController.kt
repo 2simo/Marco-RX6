@@ -245,7 +245,7 @@ internal class MainLibraryInterfaceController(
         }
         root.addView(gameList, LinearLayout.LayoutParams(-1, -2))
 
-        if (isAdminSession) {
+        if (adminSession()) {
             val publish = TextView(activity).apply {
                 text = tr("＋  نشر")
                 textSize = 11f
