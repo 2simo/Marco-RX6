@@ -24,7 +24,6 @@ import com.marcorx6.library.ui.GamePersistenceController
 import com.marcorx6.library.ui.GoogleAdminFeature
 import com.marcorx6.library.ui.LanguageFeature
 import com.marcorx6.library.ui.LibraryFilterState
-import com.marcorx6.library.ui.MainActivityResultController
 import com.marcorx6.library.ui.MainLibraryFeature
 import com.marcorx6.library.ui.MotionPreferencesApplier
 import com.marcorx6.library.ui.NotificationsFeature
