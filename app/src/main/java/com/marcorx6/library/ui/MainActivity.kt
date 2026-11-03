@@ -512,6 +512,8 @@ class MainActivity : ComponentActivity() {
         coverPickerLauncher.launch(intent)
     }
 
+    private val googleSignInResultHandler by lazy { GoogleSignInResultHandler() }
+
     private fun handleActivityResult(
         requestCode: Int,
         resultCode: Int,
@@ -519,13 +521,20 @@ class MainActivity : ComponentActivity() {
     ) {
 
         if (requestCode == SIGN_IN_REQUEST && resultCode == RESULT_OK) {
-            try {
-                val account = GoogleSignIn.getSignedInAccountFromIntent(data).getResult(com.google.android.gms.common.api.ApiException::class.java)
-                isAdminSession = false
-                createInterface()
-                refreshBloggerAccess()
-                Toast.makeText(this, "تم ربط حساب Google؛ جارٍ التحقق من صلاحيات Blogger…", Toast.LENGTH_LONG).show()
-            } catch (e: Exception) { isAdminSession = false; createInterface(); Toast.makeText(this, "فشل تسجيل الدخول إلى Google: ${e.message}", Toast.LENGTH_LONG).show() }
+            googleSignInResultHandler.handle(
+                data = data,
+                onSuccess = {
+                    isAdminSession = false
+                    createInterface()
+                    refreshBloggerAccess()
+                    Toast.makeText(this, "تم ربط حساب Google؛ جارٍ التحقق من صلاحيات Blogger…", Toast.LENGTH_LONG).show()
+                },
+                onFailure = { message ->
+                    isAdminSession = false
+                    createInterface()
+                    Toast.makeText(this, "فشل تسجيل الدخول إلى Google: $message", Toast.LENGTH_LONG).show()
+                }
+            )
             return
         }
         if (requestCode == 1005 && resultCode == RESULT_OK) {
