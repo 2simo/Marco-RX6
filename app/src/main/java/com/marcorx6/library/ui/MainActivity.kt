@@ -2391,7 +2391,7 @@ class MainActivity : ComponentActivity() {
                         val result = bloggerPostRepository.savePost(
                             post,
                             selectedLabels.toList(),
-                            existing?.bloggerPostId?.takeIf { it.isNotBlank() }
+                            existing?.bloggerPostId
                         )
                         mainHandler.post {
                             val saved = post.copy(bloggerPostId = result.optString("id", post.bloggerPostId), bloggerHtml = result.optString("content", htmlContent), url = result.optString("url", post.url), sourcePostUrl = result.optString("url", post.sourcePostUrl), blogImported = true)
