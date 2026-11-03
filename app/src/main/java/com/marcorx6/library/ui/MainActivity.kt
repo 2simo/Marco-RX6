@@ -922,6 +922,8 @@ class MainActivity : ComponentActivity() {
     // Dedicated immersive article reader; the WebView owns its scroll instead of nesting inside ScrollView.
     private val gameArticleWebViewFactory by lazy { GameArticleWebViewFactory(this) }
 
+    private val gameOfflineArchiveController by lazy { GameOfflineArchiveController(this) }
+
     private fun showDetails(game: Game) {
         val reader = android.app.Dialog(this)
         val root = LinearLayout(this).apply {
@@ -1123,21 +1125,12 @@ l\">$articleHtml</body></html>",
             minHeight = dp(48)
             setOnClickListener { action() }
         }
-        val offline = readerAction(if (archiveFile.isFile) "قراءة دون إنترنت" else "حفظ دون إنترنت") {
-            if (archiveFile.isFile) {
-                articleWebView.settings.allowFileAccess = true
-                articleWebView.loadUrl(Uri.fromFile(archiveFile).toString())
-                Toast.makeText(this, "تم فتح النسخة المحفوظة", Toast.LENGTH_SHORT).show()
-            } else {
-                articleWebView.saveWebArchive(archiveFile.absolutePath, false) { savedPath ->
-                    postToUi {
-                        if (!savedPath.isNullOrBlank() && File(savedPath).isFile) {
-                            Toast.makeText(this, "تم حفظ المقال للقراءة دون اتصال", Toast.LENGTH_LONG).show()                        } else {
-                            Toast.makeText(this, "تعذر حفظ المقال. انتظر اكتمال تحميل الصور ثم حاول مجدداً.", Toast.LENGTH_LONG).show()
-                        }
-                    }
-                }
-            }
+        val offline = readerAction(gameOfflineArchiveController.buttonLabel(archiveFile)) {
+            gameOfflineArchiveController.openOrSave(
+                webView = articleWebView,
+                archiveFile = archiveFile,
+                postToUi = ::postToUi
+            )
         }
         bottom.addView(offline, LinearLayout.LayoutParams(0, -2, 1.2f).apply { rightMargin = dp(6) })
 
