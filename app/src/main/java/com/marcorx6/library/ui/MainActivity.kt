@@ -271,26 +271,19 @@ class MainActivity : ComponentActivity() {
 
     private fun showNotificationSettings() = notificationSettingsController.show()
 
-    private fun dp(v: Int): Int =
-        (v * resources.displayMetrics.density).toInt()
+    private val basicUiFactory by lazy { BasicUiFactory(this) }
+
+    private fun dp(v: Int): Int = basicUiFactory.dp(v)
 
     private fun rounded(color: Int, radius: Int) =
-        GradientDrawable().apply {
-            setColor(color)
-            cornerRadius = dp(radius).toFloat()
-        }
+        basicUiFactory.rounded(color, radius)
 
     private fun makeText(
         value: String,
         size: Float,
         color: Int,
         bold: Boolean = false
-    ) = TextView(this).apply {
-        text = value
-        textSize = size
-        setTextColor(color)
-        if (bold) setTypeface(null, Typeface.BOLD)
-    }
+    ) = basicUiFactory.makeText(value, size, color, bold)
 
 
     private fun stylePrimaryButton(button: Button, primary: Boolean = false) {
