@@ -717,42 +717,43 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private val bloggerPostFormFieldsFactory by lazy {
-        BloggerPostFormFieldsFactory(
+    private val bloggerPostFeature by lazy {
+        BloggerPostFeature(
             activity = this,
+            services = bloggerServices,
+            gameLibraryStore = gameLibraryStore,
+            isAdminSession = { isAdminSession },
+            bloggerBlogId = { bloggerBlogId },
             dp = ::dp,
+            bg = { bg },
+            isDarkMode = ::isDarkMode,
+            panel = { panel },
+            white = { white },
+            gray = { gray },
+            red = { red },
+            makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
             makeInput = ::makeInput,
             rounded = ::rounded,
-            panel = { panel }
-        )
-    }
-
-    private val bloggerPostSaveController by lazy {
-        BloggerPostSaveController(
+            accentForeground = ::accentForeground,
             executeIo = { task -> ioExecutor.execute { task() } },
             postToUi = ::postToUi,
-            savePost = bloggerServices.posts::savePost
-        )
-    }
-
-    private val bloggerArticlePreviewFactory by lazy {
-        BloggerArticlePreviewFactory(
-            activity = this,
-            backgroundColor = { bg },
-            isDarkMode = ::isDarkMode
-        )
-    }
-
-    private val gamePostLabelsController by lazy {
-        GamePostLabelsController(
-            activity = this,
-            white = { white },
-            panel = { panel },
-            rounded = ::rounded,
-            fetchLabels = bloggerServices.posts::fetchLabels,
-            executeIo = { task -> ioExecutor.execute { task() } },
-            postToUi = ::postToUi,
-            styleAlertDialog = ::styleAlertDialog
+            styleAlertDialog = ::styleAlertDialog,
+            applyUnifiedSkin = ::applyUnifiedSkin,
+            setCoverFields = { url, preview ->
+                coverUrlField = url
+                coverPreview = preview
+            },
+            pendingCoverLocalPath = { pendingCoverLocalPath },
+            setPendingCoverLocalPath = { pendingCoverLocalPath = it },
+            pendingCoverPublicUrl = { pendingCoverPublicUrl },
+            setPendingCoverPublicUrl = { pendingCoverPublicUrl = it },
+            coverUploadInProgress = { coverUploadInProgress },
+            loadCover = ::loadCover,
+            chooseCover = ::chooseCover,
+            deleteCoverFileIfUnused = ::deleteCoverFileIfUnused,
+            resetCoverUploadFailed = { coverUploadFailed = false },
+            saveGames = ::saveGames,
+            renderGames = ::renderGames
         )
     }
 
@@ -791,68 +792,6 @@ class MainActivity : ComponentActivity() {
 
     private fun showDetails(game: Game) = gameDetailsFeature.show(game)
 
-
-    // BLOG POST COMPOSER: reusable article template published directly to Blogger
-    private val bloggerGamePostFactory by lazy { BloggerGamePostFactory() }
-
-    private val bloggerPostComposerController by lazy {
-        BloggerPostComposerController(
-            activity = this,
-            isAdminSession = { isAdminSession },
-            dp = ::dp,
-            bg = { bg },
-            panel = { panel },
-            white = { white },
-            gray = { gray },
-            red = { red },
-            makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
-            rounded = ::rounded,
-            accentForeground = ::accentForeground,
-            labelsController = gamePostLabelsController,
-            formFieldsFactory = bloggerPostFormFieldsFactory,
-            setCoverFields = { url, preview ->
-                coverUrlField = url
-                coverPreview = preview
-            },
-            pendingCoverLocalPath = { pendingCoverLocalPath },
-            setPendingCoverLocalPath = { pendingCoverLocalPath = it },
-            pendingCoverPublicUrl = { pendingCoverPublicUrl },
-            setPendingCoverPublicUrl = { pendingCoverPublicUrl = it },
-            coverUploadInProgress = { coverUploadInProgress },
-            loadCover = ::loadCover,
-            chooseCover = ::chooseCover,
-            previewFactory = bloggerArticlePreviewFactory,
-            styleAlertDialog = ::styleAlertDialog,
-            postFactory = bloggerGamePostFactory,
-            saveController = bloggerPostSaveController,
-            upsertGame = { saved, existing -> gameLibraryStore.upsert(saved, existing) },
-            deleteCoverFileIfUnused = ::deleteCoverFileIfUnused,
-            resetCoverUploadFailed = { coverUploadFailed = false },
-            saveGames = ::saveGames,
-            renderGames = ::renderGames,
-            applyUnifiedSkin = ::applyUnifiedSkin
-        )
-    }
-
-    private fun showGameDialog(existing: Game? = null) =
-        bloggerPostComposerController.show(existing)
-
-    private val gameDeletionController by lazy {
-        GameDeletionController(
-            activity = this,
-            isAdminSession = { isAdminSession },
-            bloggerBlogId = { bloggerBlogId },
-            deletePost = bloggerServices.posts::deletePost,
-            removeGame = gameLibraryStore::remove,
-            deleteCoverFileIfUnused = ::deleteCoverFileIfUnused,
-            renderGames = ::renderGames,
-            executeIo = { task -> ioExecutor.execute { task() } },
-            postToUi = ::postToUi,
-            styleAlertDialog = ::styleAlertDialog
-        )
-    }
-
-    private fun deleteGame(game: Game) = gameDeletionController.delete(game)
 
     private val gameOfTheDayController by lazy {
         GameOfTheDayController(
