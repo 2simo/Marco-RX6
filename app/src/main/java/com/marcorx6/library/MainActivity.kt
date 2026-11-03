@@ -2882,6 +2882,7 @@ class MainActivity : Activity() {
                     mainHandler.post { games.remove(game); if (game.coverLocalPath.isNotBlank()) File(game.coverLocalPath).delete(); saveGames(); renderGames(); Toast.makeText(this, "تم الحذف من Blogger", Toast.LENGTH_SHORT).show() }
                 } catch (e: Exception) { mainHandler.post { Toast.makeText(this, e.message ?: "تعذر حذف المقال من Blogger", Toast.LENGTH_LONG).show() } } }.start()
             }
+            .create().apply { setOnShowListener { styleAlertDialog(this) } }
             .show()
     }
 
@@ -2919,6 +2920,7 @@ class MainActivity : Activity() {
             .setPositiveButton("تفاصيل اللعبة") { _, _ -> showDetails(game) }
             .setNeutralButton("فتح الرابط") { _, _ -> openGameLink(game.url) }
             .setNegativeButton("إغلاق", null)
+            .create().apply { setOnShowListener { styleAlertDialog(this) } }
             .show()
     }
 
@@ -3084,7 +3086,7 @@ class MainActivity : Activity() {
                         dismiss()
                     }
                 }
-            }.show()
+            }.show().also { styleAlertDialog(it) }
     }
 
     private fun openGameLink(link: String) {
