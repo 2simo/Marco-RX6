@@ -1,10 +1,11 @@
-package com.marcorx6.library.ui
+package com.marcorx6.library.ui.library
+
+import com.marcorx6.library.ui.*
 
 import android.content.Context
 import android.view.View
 import androidx.activity.ComponentActivity
 import com.marcorx6.library.data.Game
-import com.marcorx6.library.ui.library.MainLibraryViewState
 
 /**
  * Owns the main library feature graph: screen composition, rendering, filters and view state.
