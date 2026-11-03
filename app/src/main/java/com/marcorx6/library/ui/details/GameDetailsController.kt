@@ -3,7 +3,10 @@ package com.marcorx6.library.ui
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
-import android.view.ViewCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import android.widget.LinearLayout
 import com.marcorx6.library.data.Game
 import java.io.File
@@ -84,7 +87,7 @@ internal class GameDetailsController(
             offlineLabel = offlineArchiveController.buttonLabel(archiveFile),
             isAdmin = isAdmin(),
             onOffline = {
-                gameOfflineArchiveController.openOrSave(
+                offlineArchiveController.openOrSave(
                     webView = articleWebView,
                     archiveFile = archiveFile,
                     postToUi = postToUi
