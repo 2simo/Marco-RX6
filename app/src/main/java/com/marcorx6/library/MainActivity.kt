@@ -501,6 +501,17 @@ class MainActivity : Activity() {
             setStroke(dp(1), if (isDarkMode()) Color.rgb(82, 75, 130) else Color.rgb(211, 219, 234))
         })
         dialog.window?.let { window ->
+            // Alert dialogs use their own window: keep system bars visible and let
+            // Android place the dialog inside the safe area on edge-to-edge devices.
+            WindowCompat.setDecorFitsSystemWindows(window, true)
+            window.clearFlags(
+                android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN or
+                    android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+            )
+            window.statusBarColor = bg
+            window.navigationBarColor = bg
+            WindowInsetsControllerCompat(window, window.decorView)
+                .show(WindowInsetsCompat.Type.systemBars())
             window.addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
             window.attributes = window.attributes.apply { dimAmount = 0.66f }
         }
