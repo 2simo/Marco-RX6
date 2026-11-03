@@ -123,6 +123,9 @@ class MainActivity : ComponentActivity() {
         BloggerPostRepository(bloggerApiClient, { bloggerBlogId }, { isAdminSession })
     }
     private val gameRepository by lazy { GameRepository(applicationContext) }
+    private val gamePersistenceController by lazy {
+        GamePersistenceController(gameRepository, games) { loadOfflineCatalog() }
+    }
     private val gameLibraryStore by lazy { GameLibraryStore(games) { saveGames() } }
     private val SIGN_IN_REQUEST = 1002
 
@@ -1478,29 +1481,9 @@ class MainActivity : ComponentActivity() {
         CoverFileCleanup.deleteIfUnused(File(filesDir, "covers"), path, games.map { it.coverLocalPath })
     }
 
-    private fun saveGames() {
-        gameRepository.save(games)
-    }
+    private fun saveGames() = gamePersistenceController.save()
 
-    private fun loadGames() {
-        games.clear()
-        try {
-            val savedGames = gameRepository.load()
-            if (savedGames != null) {
-                games.addAll(savedGames)
-                return
-            }
-            loadOfflineCatalog()
-        } catch (_: Exception) {
-            // Recover the bundled starter catalog if persisted data is malformed.
-            games.clear()
-            try {
-                loadOfflineCatalog()
-            } catch (_: Exception) {
-                games.clear()
-            }
-        }
-    }
+    private fun loadGames() = gamePersistenceController.load()
 
     private fun loadOfflineCatalog() {
         OfflineCatalogLoader.load(this, games) { saveGames() }
