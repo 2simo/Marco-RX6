@@ -595,11 +595,7 @@ class MainActivity : ComponentActivity() {
         CoverSelectionController(
             context = this,
             uploadController = coverUploadController,
-            pendingLocalPath = { pendingCoverLocalPath },
-            setPendingLocalPath = { pendingCoverLocalPath = it },
-            setPendingPublicUrl = { pendingCoverPublicUrl = it },
-            setUploadInProgress = { coverUploadInProgress = it },
-            setUploadFailed = { coverUploadFailed = it },
+            state = coverUploadState,
             coverUrlField = { coverUrlField },
             coverPreview = { coverPreview },
             loadCover = ::loadCover,
