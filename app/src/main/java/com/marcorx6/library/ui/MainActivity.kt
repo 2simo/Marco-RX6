@@ -85,19 +85,19 @@ class MainActivity : ComponentActivity() {
             window.isNavigationBarContrastEnforced = false
         }
     }
-    private fun accentColor(): Int = when (appearancePreferences().getString("accent", "violet")) {
-        "blue" -> Color.rgb(65, 145, 245)
+    private fun accentColor(): Int = when (appearancePreferences().getString("accent", "blue")) {
+        "blue" -> Color.rgb(42, 145, 255)
         "green" -> Color.rgb(35, 170, 125)
         "gold" -> Color.rgb(205, 157, 70)
         "rose" -> Color.rgb(215, 90, 135)
-        else -> Color.rgb(139, 92, 246)
+        else -> Color.rgb(42, 145, 255)
     }
-    private val bg: Int get() = if (isDarkMode()) Color.rgb(9, 10, 22) else Color.rgb(245, 247, 251)
-    private val panel: Int get() = if (isDarkMode()) Color.rgb(20, 22, 40) else Color.rgb(229, 234, 243)
+    private val bg: Int get() = if (isDarkMode()) Color.rgb(7, 13, 25) else Color.rgb(245, 247, 251)
+    private val panel: Int get() = if (isDarkMode()) Color.rgb(16, 27, 45) else Color.rgb(229, 234, 243)
     private val red: Int get() = accentColor()
     private val white: Int get() = if (isDarkMode()) Color.WHITE else Color.rgb(24, 29, 42)
     private fun accentForeground(): Int =
-        if (appearancePreferences().getString("accent", "violet") == "violet") Color.WHITE else Color.rgb(24, 29, 42)
+        if (appearancePreferences().getString("accent", "blue") == "violet") Color.WHITE else Color.rgb(24, 29, 42)
     private val gray: Int get() = if (isDarkMode()) Color.LTGRAY else Color.rgb(86, 96, 115)
     private val BACKUP_EXPORT_REQUEST = 1003
     private val BACKUP_IMPORT_REQUEST = 1004
@@ -327,7 +327,7 @@ class MainActivity : ComponentActivity() {
 
     private fun stylePrimaryButton(button: Button, primary: Boolean = false) {
         button.background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-            if (primary) intArrayOf(red, Color.rgb(104, 75, 190))
+            if (primary) intArrayOf(Color.rgb(36, 139, 255), Color.rgb(23, 194, 224))
             else if (isDarkMode()) intArrayOf(Color.rgb(45, 51, 72), Color.rgb(29, 34, 51))
             else intArrayOf(Color.rgb(250, 251, 255), Color.rgb(232, 237, 247))).apply {
             cornerRadius = dp(14).toFloat()
@@ -423,7 +423,7 @@ class MainActivity : ComponentActivity() {
         dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.let { stylePrimaryButton(it) }
         dialog.getButton(AlertDialog.BUTTON_NEUTRAL)?.let { stylePrimaryButton(it) }
         dialog.listView?.let { list ->
-            list.setBackgroundColor(if (isDarkMode()) Color.rgb(20, 22, 40) else Color.WHITE)
+            list.setBackgroundColor(if (isDarkMode()) Color.rgb(16, 27, 45) else Color.WHITE)
             list.divider = android.graphics.drawable.ColorDrawable(if (isDarkMode()) Color.rgb(48, 55, 78) else Color.rgb(226, 231, 241))
             list.dividerHeight = dp(1)
             list.post {
@@ -708,7 +708,7 @@ class MainActivity : ComponentActivity() {
     private fun showAppearanceSettings() {
         val choices = arrayOf("بنفسجي", "أزرق", "أخضر", "ذهبي", "وردي")
         val keys = arrayOf("violet", "blue", "green", "gold", "rose")
-        val selectedIndex = keys.indexOf(appearancePreferences().getString("accent", "violet")).coerceAtLeast(0)
+        val selectedIndex = keys.indexOf(appearancePreferences().getString("accent", "blue")).coerceAtLeast(0)
         AlertDialog.Builder(this).setTitle("تخصيص المظهر")
             .setSingleChoiceItems(choices, selectedIndex) { dialog, which ->
                 appearancePreferences().edit().putString("accent", keys[which]).apply()
@@ -728,7 +728,7 @@ class MainActivity : ComponentActivity() {
         backupExportPayload = BackupCodec.encode(
             games = games,
             darkMode = isDarkMode(),
-            accent = appearancePreferences().getString("accent", "violet") ?: "violet",
+            accent = appearancePreferences().getString("accent", "blue") ?: "violet",
             animations = appearancePreferences().getBoolean("animations", true)
         )
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
@@ -875,7 +875,7 @@ class MainActivity : ComponentActivity() {
         }
         val brand = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         brand.addView(makeText("MARCO RX6", 10f, muted, true))
-        brand.addView(makeText("LIQUID  /  PLAY", 20f, silver, true).apply {
+        brand.addView(makeText("GAME LIBRARY", 20f, silver, true).apply {
             typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
             letterSpacing = 0.06f
         })
@@ -1593,7 +1593,7 @@ class MainActivity : ComponentActivity() {
         box.addView(mode)
         heading("لون واجهة MARCO RX6")
         val themeKeys = listOf("violet", "blue", "green", "gold", "rose")
-        val theme = themedSpinner(listOf("بنفسجي", "أزرق", "أخضر", "ذهبي", "وردي"), themeKeys.indexOf(appearancePreferences().getString("accent", "violet")).coerceAtLeast(0))
+        val theme = themedSpinner(listOf("بنفسجي", "أزرق", "أخضر", "ذهبي", "وردي"), themeKeys.indexOf(appearancePreferences().getString("accent", "blue")).coerceAtLeast(0))
         box.addView(theme)
         heading("الإشعارات")
         val notifications = CheckBox(this).apply {
@@ -1960,7 +1960,7 @@ class MainActivity : ComponentActivity() {
         identity.addView(cover, LinearLayout.LayoutParams(dp(104), dp(140)))
         val info = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(14), 0, 0, 0) }
         info.addView(makeText(game.name, 18f, white, true).apply { maxLines = 3; ellipsize = android.text.TextUtils.TruncateAt.END })
-        info.addView(makeText(game.platform + "  •  MARCO RX6", 10f, if (isDarkMode()) Color.rgb(190, 174, 255) else Color.rgb(104, 66, 165), true).apply { setPadding(0, dp(6), 0, dp(4)) })
+        info.addView(makeText(game.platform + "  •  MARCO RX6", 10f, if (isDarkMode()) Color.rgb(91, 183, 255) else Color.rgb(30, 139, 235), true).apply { setPadding(0, dp(6), 0, dp(4)) })
         if (game.genre.isNotBlank() || game.releaseYear.isNotBlank()) {
             val metadata = listOf(game.genre, game.releaseYear).filter { it.isNotBlank() }.joinToString("  •  ")
             info.addView(makeText(metadata, 10f, gray, true).apply { setPadding(0, 0, 0, dp(7)) })
@@ -2005,7 +2005,7 @@ class MainActivity : ComponentActivity() {
         val similar = games.filter { it.name != game.name && (it.platform == game.platform || it.blogImported == game.blogImported) }.take(5)
         if (similar.isNotEmpty()) {
             val similarBox = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(14), dp(5), dp(14), dp(9)) }
-            similarBox.addView(makeText("قد يعجبك أيضاً", 12f, if (isDarkMode()) Color.rgb(190, 174, 255) else Color.rgb(104, 66, 165), true).apply { setPadding(0, 0, 0, dp(7)) })
+            similarBox.addView(makeText("قد يعجبك أيضاً", 12f, if (isDarkMode()) Color.rgb(91, 183, 255) else Color.rgb(30, 139, 235), true).apply { setPadding(0, 0, 0, dp(7)) })
             val similarRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
             similar.forEach { item ->
                 similarRow.addView(TextView(this).apply {
@@ -2054,10 +2054,10 @@ class MainActivity : ComponentActivity() {
                 html,body{margin:0;padding:0;width:100%;max-width:100%;overflow-x:hidden}
                 body{background:${if (isDarkMode()) "#0a0b11" else "#f5f7fb"} !important;color:${if (isDarkMode()) "#f4f4f8" else "#202638"} !important;font-family:${fontFamilyName()},Arial,sans-serif;font-size:${(17 * fontScale()).toInt()}px;line-height:1.9;padding:20px 17px 36px;overflow-wrap:anywhere;direction:rtl;text-align:right}
                 body *{color:inherit !important;background-color:transparent !important}
-                body h1,body h2,body h3,body h4{color:${if (isDarkMode()) "#b9a2f5" else "#6842a5"} !important;line-height:1.4;margin:25px 0 12px}
+                body h1,body h2,body h3,body h4{color:${if (isDarkMode()) "#59b7ff" else "#238de8"} !important;line-height:1.4;margin:25px 0 12px}
                 p{margin:0 0 18px}
                 img{display:block;max-width:100%!important;height:auto!important;width:auto;margin:18px auto;border-radius:12px;object-fit:contain}
-                body a{color:${if (isDarkMode()) "#e2c17c" else "#6842a5"} !important;text-decoration:none;font-weight:700}
+                body a{color:${if (isDarkMode()) "#e2c17c" else "#238de8"} !important;text-decoration:none;font-weight:700}
                 ul,ol{padding-left:25px;margin:10px 0 20px}
                 li{padding:4px 0}
                 body blockquote{border-right:3px solid ${if (isDarkMode()) "#d3b170" else "#8b5cf6"};padding:8px 14px;margin:16px 0;background:${if (isDarkMode()) "#1b1d3b" else "#eee9f8"} !important}
@@ -2163,7 +2163,7 @@ class MainActivity : ComponentActivity() {
             readerWindow.setLayout(-1, -1)
             ViewCompat.requestApplyInsets(readerWindow.decorView)
         }
-        reader.window?.setBackgroundDrawable(rounded(if (isDarkMode()) Color.rgb(9, 10, 22) else Color.rgb(245, 247, 251), 0))
+        reader.window?.setBackgroundDrawable(rounded(if (isDarkMode()) Color.rgb(7, 13, 25) else Color.rgb(245, 247, 251), 0))
         reader.setOnDismissListener { articleWebView.stopLoading(); articleWebView.destroy() }
     }
 
