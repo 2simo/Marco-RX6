@@ -924,6 +924,19 @@ class MainActivity : ComponentActivity() {
 
     private val gameOfflineArchiveController by lazy { GameOfflineArchiveController(this) }
 
+    private val gamePostLabelsController by lazy {
+        GamePostLabelsController(
+            activity = this,
+            white = { white },
+            panel = { panel },
+            rounded = ::rounded,
+            fetchLabels = bloggerPostRepository::fetchLabels,
+            executeIo = { task -> ioExecutor.execute { task() } },
+            postToUi = ::postToUi,
+            styleAlertDialog = ::styleAlertDialog
+        )
+    }
+
     private val gameDownloadLinksViewFactory by lazy {
         GameDownloadLinksViewFactory(
             activity = this,
@@ -1170,34 +1183,12 @@ class MainActivity : ComponentActivity() {
         intro.addView(makeText("جهّز الغلاف والتفاصيل والمحتوى، ثم عاين المقال قبل إرساله إلى Blogger.", 11f, gray).apply { setPadding(0, dp(5), 0, 0) })
         box.addView(intro, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
         val title = makeInput("عنوان المقال").apply { setSingleLine(true) }
-        val categoryButton = Button(this).apply { text = "تحميل تسميات المدونة..."; setTextColor(white); background = rounded(panel, 12) }
-        val selectedLabels = linkedSetOf<String>()
-        val availableLabels = mutableListOf<String>()
-        fun refreshLabelButton() {
-            categoryButton.text = if (selectedLabels.isEmpty()) "اختيار Labels من المدونة" else "الأقسام (${selectedLabels.size}): " + selectedLabels.joinToString("، ")
-        }
-        categoryButton.setOnClickListener {
-            if (availableLabels.isEmpty()) { Toast.makeText(this, "لم يتم تحميل تسميات المدونة بعد", Toast.LENGTH_SHORT).show(); return@setOnClickListener }
-            val checked = BooleanArray(availableLabels.size) { availableLabels[it] in selectedLabels }
-            AlertDialog.Builder(this).setTitle("اختر أقسام المقال من المدونة")
-                .setMultiChoiceItems(availableLabels.toTypedArray(), checked) { _, which, isChecked ->
-                    if (isChecked) selectedLabels.add(availableLabels[which]) else selectedLabels.remove(availableLabels[which])
-                    refreshLabelButton()
-                }.setPositiveButton("تم", null)
-                .setNeutralButton("تحديث التسميات") { _, _ ->
-                    ioExecutor.execute {
-                        try {
-                            val latest = bloggerPostRepository.fetchLabels()
-                            postToUi {
-                                availableLabels.clear(); availableLabels.addAll(latest)
-                                selectedLabels.retainAll(availableLabels.toSet()); refreshLabelButton()
-                                Toast.makeText(this, "تم تحديث ${latest.size} تسمية من المدونة", Toast.LENGTH_SHORT).show()
-                            }
-                        } catch (e: Exception) { postToUi { Toast.makeText(this, e.message ?: "تعذر تحديث التسميات", Toast.LENGTH_LONG).show() } }
-                    }
-                }.show().also { styleAlertDialog(it) }
-        }
-        if (existing != null && existing.platform.isNotBlank()) selectedLabels.add(existing.platform)
+        val labelsUi = gamePostLabelsController.create(
+            initialLabel = existing?.platform,
+            isNewPost = existing == null
+        )
+        val categoryButton = labelsUi.button
+        val selectedLabels = labelsUi.selectedLabels
         val body = makeInput("وصف المقال — اكتب المعلومات فقط، وسيُنسّقها القالب تلقائياً").apply { minLines = 8; gravity = Gravity.TOP or Gravity.START; inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE or android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES; setPadding(dp(13), dp(12), dp(13), dp(12)) }
         val coverUrl = makeInput("رابط صورة الغلاف (اختياري)").apply { setSingleLine(true) }
         val link = makeInput("رابط التحميل أو رابط إضافي (اختياري)").apply { setSingleLine(true) }
