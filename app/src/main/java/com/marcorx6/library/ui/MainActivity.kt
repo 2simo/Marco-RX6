@@ -1746,7 +1746,8 @@ class MainActivity : ComponentActivity() {
             while (attributes.find()) {
                 val candidate = attributes.group(1)?.trim().orEmpty()
                 if (candidate.startsWith("https://") || candidate.startsWith("http://") || candidate.startsWith("//")) {
-                    val absolute = if (candidate.startsWith("//")) "https:$candidate" else candidate
+                    val absolute = if (candidate.startsWith("//")) "https:$candidate"
+                        else SecureUrlPolicy.upgradeToHttps(candidate)
                     return normalizeBloggerImageUrl(absolute)
                 }
             }
