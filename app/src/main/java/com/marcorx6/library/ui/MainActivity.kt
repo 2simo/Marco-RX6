@@ -924,6 +924,8 @@ class MainActivity : ComponentActivity() {
 
     private val gameOfflineArchiveController by lazy { GameOfflineArchiveController(this) }
 
+    private val bloggerGamePostFactory by lazy { BloggerGamePostFactory() }
+
     private val bloggerArticlePreviewFactory by lazy {
         BloggerArticlePreviewFactory(
             activity = this,
@@ -1251,9 +1253,19 @@ class MainActivity : ComponentActivity() {
                 if (relatedLink.isNotBlank() && !relatedLink.startsWith("https://")) { link.error = "أدخل رابطاً يبدأ بـ HTTPS"; return@setOnClickListener }
                 val contentText = body.text.toString().trim()
                 if (contentText.isBlank()) { body.error = "أدخل وصف المقال"; return@setOnClickListener }
-                val publishedCoverLink = BloggerFeedParser.normalizeBloggerImageUrl(coverLink)
-                val htmlContent = BloggerArticleBuilder.build(postTitle, selectedLabels.joinToString("، "), genre.text.toString().trim(), releaseYear.text.toString().trim(), contentText, publishedCoverLink, relatedLink)
-                val post = Game(name = postTitle, platform = categoryName, description = contentText, url = relatedLink.ifBlank { existing?.url ?: "" }, coverUrl = publishedCoverLink, coverLocalPath = if (coverLink.isBlank() || coverLink == pendingCoverPublicUrl || (existing != null && coverLink == existing.coverUrl)) pendingCoverLocalPath else "", sourcePostUrl = existing?.sourcePostUrl ?: "", downloadLinks = existing?.downloadLinks ?: "", blogImported = true, isFavorite = existing?.isFavorite ?: false, bloggerPostId = existing?.bloggerPostId ?: "", bloggerHtml = htmlContent, playStatus = existing?.playStatus ?: "", genre = genre.text.toString().trim(), releaseYear = releaseYear.text.toString().trim())
+                val post = bloggerGamePostFactory.create(
+                    existing = existing,
+                    title = postTitle,
+                    labels = selectedLabels.toList(),
+                    description = contentText,
+                    coverLink = coverLink,
+                    relatedLink = relatedLink,
+                    genre = genre.text.toString(),
+                    releaseYear = releaseYear.text.toString(),
+                    pendingCoverLocalPath = pendingCoverLocalPath,
+                    pendingCoverPublicUrl = pendingCoverPublicUrl
+                )
+                val htmlContent = post.bloggerHtml
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
                 ioExecutor.execute {
                     try {
