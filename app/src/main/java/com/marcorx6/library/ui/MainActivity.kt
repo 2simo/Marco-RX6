@@ -846,7 +846,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun createInterface() {
-        // LIQUID METAL redesign: premium chrome surfaces, clear hierarchy and quick navigation.
+        // RX6 GAME HUB: unified midnight-blue surfaces, electric-blue accents and clear game-first hierarchy.
         val silver = if (isDarkMode()) Color.rgb(226, 232, 242) else Color.rgb(43, 52, 68)
         val muted = gray
         val violet = red
@@ -873,10 +873,10 @@ class MainActivity : ComponentActivity() {
             setPadding(dp(2), dp(3), dp(2), dp(17))
         }
         val brand = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        brand.addView(makeText("MARCO RX6", 10f, muted, true))
-        brand.addView(makeText("GAME LIBRARY", 20f, silver, true).apply {
+        brand.addView(makeText("MARCO RX6  /  OFFICIAL GAME HUB", 9f, if (isDarkMode()) Color.rgb(111, 190, 255) else Color.rgb(30, 116, 204), true).apply { letterSpacing = 0.08f })
+        brand.addView(makeText("مكتبة الألعاب", 21f, silver, true).apply {
             typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
-            letterSpacing = 0.06f
+            letterSpacing = 0.01f
         })
         header.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
         val menu = TextView(this).apply {
@@ -947,9 +947,9 @@ class MainActivity : ComponentActivity() {
             setPadding(dp(17), dp(17), dp(17), dp(17))
         }
         val heroCopy = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_VERTICAL }
-        heroCopy.addView(makeText("MARCO RX6  •  GAME HUB", 9f, if (isDarkMode()) Color.rgb(139, 202, 255) else Color.rgb(28, 116, 205), true).apply { letterSpacing = 0.10f })
-        heroCopy.addView(makeText(tr("اكتشف ألعابك المفضلة"), 21f, white, true).apply { setPadding(0, dp(7), 0, dp(5)) })
-        heroCopy.addView(makeText(tr("مكتبتك، مقالاتك وتفاصيل ألعابك في مكان واحد."), 10f, if (isDarkMode()) Color.rgb(205, 220, 239) else Color.rgb(76, 94, 119)).apply { maxLines = 2 })
+        heroCopy.addView(makeText("PLAY • DISCOVER • COLLECT", 9f, if (isDarkMode()) Color.rgb(139, 202, 255) else Color.rgb(28, 116, 205), true).apply { letterSpacing = 0.12f })
+        heroCopy.addView(makeText(tr("عالم ألعابك يبدأ من هنا"), 21f, white, true).apply { setPadding(0, dp(7), 0, dp(5)) })
+        heroCopy.addView(makeText(tr("تصفّح مكتبتك، اكتشف التفاصيل وتابع ألعابك المفضلة."), 10f, if (isDarkMode()) Color.rgb(205, 220, 239) else Color.rgb(76, 94, 119)).apply { maxLines = 2 })
         hero.addView(heroCopy, LinearLayout.LayoutParams(0, -2, 1f))
         val heroMark = TextView(this).apply {
             text = "RX6"
@@ -1128,9 +1128,9 @@ class MainActivity : ComponentActivity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
             background = if (isDarkMode()) GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(74, 83, 105), Color.rgb(27, 33, 48), Color.rgb(13, 17, 28))).apply {
+                intArrayOf(Color.rgb(19, 39, 65), Color.rgb(10, 23, 41), Color.rgb(7, 15, 28))).apply {
                 cornerRadius = dp(23).toFloat()
-                setStroke(dp(1), Color.rgb(100, 113, 140))
+                setStroke(dp(1), Color.rgb(43, 105, 164))
             } else GradientDrawable(GradientDrawable.Orientation.TL_BR,
                 intArrayOf(Color.rgb(255, 255, 255), Color.rgb(241, 244, 250))).apply {
                 cornerRadius = dp(23).toFloat()
@@ -1144,7 +1144,7 @@ class MainActivity : ComponentActivity() {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
                 setPadding(dp(5), dp(5), dp(5), dp(5))
-                background = rounded(if (isDarkMode()) Color.rgb(45, 52, 71) else Color.rgb(232, 237, 246), 15)
+                background = rounded(if (isDarkMode()) Color.rgb(22, 43, 68) else Color.rgb(232, 237, 246), 15)
                 setOnClickListener { action() }
             }
             item.addView(makeText(icon, 15f, if (isDarkMode()) silver else Color.rgb(43, 123, 194), true).apply {
@@ -1779,8 +1779,13 @@ class MainActivity : ComponentActivity() {
                 }
                 val game = sorted[itemIndex]
                 val card = LinearLayout(this).apply {
-                    orientation = LinearLayout.VERTICAL; background = rounded(panel, 16)
-                    setPadding(dp(5), dp(5), dp(5), dp(7)); isClickable = true; isFocusable = true
+                    orientation = LinearLayout.VERTICAL
+                    background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                        if (isDarkMode()) intArrayOf(Color.rgb(20, 34, 57), Color.rgb(11, 20, 36)) else intArrayOf(Color.WHITE, Color.rgb(235, 241, 250))).apply {
+                        cornerRadius = dp(18).toFloat()
+                        setStroke(dp(1), if (isDarkMode()) Color.rgb(37, 75, 119) else Color.rgb(215, 225, 239))
+                    }
+                    setPadding(dp(6), dp(6), dp(6), dp(8)); elevation = dp(2).toFloat(); isClickable = true; isFocusable = true
                     setOnClickListener { showDetails(game) }
                 }
                 val imageFrame = FrameLayout(this).apply { clipToOutline = true; background = rounded(bg, 12) }
@@ -1788,8 +1793,9 @@ class MainActivity : ComponentActivity() {
                 imageFrame.addView(image, FrameLayout.LayoutParams(-1, -1))
                 if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) loadCover(image, game.coverLocalPath, game.coverUrl)
                 else { image.setImageResource(android.R.drawable.ic_menu_gallery); image.scaleType = ImageView.ScaleType.CENTER_INSIDE }
-                card.addView(imageFrame, LinearLayout.LayoutParams(-1, dp(174)))
-                card.addView(makeText(game.name, 12f, white, true).apply {
+                imageFrame.background = rounded(if (isDarkMode()) Color.rgb(8, 16, 29) else Color.rgb(224, 232, 243), 13)
+                card.addView(imageFrame, LinearLayout.LayoutParams(-1, dp(178)))
+                card.addView(makeText(game.name, 12.5f, white, true).apply {
                     maxLines = 2; minLines = 2; ellipsize = android.text.TextUtils.TruncateAt.END
                     gravity = Gravity.CENTER_VERTICAL; setPadding(dp(4), dp(7), dp(4), dp(2))
                 })
