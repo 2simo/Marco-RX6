@@ -84,8 +84,13 @@ class MainActivity : ComponentActivity() {
 
     private var selected = "ALL"
     private var sortMode = "الأحدث"
-    private var selectedGenre = ""
-    private var selectedYear = ""
+    private val libraryFilterState = LibraryFilterState()
+    private var selectedGenre: String
+        get() = libraryFilterState.genre
+        set(value) { libraryFilterState.apply(value, libraryFilterState.year) }
+    private var selectedYear: String
+        get() = libraryFilterState.year
+        set(value) { libraryFilterState.apply(libraryFilterState.genre, value) }
     private val uiThreadDispatcher by lazy { UiThreadDispatcher(this) }
     private fun postToUi(action: () -> Unit) = uiThreadDispatcher.post(action)
 
@@ -470,30 +475,20 @@ class MainActivity : ComponentActivity() {
     private fun showAppearanceSettings() = appearanceFeature.showAppearanceSettings()
     private fun showTypographySettings() = appearanceFeature.showTypographySettings()
 
-    private fun showAdvancedFilters() {
-        AdvancedFiltersController(
+    private val advancedFiltersFeature by lazy {
+        AdvancedFiltersFeature(
             activity = this,
+            state = libraryFilterState,
+            games = { games },
             dp = ::dp,
-            red = red,
+            red = { red },
             makeText = ::makeText,
             styleDialog = ::styleAlertDialog,
-            onApply = { genre, year ->
-                selectedGenre = genre
-                selectedYear = year
-                renderGames()
-            },
-            onClear = {
-                selectedGenre = ""
-                selectedYear = ""
-                renderGames()
-            }
-        ).show(
-            genres = games.map { it.genre.trim() }.filter { it.isNotBlank() }.distinct().sorted(),
-            years = games.map { it.releaseYear.trim() }.filter { it.isNotBlank() }.distinct().sortedDescending(),
-            selectedGenre = selectedGenre,
-            selectedYear = selectedYear
+            renderGames = ::renderGames
         )
     }
+
+    private fun showAdvancedFilters() = advancedFiltersFeature.show()
 
     private val mainLibraryInterfaceController by lazy {
         MainLibraryInterfaceController(
