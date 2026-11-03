@@ -1299,42 +1299,11 @@ class MainActivity : ComponentActivity() {
 
         Thread {
             try {
-                val connection =
-                    URL(bloggerFeedUrl).openConnection() as HttpURLConnection
-
-                connection.requestMethod = "GET"
-                connection.connectTimeout = 15000
-                connection.readTimeout = 20000
-                connection.setRequestProperty(
-                    "User-Agent",
-                    "MarcoRX6-Android/3.0"
-                )
-                connection.setRequestProperty("Accept", "application/json")
-
-                val body = try {
-                    connection.inputStream.bufferedReader(Charsets.UTF_8)
-                        .use { it.readText() }
-                } finally {
-                    connection.disconnect()
-                }
-
-                val feed = JSONObject(body).optJSONObject("feed")
-                    ?: JSONObject()
-                val feedId = feed.optJSONObject("id")?.optString(36.toChar().toString() + "t", "").orEmpty()
-                Regex("blog-(\\d+)").find(feedId)?.groupValues?.getOrNull(1)?.let { bloggerBlogId = it }
-
-                val entries = feed.optJSONArray("entry")
-                    ?: JSONArray()
-
-                val imported = mutableListOf<Game>()
-
-                for (i in 0 until entries.length()) {
-                    val entry = entries.optJSONObject(i) ?: continue
-                    val game = BloggerFeedParser.parseBlogEntry(entry) ?: continue
-                    imported.add(game)
-                }
+                val feedResult = BloggerFeedClient(bloggerFeedUrl).fetch()
+                val imported = feedResult.games
 
                 mainHandler.post {
+                    bloggerBlogId = feedResult.blogId
                     val result = mergeImportedGames(imported)
                     isSyncing = false
                     refreshBloggerAccess()
