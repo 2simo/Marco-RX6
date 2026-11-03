@@ -27,6 +27,14 @@ android {
     }
 
     buildTypes {
+        getByName("debug") {
+            // CI debug uses the registered release certificate for the same OAuth pair.
+            // Local builds retain the normal Android debug keystore.
+            if (System.getenv("MARCO_DEBUG_USE_RELEASE_KEY") == "true") {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
+
         getByName("release") {
             signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
