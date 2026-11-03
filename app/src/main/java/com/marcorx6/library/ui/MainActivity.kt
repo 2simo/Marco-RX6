@@ -572,7 +572,13 @@ class MainActivity : ComponentActivity() {
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
-                background = rounded(surface, 15)
+                background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                    if (isDarkMode()) intArrayOf(Color.rgb(24, 39, 63), Color.rgb(12, 22, 39))
+                    else intArrayOf(Color.WHITE, Color.rgb(237, 243, 252))).apply {
+                    cornerRadius = dp(16).toFloat()
+                    setStroke(dp(1), if (isDarkMode()) Color.rgb(43, 83, 128) else Color.rgb(207, 220, 239))
+                }
+                elevation = dp(1).toFloat()
                 setPadding(dp(14), dp(14), dp(14), dp(14))
                 isClickable = true
                 isFocusable = true
@@ -583,7 +589,12 @@ class MainActivity : ComponentActivity() {
                 textSize = 17f
                 gravity = Gravity.CENTER
                 setTextColor(if (isDarkMode()) Color.WHITE else Color.rgb(68, 76, 96))
-                background = rounded(if (isDarkMode()) Color.rgb(43, 49, 68) else Color.rgb(239, 242, 248), 12)
+                background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                    if (isDarkMode()) intArrayOf(Color.rgb(29, 103, 169), Color.rgb(18, 55, 91))
+                    else intArrayOf(Color.rgb(220, 239, 255), Color.rgb(195, 222, 250))).apply {
+                    cornerRadius = dp(12).toFloat()
+                    setStroke(dp(1), if (isDarkMode()) Color.rgb(69, 139, 201) else Color.rgb(165, 204, 239))
+                }
                 setPadding(dp(11), dp(9), dp(11), dp(9))
                 minWidth = dp(42)
             }
