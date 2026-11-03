@@ -13,10 +13,9 @@ import com.marcorx6.library.network.SecureUrlPolicy
 import com.marcorx6.library.network.BloggerApiClient
 import com.marcorx6.library.network.BloggerFeedClient
 import com.marcorx6.library.network.BloggerArticleBuilder
+import com.marcorx6.library.notification.BlogNotificationScheduler
 import com.marcorx6.library.network.BloggerFeedParser
 import android.app.DownloadManager
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Intent
@@ -56,14 +55,10 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.work.Constraints
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
-import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
+
+    private val notificationScheduler by lazy { BlogNotificationScheduler(applicationContext) }
 
     private fun appearancePreferences() = getSharedPreferences("appearance_settings", MODE_PRIVATE)
     private fun isDarkMode() = appearancePreferences().getBoolean("dark_mode", true)
@@ -160,14 +155,14 @@ class MainActivity : ComponentActivity() {
 
         applySystemBarAppearance()
 
-        createNotificationChannel()
+        notificationScheduler.createNotificationChannel()
         configureGoogleSignIn()
         loadGames()
         restoreAdminSession()
         createInterface()
         showStartupExperience()
-        if (notificationPreferences().getBoolean("enabled", false)) {
-            scheduleBlogNotifications()
+        if (notificationScheduler.isEnabled()) {
+            notificationScheduler.schedule()
             requestNotificationPermissionIfNeeded()
         }
         syncFromBlog(showResult = false)
@@ -292,36 +287,6 @@ class MainActivity : ComponentActivity() {
         return "<div><p>$text</p>$image<p><a href=\"${game.url}\">تحميل اللعبة</a></p></div>"
     }
 
-    private fun notificationPreferences() =
-        getSharedPreferences("notification_settings", MODE_PRIVATE)
-
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                BlogNotificationWorker.CHANNEL_ID,
-                "New MARCO RX6 posts",
-                NotificationManager.IMPORTANCE_DEFAULT
-            ).apply {
-                description = "Alerts when a new post is published on the MARCO RX6 blog"
-            }
-            getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
-        }
-    }
-
-    private fun scheduleBlogNotifications() {
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
-        val request = PeriodicWorkRequestBuilder<BlogNotificationWorker>(15, TimeUnit.MINUTES)
-            .setConstraints(constraints)
-            .build()
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            BlogNotificationWorker.WORK_NAME,
-            ExistingPeriodicWorkPolicy.UPDATE,
-            request
-        )
-    }
-
     private fun requestNotificationPermissionIfNeeded() {
         if (Build.VERSION.SDK_INT >= 33 &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
@@ -331,7 +296,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun showNotificationSettings() {
-        val enabled = notificationPreferences().getBoolean("enabled", false)
+        val enabled = notificationScheduler.isEnabled()
         AlertDialog.Builder(this)
             .setTitle("إشعارات المقالات الجديدة")
             .setMessage(if (enabled)
@@ -339,14 +304,14 @@ class MainActivity : ComponentActivity() {
             else
                 "الإشعارات متوقفة. فعّلها ليصلك تنبيه عند نشر مقال جديد.")
             .setPositiveButton(if (enabled) "إبقاء مفعّلة" else "تفعيل") { _, _ ->
-                notificationPreferences().edit().putBoolean("enabled", true).apply()
-                scheduleBlogNotifications()
+                notificationScheduler.setEnabled(true)
+                notificationScheduler.schedule()
                 requestNotificationPermissionIfNeeded()
                 Toast.makeText(this, "تم تفعيل إشعارات المقالات الجديدة", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("إيقاف") { _, _ ->
-                notificationPreferences().edit().putBoolean("enabled", false).apply()
-                WorkManager.getInstance(this).cancelUniqueWork(BlogNotificationWorker.WORK_NAME)
+                notificationScheduler.setEnabled(false)
+                notificationScheduler.cancel()
                 Toast.makeText(this, "تم إيقاف الإشعارات", Toast.LENGTH_SHORT).show()
             }
             .setNeutralButton("إغلاق", null)
@@ -1796,12 +1761,12 @@ class MainActivity : ComponentActivity() {
                 appearancePreferences().edit()
                     .putBoolean("dark_mode", mode.selectedItemPosition == 0)
                     .putString("accent", themeKeys[theme.selectedItemPosition]).apply()
-                notificationPreferences().edit().putBoolean("enabled", notifications.isChecked).apply()
+                notificationScheduler.setEnabled(notifications.isChecked)
                 if (notifications.isChecked) {
-                    scheduleBlogNotifications()
+                    notificationScheduler.schedule()
                     requestNotificationPermissionIfNeeded()
                 } else {
-                    WorkManager.getInstance(this).cancelUniqueWork(BlogNotificationWorker.WORK_NAME)
+                    notificationScheduler.cancel()
                 }
                 recreate()
             }
