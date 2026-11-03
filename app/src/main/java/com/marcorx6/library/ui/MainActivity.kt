@@ -231,7 +231,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         startupExperienceController.dismiss()
-        mainHandler.removeCallbacksAndMessages(null)
+        mainLibraryInterfaceController.dispose()
         setupDialog?.let { if (it.isShowing) it.dismiss() }
         setupDialog = null
         ioExecutor.shutdownNow()
@@ -331,6 +331,23 @@ class MainActivity : ComponentActivity() {
 
     private fun tr(value: String): String =
         LanguageTranslator.translate(value, currentLanguage())
+
+    private fun showLanguagePicker() {
+        val codes = arrayOf("ar", "en", "fr", "es")
+        val labels = arrayOf(tr("العربية"), tr("الإنجليزية"), tr("الفرنسية"), tr("الإسبانية"))
+        val current = codes.indexOf(currentLanguage()).coerceAtLeast(0)
+        AlertDialog.Builder(this)
+            .setTitle(tr("اختر لغة التطبيق"))
+            .setSingleChoiceItems(labels, current) { dialog, which ->
+                getSharedPreferences("app_settings", MODE_PRIVATE).edit()
+                    .putString("language", codes[which]).apply()
+                dialog.dismiss()
+                createInterface()
+                Toast.makeText(this, tr("تم حفظ اللغة"), Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton(tr("إغلاق"), null)
+            .show().also { styleAlertDialog(it) }
+    }
 
 
     private val sideMenuController by lazy {
@@ -1082,7 +1099,7 @@ class MainActivity : ComponentActivity() {
             fontFamily = fontFamilyName(),
             fontSize = (17 * fontScale()).toInt(),
             onDownload = { url, userAgent, contentDisposition, mimeType, pageUrl ->
-                enqueueGameDownload(url, game.name, userAgent, contentDisposition, mimeType, pageUrl)
+                enqueueGameDownload(url, game.name, userAgent.orEmpty(), contentDisposition.orEmpty(), mimeType.orEmpty(), pageUrl)
             }
         )
         root.addView(articleWebView, LinearLayout.LayoutParams(-1, 0, 1f))
