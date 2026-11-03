@@ -414,7 +414,8 @@ class MainActivity : ComponentActivity() {
 
     private val mainLibraryFeature by lazy {
         MainLibraryFeature(
-            activity = this,
+            context = this,
+            setContentView = { view -> setContentView(view) },
             darkMode = ::isDarkMode,
             currentLanguage = ::currentLanguage,
             dp = ::dp,
