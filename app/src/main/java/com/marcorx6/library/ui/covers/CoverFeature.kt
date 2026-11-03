@@ -12,6 +12,7 @@ internal class CoverFeature(
     filesDir: File,
     contentResolver: ContentResolver,
     accessToken: () -> String,
+    state: CoverUploadState,
     executeIo: (() -> Unit) -> Unit,
     postToUi: (() -> Unit) -> Unit,
     coverUrlField: () -> EditText?,
@@ -22,8 +23,6 @@ internal class CoverFeature(
     white: () -> Int,
     styleDialog: (android.app.AlertDialog) -> Unit
 ) {
-    val state = CoverUploadState()
-
     private val driveServices = DriveServices(
         filesDir = filesDir,
         contentResolver = contentResolver,
