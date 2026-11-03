@@ -1542,7 +1542,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private var activeProfileDialog: AlertDialog? = null
-    private fun profilePreferences() = getSharedPreferences("user_profile", MODE_PRIVATE)
+    private fun profilePreferences() = ProfilePreferences.open(this)
     private fun showProfile() {
         val prefs = profilePreferences()
         val box = LinearLayout(this).apply {
