@@ -66,10 +66,12 @@ jobs:
           "$APKSIGNER" verify --print-certs app/build/outputs/apk/release/app-release.apk
           echo "Debug APK signer:"
           "$APKSIGNER" verify --print-certs app/build/outputs/apk/debug/app-debug.apk
-          RELEASE_CERT="$("$APKSIGNER" verify --print-certs app/build/outputs/apk/release/app-release.apk | awk -F': ' '/Signer #1 certificate SHA-256 digest/ {print $2}')"
-          DEBUG_CERT="$("$APKSIGNER" verify --print-certs app/build/outputs/apk/debug/app-debug.apk | awk -F': ' '/Signer #1 certificate SHA-256 digest/ {print $2}')"
+          RELEASE_CERT="$("$APKSIGNER" verify --print-certs app/build/outputs/apk/release/app-release.apk | awk -F': ' '/certificate SHA-256 digest:/ {print $3; exit}')"
+          DEBUG_CERT="$("$APKSIGNER" verify --print-certs app/build/outputs/apk/debug/app-debug.apk | awk -F': ' '/certificate SHA-256 digest:/ {print $3; exit}')"
           test -n "$RELEASE_CERT"
           test -n "$DEBUG_CERT"
+          echo "Release SHA-256: $RELEASE_CERT"
+          echo "Debug SHA-256:   $DEBUG_CERT"
           test "$DEBUG_CERT" = "$RELEASE_CERT"
 
       - name: Upload signed release APK
