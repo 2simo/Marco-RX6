@@ -123,6 +123,22 @@ class MainActivity : ComponentActivity() {
         BloggerPostRepository(bloggerApiClient, { bloggerBlogId }, { isAdminSession })
     }
     private val gameRepository by lazy { GameRepository(applicationContext) }
+    private val profileAvatarController by lazy {
+        ProfileAvatarController(
+            executor = ioExecutor,
+            saveAvatar = { uri -> profileAvatarRepository.save(uri).absolutePath },
+            persistPath = { path -> profilePreferences().edit().putString("avatar_path", path).apply() },
+            postToUi = ::postToUi,
+            onSaved = {
+                Toast.makeText(this, "تم تحديث صورة الملف الشخصي", Toast.LENGTH_SHORT).show()
+                showProfile()
+            },
+            onError = { message ->
+                Toast.makeText(this, "تعذر حفظ الصورة: $message", Toast.LENGTH_LONG).show()
+            }
+        )
+    }
+
     private val bloggerAccessController by lazy {
         BloggerAccessController(
             executor = ioExecutor,
@@ -518,18 +534,7 @@ class MainActivity : ComponentActivity() {
         }
         if (requestCode == 1005 && resultCode == RESULT_OK) {
             val uri = data?.data ?: return
-            ioExecutor.execute {
-                try {
-                    val destination = profileAvatarRepository.save(uri)
-                    profilePreferences().edit().putString("avatar_path", destination.absolutePath).apply()
-                    postToUi {
-                        Toast.makeText(this, "تم تحديث صورة الملف الشخصي", Toast.LENGTH_SHORT).show()
-                        showProfile()
-                    }
-                } catch (e: Exception) {
-                    postToUi { Toast.makeText(this, "تعذر حفظ الصورة: ${e.message}", Toast.LENGTH_LONG).show() }
-                }
-            }
+            profileAvatarController.handle(uri)
             return
         }
         if (requestCode != PICK_IMAGE_REQUEST || resultCode != RESULT_OK) return
