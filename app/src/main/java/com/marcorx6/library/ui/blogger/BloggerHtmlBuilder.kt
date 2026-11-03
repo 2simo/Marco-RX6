@@ -1,6 +1,6 @@
 package com.marcorx6.library.ui
 
-import com.marcorx6.library.model.Game
+import com.marcorx6.library.data.Game
 
 /** Builds the HTML fragment used when composing a Blogger game post. */
 internal object BloggerHtmlBuilder {
