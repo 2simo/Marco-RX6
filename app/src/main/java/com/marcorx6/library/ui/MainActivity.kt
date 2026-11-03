@@ -389,7 +389,7 @@ class MainActivity : ComponentActivity() {
             if (isDarkMode()) intArrayOf(Color.rgb(28, 31, 54), Color.rgb(14, 19, 34))
             else intArrayOf(Color.WHITE, Color.rgb(239, 243, 251))).apply {
             cornerRadius = dp(24).toFloat()
-            setStroke(dp(1), if (isDarkMode()) Color.rgb(82, 75, 130) else Color.rgb(211, 219, 234))
+            setStroke(dp(1), if (isDarkMode()) Color.rgb(57, 105, 158) else Color.rgb(211, 219, 234))
         })
         dialog.window?.let { window ->
             // Alert dialogs use their own window: keep system bars visible and let
@@ -565,7 +565,7 @@ class MainActivity : ComponentActivity() {
                 setColor(ink)
                 cornerRadii = floatArrayOf(0f, 0f, dp(24).toFloat(), dp(24).toFloat(),
                     dp(24).toFloat(), dp(24).toFloat(), 0f, 0f)
-                setStroke(dp(1), Color.rgb(99, 113, 141))
+                setStroke(dp(1), Color.rgb(57, 105, 158))
             })
         }
         val top = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
@@ -727,7 +727,7 @@ class MainActivity : ComponentActivity() {
         backupExportPayload = BackupCodec.encode(
             games = games,
             darkMode = isDarkMode(),
-            accent = appearancePreferences().getString("accent", "blue") ?: "violet",
+            accent = appearancePreferences().getString("accent", "blue") ?: "blue",
             animations = appearancePreferences().getBoolean("animations", true)
         )
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
@@ -968,7 +968,7 @@ class MainActivity : ComponentActivity() {
             gravity = Gravity.CENTER
         })
         stats.addView(makeText("•  " + tr("المدونة محدّثة"), 10f,
-            if (isDarkMode()) Color.rgb(197, 184, 255) else Color.rgb(112, 76, 174), true).apply {
+            if (isDarkMode()) Color.rgb(151, 205, 255) else Color.rgb(35, 139, 235), true).apply {
             gravity = Gravity.CENTER
             setPadding(0, dp(8), 0, 0)
         })
@@ -1111,7 +1111,7 @@ class MainActivity : ComponentActivity() {
                 typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
                 gravity = Gravity.CENTER
                 background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-                    intArrayOf(Color.rgb(118, 127, 151), Color.rgb(100, 77, 157))).apply {
+                    intArrayOf(Color.rgb(118, 127, 151), Color.rgb(39, 126, 210))).apply {
                     cornerRadius = dp(15).toFloat()
                 }
                 setPadding(dp(18), dp(13), dp(18), dp(13))
@@ -1155,7 +1155,7 @@ class MainActivity : ComponentActivity() {
                 background = rounded(if (isDarkMode()) Color.rgb(45, 52, 71) else Color.rgb(232, 237, 246), 15)
                 setOnClickListener { action() }
             }
-            item.addView(makeText(icon, 15f, if (isDarkMode()) silver else Color.rgb(92, 76, 143), true).apply {
+            item.addView(makeText(icon, 15f, if (isDarkMode()) silver else Color.rgb(43, 123, 194), true).apply {
                 gravity = Gravity.CENTER
             })
             item.addView(makeText(label, 10f, if (isDarkMode()) silver else Color.rgb(43, 51, 68), true).apply {
@@ -1459,7 +1459,7 @@ class MainActivity : ComponentActivity() {
         val splashAccent = red
         val content = FrameLayout(this).apply {
             setBackground(GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                if (isDarkMode()) intArrayOf(Color.rgb(20, 14, 39), Color.rgb(7, 10, 23), Color.rgb(4, 7, 16))
+                if (isDarkMode()) intArrayOf(Color.rgb(8, 22, 42), Color.rgb(7, 13, 25), Color.rgb(5, 11, 21))
                 else intArrayOf(Color.rgb(248, 249, 253), Color.rgb(237, 241, 249), Color.rgb(229, 234, 244))))
         }
         val center = LinearLayout(this).apply {
@@ -1472,10 +1472,10 @@ class MainActivity : ComponentActivity() {
             gravity = Gravity.CENTER
             setPadding(dp(24), dp(34), dp(24), dp(34))
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                if (isDarkMode()) intArrayOf(Color.rgb(22, 20, 47), Color.rgb(8, 12, 27), Color.rgb(18, 12, 39))
+                if (isDarkMode()) intArrayOf(Color.rgb(10, 25, 46), Color.rgb(7, 16, 31), Color.rgb(9, 23, 43))
                 else intArrayOf(Color.WHITE, Color.rgb(244, 246, 251), Color.rgb(232, 237, 247))).apply {
                 cornerRadius = dp(34).toFloat()
-                setStroke(dp(1), if (isDarkMode()) Color.rgb(93, 76, 155) else Color.rgb(199, 207, 224))
+                setStroke(dp(1), if (isDarkMode()) Color.rgb(42, 126, 205) else Color.rgb(199, 207, 224))
             }
             elevation = dp(28).toFloat()
         }
@@ -1486,7 +1486,7 @@ class MainActivity : ComponentActivity() {
             contentDescription = "MARCO RX6"
             background = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
-                setColor(if (isDarkMode()) Color.rgb(13, 10, 29) else Color.rgb(242, 244, 250))
+                setColor(if (isDarkMode()) Color.rgb(8, 18, 34) else Color.rgb(242, 244, 250))
                 setStroke(dp(1), splashAccent)
             }
             setPadding(dp(12), dp(12), dp(12), dp(12))
@@ -1510,7 +1510,7 @@ class MainActivity : ComponentActivity() {
 
         val progressTrack = FrameLayout(this).apply {
             background = GradientDrawable().apply {
-                setColor(if (isDarkMode()) Color.rgb(42, 34, 63) else Color.rgb(220, 226, 237))
+                setColor(if (isDarkMode()) Color.rgb(20, 43, 70) else Color.rgb(220, 226, 237))
                 cornerRadius = dp(20).toFloat()
             }
             clipToOutline = true
