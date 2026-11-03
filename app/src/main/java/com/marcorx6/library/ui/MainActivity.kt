@@ -104,12 +104,25 @@ class MainActivity : ComponentActivity() {
     private var setupDialog: Dialog? = null
     private var searchRenderRunnable: Runnable? = null
     private val PICK_IMAGE_REQUEST = 1001
-    private var pendingCoverLocalPath = ""
-    private var pendingCoverPublicUrl = ""
-    private var coverUploadInProgress = false
-    private var coverUploadFailed = false
-    private var coverPreview: ImageView? = null
-    private var coverUrlField: EditText? = null
+    private val coverUploadState = CoverUploadState()
+    private var pendingCoverLocalPath: String
+        get() = coverUploadState.pendingLocalPath
+        set(value) { coverUploadState.pendingLocalPath = value }
+    private var pendingCoverPublicUrl: String
+        get() = coverUploadState.pendingPublicUrl
+        set(value) { coverUploadState.pendingPublicUrl = value }
+    private var coverUploadInProgress: Boolean
+        get() = coverUploadState.inProgress
+        set(value) { coverUploadState.inProgress = value }
+    private var coverUploadFailed: Boolean
+        get() = coverUploadState.failed
+        set(value) { coverUploadState.failed = value }
+    private var coverPreview: ImageView?
+        get() = coverUploadState.preview
+        set(value) { coverUploadState.preview = value }
+    private var coverUrlField: EditText?
+        get() = coverUploadState.urlField
+        set(value) { coverUploadState.urlField = value }
     private var isSyncing = false
     private val adminSessionState = AdminSessionState()
     private var bloggerBlogId: String
