@@ -926,6 +926,18 @@ class MainActivity : ComponentActivity() {
         )
     }
 
+    private val gameDetailsTopBarFactory by lazy {
+        GameDetailsTopBarFactory(
+            activity = this,
+            dp = ::dp,
+            makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
+            isDarkMode = ::isDarkMode,
+            white = { white },
+            red = { red },
+            favoriteToggleFactory = gameFavoriteToggleFactory
+        )
+    }
+
     private val gameDetailsIdentityViewFactory by lazy {
         GameDetailsIdentityViewFactory(
             activity = this,
@@ -1017,33 +1029,7 @@ class MainActivity : ComponentActivity() {
             insets
         }
 
-        val topBar = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(16), dp(10), dp(12), dp(10))
-            background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-                if (isDarkMode()) intArrayOf(Color.rgb(17, 32, 54), Color.rgb(9, 17, 31))
-                else intArrayOf(Color.WHITE, Color.rgb(235, 242, 251)))
-        }
-        val close = TextView(this).apply {
-            text = "‹"
-            textSize = 30f
-            setTextColor(white)
-            gravity = Gravity.CENTER
-            setOnClickListener { reader.dismiss() }
-        }
-        close.minWidth = dp(48)
-        close.minHeight = dp(48)
-        topBar.addView(close, LinearLayout.LayoutParams(dp(48), dp(48)))
-        val heading = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        heading.addView(makeText(game.name, 16f, white, true).apply {
-            maxLines = 1
-            ellipsize = android.text.TextUtils.TruncateAt.END
-        })
-        heading.addView(makeText(game.platform, 10f, red, true))
-        topBar.addView(heading, LinearLayout.LayoutParams(0, -2, 1f))
-        val favorite = gameFavoriteToggleFactory.create(game)
-        topBar.addView(favorite)
+        val topBar = gameDetailsTopBarFactory.create(game) { reader.dismiss() }
         root.addView(topBar)
 
         val identity = gameDetailsIdentityViewFactory.create(game)
