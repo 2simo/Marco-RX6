@@ -23,7 +23,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
 import android.content.pm.PackageManager
-import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -99,6 +98,7 @@ class MainActivity : ComponentActivity() {
     private val BACKUP_IMPORT_REQUEST = 1004
     private val platforms = listOf("الكل", "BLOG", "FAVORITES", "PSP", "PS1", "PS2", "PS3", "PS4")
     private val games = mutableListOf<Game>()
+    private val googleDriveClient by lazy { com.marcorx6.library.network.GoogleDriveClient() }
     private val coverRepository by lazy { com.marcorx6.library.data.CoverRepository(applicationContext).also { coverRepositoryCreated = true } }
     private var coverRepositoryCreated = false
 
@@ -263,99 +263,6 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private fun uploadCoverToDrive(file: File): String {
-        if (!file.exists() || file.length() == 0L) throw IllegalStateException("ملف الصورة فارغ أو غير موجود")
-        if (file.length() > 10L * 1024 * 1024) throw IllegalStateException("حجم صورة الغلاف يتجاوز 10 ميغابايت")
-        // Detect the real image format from its contents. Picked images are stored
-        // with a neutral .img suffix, so relying on the filename mislabels PNG/WebP as JPEG.
-        val imageBounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        BitmapFactory.decodeFile(file.absolutePath, imageBounds)
-        val detectedMime = imageBounds.outMimeType?.lowercase(Locale.ROOT).orEmpty()
-        val mime = when (detectedMime) {
-            "image/png", "image/webp", "image/gif", "image/jpeg" -> detectedMime
-            else -> when (file.extension.lowercase(Locale.ROOT)) {
-                "png" -> "image/png"
-                "webp" -> "image/webp"
-                "gif" -> "image/gif"
-                else -> "image/jpeg"
-            }
-        }
-        val token = driveToken()
-        val boundary = "MarcoRX6" + System.currentTimeMillis().toString()
-        val extension = when (mime) {
-            "image/png" -> "png"
-            "image/webp" -> "webp"
-            "image/gif" -> "gif"
-            else -> "jpg"
-        }
-        val metadata = JSONObject().put("name", "MARCO_RX6_" + file.nameWithoutExtension + "." + extension)
-        val output = java.io.ByteArrayOutputStream()
-        output.write(("--$boundary\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n").toByteArray(Charsets.UTF_8))
-        output.write(metadata.toString().toByteArray(Charsets.UTF_8))
-        output.write(("\r\n--$boundary\r\nContent-Type: $mime\r\n\r\n").toByteArray(Charsets.UTF_8))
-        file.inputStream().use { it.copyTo(output) }
-        output.write("\r\n--$boundary--\r\n".toByteArray(Charsets.UTF_8))
-
-        val connection = URL("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id").openConnection() as HttpURLConnection
-        connection.requestMethod = "POST"
-        connection.connectTimeout = 30000
-        connection.readTimeout = 30000
-        connection.doOutput = true
-        connection.setRequestProperty("Authorization", "Bearer $token")
-        connection.setRequestProperty("Content-Type", "multipart/related; boundary=$boundary")
-        connection.outputStream.use { it.write(output.toByteArray()) }
-        val code = connection.responseCode
-        val response = (if (code in 200..299) connection.inputStream else connection.errorStream)
-            ?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
-        connection.disconnect()
-        if (code !in 200..299) throw IllegalStateException("فشل رفع الصورة إلى Google Drive ($code): $response")
-
-        val id = JSONObject(response).optString("id")
-        if (id.isBlank()) throw IllegalStateException("لم يرجع Google Drive معرّف الصورة")
-        val permission = URL("https://www.googleapis.com/drive/v3/files/$id/permissions").openConnection() as HttpURLConnection
-        permission.requestMethod = "POST"
-        permission.connectTimeout = 20000
-        permission.readTimeout = 20000
-        permission.doOutput = true
-        permission.setRequestProperty("Authorization", "Bearer $token")
-        permission.setRequestProperty("Content-Type", "application/json; charset=utf-8")
-        permission.outputStream.use {
-            it.write(JSONObject().put("type", "anyone").put("role", "reader").toString().toByteArray(Charsets.UTF_8))
-        }
-        val permissionCode = permission.responseCode
-        val permissionBody = (if (permissionCode in 200..299) permission.inputStream else permission.errorStream)
-            ?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
-        permission.disconnect()
-        if (permissionCode !in 200..299) throw IllegalStateException("تم رفع الصورة لكن تعذر جعلها متاحة للموقع ($permissionCode): $permissionBody")
-        val directImageUrl = "https://lh3.googleusercontent.com/d/$id"
-        verifyPublicImageUrl(directImageUrl)
-        return directImageUrl
-    }
-
-    private fun verifyPublicImageUrl(imageUrl: String) {
-        var lastFailure = "رابط الصورة لا يعيد ملف صورة مباشراً"
-        repeat(3) { attempt ->
-            val connection = URL(imageUrl).openConnection() as HttpURLConnection
-            try {
-                connection.requestMethod = "GET"
-                connection.connectTimeout = 12000
-                connection.readTimeout = 15000
-                connection.instanceFollowRedirects = true
-                connection.setRequestProperty("Range", "bytes=0-31")
-                connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/131.0.0.0 Mobile Safari/537.36")
-                val code = connection.responseCode
-                val mime = connection.contentType.orEmpty().substringBefore(";").lowercase(Locale.ROOT)
-                if (code in 200..299 && mime.startsWith("image/")) return
-                lastFailure = "تعذر التحقق من رابط الصورة (HTTP $code، النوع: ${mime.ifBlank { "غير معروف" }})"
-            } catch (e: Exception) {
-                lastFailure = e.message ?: lastFailure
-            } finally {
-                connection.disconnect()
-            }
-            if (attempt < 2) Thread.sleep(900L * (attempt + 1))
-        }
-        throw IllegalStateException(lastFailure)
-    }
 
     private fun fetchBlogLabels(): List<String> {
         if (bloggerBlogId.isBlank()) throw IllegalStateException("زامن المدونة أولاً ثم حدّث التسميات.")
@@ -1705,7 +1612,7 @@ class MainActivity : ComponentActivity() {
                     coverPreview?.let { loadCover(it, pendingCoverLocalPath, "") }
                     Toast.makeText(this, "تم اختيار الصورة، جارٍ رفعها للموقع...", Toast.LENGTH_SHORT).show()
                 }
-                val publicImageUrl = uploadCoverToDrive(destination)
+                val publicImageUrl = googleDriveClient.uploadCover(destination, driveToken())
                 mainHandler.post {
                     pendingCoverPublicUrl = publicImageUrl
                     coverUploadInProgress = false
