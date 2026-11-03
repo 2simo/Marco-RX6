@@ -1317,82 +1317,49 @@ class MainActivity : ComponentActivity() {
 
     private fun showStartupExperience() {
         val splash = Dialog(this, android.R.style.Theme_Material_NoActionBar)
-        val splashText = white
-        val splashMuted = gray
-        val splashAccent = red
         val content = FrameLayout(this).apply {
-            setBackground(GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                if (isDarkMode()) intArrayOf(Color.rgb(8, 22, 42), Color.rgb(7, 13, 25), Color.rgb(5, 11, 21))
-                else intArrayOf(Color.rgb(248, 249, 253), Color.rgb(237, 241, 249), Color.rgb(229, 234, 244))))
+            setBackground(GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(
+                Color.rgb(3, 10, 22), Color.rgb(5, 19, 39), Color.rgb(2, 8, 19)
+            )))
         }
         val center = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            setPadding(dp(28), dp(30), dp(28), dp(26))
+            setPadding(dp(30), dp(24), dp(30), dp(24))
         }
-        val contentCard = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            setPadding(dp(24), dp(34), dp(24), dp(34))
-            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                if (isDarkMode()) intArrayOf(Color.rgb(10, 25, 46), Color.rgb(7, 16, 31), Color.rgb(9, 23, 43))
-                else intArrayOf(Color.WHITE, Color.rgb(244, 246, 251), Color.rgb(232, 237, 247))).apply {
-                cornerRadius = dp(34).toFloat()
-                setStroke(dp(1), if (isDarkMode()) Color.rgb(42, 126, 205) else Color.rgb(199, 207, 224))
+        val logoHalo = FrameLayout(this).apply {
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(Color.rgb(7, 24, 45))
+                setStroke(dp(2), Color.rgb(39, 160, 255))
             }
-            elevation = dp(28).toFloat()
+            elevation = dp(18).toFloat()
         }
-
         val logo = ImageView(this).apply {
             setImageResource(R.drawable.marco_rx6_brand)
             scaleType = ImageView.ScaleType.FIT_CENTER
             contentDescription = "MARCO RX6"
-            background = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setColor(if (isDarkMode()) Color.rgb(8, 18, 34) else Color.rgb(242, 244, 250))
-                setStroke(dp(1), splashAccent)
-            }
-            setPadding(dp(12), dp(12), dp(12), dp(12))
+            setPadding(dp(15), dp(15), dp(15), dp(15))
             alpha = 0f
-            scaleX = 0.82f
-            scaleY = 0.82f
+            scaleX = 0.84f
+            scaleY = 0.84f
         }
-        contentCard.addView(logo, LinearLayout.LayoutParams(dp(148), dp(148)).apply {
-            bottomMargin = dp(18)
-        })
-
-        contentCard.addView(makeText("MARCO RX6", 23f, splashText, true).apply {
-            letterSpacing = 0.12f
+        logoHalo.addView(logo, FrameLayout.LayoutParams(-1, -1))
+        center.addView(logoHalo, LinearLayout.LayoutParams(dp(154), dp(154)).apply { bottomMargin = dp(25) })
+        center.addView(makeText("MARCO RX6", 25f, Color.WHITE, true).apply {
             gravity = Gravity.CENTER
+            letterSpacing = 0.16f
         })
-        contentCard.addView(makeText("GAME LIBRARY  •  BLOG HUB", 10f, splashMuted, true).apply {
-            letterSpacing = 0.13f
+        center.addView(makeText("GAME LIBRARY", 10f, Color.rgb(105, 190, 255), true).apply {
             gravity = Gravity.CENTER
-            setPadding(0, dp(5), 0, dp(25))
+            letterSpacing = 0.28f
+            setPadding(0, dp(9), 0, 0)
         })
-
-        val progressTrack = FrameLayout(this).apply {
-            background = GradientDrawable().apply {
-                setColor(if (isDarkMode()) Color.rgb(20, 43, 70) else Color.rgb(220, 226, 237))
-                cornerRadius = dp(20).toFloat()
-            }
-            clipToOutline = true
-        }
-        val progressFill = View(this).apply {
-            background = GradientDrawable(
-                GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(splashAccent, Color.rgb(52, 174, 255), Color.rgb(35, 210, 224))
-            ).apply { cornerRadius = dp(20).toFloat() }
-        }
-        progressTrack.addView(progressFill, FrameLayout.LayoutParams(0, -1, Gravity.START))
-        contentCard.addView(progressTrack, LinearLayout.LayoutParams(-1, dp(10)))
-
-        val loadingText = makeText("جارٍ تجهيز تجربتك...", 11f, splashMuted).apply {
+        val loading = makeText("جارٍ تجهيز عالم الألعاب...", 11f, Color.rgb(153, 174, 199)).apply {
             gravity = Gravity.CENTER
-            setPadding(0, dp(14), 0, 0)
+            setPadding(0, dp(34), 0, 0)
         }
-        contentCard.addView(loadingText)
-        center.addView(contentCard, LinearLayout.LayoutParams(-1, -2))
+        center.addView(loading)
         content.addView(center, FrameLayout.LayoutParams(-1, -1))
         splash.setContentView(content)
         splash.setCancelable(false)
@@ -1400,38 +1367,18 @@ class MainActivity : ComponentActivity() {
         splash.show()
         splash.window?.setBackgroundDrawableResource(android.R.color.transparent)
         splash.window?.setLayout(-1, -1)
-        splash.window?.let { splashWindow ->
-            WindowCompat.setDecorFitsSystemWindows(splashWindow, true)
-            WindowInsetsControllerCompat(splashWindow, splashWindow.decorView).apply {
-                isAppearanceLightStatusBars = !isDarkMode()
-                isAppearanceLightNavigationBars = !isDarkMode()
-                systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
+        splash.window?.let { w ->
+            WindowCompat.setDecorFitsSystemWindows(w, false)
+            w.statusBarColor = Color.TRANSPARENT
+            w.navigationBarColor = Color.TRANSPARENT
+            WindowInsetsControllerCompat(w, w.decorView).apply {
+                isAppearanceLightStatusBars = false
+                isAppearanceLightNavigationBars = false
                 show(WindowInsetsCompat.Type.systemBars())
             }
         }
-
-        logo.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(650L)
-            .setInterpolator(android.view.animation.OvershootInterpolator(1.15f)).start()
-
-        progressTrack.post {
-            val animator = android.animation.ValueAnimator.ofInt(0, 100).apply {
-                duration = 1750L
-                interpolator = android.view.animation.DecelerateInterpolator()
-                addUpdateListener { animation ->
-                    val percent = animation.animatedValue as Int
-                    val params = progressFill.layoutParams
-                    params.width = (progressTrack.width * percent / 100f).toInt()
-                    progressFill.layoutParams = params
-                    loadingText.text = when {
-                        percent < 35 -> "جارٍ تهيئة المكتبة..."
-                        percent < 75 -> "جارٍ تجهيز المحتوى..."
-                        else -> "مرحباً بك في MARCO RX6"
-                    }
-                }
-            }
-            animator.start()
-        }
-
+        logo.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(700L)
+            .setInterpolator(android.view.animation.OvershootInterpolator(1.08f)).start()
         mainHandler.postDelayed({
             if (!isFinishing) {
                 splash.dismiss()
@@ -1443,9 +1390,8 @@ class MainActivity : ComponentActivity() {
                     showProfile()
                 }
             }
-        }, 1850L)
+        }, 1750L)
     }
-
 
     private fun showFirstRunSetup() {
         val box = LinearLayout(this).apply {
