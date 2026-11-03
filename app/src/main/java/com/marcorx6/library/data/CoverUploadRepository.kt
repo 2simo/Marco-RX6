@@ -30,7 +30,23 @@ internal class CoverUploadRepository(
         return destination
     }
 
-    /** Uploads a previously persisted cover and returns its verified public URL. */
-    fun uploadCover(file: File, accessToken: String): String =
-        driveClient.uploadCover(file, accessToken)
+    /**
+     * Saves a selected image locally, notifies the UI so it can show the local
+     * preview, then uploads it and returns the verified public URL.
+     */
+    fun saveAndUploadCover(
+        uri: Uri,
+        accessToken: String,
+        onLocalFileSaved: (File) -> Unit
+    ): CoverUploadResult {
+        val localFile = savePickedCover(uri)
+        onLocalFileSaved(localFile)
+        val publicUrl = driveClient.uploadCover(localFile, accessToken)
+        return CoverUploadResult(localFile, publicUrl)
+    }
 }
+
+internal data class CoverUploadResult(
+    val localFile: File,
+    val publicUrl: String
+)
