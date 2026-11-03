@@ -3,6 +3,7 @@ package com.marcorx6.library.ui
 
 import android.Manifest
 import android.animation.LayoutTransition
+import android.animation.ValueAnimator
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import com.marcorx6.library.R
@@ -158,7 +159,7 @@ class MainActivity : ComponentActivity() {
         loadGames()
         restoreAdminSession()
         createInterface()
-        showStartupExperience()
+        if (savedInstanceState == null) showStartupExperience()
         if (notificationScheduler.isEnabled()) {
             notificationScheduler.schedule()
             requestNotificationPermissionIfNeeded()
@@ -1358,6 +1359,30 @@ class MainActivity : ComponentActivity() {
             setPadding(0, dp(34), 0, 0)
         }
         center.addView(loading)
+        val progress = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
+            max = 100
+            progress = 1
+            progressTintList = android.content.res.ColorStateList.valueOf(Color.rgb(42, 145, 255))
+            progressBackgroundTintList = android.content.res.ColorStateList.valueOf(Color.rgb(29, 48, 70))
+            progressDrawable = progressDrawable.mutate().apply {
+                if (this is android.graphics.drawable.LayerDrawable) {
+                    findDrawableByLayerId(android.R.id.background)?.let {
+                        it.setTint(Color.rgb(29, 48, 70))
+                    }
+                    findDrawableByLayerId(android.R.id.progress)?.let {
+                        it.setTint(Color.rgb(42, 145, 255))
+                    }
+                }
+            }
+        }
+        center.addView(progress, LinearLayout.LayoutParams(dp(238), dp(7)).apply {
+            topMargin = dp(18)
+        })
+        val percent = makeText("1%", 12f, Color.rgb(105, 190, 255), true).apply {
+            gravity = Gravity.CENTER
+            setPadding(0, dp(9), 0, 0)
+        }
+        center.addView(percent)
         content.addView(center, FrameLayout.LayoutParams(-1, -1))
         splash.setContentView(content)
         splash.setCancelable(false)
@@ -1377,6 +1402,15 @@ class MainActivity : ComponentActivity() {
         }
         logo.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(700L)
             .setInterpolator(android.view.animation.OvershootInterpolator(1.08f)).start()
+        ValueAnimator.ofInt(1, 100).apply {
+            duration = 2500L
+            addUpdateListener { animator ->
+                val value = animator.animatedValue as Int
+                progress.progress = value
+                percent.text = "$value%"
+            }
+            start()
+        }
         mainHandler.postDelayed({
             if (!isFinishing) {
                 splash.dismiss()
@@ -1388,7 +1422,7 @@ class MainActivity : ComponentActivity() {
                     showProfile()
                 }
             }
-        }, 1750L)
+        }, 2600L)
     }
 
     private fun showFirstRunSetup() {
