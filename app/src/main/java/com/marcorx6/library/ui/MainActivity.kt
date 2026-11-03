@@ -684,33 +684,7 @@ class MainActivity : ComponentActivity() {
         footer.addView(next, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(8) })
         root.addView(footer, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(18) })
 
-        fun optionCard(label: String, selected: Boolean, detail: String = ""): LinearLayout {
-            return LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(18), dp(14), dp(18), dp(14))
-                background = GradientDrawable().apply {
-                    cornerRadius = dp(17).toFloat()
-                    setColor(if (selected) Color.rgb(12, 48, 83) else Color.rgb(14, 29, 48))
-                    setStroke(dp(if (selected) 2 else 1),
-                        if (selected) Color.rgb(42, 145, 255) else Color.rgb(54, 76, 103))
-                }
-                addView(makeText(if (selected) "✓   $label" else label, 16f,
-                    if (selected) Color.WHITE else Color.rgb(222, 232, 245), true))
-                if (detail.isNotBlank()) addView(makeText(detail, 10f, Color.rgb(153, 174, 199)).apply {
-                    setPadding(0, dp(5), 0, 0)
-                })
-                isClickable = true
-                isFocusable = true
-            }
-        }
 
-        fun animateIn(view: View) {
-            view.alpha = 0f
-            view.translationY = dp(18).toFloat()
-            view.animate().alpha(1f).translationY(0f).setDuration(360L)
-                .setInterpolator(android.view.animation.DecelerateInterpolator()).start()
-        }
 
         renderStep = { target: Int, animate: Boolean ->
             step = target.coerceIn(0, steps.lastIndex)
@@ -746,7 +720,7 @@ class MainActivity : ComponentActivity() {
 
             val choices = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
             fun addChoice(label: String, detail: String = "", selectedNow: Boolean, action: () -> Unit) {
-                val card = optionCard(label, selectedNow, detail)
+                val card = firstRunSetupViewFactory.optionCard(label, selectedNow, detail)
                 choices.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(11) })
                 card.setOnClickListener {
                     action()
@@ -783,21 +757,21 @@ class MainActivity : ComponentActivity() {
                         "rose" -> Color.rgb(215, 90, 135)
                         else -> Color.rgb(42, 145, 255)
                     }
-                    val card = optionCard(label, accentKey == key)
+                    val card = firstRunSetupViewFactory.optionCard(label, accentKey == key)
                     val dot = View(this).apply { background = rounded(swatchColor, 20) }
                     card.addView(dot, LinearLayout.LayoutParams(dp(24), dp(24)).apply { topMargin = dp(9) })
                     choices.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(9) })
                     card.setOnClickListener { accentKey = key; renderStep(step, false) }
-                    if (animate) animateIn(card)
+                    if (animate) firstRunSetupViewFactory.animateIn(card)
                 }
                 4 -> {
                     addChoice("تفعيل الإشعارات", "تنبيه عند وصول مقال جديد", notificationsEnabled) { notificationsEnabled = true }
                     addChoice("إيقاف الإشعارات", "يمكنك تفعيلها لاحقاً من الإعدادات", !notificationsEnabled) { notificationsEnabled = false }
                 }
                 5 -> {
-                    val readyCard = optionCard("مكتبتك جاهزة!", true, "تم حفظ المنصة واللغة والمظهر واللون والإشعارات.")
+                    val readyCard = firstRunSetupViewFactory.optionCard("مكتبتك جاهزة!", true, "تم حفظ المنصة واللغة والمظهر واللون والإشعارات.")
                     choices.addView(readyCard, LinearLayout.LayoutParams(-1, -2))
-                    if (animate) animateIn(readyCard)
+                    if (animate) firstRunSetupViewFactory.animateIn(readyCard)
                 }
             }
             val scroll = ScrollView(this).apply {
@@ -807,7 +781,7 @@ class MainActivity : ComponentActivity() {
             }
             page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
             content.addView(page, FrameLayout.LayoutParams(-1, -1))
-            if (animate) animateIn(page)
+            if (animate) firstRunSetupViewFactory.animateIn(page)
             next.setOnClickListener {
                 if (step < steps.lastIndex) {
                     val old = step
@@ -927,6 +901,14 @@ class MainActivity : ComponentActivity() {
     private val gameOfflineArchiveController by lazy { GameOfflineArchiveController(this) }
 
     private val bloggerGamePostFactory by lazy { BloggerGamePostFactory() }
+
+    private val firstRunSetupViewFactory by lazy {
+        FirstRunSetupViewFactory(
+            activity = this,
+            dp = ::dp,
+            makeText = { value, size, color, bold -> makeText(value, size, color, bold) }
+        )
+    }
 
     private val bloggerPostSaveController by lazy {
         BloggerPostSaveController(
