@@ -37,11 +37,10 @@ class MainActivity : ComponentActivity() {
     private val gray: Int get() = appearancePaletteFeature.gray
 
     private val games get() = gameDataRuntimeFeature.games
-    private var coverRuntimeFeatureCreated = false
-    private val coverRuntimeFeature by lazy {
+    private val coverRuntimeFeatureDelegate = lazy {
         CoverRuntimeFeature(applicationContext, filesDir) { games }
-            .also { coverRuntimeFeatureCreated = true }
     }
+    private val coverRuntimeFeature by coverRuntimeFeatureDelegate
 
     private val libraryViewState get() = libraryRuntimeFeature.viewState
 
@@ -199,7 +198,7 @@ class MainActivity : ComponentActivity() {
             disposeLibrary = { libraryRuntimeFeature.dispose() },
             shutdownServices = { activityServicesRuntimeFeature.shutdown() },
             closeCoverRuntime = {
-                if (coverRuntimeFeatureCreated) coverRuntimeFeature.close()
+                if (coverRuntimeFeatureDelegate.isInitialized()) coverRuntimeFeature.close()
             }
         )
     }
