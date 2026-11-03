@@ -23,8 +23,6 @@ import android.widget.*
 
 class MainActivity : ComponentActivity() {
 
-    private val runtimeState = MainActivityRuntimeState()
-
     private val activityServicesRuntimeFeature by lazy {
         ActivityServicesRuntimeFeature(this, ::styleAlertDialog, ::isDarkMode)
     }
@@ -40,7 +38,7 @@ class MainActivity : ComponentActivity() {
     private fun accentForeground(): Int = appearancePaletteFeature.accentForeground()
     private val gray: Int get() = appearancePaletteFeature.gray
 
-    private val games get() = runtimeState.games
+    private val games get() = gameDataRuntimeFeature.games
     private var coverRuntimeFeatureCreated = false
     private val coverRuntimeFeature by lazy {
         CoverRuntimeFeature(applicationContext, filesDir) { games }
@@ -67,9 +65,7 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private var isSyncing: Boolean
-        get() = runtimeState.isSyncing
-        set(value) { runtimeState.isSyncing = value }
+    private val isSyncing: Boolean get() = bloggerRuntimeFeature.isSyncing
     private val googleAccountRuntimeFeature by lazy {
         GoogleAccountRuntimeFeature(applicationContext)
     }
@@ -80,7 +76,7 @@ class MainActivity : ComponentActivity() {
         get() = googleAccountRuntimeFeature.isAdminSession
         set(value) { googleAccountRuntimeFeature.isAdminSession = value }
     private val bloggerServices get() = googleAccountRuntimeFeature.bloggerServices
-    private val gameDataRuntimeFeature by lazy { GameDataRuntimeFeature(this, games) }
+    private val gameDataRuntimeFeature by lazy { GameDataRuntimeFeature(this) }
     private val userExperienceRuntimeFeature by lazy {
         UserExperienceRuntimeFeature(
             activity = this,
@@ -135,8 +131,6 @@ class MainActivity : ComponentActivity() {
             currentBlogId = { bloggerBlogId },
             setAdmin = { isAdminSession = it },
             isAdminSession = { isAdminSession },
-            isSyncing = { isSyncing },
-            setSyncing = { isSyncing = it },
             feedUrl = bloggerFeedUrl,
             postToUi = activityServicesRuntimeFeature::postToUi,
             refreshUi = ::createInterface,
