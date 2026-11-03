@@ -10,8 +10,8 @@ internal class BloggerAccessFeature(
     context: Context,
     services: BloggerServices,
     executor: Executor,
-    currentAccount: () -> GoogleSignInAccount?,
-    currentBlogId: () -> String,
+    private val currentAccount: () -> GoogleSignInAccount?,
+    private val currentBlogId: () -> String,
     setAdmin: (Boolean) -> Unit,
     postToUi: (() -> Unit) -> Unit,
     refreshUi: () -> Unit
