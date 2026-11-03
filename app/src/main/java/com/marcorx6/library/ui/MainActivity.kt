@@ -13,7 +13,6 @@ import com.marcorx6.library.data.Game
 import com.marcorx6.library.data.GameRepository
 import com.marcorx6.library.data.GameLibraryManager
 import com.marcorx6.library.data.GameLibraryStore
-import com.marcorx6.library.data.ProfileAvatarRepository
 import com.marcorx6.library.data.DownloadRepository
 import com.marcorx6.library.network.BloggerFeedClient
 import com.marcorx6.library.network.BloggerArticleBuilder
@@ -59,7 +58,6 @@ class MainActivity : ComponentActivity() {
     private val downloadUiController by lazy {
         DownloadUiController(this, downloadRepository) { dialog -> styleAlertDialog(dialog) }
     }
-    private val profileAvatarRepository by lazy { ProfileAvatarRepository(contentResolver, filesDir) }
 
     private fun appearancePreferences() = AppearancePreferencesStore.appearance(this)
     private fun isDarkMode() = AppearancePreferencesStore.isDarkMode(appearancePreferences())
@@ -141,17 +139,41 @@ class MainActivity : ComponentActivity() {
         )
     }
     private val gameRepository by lazy { GameRepository(applicationContext) }
-    private val profileAvatarController: ProfileAvatarController by lazy {
-        ProfileAvatarController(
+    private val profileFeature by lazy {
+        ProfileFeature(
+            activity = this,
+            contentResolver = contentResolver,
+            filesDir = filesDir,
             executor = ioExecutor,
-            saveAvatar = { uri -> profileAvatarRepository.save(uri).absolutePath },
-            persistPath = { path -> profilePreferences().edit().putString("avatar_path", path).apply() },
             postToUi = ::postToUi,
-            onSaved = {
+            preferences = ProfilePreferences.open(this),
+            games = { games },
+            dp = ::dp,
+            rounded = ::rounded,
+            makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
+            makeInput = ::makeInput,
+            tr = ::tr,
+            isDarkMode = ::isDarkMode,
+            panel = { panel },
+            red = { red },
+            white = { white },
+            gray = { gray },
+            showLanguagePicker = ::showLanguagePicker,
+            showNotificationSettings = ::showNotificationSettings,
+            chooseAvatar = {
+                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    type = "image/*"
+                }
+                profileAvatarLauncher.launch(intent)
+            },
+            styleAlertDialog = ::styleAlertDialog,
+            applyUnifiedSkin = ::applyUnifiedSkin,
+            onAvatarSaved = {
                 Toast.makeText(this, "تم تحديث صورة الملف الشخصي", Toast.LENGTH_SHORT).show()
                 showProfile()
             },
-            onError = { message ->
+            onAvatarError = { message ->
                 Toast.makeText(this, "تعذر حفظ الصورة: $message", Toast.LENGTH_LONG).show()
             }
         )
@@ -596,7 +618,7 @@ class MainActivity : ComponentActivity() {
                     }
                 )
             },
-            onAvatarSelected = profileAvatarController::handle,
+            onAvatarSelected = profileFeature.avatarController::handle,
             onCoverSelected = coverSelectionController::handle
         )
     }
@@ -622,40 +644,7 @@ class MainActivity : ComponentActivity() {
     private fun showFirstRunSetup() = firstRunSetupController.show()
 
 
-    private var activeProfileDialog: AlertDialog? = null
-    private fun profilePreferences() = ProfilePreferences.open(this)
-    private val profileController by lazy {
-        ProfileController(
-            activity = this,
-            preferences = profilePreferences(),
-            games = { games },
-            dp = ::dp,
-            rounded = ::rounded,
-            makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
-            makeInput = ::makeInput,
-            tr = ::tr,
-            isDarkMode = ::isDarkMode,
-            panel = { panel },
-            red = { red },
-            white = { white },
-            gray = { gray },
-            showLanguagePicker = ::showLanguagePicker,
-            showNotificationSettings = ::showNotificationSettings,
-            chooseAvatar = {
-                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                    addCategory(Intent.CATEGORY_OPENABLE)
-                    type = "image/*"
-                }
-                profileAvatarLauncher.launch(intent)
-            },
-            getActiveDialog = { activeProfileDialog },
-            setActiveDialog = { activeProfileDialog = it },
-            styleAlertDialog = ::styleAlertDialog,
-            applyUnifiedSkin = ::applyUnifiedSkin
-        )
-    }
-
-    private fun showProfile() = profileController.show()
+    private fun showProfile() = profileFeature.show()
     private val gameLibraryRenderer by lazy {
         GameLibraryRenderer(
             activity = this,
