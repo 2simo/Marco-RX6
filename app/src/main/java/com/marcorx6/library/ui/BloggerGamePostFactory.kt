@@ -1,5 +1,8 @@
 package com.marcorx6.library.ui
 
+import com.marcorx6.library.network.BloggerArticleBuilder
+import com.marcorx6.library.network.BloggerFeedParser
+
 import com.marcorx6.library.data.Game
 
 internal class BloggerGamePostFactory {
