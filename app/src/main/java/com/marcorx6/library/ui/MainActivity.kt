@@ -83,12 +83,6 @@ class MainActivity : ComponentActivity() {
     private var selected = "ALL"
     private var sortMode = "الأحدث"
     private val libraryFilterState = LibraryFilterState()
-    private var selectedGenre: String
-        get() = libraryFilterState.genre
-        set(value) { libraryFilterState.apply(value, libraryFilterState.year) }
-    private var selectedYear: String
-        get() = libraryFilterState.year
-        set(value) { libraryFilterState.apply(libraryFilterState.genre, value) }
     private val uiThreadDispatcher by lazy { UiThreadDispatcher(this) }
     private fun postToUi(action: () -> Unit) = uiThreadDispatcher.post(action)
 
@@ -567,8 +561,8 @@ class MainActivity : ComponentActivity() {
             search = { search },
             games = { games },
             selected = { selected },
-            selectedGenre = { selectedGenre },
-            selectedYear = { selectedYear },
+            selectedGenre = { libraryFilterState.genre },
+            selectedYear = { libraryFilterState.year },
             sortMode = { sortMode },
             bg = { bg },
             panel = { panel },
