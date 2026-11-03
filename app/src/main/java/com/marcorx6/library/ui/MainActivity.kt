@@ -513,23 +513,18 @@ class MainActivity : ComponentActivity() {
     }
 
     // IMAGE LOADER
-    private fun loadCover(
-        image: ImageView,
-        localPath: String,
-        imageUrl: String
-    ) {
-        val resolvedImageUrl = BloggerFeedParser.normalizeBloggerImageUrl(imageUrl)
-        image.setImageResource(android.R.drawable.ic_menu_gallery)
-        if (localPath.isBlank() && resolvedImageUrl.isBlank()) {
-            image.tag = null
-            return
-        }
-        val key = keyForCover(localPath, resolvedImageUrl)
-        image.tag = key
-        coverRepository.load(localPath, resolvedImageUrl) { bitmap ->
-            if (bitmap != null && image.tag == key) image.setImageBitmap(bitmap)
-        }
+    private val coverDisplayController by lazy {
+        CoverDisplayController(
+            normalizeUrl = BloggerFeedParser::normalizeBloggerImageUrl,
+            resolveKey = ::keyForCover,
+            loadBitmap = { localPath, imageUrl, callback ->
+                coverRepository.load(localPath, imageUrl, callback)
+            }
+        )
     }
+
+    private fun loadCover(image: ImageView, localPath: String, imageUrl: String) =
+        coverDisplayController.load(image, localPath, imageUrl)
 
     private fun keyForCover(localPath: String, imageUrl: String): String =
         CoverKeyResolver.resolve(localPath, imageUrl, coverRepository::stableCacheName) { asset ->
