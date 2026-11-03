@@ -1641,14 +1641,25 @@ class MainActivity : ComponentActivity() {
     private fun profilePreferences() = getSharedPreferences("user_profile", MODE_PRIVATE)
     private fun showProfile() {
         val prefs = profilePreferences()
-        val settings = getSharedPreferences("app_settings", MODE_PRIVATE)
         val box = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(18), dp(8), dp(18), dp(6))
+            setPadding(dp(18), dp(10), dp(18), dp(8))
+        }
+
+        val hero = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(16), dp(16), dp(16), dp(16))
+            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                if (isDarkMode()) intArrayOf(Color.rgb(19, 91, 158), Color.rgb(12, 39, 67), Color.rgb(8, 26, 43))
+                else intArrayOf(Color.rgb(226, 241, 255), Color.rgb(241, 247, 255))).apply {
+                cornerRadius = dp(20).toFloat()
+                setStroke(dp(1), if (isDarkMode()) Color.rgb(65, 133, 194) else Color.rgb(173, 207, 237))
+            }
         }
         val avatar = ImageView(this).apply {
             scaleType = ImageView.ScaleType.CENTER_CROP
-            background = rounded(panel, 60)
+            background = rounded(if (isDarkMode()) Color.rgb(36, 65, 91) else Color.WHITE, 48)
             clipToOutline = true
             val path = prefs.getString("avatar_path", "").orEmpty()
             if (path.isNotBlank() && File(path).exists()) {
@@ -1658,69 +1669,73 @@ class MainActivity : ComponentActivity() {
                 scaleType = ImageView.ScaleType.CENTER_INSIDE
             }
         }
-        box.addView(avatar, LinearLayout.LayoutParams(dp(92), dp(92)).apply {
-            gravity = Gravity.CENTER
-            bottomMargin = dp(8)
-        })
-        val chooseAvatar = TextView(this).apply {
-            text = "اختيار صورة الملف الشخصي"
-            textSize = 12f
-            setTextColor(red)
-            gravity = Gravity.CENTER
-            setPadding(dp(8), dp(8), dp(8), dp(14))
-            setOnClickListener {
-                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                    addCategory(Intent.CATEGORY_OPENABLE)
-                    type = "image/*"
-                }
-                activeProfileDialog?.dismiss()
-                profileAvatarLauncher.launch(intent)
-            }
+        hero.addView(avatar, LinearLayout.LayoutParams(dp(78), dp(78)))
+        val identity = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(14), 0, 0, 0)
         }
-        box.addView(chooseAvatar, LinearLayout.LayoutParams(-1, -2))
-        val nameLabel = makeText(tr("اسم العرض"), 11f, red, true)
+        identity.addView(makeText("PLAYER PROFILE", 9f, if (isDarkMode()) Color.rgb(151, 207, 255) else Color.rgb(34, 119, 190), true).apply { letterSpacing = 0.12f })
+        identity.addView(makeText(prefs.getString("nickname", "Player") ?: "Player", 19f, if (isDarkMode()) Color.WHITE else Color.rgb(22, 43, 65), true).apply {
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+            setPadding(0, dp(5), 0, dp(3))
+        })
+        identity.addView(makeText("MARCO RX6  •  GAMER", 9f, if (isDarkMode()) Color.rgb(191, 211, 230) else Color.rgb(79, 105, 129), true))
+        hero.addView(identity, LinearLayout.LayoutParams(0, -2, 1f))
+        hero.setOnClickListener {
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply { addCategory(Intent.CATEGORY_OPENABLE); type = "image/*" }
+            activeProfileDialog?.dismiss()
+            profileAvatarLauncher.launch(intent)
+        }
+        box.addView(hero, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
+        box.addView(makeText("اضغط على البطاقة لتغيير الصورة الشخصية", 10f, gray).apply {
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, dp(12))
+        })
+
         val input = makeInput(tr("اسم العرض")).apply {
             setSingleLine(true)
             setText(prefs.getString("nickname", "Player") ?: "Player")
         }
-        box.addView(nameLabel)
+        box.addView(makeText(tr("اسم العرض"), 11f, red, true))
         box.addView(input, LinearLayout.LayoutParams(-1, dp(50)).apply { topMargin = dp(6); bottomMargin = dp(14) })
 
         val favoriteCount = games.count { it.isFavorite }
-        val stats = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            background = rounded(panel, 14)
-            setPadding(dp(12), dp(14), dp(12), dp(14))
-        }
-        fun stat(value: String, label: String) = LinearLayout(this).apply {
+        val stats = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        fun statCard(value: String, label: String) = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            addView(makeText(value, 21f, red, true))
-            addView(makeText(label, 10f, gray))
+            background = rounded(panel, 16)
+            setPadding(dp(10), dp(14), dp(10), dp(14))
+            addView(makeText(value, 23f, red, true))
+            addView(makeText(label, 10f, gray).apply { setPadding(0, dp(3), 0, 0) })
         }
-        stats.addView(stat(games.size.toString(), "المقالات"), LinearLayout.LayoutParams(0, -2, 1f))
-        stats.addView(stat(favoriteCount.toString(), "المفضلة"), LinearLayout.LayoutParams(0, -2, 1f))
-        box.addView(stats, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
+        stats.addView(statCard(games.size.toString(), "الألعاب"), LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
+        stats.addView(statCard(favoriteCount.toString(), "المفضلة"), LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(6) })
+        box.addView(stats, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(14) })
 
-        fun settingButton(label: String, detail: String, action: () -> Unit) =
-            LinearLayout(this).apply {
+        fun settingButton(icon: String, label: String, detail: String, action: () -> Unit) = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            background = rounded(panel, 15)
+            setPadding(dp(14), dp(13), dp(14), dp(13))
+            addView(makeText(icon, 20f, red, true).apply { gravity = Gravity.CENTER })
+            val copy = LinearLayout(this@MainActivity).apply {
                 orientation = LinearLayout.VERTICAL
-                background = rounded(panel, 12)
-                setPadding(dp(13), dp(11), dp(13), dp(11))
+                setPadding(dp(12), 0, 0, 0)
                 addView(makeText(label, 13f, white, true))
                 addView(makeText(detail, 10f, gray).apply { setPadding(0, dp(3), 0, 0) })
-                setOnClickListener { action() }
             }
-        box.addView(settingButton("🌐  اللغة", "العربية • English • Français • Español") {
-            showLanguagePicker()
-        }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
-        box.addView(settingButton("♧  الإشعارات", "التحكم في تنبيهات المقالات الجديدة") {
-            showNotificationSettings()
-        }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
+            addView(copy, LinearLayout.LayoutParams(0, -2, 1f))
+            addView(makeText("‹", 22f, gray, true))
+            setOnClickListener { action() }
+        }
+        box.addView(settingButton("文", "اللغة", "العربية • English • Français • Español") { showLanguagePicker() }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
+        box.addView(settingButton("♧", "الإشعارات", "التحكم في تنبيهات المقالات الجديدة") { showNotificationSettings() })
 
         val dialog = AlertDialog.Builder(this)
             .setTitle(if (prefs.getBoolean("profile_created", false)) tr("ملفي الشخصي") else "إنشاء ملف اللاعب")
-            .setView(ScrollView(this).apply { addView(box) })
+            .setView(ScrollView(this).apply { isFillViewport = true; addView(box) })
             .setPositiveButton(tr("حفظ"), null)
             .setNegativeButton(tr("إغلاق"), null)
             .create()
@@ -1737,8 +1752,6 @@ class MainActivity : ComponentActivity() {
         styleAlertDialog(dialog)
         applyUnifiedSkin(box)
     }
-
-    // PLAYSTATION LIBRARY: image-only horizontal shelves for every category.
     private fun renderGames() {
         gameList.removeAllViews()
         for (i in 0 until filters.childCount) {
