@@ -1,7 +1,42 @@
 
 package com.marcorx6.library.ui.activity
 
-import com.marcorx6.library.ui.*
+import com.marcorx6.library.ui.AccentPalette
+import com.marcorx6.library.ui.AdvancedFiltersFeature
+import com.marcorx6.library.ui.AppearanceFeature
+import com.marcorx6.library.ui.AppearancePreferencesStore
+import com.marcorx6.library.ui.BlogSyncFeature
+import com.marcorx6.library.ui.BloggerAccessFeature
+import com.marcorx6.library.ui.BloggerHtmlBuilder
+import com.marcorx6.library.ui.BloggerServices
+import com.marcorx6.library.ui.CoverDisplayController
+import com.marcorx6.library.ui.CoverFeature
+import com.marcorx6.library.ui.CoverFileCleanup
+import com.marcorx6.library.ui.CoverKeyResolver
+import com.marcorx6.library.ui.CoverUploadState
+import com.marcorx6.library.ui.DownloadFeature
+import com.marcorx6.library.ui.FirstRunSetupFeature
+import com.marcorx6.library.ui.GameDetailsFeature
+import com.marcorx6.library.ui.GameImportMerger
+import com.marcorx6.library.ui.GameLibraryFeature
+import com.marcorx6.library.ui.GameOfTheDayController
+import com.marcorx6.library.ui.GamePersistenceController
+import com.marcorx6.library.ui.GoogleAdminFeature
+import com.marcorx6.library.ui.LanguageFeature
+import com.marcorx6.library.ui.LibraryFilterState
+import com.marcorx6.library.ui.MainActivityResultController
+import com.marcorx6.library.ui.MainLibraryFeature
+import com.marcorx6.library.ui.MotionPreferencesApplier
+import com.marcorx6.library.ui.NotificationsFeature
+import com.marcorx6.library.ui.OfflineCatalogLoader
+import com.marcorx6.library.ui.PlatformCorrectionController
+import com.marcorx6.library.ui.ProfileFeature
+import com.marcorx6.library.ui.ProfilePreferences
+import com.marcorx6.library.ui.SideMenuFeature
+import com.marcorx6.library.ui.StartupExperienceController
+import com.marcorx6.library.ui.SystemBarAppearanceController
+import com.marcorx6.library.ui.UiThreadDispatcher
+import com.marcorx6.library.ui.UiToolkitFeature
 import java.util.concurrent.Executors
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
@@ -42,7 +77,6 @@ class MainActivity : ComponentActivity() {
     private val white: Int get() = if (isDarkMode()) Color.WHITE else Color.rgb(24, 29, 42)
     private fun accentForeground(): Int = AccentPalette.foreground()
     private val gray: Int get() = if (isDarkMode()) Color.LTGRAY else Color.rgb(86, 96, 115)
-    private val platforms = listOf("الكل", "BLOG", "FAVORITES", "PS2", "PS3", "PS4")
     private val games = mutableListOf<Game>()
     private val coverRepository by lazy { com.marcorx6.library.data.CoverRepository(applicationContext).also { coverRepositoryCreated = true } }
     private var coverRepositoryCreated = false
@@ -59,7 +93,6 @@ class MainActivity : ComponentActivity() {
     private fun postToUi(action: () -> Unit) = uiThreadDispatcher.post(action)
 
     private val ioExecutor = Executors.newCachedThreadPool()
-    private var searchRenderRunnable: Runnable? = null
     private val PICK_IMAGE_REQUEST = 1001
     private val coverUploadState = CoverUploadState()
     private val coverFeature by lazy {
