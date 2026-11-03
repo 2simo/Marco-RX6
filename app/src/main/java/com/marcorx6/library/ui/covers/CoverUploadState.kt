@@ -8,9 +8,7 @@ internal class CoverUploadState {
     var pendingLocalPath: String = ""
     var pendingPublicUrl: String = ""
     var inProgress: Boolean = false
-        private set
     var failed: Boolean = false
-        private set
     var preview: ImageView? = null
     var urlField: EditText? = null
 
