@@ -3065,7 +3065,7 @@ class MainActivity : Activity() {
         }
         val message = if (entries.isEmpty()) "لا توجد تنزيلات مسجلة حتى الآن. افتح تفاصيل لعبة واضغط على رابط التنزيل لإضافته هنا."
             else entries.joinToString("\n\n")
-        AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this)
             .setTitle("مدير التنزيلات • ${entries.size}")
             .setMessage(message)
             .setPositiveButton("تحديث", null)
