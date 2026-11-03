@@ -1020,10 +1020,15 @@ class MainActivity : ComponentActivity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        (listOf("ALL", "BLOG", "FAVORITES") + platforms.drop(3) + listOf("WANT_TO_PLAY", "PLAYING", "COMPLETED")).forEach { category ->
+        listOf("ALL", "PS4", "PS3", "PS2", "PS1", "PSP", "BLOG", "FAVORITES", "WANT_TO_PLAY", "PLAYING", "COMPLETED").forEach { category ->
             val chip = TextView(this).apply {
                 text = when (category) {
                     "ALL" -> tr("الكل")
+                    "PS4" -> "PS4"
+                    "PS3" -> "PS3"
+                    "PS2" -> "PS2"
+                    "PS1" -> "PS1"
+                    "PSP" -> "PSP"
                     "BLOG" -> tr("المدونة")
                     "FAVORITES" -> tr("المفضلة")
                     "WANT_TO_PLAY" -> "أريد لعبها"
@@ -1043,6 +1048,9 @@ class MainActivity : ComponentActivity() {
             }
             filters.addView(chip, LinearLayout.LayoutParams(-2, -2).apply { marginEnd = dp(7) })
         }
+        root.addView(makeText("اختر المنصة", 11f, red, true).apply {
+            setPadding(dp(2), dp(2), dp(2), dp(7))
+        })
         filterScroll.addView(filters)
         root.addView(filterScroll, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(17) })
 
@@ -1051,8 +1059,8 @@ class MainActivity : ComponentActivity() {
             gravity = Gravity.CENTER_VERTICAL
         }
         val titles = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        titles.addView(makeText("DISCOVER", 8f, violet, true).apply { letterSpacing = 0.14f })
-        titles.addView(makeText(tr("أحدث المقالات"), 21f, silver, true))
+        titles.addView(makeText("MARCO RX6  /  GAMES", 8f, violet, true).apply { letterSpacing = 0.14f })
+        titles.addView(makeText(tr("اكتشف الألعاب"), 21f, silver, true))
         section.addView(titles, LinearLayout.LayoutParams(0, -2, 1f))
         countText = makeText("0 " + tr("مقال"), 10f, muted, true)
         section.addView(countText)
