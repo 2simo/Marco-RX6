@@ -1069,6 +1069,10 @@ class MainActivity : ComponentActivity() {
                 }, LinearLayout.LayoutParams(dp(118), -2).apply { marginEnd = dp(7) })
             }
             val scroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false; addView(similarRow) }
+            similarBox.addView(scroll)
+            root.addView(similarBox)
+        }
+
         val articleWebView = gameArticleWebViewFactory.create(
             backgroundColor = bg,
             gameUrl = game.url,
@@ -1081,9 +1085,6 @@ class MainActivity : ComponentActivity() {
                 enqueueGameDownload(url, game.name, userAgent, contentDisposition, mimeType, pageUrl)
             }
         )
-l\">$articleHtml</body></html>",
-                "text/html", "UTF-8", null)
-        }
         root.addView(articleWebView, LinearLayout.LayoutParams(-1, 0, 1f))
         val downloads = try { JSONArray(game.downloadLinks) } catch (_: Exception) { JSONArray() }
         if (downloads.length() > 0) {
