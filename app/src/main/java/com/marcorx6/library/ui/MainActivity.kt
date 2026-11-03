@@ -924,6 +924,17 @@ class MainActivity : ComponentActivity() {
 
     private val gameOfflineArchiveController by lazy { GameOfflineArchiveController(this) }
 
+    private val gameSimilarGamesViewFactory by lazy {
+        GameSimilarGamesViewFactory(
+            activity = this,
+            dp = ::dp,
+            rounded = ::rounded,
+            makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
+            isDarkMode = ::isDarkMode,
+            white = { white }
+        )
+    }
+
     private fun showDetails(game: Game) {
         val reader = android.app.Dialog(this)
         val root = LinearLayout(this).apply {
