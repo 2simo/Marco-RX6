@@ -19,7 +19,6 @@ import com.marcorx6.library.network.BloggerArticleBuilder
 import com.marcorx6.library.notification.BlogNotificationScheduler
 import com.marcorx6.library.network.BloggerFeedParser
 import android.app.AlertDialog
-import android.app.Dialog
 import android.content.Intent
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import android.content.pm.PackageManager
