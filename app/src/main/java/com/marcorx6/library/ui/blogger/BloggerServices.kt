@@ -26,6 +26,7 @@ internal class BloggerServices(
     fun createAccessController(
         executor: Executor,
         currentAccountId: () -> String?,
+        currentBlogId: () -> String,
         setAdmin: (Boolean) -> Unit,
         postToUi: (() -> Unit) -> Unit,
         refreshUi: () -> Unit,
@@ -34,6 +35,7 @@ internal class BloggerServices(
         executor = executor,
         checkAccess = apiClient::hasWriteAccess,
         currentAccountId = currentAccountId,
+        currentBlogId = currentBlogId,
         setAdmin = setAdmin,
         postToUi = postToUi,
         refreshUi = refreshUi,
