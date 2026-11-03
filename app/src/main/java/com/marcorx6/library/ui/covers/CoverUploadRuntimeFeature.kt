@@ -3,7 +3,6 @@ package com.marcorx6.library.ui
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
-import android.widget.EditText
 import android.widget.ImageView
 import java.io.File
 
