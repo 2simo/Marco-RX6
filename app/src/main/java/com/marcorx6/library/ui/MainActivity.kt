@@ -1,9 +1,14 @@
 
-package com.marcorx6.library
+package com.marcorx6.library.ui
 
 import android.Manifest
 import android.animation.LayoutTransition
-import android.app.Activity
+import androidx.activity.ComponentActivity
+import androidx.activity.result.contract.ActivityResultContracts
+import com.marcorx6.library.R
+import com.marcorx6.library.BlogNotificationWorker
+import com.marcorx6.library.data.Game
+import com.marcorx6.library.network.SecureUrlPolicy
 import android.app.DownloadManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -57,26 +62,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.Executors
 import java.security.MessageDigest
 
-data class Game(
-    val name: String,
-    val platform: String,
-    val description: String,
-    val url: String,
-    val coverUrl: String = "",
-    val coverLocalPath: String = "",
-    val sourcePostUrl: String = "",
-    val downloadLinks: String = "",
-    val blogImported: Boolean = false,
-    val platformManuallyCorrected: Boolean = false,
-    val isFavorite: Boolean = false,
-    val bloggerPostId: String = "",
-    val bloggerHtml: String = "",
-    val playStatus: String = "",
-    val genre: String = "",
-    val releaseYear: String = ""
-)
-
-class MainActivity : Activity() {
+class MainActivity : ComponentActivity() {
 
     private fun appearancePreferences() = getSharedPreferences("appearance_settings", MODE_PRIVATE)
     private fun isDarkMode() = appearancePreferences().getBoolean("dark_mode", true)
@@ -152,6 +138,27 @@ class MainActivity : Activity() {
         email?.trim()?.lowercase(Locale.ROOT) in adminEmails
     private val SIGN_IN_REQUEST = 1002
 
+    private val googleSignInLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            handleActivityResult(SIGN_IN_REQUEST, result.resultCode, result.data)
+        }
+    private val backupExportLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            handleActivityResult(BACKUP_EXPORT_REQUEST, result.resultCode, result.data)
+        }
+    private val backupImportLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            handleActivityResult(BACKUP_IMPORT_REQUEST, result.resultCode, result.data)
+        }
+    private val coverPickerLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            handleActivityResult(PICK_IMAGE_REQUEST, result.resultCode, result.data)
+        }
+    private val profileAvatarLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            handleActivityResult(1005, result.resultCode, result.data)
+        }
+
     private val bloggerFeedUrl =
         "https://marcorx6.blogspot.com/feeds/posts/default?alt=json&max-results=100"
 
@@ -196,7 +203,7 @@ class MainActivity : Activity() {
         val account = GoogleSignIn.getLastSignedInAccount(this)
         isAdminSession = isApprovedAdmin(account?.email)
     }
-    private fun startGoogleSignIn() { googleSignInClient?.let { startActivityForResult(it.signInIntent, SIGN_IN_REQUEST) } }
+    private fun startGoogleSignIn() { googleSignInClient?.let { googleSignInLauncher.launch(it.signInIntent) } }
     private fun signOutAdmin() {
         googleSignInClient?.signOut()?.addOnCompleteListener { isAdminSession = false; createInterface() }
     }
@@ -860,7 +867,7 @@ class MainActivity : Activity() {
             putExtra(Intent.EXTRA_TITLE, "MARCO-RX6-backup.json")
         }
         backupExportPayload = payload.toString(2)
-        startActivityForResult(intent, BACKUP_EXPORT_REQUEST)
+        backupExportLauncher.launch(intent)
     }
     private var backupExportPayload: String = ""
 
@@ -868,7 +875,7 @@ class MainActivity : Activity() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE); type = "application/json"
         }
-        startActivityForResult(intent, BACKUP_IMPORT_REQUEST)
+        backupImportLauncher.launch(intent)
     }
 
     private fun handleBackupResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
@@ -1688,7 +1695,7 @@ class MainActivity : Activity() {
         for (index in 0 until (mediaContent?.length() ?: 0)) {
             val url = mediaContent?.optJSONObject(index)?.optString("url").orEmpty()
             if (url.startsWith("https://") || url.startsWith("http://")) {
-                return normalizeBloggerImageUrl(url)
+                return normalizeBloggerImageUrl(SecureUrlPolicy.upgradeToHttps(url))
             }
         }
         return ""
@@ -1931,17 +1938,14 @@ class MainActivity : Activity() {
             type = "image/*"
         }
 
-        startActivityForResult(intent, PICK_IMAGE_REQUEST)
+        coverPickerLauncher.launch(intent)
     }
 
-    @Deprecated("Using activity result for compatibility")
-    override fun onActivityResult(
+    private fun handleActivityResult(
         requestCode: Int,
         resultCode: Int,
         data: Intent?
     ) {
-
-        super.onActivityResult(requestCode, resultCode, data)
 
         if (requestCode == BACKUP_EXPORT_REQUEST || requestCode == BACKUP_IMPORT_REQUEST) {
             handleBackupResult(requestCode, resultCode, data)
@@ -2280,7 +2284,7 @@ class MainActivity : Activity() {
                     type = "image/*"
                 }
                 activeProfileDialog?.dismiss()
-                startActivityForResult(intent, 1005)
+                profileAvatarLauncher.launch(intent)
             }
         }
         box.addView(chooseAvatar, LinearLayout.LayoutParams(-1, -2))
@@ -3094,14 +3098,15 @@ class MainActivity : Activity() {
         hintedMimeType: String = "",
         referrer: String = ""
     ) {
-        if (!link.startsWith("https://") && !link.startsWith("http://")) {
-            Toast.makeText(this, "رابط التنزيل غير صالح", Toast.LENGTH_SHORT).show()
+        val secureLink = SecureUrlPolicy.toHttpsUrl(link)
+        if (secureLink == null) {
+            Toast.makeText(this, "رابط التنزيل غير آمن أو غير صالح؛ يجب استخدام HTTPS", Toast.LENGTH_LONG).show()
             return
         }
         Toast.makeText(this, "جارٍ التحقق من رابط الملف…", Toast.LENGTH_SHORT).show()
         Thread {
             try {
-                val probe = inspectDownloadUrl(link, userAgent, contentDisposition, hintedMimeType)
+                val probe = inspectDownloadUrl(secureLink, userAgent, contentDisposition, hintedMimeType)
                 if (!probe.isDirectFile) {
                     mainHandler.post {
                         Toast.makeText(
@@ -3113,6 +3118,9 @@ class MainActivity : Activity() {
                     }
                     return@Thread
                 }
+                if (!probe.finalUrl.startsWith("https://", ignoreCase = true)) {
+                    throw SecurityException("رابط التحويل النهائي لا يستخدم HTTPS؛ تم إيقاف التنزيل لحماية بياناتك")
+                }
                 val request = DownloadManager.Request(Uri.parse(probe.finalUrl))
                     .setTitle(title.ifBlank { "MARCO RX6" })
                     .setDescription("تنزيل ملف عبر MARCO RX6")
@@ -3121,7 +3129,7 @@ class MainActivity : Activity() {
                     .setAllowedOverRoaming(false)
                 if (probe.mimeType.isNotBlank()) request.setMimeType(probe.mimeType)
                 if (userAgent.isNotBlank()) request.addRequestHeader("User-Agent", userAgent)
-                if (Uri.parse(link).host.equals(Uri.parse(probe.finalUrl).host, ignoreCase = true)) {
+                if (Uri.parse(secureLink).host.equals(Uri.parse(probe.finalUrl).host, ignoreCase = true)) {
                     CookieManager.getInstance().getCookie(probe.finalUrl)?.takeIf { it.isNotBlank() }?.let {
                         request.addRequestHeader("Cookie", it)
                     }
