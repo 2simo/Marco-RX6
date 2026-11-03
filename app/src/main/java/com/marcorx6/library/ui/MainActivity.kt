@@ -569,12 +569,12 @@ class MainActivity : ComponentActivity() {
     private fun fontScale(): Float = TypographyPreferences.scale(fontPreferences())
     private fun fontFamilyName(): String = TypographyPreferences.family(fontPreferences())
     private fun applyTypography(view: View) {
-        if (view is TextView) {
-            val style = view.typeface?.style ?: Typeface.NORMAL
-            view.setTypeface(Typeface.create(fontFamilyName(), style))
-            view.textSize = view.textSize / resources.displayMetrics.scaledDensity * fontScale()
-        }
-        if (view is ViewGroup) for (i in 0 until view.childCount) applyTypography(view.getChildAt(i))
+        TypographyApplier.apply(
+            view = view,
+            fontFamily = fontFamilyName(),
+            fontScale = fontScale(),
+            scaledDensity = resources.displayMetrics.scaledDensity
+        )
     }
     private fun applyMotionPreferences(view: View) {
         val animationsEnabled = appearancePreferences().getBoolean("animations", true)
