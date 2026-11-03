@@ -1946,28 +1946,22 @@ class MainActivity : ComponentActivity() {
             (resources.displayMetrics.heightPixels * 0.88f).toInt()
         )
     }
-    private fun deleteGame(game: Game) {
-
-        AlertDialog.Builder(this)
-            .setTitle("حذف المقال")
-            .setMessage("هل تريد حذف المقال ${game.name}؟")
-            .setNegativeButton("إلغاء", null)
-            .setPositiveButton("حذف") { _, _ ->
-                if (!isAdminSession || bloggerBlogId.isBlank() || game.bloggerPostId.isBlank()) { Toast.makeText(this, "يلزم تسجيل دخول المسؤول ومعرّف المقال في Blogger", Toast.LENGTH_LONG).show(); return@setPositiveButton }
-                ioExecutor.execute { try {
-                    bloggerPostRepository.deletePost(game.bloggerPostId)
-                    postToUi {
-                        if (gameLibraryStore.remove(game)) {
-                            deleteCoverFileIfUnused(game.coverLocalPath)
-                        }
-                        renderGames()
-                        Toast.makeText(this, "تم الحذف من Blogger", Toast.LENGTH_SHORT).show()
-                    }
-                } catch (e: Exception) { postToUi { Toast.makeText(this, e.message ?: "تعذر حذف المقال من Blogger", Toast.LENGTH_LONG).show() } } }
-            }
-            .create().apply { setOnShowListener { styleAlertDialog(this) } }
-            .show()
+    private val gameDeletionController by lazy {
+        GameDeletionController(
+            activity = this,
+            isAdminSession = { isAdminSession },
+            bloggerBlogId = { bloggerBlogId },
+            deletePost = bloggerPostRepository::deletePost,
+            removeGame = gameLibraryStore::remove,
+            deleteCoverFileIfUnused = ::deleteCoverFileIfUnused,
+            renderGames = ::renderGames,
+            executeIo = { task -> ioExecutor.execute { task() } },
+            postToUi = ::postToUi,
+            styleAlertDialog = ::styleAlertDialog
+        )
     }
+
+    private fun deleteGame(game: Game) = gameDeletionController.delete(game)
 
     private val gameOfTheDayController by lazy {
         GameOfTheDayController(
