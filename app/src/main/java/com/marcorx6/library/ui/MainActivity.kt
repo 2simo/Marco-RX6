@@ -789,21 +789,16 @@ class MainActivity : ComponentActivity() {
                         .withEndAction { renderStep(old + 1, true); content.translationX = dp(28).toFloat(); content.animate().alpha(1f).translationX(0f).setDuration(230L).start() }
                         .start()
                 } else {
-                    settings.edit()
-                        .putString("language", languageCode)
-                        .putString("preferred_platform", preferredPlatform)
-                        .putBoolean("setup_completed", true)
-                        .putBoolean("profile_prompted", true)
-                        .apply()
-                    appearance.edit().putBoolean("dark_mode", darkMode).putString("accent", accentKey).apply()
-                    selected = preferredPlatform
-                    notificationScheduler.setEnabled(notificationsEnabled)
-                    if (notificationsEnabled) {
-                        notificationScheduler.schedule()
-                        requestNotificationPermissionIfNeeded()
-                    } else notificationScheduler.cancel()
-                    dialog.dismiss()
-                    recreate()
+                    firstRunSetupCompletionController.complete(
+                        languageCode = languageCode,
+                        preferredPlatform = preferredPlatform,
+                        darkMode = darkMode,
+                        accentKey = accentKey,
+                        notificationsEnabled = notificationsEnabled
+                    ) {
+                        dialog.dismiss()
+                        recreate()
+                    }
                 }
             }
         }
@@ -901,6 +896,18 @@ class MainActivity : ComponentActivity() {
     private val gameOfflineArchiveController by lazy { GameOfflineArchiveController(this) }
 
     private val bloggerGamePostFactory by lazy { BloggerGamePostFactory() }
+
+    private val firstRunSetupCompletionController by lazy {
+        FirstRunSetupCompletionController(
+            settings = getSharedPreferences("app_settings", MODE_PRIVATE),
+            appearance = appearancePreferences(),
+            setNotificationsEnabled = notificationScheduler::setEnabled,
+            scheduleNotifications = notificationScheduler::schedule,
+            cancelNotifications = notificationScheduler::cancel,
+            requestNotificationPermission = ::requestNotificationPermissionIfNeeded,
+            onPlatformSelected = { selected = it }
+        )
+    }
 
     private val firstRunSetupViewFactory by lazy {
         FirstRunSetupViewFactory(
