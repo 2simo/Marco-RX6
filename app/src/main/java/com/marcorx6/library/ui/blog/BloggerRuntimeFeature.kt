@@ -20,8 +20,6 @@ internal class BloggerRuntimeFeature(
     currentBlogId: () -> String,
     setAdmin: (Boolean) -> Unit,
     isAdminSession: () -> Boolean,
-    isSyncing: () -> Boolean,
-    setSyncing: (Boolean) -> Unit,
     feedUrl: String,
     postToUi: (() -> Unit) -> Unit,
     refreshUi: () -> Unit,
@@ -56,6 +54,10 @@ internal class BloggerRuntimeFeature(
     resetCoverUploadFailed: () -> Unit,
     saveGames: () -> Unit
 ) {
+    private var syncing = false
+
+    val isSyncing: Boolean get() = syncing
+
     private val bloggerAccessFeature by lazy {
         BloggerAccessFeature(
             context = activity,
@@ -73,8 +75,8 @@ internal class BloggerRuntimeFeature(
         BlogSyncFeature(
             context = activity,
             executor = executor,
-            isSyncing = isSyncing,
-            setSyncing = setSyncing,
+            isSyncing = { syncing },
+            setSyncing = { syncing = it },
             feedUrl = feedUrl,
             postToUi = postToUi,
             merge = merge,
