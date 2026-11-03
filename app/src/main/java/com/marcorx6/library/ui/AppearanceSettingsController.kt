@@ -4,7 +4,7 @@ import android.app.Activity
 import android.content.SharedPreferences
 import android.view.View
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
+import android.app.AlertDialog
 
 internal class AppearanceSettingsController(
     private val activity: Activity,
