@@ -19,11 +19,7 @@ import android.widget.Toast
 internal class CoverSelectionController(
     private val context: Context,
     private val uploadController: CoverUploadController,
-    private val pendingLocalPath: () -> String,
-    private val setPendingLocalPath: (String) -> Unit,
-    private val setPendingPublicUrl: (String) -> Unit,
-    private val setUploadInProgress: (Boolean) -> Unit,
-    private val setUploadFailed: (Boolean) -> Unit,
+    private val state: CoverUploadState,
     private val coverUrlField: () -> EditText?,
     private val coverPreview: () -> ImageView?,
     private val loadCover: (ImageView, String, String) -> Unit,
@@ -33,33 +29,27 @@ internal class CoverSelectionController(
     private val styleDialog: (AlertDialog) -> Unit
 ) {
     fun handle(uri: Uri) {
-        setUploadInProgress(true)
-        setUploadFailed(false)
-        setPendingPublicUrl("")
+        state.beginSelection()
         coverUrlField()?.setText("")
 
         uploadController.upload(
             uri = uri,
             onLocalFileSaved = { localFile ->
-                val previousPendingPath = pendingLocalPath()
-                setPendingLocalPath(localFile.absolutePath)
+                val previousPendingPath = state.pendingLocalPath
+                state.localFileSaved(localFile.absolutePath)
                 deleteCoverFileIfUnused(previousPendingPath)
                 coverUrlField()?.setText("")
-                coverPreview()?.let { loadCover(it, pendingLocalPath(), "") }
+                coverPreview()?.let { loadCover(it, state.pendingLocalPath, "") }
                 Toast.makeText(context, "تم اختيار الصورة، جارٍ رفعها للموقع...", Toast.LENGTH_SHORT).show()
             },
             onSuccess = { uploadResult ->
-                setPendingLocalPath(uploadResult.localFile.absolutePath)
-                setPendingPublicUrl(uploadResult.publicUrl)
-                setUploadInProgress(false)
-                setUploadFailed(false)
+                state.uploadSucceeded(uploadResult.localFile.absolutePath, uploadResult.publicUrl)
                 coverUrlField()?.setText(uploadResult.publicUrl)
-                coverPreview()?.let { loadCover(it, pendingLocalPath(), uploadResult.publicUrl) }
+                coverPreview()?.let { loadCover(it, state.pendingLocalPath, uploadResult.publicUrl) }
                 Toast.makeText(context, "تم رفع الغلاف بنجاح وأصبح جاهزاً للنشر", Toast.LENGTH_LONG).show()
             },
             onFailure = { error ->
-                setUploadInProgress(false)
-                setUploadFailed(true)
+                state.uploadFailed()
                 val details = (error.message ?: error.javaClass.simpleName).ifBlank { "خطأ غير معروف" }
                 val detailsView = TextView(context).apply {
                     text = details
