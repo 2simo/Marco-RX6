@@ -18,7 +18,6 @@ import com.marcorx6.library.data.Game
 import android.app.AlertDialog
 import android.content.Intent
 import com.google.android.gms.auth.api.signin.GoogleSignIn
-import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.widget.*
