@@ -120,7 +120,7 @@ class MainActivity : ComponentActivity() {
         BloggerPostRepository(bloggerApiClient, { bloggerBlogId }, { isAdminSession })
     }
     private val gameRepository by lazy { GameRepository(applicationContext) }
-    private val profileAvatarController by lazy {
+    private val profileAvatarController: ProfileAvatarController by lazy {
         ProfileAvatarController(
             executor = ioExecutor,
             saveAvatar = { uri -> profileAvatarRepository.save(uri).absolutePath },
@@ -545,7 +545,7 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private val coverSelectionController by lazy {
+    private val coverSelectionController: CoverSelectionController by lazy {
         CoverSelectionController(
             context = this,
             uploadController = coverUploadController,
@@ -564,7 +564,7 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private val activityResultController by lazy {
+    private val activityResultController: MainActivityResultController by lazy {
         MainActivityResultController(
             signInRequestCode = SIGN_IN_REQUEST,
             avatarRequestCode = 1005,
