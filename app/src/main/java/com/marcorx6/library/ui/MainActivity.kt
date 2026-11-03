@@ -123,6 +123,24 @@ class MainActivity : ComponentActivity() {
         BloggerPostRepository(bloggerApiClient, { bloggerBlogId }, { isAdminSession })
     }
     private val gameRepository by lazy { GameRepository(applicationContext) }
+    private val blogSyncController by lazy {
+        BlogSyncController(
+            context = this,
+            executor = ioExecutor,
+            isSyncing = { isSyncing },
+            setSyncing = { isSyncing = it },
+            fetch = {
+                val result = BloggerFeedClient(bloggerFeedUrl).fetch()
+                result.blogId to result.games
+            },
+            postToUi = ::postToUi,
+            merge = ::mergeImportedGames,
+            setBlogId = { bloggerBlogId = it },
+            refreshAccess = ::refreshBloggerAccess,
+            renderGames = ::renderGames
+        )
+    }
+
     private val gamePersistenceController by lazy {
         GamePersistenceController(gameRepository, games) { loadOfflineCatalog() }
     }
@@ -447,65 +465,7 @@ class MainActivity : ComponentActivity() {
 
     private fun createInterface() = mainLibraryInterfaceController.create()
 
-    private fun syncFromBlog(showResult: Boolean) {
-
-        if (isSyncing) {
-            if (showResult) {
-                Toast.makeText(
-                    this,
-                    "المزامنة جارية بالفعل",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-            return
-        }
-
-        isSyncing = true
-
-        if (showResult) {
-            Toast.makeText(
-                this,
-                "جارٍ الاتصال بمدونة MARCO RX6...",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-
-        ioExecutor.execute {
-            try {
-                val feedResult = BloggerFeedClient(bloggerFeedUrl).fetch()
-                val imported = feedResult.games
-
-                postToUi {
-                    bloggerBlogId = feedResult.blogId
-                    val result = mergeImportedGames(imported)
-                    isSyncing = false
-                    refreshBloggerAccess()
-                    renderGames()
-
-                    if (showResult) {
-                        Toast.makeText(
-                            this,
-                            "اكتملت المزامنة: تمت إضافة ${result.first} وتحديث ${result.second}",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
-
-            } catch (e: Exception) {
-                postToUi {
-                    isSyncing = false
-
-                    if (showResult) {
-                        Toast.makeText(
-                            this,
-                            "تعذرت المزامنة. تحقق من اتصال الإنترنت وحاول مجدداً.",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
-            }
-        }
-    }
+    private fun syncFromBlog(showResult: Boolean) = blogSyncController.sync(showResult)
 
     private fun mergeImportedGames(imported: List<Game>): Pair<Int, Int> =
         GameImportMerger.merge(gameLibraryStore, imported)
