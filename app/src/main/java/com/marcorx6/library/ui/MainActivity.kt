@@ -113,29 +113,16 @@ class MainActivity : ComponentActivity() {
         )
     }
     private var isSyncing = false
-    private val adminSessionState = AdminSessionState()
+    private val googleAdminFeature by lazy { GoogleAdminFeature(this) }
     private var bloggerBlogId: String
-        get() = adminSessionState.blogId()
-        set(value) = adminSessionState.setBlogId(value)
+        get() = googleAdminFeature.blogId
+        set(value) { googleAdminFeature.blogId = value }
     private var isAdminSession: Boolean
-        get() = adminSessionState.isAuthorized(
-            accountId = GoogleSignIn.getLastSignedInAccount(this)?.id
-        )
-        set(value) {
-            if (value) {
-                adminSessionState.grant(
-                    accountId = GoogleSignIn.getLastSignedInAccount(this)?.id,
-                    blogId = bloggerBlogId
-                )
-            } else {
-                adminSessionState.clear()
-            }
-        }
-    private val googleAccountController by lazy { GoogleAccountController(this) }
-    private val googleTokenProvider by lazy { GoogleTokenProvider(this, adminSessionState) }
+        get() = googleAdminFeature.isAdminSession
+        set(value) { googleAdminFeature.isAdminSession = value }
     private val bloggerServices by lazy {
         BloggerServices(
-            tokenProvider = googleTokenProvider,
+            tokenProvider = googleAdminFeature.tokenProvider,
             blogIdProvider = { bloggerBlogId },
             isAdminSession = { isAdminSession }
         )
@@ -293,14 +280,14 @@ class MainActivity : ComponentActivity() {
             hasAccount = account?.account != null
         )
     }
-    private fun startGoogleSignIn() = googleSignInLauncher.launch(googleAccountController.signInIntent())
+    private fun startGoogleSignIn() = googleSignInLauncher.launch(googleAdminFeature.accountController.signInIntent())
     private fun signOutAdmin() {
         googleAccountController.signOut {
             isAdminSession = false
             createInterface()
         }
     }
-    private fun driveToken(): String = googleTokenProvider.driveToken()
+    private fun driveToken(): String = googleAdminFeature.driveToken()
 
 
     private fun bloggerHtml(game: Game): String = BloggerHtmlBuilder.build(game)
