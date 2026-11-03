@@ -55,6 +55,8 @@ import androidx.core.view.WindowInsetsControllerCompat
 
 class MainActivity : ComponentActivity() {
 
+    private val runtimeState = MainActivityRuntimeState()
+
     private val downloadFeature by lazy {
         DownloadFeature(this, ::styleAlertDialog)
     }
@@ -74,7 +76,7 @@ class MainActivity : ComponentActivity() {
     private val white: Int get() = if (isDarkMode()) Color.WHITE else Color.rgb(24, 29, 42)
     private fun accentForeground(): Int = AccentPalette.foreground()
     private val gray: Int get() = if (isDarkMode()) Color.LTGRAY else Color.rgb(86, 96, 115)
-    private val games = mutableListOf<Game>()
+    private val games get() = runtimeState.games
     private var coverRuntimeFeatureCreated = false
     private val coverRuntimeFeature by lazy {
         CoverRuntimeFeature(applicationContext, filesDir) { games }
@@ -82,13 +84,13 @@ class MainActivity : ComponentActivity() {
     }
 
     private val libraryViewState = MainLibraryViewState()
-    private val libraryFilterState = LibraryFilterState()
+    private val libraryFilterState get() = runtimeState.libraryFilterState
     private val uiThreadDispatcher by lazy { UiThreadDispatcher(this) }
     private fun postToUi(action: () -> Unit) = uiThreadDispatcher.post(action)
 
     private val ioExecutor = Executors.newCachedThreadPool()
     private val PICK_IMAGE_REQUEST = 1001
-    private val coverUploadState = CoverUploadState()
+    private val coverUploadState get() = runtimeState.coverUploadState
     private val coverFeature by lazy {
         CoverFeature(
             context = this,
@@ -107,7 +109,9 @@ class MainActivity : ComponentActivity() {
             styleDialog = ::styleAlertDialog
         )
     }
-    private var isSyncing = false
+    private var isSyncing: Boolean
+        get() = runtimeState.isSyncing
+        set(value) { runtimeState.isSyncing = value }
     private val googleAdminFeature by lazy { GoogleAdminFeature(this) }
     private var bloggerBlogId: String
         get() = googleAdminFeature.blogId
