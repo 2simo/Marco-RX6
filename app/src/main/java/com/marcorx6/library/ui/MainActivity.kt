@@ -33,7 +33,6 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
-import android.webkit.CookieManager
 import android.webkit.WebView
 import android.os.Build
 import android.os.Bundle
@@ -50,8 +49,6 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
-import java.net.HttpURLConnection
-import java.net.URL
 import java.util.Locale
 import java.util.Calendar
 import java.util.regex.Pattern
