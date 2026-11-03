@@ -926,6 +926,18 @@ class MainActivity : ComponentActivity() {
         )
     }
 
+    private val gameFavoriteToggleFactory by lazy {
+        GameFavoriteToggleFactory(
+            activity = this,
+            games = games,
+            dp = ::dp,
+            white = { white },
+            red = { red },
+            saveGames = ::saveGames,
+            renderGames = ::renderGames
+        )
+    }
+
     private val gameWatchlistViewFactory by lazy {
         GameWatchlistViewFactory(
             activity = this,
@@ -1015,25 +1027,7 @@ class MainActivity : ComponentActivity() {
         })
         heading.addView(makeText(game.platform, 10f, red, true))
         topBar.addView(heading, LinearLayout.LayoutParams(0, -2, 1f))
-        val favorite = TextView(this).apply {
-            text = if (game.isFavorite) "★" else "☆"
-            textSize = 25f
-            gravity = Gravity.CENTER
-            setTextColor(if (game.isFavorite) red else white)
-            setPadding(dp(8), dp(4), dp(8), dp(4))
-            minWidth = dp(48)
-            minHeight = dp(48)
-            setOnClickListener {
-                val index = games.indexOfFirst { it.name == game.name && it.url == game.url }
-                if (index >= 0) {
-                    games[index] = games[index].copy(isFavorite = !games[index].isFavorite)
-                    saveGames()
-                    text = if (games[index].isFavorite) "★" else "☆"
-                    setTextColor(if (games[index].isFavorite) red else white)
-                    renderGames()
-                }
-            }
-        }
+        val favorite = gameFavoriteToggleFactory.create(game)
         topBar.addView(favorite)
         root.addView(topBar)
 
