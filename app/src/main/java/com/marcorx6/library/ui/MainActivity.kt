@@ -2284,7 +2284,9 @@ class MainActivity : ComponentActivity() {
                         )
                         mainHandler.post {
                             val saved = post.copy(bloggerPostId = result.optString("id", post.bloggerPostId), bloggerHtml = result.optString("content", htmlContent), url = result.optString("url", post.url), sourcePostUrl = result.optString("url", post.sourcePostUrl), blogImported = true)
+                            val previousCoverPath = existing?.coverLocalPath.orEmpty()
                             gameLibraryStore.upsert(saved, existing)
+                            deleteCoverFileIfUnused(previousCoverPath)
                             pendingCoverLocalPath = ""; pendingCoverPublicUrl = ""; coverUploadFailed = false
                             saveGames(); renderGames(); dialog.dismiss(); Toast.makeText(this, "تم نشر المقال على Blogger", Toast.LENGTH_LONG).show()
                         }
@@ -2310,7 +2312,13 @@ class MainActivity : ComponentActivity() {
                 if (!isAdminSession || bloggerBlogId.isBlank() || game.bloggerPostId.isBlank()) { Toast.makeText(this, "يلزم تسجيل دخول المسؤول ومعرّف المقال في Blogger", Toast.LENGTH_LONG).show(); return@setPositiveButton }
                 Thread { try {
                     bloggerPostRepository.deletePost(game.bloggerPostId)
-                    mainHandler.post { gameLibraryStore.remove(game); if (game.coverLocalPath.isNotBlank()) File(game.coverLocalPath).delete(); renderGames(); Toast.makeText(this, "تم الحذف من Blogger", Toast.LENGTH_SHORT).show() }
+                    mainHandler.post {
+                        if (gameLibraryStore.remove(game)) {
+                            deleteCoverFileIfUnused(game.coverLocalPath)
+                        }
+                        renderGames()
+                        Toast.makeText(this, "تم الحذف من Blogger", Toast.LENGTH_SHORT).show()
+                    }
                 } catch (e: Exception) { mainHandler.post { Toast.makeText(this, e.message ?: "تعذر حذف المقال من Blogger", Toast.LENGTH_LONG).show() } } }.start()
             }
             .create().apply { setOnShowListener { styleAlertDialog(this) } }
@@ -2459,6 +2467,25 @@ class MainActivity : ComponentActivity() {
                 Toast.LENGTH_SHORT
             ).show()
         }
+    }
+
+    /**
+     * Deletes an app-managed cover only after no library entry references it.
+     * Restrict deletion to the private covers directory to avoid touching
+     * arbitrary paths restored from older or external backup files.
+     */
+    private fun deleteCoverFileIfUnused(path: String) {
+        if (path.isBlank()) return
+
+        val coversDirectory = File(filesDir, "covers").canonicalFile
+        val coverFile = runCatching { File(path).canonicalFile }.getOrNull() ?: return
+        if (coverFile.parentFile != coversDirectory || !coverFile.isFile) return
+
+        val stillReferenced = games.any { game ->
+            game.coverLocalPath.isNotBlank() &&
+                runCatching { File(game.coverLocalPath).canonicalFile == coverFile }.getOrDefault(false)
+        }
+        if (!stillReferenced) coverFile.delete()
     }
 
     private fun saveGames() {
