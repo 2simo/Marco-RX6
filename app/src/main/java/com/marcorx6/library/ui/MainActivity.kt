@@ -1214,20 +1214,6 @@ class MainActivity : ComponentActivity() {
         loadCover(preview, pendingCoverLocalPath, existing?.coverUrl ?: "")
         box.addView(Button(this).apply { text = "اختيار صورة الغلاف من الهاتف"; tag = "marco_primary_action"; setTextColor(accentForeground()); background = rounded(red, 12); setOnClickListener { chooseCover() } }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
         box.addView(makeText("أقسام المقال • Labels من المدونة", 10f, red, true)); box.addView(categoryButton)
-        ioExecutor.execute {
-            try {
-                val labels = bloggerPostRepository.fetchLabels()
-                postToUi {
-                    availableLabels.clear(); availableLabels.addAll(labels)
-                    if (existing == null && selectedLabels.isEmpty() && labels.isNotEmpty()) selectedLabels.add(labels.first())
-                    refreshLabelButton()
-                    categoryButton.isEnabled = labels.isNotEmpty()
-                    if (labels.isEmpty()) categoryButton.text = "لا توجد Labels في المقالات المنشورة"
-                }
-            } catch (e: Exception) {
-                postToUi { categoryButton.text = "تعذر تحميل Labels • حاول التحديث"; categoryButton.isEnabled = true }
-            }
-        }
         box.addView(genre); box.addView(releaseYear); box.addView(title)
         box.addView(makeText("03 • محتوى المقال", 12f, red, true).apply { setPadding(0, dp(12), 0, dp(5)) })
         box.addView(body, LinearLayout.LayoutParams(-1, dp(190))); box.addView(coverUrl); box.addView(link)
