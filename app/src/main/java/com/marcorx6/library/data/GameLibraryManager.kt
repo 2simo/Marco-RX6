@@ -5,7 +5,7 @@ import java.util.Locale
 internal data class GameMergeResult(
     val added: Int,
     val updated: Int,
-    val warnings: List<Game>
+    val warnings: List<Pair<Game, String>>
 )
 
 /**
@@ -15,7 +15,7 @@ internal object GameLibraryManager {
     fun merge(current: MutableList<Game>, imported: List<Game>): GameMergeResult {
         var added = 0
         var updated = 0
-        val warnings = mutableListOf<Game>()
+        val warnings = mutableListOf<Pair<Game, String>>()
 
         imported.forEach { incoming ->
             val byPost = current.indexOfFirst {
@@ -43,7 +43,7 @@ internal object GameLibraryManager {
                 if (!manualDuplicate) {
                     current.add(incoming)
                     added++
-                    if (hasPlatformMismatch(incoming)) warnings.add(incoming)
+                    hasPlatformMismatch(incoming)?.let { warnings.add(incoming to it) }
                 }
             }
         }
@@ -83,20 +83,21 @@ internal object GameLibraryManager {
         }
     }
 
-    private fun hasPlatformMismatch(game: Game): Boolean {
+    private fun hasPlatformMismatch(game: Game): String? {
         val regex = Regex(
             "(?i)(?:نظام\\s*التشغيل|operating\\s*system)" +
                 "\\s*[:：\\-]?\\s*(PlayStation\\s*[1-4]|PS[1-4]|PSP)"
         )
-        val found = regex.find(game.description)?.groupValues?.getOrNull(1) ?: return false
-        val fieldPlatform = when (found.replace(" ", "").uppercase(Locale.ROOT)) {
-            "PLAYSTATION1", "PS1" -> "PS1"
-            "PLAYSTATION2", "PS2" -> "PS2"
-            "PLAYSTATION3", "PS3" -> "PS3"
-            "PLAYSTATION4", "PS4" -> "PS4"
-            "PSP" -> "PSP"
-            else -> return false
+        val found = regex.find(game.description)?.groupValues?.getOrNull(1) ?: return null
+        val normalized = found.lowercase(Locale.ROOT).replace(" ", "").replace("-", "")
+        val fieldPlatform = when {
+            normalized == "psp" || normalized.contains("playstationportable") -> "PSP"
+            normalized == "ps1" || normalized.contains("playstation1") || normalized.contains("playstationone") -> "PS1"
+            normalized == "ps2" || normalized.contains("playstation2") -> "PS2"
+            normalized == "ps3" || normalized.contains("playstation3") -> "PS3"
+            normalized == "ps4" || normalized.contains("playstation4") -> "PS4"
+            else -> return null
         }
-        return fieldPlatform != game.platform
+        return fieldPlatform.takeIf { it != game.platform }
     }
 }
