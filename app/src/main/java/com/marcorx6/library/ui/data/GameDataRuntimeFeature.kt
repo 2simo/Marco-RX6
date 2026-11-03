@@ -10,8 +10,9 @@ import com.marcorx6.library.data.GameRepository
  */
 internal class GameDataRuntimeFeature(
     private val activity: ComponentActivity,
-    private val games: MutableList<Game>
 ) {
+    val games: MutableList<Game> = mutableListOf()
+
     private val gameRepository by lazy { GameRepository(activity.applicationContext) }
 
     private val persistenceController by lazy {
