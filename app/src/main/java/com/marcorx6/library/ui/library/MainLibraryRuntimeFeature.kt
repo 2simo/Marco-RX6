@@ -122,6 +122,12 @@ internal class MainLibraryRuntimeFeature(
         )
     }
 
+    fun initializePreferredPlatform() {
+        viewState.selected = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+            .getString("preferred_platform", "ALL")
+            ?.takeIf { it in listOf("PS2", "PS3", "PS4") } ?: "ALL"
+    }
+
     fun create() = mainLibraryFeature.create()
     fun dispose() = mainLibraryFeature.dispose()
     fun renderGames() = gameLibraryFeature.render()
