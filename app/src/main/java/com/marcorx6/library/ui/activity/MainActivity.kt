@@ -7,7 +7,7 @@ import com.marcorx6.library.ui.auth.GoogleAccountRuntimeFeature
 import com.marcorx6.library.ui.blog.BloggerRuntimeFeature
 import com.marcorx6.library.ui.covers.CoverRuntimeFeature
 import com.marcorx6.library.ui.covers.CoverUploadRuntimeFeature
-import com.marcorx6.library.ui.data.GameDataRuntimeFeature
+import com.marcorx6.library.data.GameDataRuntimeFeature
 import com.marcorx6.library.ui.experience.UserExperienceRuntimeFeature
 import com.marcorx6.library.ui.game.GameExperienceRuntimeFeature
 import com.marcorx6.library.ui.library.MainLibraryRuntimeFeature
