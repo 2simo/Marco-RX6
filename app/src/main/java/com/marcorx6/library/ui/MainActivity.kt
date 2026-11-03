@@ -114,6 +114,7 @@ class MainActivity : ComponentActivity() {
     private var isAdminSession = false
     private var bloggerBlogId = ""
     private var googleSignInClient: com.google.android.gms.auth.api.signin.GoogleSignInClient? = null
+    private val googleTokenProvider by lazy { GoogleTokenProvider(this) { isAdminSession } }
     private val bloggerApiClient by lazy { BloggerApiClient { googleBloggerToken() } }
     private val bloggerPostRepository by lazy {
         BloggerPostRepository(bloggerApiClient, { bloggerBlogId }, { isAdminSession })
@@ -259,9 +260,9 @@ class MainActivity : ComponentActivity() {
     private fun signOutAdmin() {
         googleSignInClient?.signOut()?.addOnCompleteListener { isAdminSession = false; createInterface() }
     }
-    private fun googleBloggerToken(): String = GoogleTokenProvider(this).bloggerToken()
+    private fun googleBloggerToken(): String = googleTokenProvider.bloggerToken()
 
-    private fun driveToken(): String = GoogleTokenProvider(this) { isAdminSession }.driveToken()
+    private fun driveToken(): String = googleTokenProvider.driveToken()
 
 
     private fun bloggerHtml(game: Game): String = BloggerHtmlBuilder.build(game)
