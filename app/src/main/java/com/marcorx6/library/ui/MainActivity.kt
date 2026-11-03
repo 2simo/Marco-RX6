@@ -111,8 +111,23 @@ class MainActivity : ComponentActivity() {
     private var coverPreview: ImageView? = null
     private var coverUrlField: EditText? = null
     private var isSyncing = false
-    private var isAdminSession = false
+    private val adminSessionState = AdminSessionState()
     private var bloggerBlogId = ""
+    private var isAdminSession: Boolean
+        get() = adminSessionState.isAuthorized(
+            accountId = GoogleSignIn.getLastSignedInAccount(this)?.id,
+            blogId = bloggerBlogId
+        )
+        set(value) {
+            if (value) {
+                adminSessionState.grant(
+                    accountId = GoogleSignIn.getLastSignedInAccount(this)?.id,
+                    blogId = bloggerBlogId
+                )
+            } else {
+                adminSessionState.clear()
+            }
+        }
     private var googleSignInClient: com.google.android.gms.auth.api.signin.GoogleSignInClient? = null
     private val googleTokenProvider by lazy { GoogleTokenProvider(this) { isAdminSession } }
     private val bloggerApiClient by lazy { BloggerApiClient { googleBloggerToken() } }
