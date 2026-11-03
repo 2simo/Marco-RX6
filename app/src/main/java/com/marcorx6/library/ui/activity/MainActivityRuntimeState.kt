@@ -8,5 +8,4 @@ import com.marcorx6.library.data.Game
  */
 internal class MainActivityRuntimeState {
     val games: MutableList<Game> = mutableListOf()
-    var isSyncing: Boolean = false
 }
