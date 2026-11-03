@@ -15,7 +15,7 @@ import com.marcorx6.library.ui.CoverUploadState
 import com.marcorx6.library.ui.CoverRuntimeFeature
 import com.marcorx6.library.ui.DownloadFeature
 import com.marcorx6.library.ui.FirstRunSetupFeature
-import com.marcorx6.library.ui.GameDetailsFeature
+import com.marcorx6.library.ui.GameExperienceRuntimeFeature
 import com.marcorx6.library.ui.GameImportMerger
 import com.marcorx6.library.ui.GameOfTheDayController
 import com.marcorx6.library.ui.GamePersistenceController
