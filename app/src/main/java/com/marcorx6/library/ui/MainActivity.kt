@@ -917,6 +917,16 @@ class MainActivity : ComponentActivity() {
         )
     }
 
+    private val bloggerPostFormFieldsFactory by lazy {
+        BloggerPostFormFieldsFactory(
+            activity = this,
+            dp = ::dp,
+            makeInput = ::makeInput,
+            rounded = ::rounded,
+            panel = { panel }
+        )
+    }
+
     private val bloggerPostSaveController by lazy {
         BloggerPostSaveController(
             executeIo = { task -> ioExecutor.execute { task() } },
@@ -1139,18 +1149,13 @@ class MainActivity : ComponentActivity() {
         intro.addView(makeText(if (existing == null) "استوديو النشر • MARCO RX6" else "استوديو التحرير • MARCO RX6", 17f, white, true))
         intro.addView(makeText("جهّز الغلاف والتفاصيل والمحتوى، ثم عاين المقال قبل إرساله إلى Blogger.", 11f, gray).apply { setPadding(0, dp(5), 0, 0) })
         box.addView(intro, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
-        val title = makeInput("عنوان المقال").apply { setSingleLine(true) }
-        val labelsUi = gamePostLabelsController.create(
-            initialLabel = existing?.platform,
-            isNewPost = existing == null
-        )
-        val categoryButton = labelsUi.button
-        val selectedLabels = labelsUi.selectedLabels
-        val body = makeInput("وصف المقال — اكتب المعلومات فقط، وسيُنسّقها القالب تلقائياً").apply { minLines = 8; gravity = Gravity.TOP or Gravity.START; inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE or android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES; setPadding(dp(13), dp(12), dp(13), dp(12)) }
-        val coverUrl = makeInput("رابط صورة الغلاف (اختياري)").apply { setSingleLine(true) }
-        val link = makeInput("رابط التحميل أو رابط إضافي (اختياري)").apply { setSingleLine(true) }
-        val genre = makeInput("نوع اللعبة (مثال: أكشن، مغامرات)").apply { setSingleLine(true) }
-        val releaseYear = makeInput("سنة الإصدار (مثال: 2024)").apply { setSingleLine(true); inputType = android.text.InputType.TYPE_CLASS_NUMBER }
+        val formFields = bloggerPostFormFieldsFactory.create()
+        val title = formFields.title
+        val body = formFields.body
+        val coverUrl = formFields.coverUrl
+        val link = formFields.relatedLink
+        val genre = formFields.genre
+        val releaseYear = formFields.releaseYear
         coverUrlField = coverUrl
         if (existing != null) {
             title.setText(existing.name)
@@ -1164,7 +1169,7 @@ class MainActivity : ComponentActivity() {
             body.setText("")
             if (pendingCoverPublicUrl.isNotBlank()) coverUrl.setText(pendingCoverPublicUrl)
         }
-        val preview = ImageView(this).apply { scaleType = ImageView.ScaleType.CENTER_CROP; background = rounded(panel, 13) }
+        val preview = formFields.coverPreview
         coverPreview = preview
         box.addView(makeText("02 • صورة الغلاف", 12f, red, true).apply { setPadding(0, dp(8), 0, dp(6)) })
         box.addView(preview, LinearLayout.LayoutParams(-1, dp(165)).apply { bottomMargin = dp(8) })
