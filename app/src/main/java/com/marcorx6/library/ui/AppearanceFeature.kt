@@ -28,6 +28,15 @@ internal class AppearanceFeature(
     fun fontScale(): Float = TypographyPreferences.scale(typographyPreferences())
     fun fontFamilyName(): String = TypographyPreferences.family(typographyPreferences())
 
+    fun applyTypography(view: View, scaledDensity: Float) {
+        TypographyApplier.apply(
+            view = view,
+            fontFamily = fontFamilyName(),
+            fontScale = fontScale(),
+            scaledDensity = scaledDensity
+        )
+    }
+
     fun showAppearanceSettings() {
         AppearanceSettingsController(
             activity = activity,
