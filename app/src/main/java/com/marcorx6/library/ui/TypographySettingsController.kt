@@ -3,13 +3,12 @@ package com.marcorx6.library.ui
 import android.app.Activity
 import android.content.SharedPreferences
 import android.graphics.drawable.Drawable
-import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
+import android.app.AlertDialog
 
 internal class TypographySettingsController(
     private val activity: Activity,
