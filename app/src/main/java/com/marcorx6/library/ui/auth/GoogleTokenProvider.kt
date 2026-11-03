@@ -7,7 +7,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 /** Centralizes scoped Google OAuth token retrieval for Blogger and Drive. */
 internal class GoogleTokenProvider(
     context: Context,
-    private val isAdminSession: () -> Boolean = { true }
+    private val isAdminSession: () -> Boolean
 ) {
     private val appContext = context.applicationContext
 
