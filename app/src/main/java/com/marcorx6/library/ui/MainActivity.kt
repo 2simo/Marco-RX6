@@ -1403,7 +1403,7 @@ class MainActivity : ComponentActivity() {
         logo.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(700L)
             .setInterpolator(android.view.animation.OvershootInterpolator(1.08f)).start()
         ValueAnimator.ofInt(1, 100).apply {
-            duration = 2500L
+            duration = 4500L
             addUpdateListener { animator ->
                 val value = animator.animatedValue as Int
                 progress.progress = value
@@ -1422,7 +1422,7 @@ class MainActivity : ComponentActivity() {
                     showProfile()
                 }
             }
-        }, 2600L)
+        }, 4600L)
     }
 
     private fun showFirstRunSetup() {
