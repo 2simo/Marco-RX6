@@ -464,8 +464,17 @@ class MainActivity : Activity() {
             window.addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
             window.attributes = window.attributes.apply { dimAmount = 0.66f }
         }
+        dialog.findViewById<TextView>(android.R.id.alertTitle)?.apply {
+            setTextColor(white)
+            textSize = 18f
+            typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
+        }
         dialog.findViewById<View>(android.R.id.message)?.let {
-            (it as? TextView)?.apply { setTextColor(gray); textSize = 14f; setLineSpacing(dp(3).toFloat(), 1f) }
+            (it as? TextView)?.apply {
+                setTextColor(gray)
+                textSize = 14f
+                setLineSpacing(dp(3).toFloat(), 1f)
+            }
         }
         dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.let { stylePrimaryButton(it, true) }
         dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.let { stylePrimaryButton(it) }
