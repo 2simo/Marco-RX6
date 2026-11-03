@@ -1,4 +1,6 @@
-package com.marcorx6.library.ui
+package com.marcorx6.library.ui.covers
+
+import com.marcorx6.library.ui.*
 
 import android.content.ContentResolver
 import android.content.Context
