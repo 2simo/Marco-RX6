@@ -298,28 +298,13 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun showNotificationSettings() {
-        val enabled = notificationScheduler.isEnabled()
-        AlertDialog.Builder(this)
-            .setTitle("إشعارات المقالات الجديدة")
-            .setMessage(if (enabled)
-                "الإشعارات مفعّلة. يتحقق تطبيق MARCO RX6 من مدونتك دورياً وينبهك عند نشر مقال جديد."
-            else
-                "الإشعارات متوقفة. فعّلها ليصلك تنبيه عند نشر مقال جديد.")
-            .setPositiveButton(if (enabled) "إبقاء مفعّلة" else "تفعيل") { _, _ ->
-                notificationScheduler.setEnabled(true)
-                notificationScheduler.schedule()
-                requestNotificationPermissionIfNeeded()
-                Toast.makeText(this, "تم تفعيل إشعارات المقالات الجديدة", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("إيقاف") { _, _ ->
-                notificationScheduler.setEnabled(false)
-                notificationScheduler.cancel()
-                Toast.makeText(this, "تم إيقاف الإشعارات", Toast.LENGTH_SHORT).show()
-            }
-            .setNeutralButton("إغلاق", null)
-            .show().also { styleAlertDialog(it) }
+    private val notificationSettingsController by lazy {
+        NotificationSettingsController(this, notificationScheduler, ::styleAlertDialog) {
+            requestNotificationPermissionIfNeeded()
+        }
     }
+
+    private fun showNotificationSettings() = notificationSettingsController.show()
 
     private fun dp(v: Int): Int =
         (v * resources.displayMetrics.density).toInt()
