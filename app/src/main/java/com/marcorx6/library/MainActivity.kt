@@ -2987,7 +2987,6 @@ class MainActivity : Activity() {
             }
             val path = Uri.parse(finalUrl).lastPathSegment.orEmpty().lowercase(Locale.ROOT)
             val hasFileExtension = Regex("""\.(apk|zip|7z|rar|iso|pkg|bin|cue|chd|img|pbp|cso|nsp|xci|pdf|mp4|mp3)$""").containsMatchIn(path)
-                .containsMatchIn(path)
             val isAttachment = disposition.contains("attachment", ignoreCase = true)
             val isBinary = mime == "application/octet-stream" ||
                 mime.startsWith("application/") ||
