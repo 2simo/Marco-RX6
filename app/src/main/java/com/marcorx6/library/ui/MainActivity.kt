@@ -164,11 +164,17 @@ class MainActivity : ComponentActivity() {
         restoreAdminSession()
         createInterface()
         if (savedInstanceState == null) showStartupExperience()
-        if (notificationScheduler.isEnabled()) {
-            notificationScheduler.schedule()
-            requestNotificationPermissionIfNeeded()
+        // Keep background prompts and sync away from the full-screen first-run setup.
+        // They resume on the next activity creation after setup has been completed.
+        val setupCompleted = getSharedPreferences("app_settings", MODE_PRIVATE)
+            .getBoolean("setup_completed", false)
+        if (setupCompleted) {
+            if (notificationScheduler.isEnabled()) {
+                notificationScheduler.schedule()
+                requestNotificationPermissionIfNeeded()
+            }
+            syncFromBlog(showResult = false)
         }
-        syncFromBlog(showResult = false)
     }
 
     override fun onResume() {
