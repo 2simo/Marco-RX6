@@ -1149,6 +1149,12 @@ class MainActivity : ComponentActivity() {
         intro.addView(makeText(if (existing == null) "استوديو النشر • MARCO RX6" else "استوديو التحرير • MARCO RX6", 17f, white, true))
         intro.addView(makeText("جهّز الغلاف والتفاصيل والمحتوى، ثم عاين المقال قبل إرساله إلى Blogger.", 11f, gray).apply { setPadding(0, dp(5), 0, 0) })
         box.addView(intro, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
+        val labelsUi = gamePostLabelsController.create(
+            initialLabel = existing?.platform,
+            isNewPost = existing == null
+        )
+        val categoryButton = labelsUi.button
+        val selectedLabels = labelsUi.selectedLabels
         val formFields = bloggerPostFormFieldsFactory.create()
         val title = formFields.title
         val body = formFields.body
