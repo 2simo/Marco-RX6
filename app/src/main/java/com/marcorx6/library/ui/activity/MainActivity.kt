@@ -105,13 +105,7 @@ class MainActivity : ComponentActivity() {
             gray = { gray },
             showLanguagePicker = appearanceRuntimeFeature::showLanguagePicker,
             showNotificationSettings = activityServicesRuntimeFeature::showNotificationSettings,
-            chooseAvatar = {
-                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                    addCategory(Intent.CATEGORY_OPENABLE)
-                    type = "image/*"
-                }
-                activityResultRuntimeFeature.launchProfileAvatar(intent)
-            },
+            launchAvatarPicker = activityResultRuntimeFeature::launchProfileAvatar,
             styleAlertDialog = ::styleAlertDialog,
             applyUnifiedSkin = ::applyUnifiedSkin,
             onAvatarSaved = {
