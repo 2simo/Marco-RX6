@@ -130,6 +130,7 @@ class MainActivity : ComponentActivity() {
         BloggerPostRepository(bloggerApiClient, { bloggerBlogId }, { isAdminSession })
     }
     private val gameRepository by lazy { GameRepository(applicationContext) }
+    private val gameLibraryStore by lazy { GameLibraryStore(games) { saveGames() } }
     private val SIGN_IN_REQUEST = 1002
 
     private val googleSignInLauncher =
@@ -757,7 +758,7 @@ class MainActivity : ComponentActivity() {
                     .setMessage("سيتم استبدال المكتبة الحالية بـ ${restored.size} عنصر. يُفضّل تصدير نسخة من بياناتك الحالية أولاً. هل تريد المتابعة؟")
                     .setNegativeButton("إلغاء", null)
                     .setPositiveButton("استعادة") { _, _ ->
-                        games.clear(); games.addAll(restored); saveGames()
+                        gameLibraryStore.replaceAll(restored)
                         backup.appearance?.let { a ->
                             appearancePreferences().edit()
                                 .putBoolean("dark_mode", a.darkMode)
@@ -1254,8 +1255,7 @@ class MainActivity : ComponentActivity() {
     private fun mergeImportedGames(
         imported: List<Game>
     ): Triple<Int, Int, List<Pair<Game, String>>> {
-        val result = GameLibraryManager.merge(games, imported)
-        saveGames()
+        val result = gameLibraryStore.mergeImported(imported)
         return Triple(result.added, result.updated, result.warnings)
     }
 
@@ -1289,17 +1289,7 @@ class MainActivity : ComponentActivity() {
             .setTitle("اختر المنصة")
             .setItems(choices) { _, which ->
 
-                val index = games.indexOfFirst {
-                    it.sourcePostUrl == game.sourcePostUrl
-                }
-
-                if (index >= 0) {
-                    games[index] = games[index].copy(
-                        platform = choices[which],
-                        platformManuallyCorrected = true
-                    )
-
-                    saveGames()
+                if (gameLibraryStore.correctPlatform(game.sourcePostUrl, choices[which])) {
                     renderGames()
                 }
             }
@@ -2313,7 +2303,7 @@ class MainActivity : ComponentActivity() {
                         )
                         mainHandler.post {
                             val saved = post.copy(bloggerPostId = result.optString("id", post.bloggerPostId), bloggerHtml = result.optString("content", htmlContent), url = result.optString("url", post.url), sourcePostUrl = result.optString("url", post.sourcePostUrl), blogImported = true)
-                            val idx = if (existing == null) -1 else games.indexOf(existing); if (idx >= 0) games[idx] = saved else games.add(0, saved)
+                            gameLibraryStore.upsert(saved, existing)
                             pendingCoverLocalPath = ""; pendingCoverPublicUrl = ""; coverUploadFailed = false
                             saveGames(); renderGames(); dialog.dismiss(); Toast.makeText(this, "تم نشر المقال على Blogger", Toast.LENGTH_LONG).show()
                         }
@@ -2339,7 +2329,7 @@ class MainActivity : ComponentActivity() {
                 if (!isAdminSession || bloggerBlogId.isBlank() || game.bloggerPostId.isBlank()) { Toast.makeText(this, "يلزم تسجيل دخول المسؤول ومعرّف المقال في Blogger", Toast.LENGTH_LONG).show(); return@setPositiveButton }
                 Thread { try {
                     bloggerPostRepository.deletePost(game.bloggerPostId)
-                    mainHandler.post { games.remove(game); if (game.coverLocalPath.isNotBlank()) File(game.coverLocalPath).delete(); saveGames(); renderGames(); Toast.makeText(this, "تم الحذف من Blogger", Toast.LENGTH_SHORT).show() }
+                    mainHandler.post { gameLibraryStore.remove(game); if (game.coverLocalPath.isNotBlank()) File(game.coverLocalPath).delete(); renderGames(); Toast.makeText(this, "تم الحذف من Blogger", Toast.LENGTH_SHORT).show() }
                 } catch (e: Exception) { mainHandler.post { Toast.makeText(this, e.message ?: "تعذر حذف المقال من Blogger", Toast.LENGTH_LONG).show() } } }.start()
             }
             .create().apply { setOnShowListener { styleAlertDialog(this) } }
