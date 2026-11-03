@@ -926,6 +926,20 @@ class MainActivity : ComponentActivity() {
         )
     }
 
+    private val gameWatchlistViewFactory by lazy {
+        GameWatchlistViewFactory(
+            activity = this,
+            games = games,
+            dp = ::dp,
+            rounded = ::rounded,
+            white = { white },
+            panel = { panel },
+            saveGames = ::saveGames,
+            renderGames = ::renderGames,
+            styleAlertDialog = ::styleAlertDialog
+        )
+    }
+
     private val gamePostLabelsController by lazy {
         GamePostLabelsController(
             activity = this,
@@ -1052,39 +1066,7 @@ class MainActivity : ComponentActivity() {
             val metadata = listOf(game.genre, game.releaseYear).filter { it.isNotBlank() }.joinToString("  •  ")
             info.addView(makeText(metadata, 10f, gray, true).apply { setPadding(0, 0, 0, dp(7)) })
         }
-        val watchlistNames = arrayOf("بدون حالة", "أريد لعبها", "ألعبها حالياً", "أنهيتها")
-        val watchlistKeys = arrayOf("", "WANT_TO_PLAY", "PLAYING", "COMPLETED")
-        fun watchlistLabel(status: String) = when (status) {
-            "WANT_TO_PLAY" -> "أريد لعبها"
-            "PLAYING" -> "ألعبها حالياً"
-            "COMPLETED" -> "أنهيتها"
-            else -> "إضافة إلى قائمة المتابعة"
-        }
-        val watchlistButton = TextView(this).apply {
-            text = "＋  " + watchlistLabel(game.playStatus)
-            textSize = 11f
-            setTextColor(white)
-            gravity = Gravity.CENTER
-            background = rounded(panel, 11)
-            setPadding(dp(11), dp(9), dp(11), dp(9))
-            setOnClickListener {
-                val current = watchlistKeys.indexOf(game.playStatus).coerceAtLeast(0)
-                AlertDialog.Builder(this@MainActivity)
-                    .setTitle("قائمة متابعة الألعاب")
-                    .setSingleChoiceItems(watchlistNames, current) { dialog, which ->
-                        val index = games.indexOfFirst { it.name == game.name && it.url == game.url }
-                        if (index >= 0) {
-                            games[index] = games[index].copy(playStatus = watchlistKeys[which])
-                            saveGames()
-                            text = "＋  " + watchlistLabel(watchlistKeys[which])
-                            renderGames()
-                        }
-                        dialog.dismiss()
-                    }
-                    .setNegativeButton("إغلاق", null)
-                    .show().also { styleAlertDialog(it) }
-            }
-        }
+        val watchlistButton = gameWatchlistViewFactory.create(game)
         info.addView(watchlistButton, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(7) })
         identity.addView(info, LinearLayout.LayoutParams(0, -2, 1f))
         root.addView(identity, LinearLayout.LayoutParams(-1, -2).apply { setMargins(dp(14), dp(12), dp(14), dp(12)) })
