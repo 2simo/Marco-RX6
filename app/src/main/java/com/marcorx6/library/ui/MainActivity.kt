@@ -601,38 +601,35 @@ class MainActivity : ComponentActivity() {
 
 
     private fun showProfile() = profileFeature.show()
-    private val gameLibraryRenderer by lazy {
-        GameLibraryRenderer(
+    private val gameLibraryFeature by lazy {
+        GameLibraryFeature(
             activity = this,
             dp = ::dp,
             rounded = ::rounded,
             makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
             isDarkMode = ::isDarkMode,
             accentForeground = ::accentForeground,
-            tr = ::tr,
+            translate = ::tr,
             loadCover = ::loadCover,
-            showDetails = ::showDetails
+            showDetails = ::showDetails,
+            gameList = { gameList },
+            filters = { filters },
+            countText = { countText },
+            search = { search },
+            games = { games },
+            selected = { selected },
+            selectedGenre = { selectedGenre },
+            selectedYear = { selectedYear },
+            sortMode = { sortMode },
+            bg = { bg },
+            panel = { panel },
+            red = { red },
+            white = { white },
+            gray = { gray }
         )
     }
 
-    private fun renderGames() {
-        gameLibraryRenderer.render(
-            gameList = gameList,
-            filters = filters,
-            countText = countText,
-            search = search,
-            games = games,
-            selected = selected,
-            selectedGenre = selectedGenre,
-            selectedYear = selectedYear,
-            sortMode = sortMode,
-            bg = bg,
-            panel = panel,
-            red = red,
-            white = white,
-            gray = gray
-        )
-    }
+    private fun renderGames() = gameLibraryFeature.render()
 
     private val firstRunSetupFeature by lazy {
         FirstRunSetupFeature(
