@@ -2,7 +2,6 @@
 package com.marcorx6.library.ui.activity
 
 import com.marcorx6.library.ui.AccentPalette
-import com.marcorx6.library.ui.AdvancedFiltersFeature
 import com.marcorx6.library.ui.AppearanceRuntimeFeature
 import com.marcorx6.library.ui.AppearancePreferencesStore
 import com.marcorx6.library.ui.BlogSyncFeature
@@ -17,14 +16,10 @@ import com.marcorx6.library.ui.DownloadFeature
 import com.marcorx6.library.ui.FirstRunSetupFeature
 import com.marcorx6.library.ui.GameDetailsFeature
 import com.marcorx6.library.ui.GameImportMerger
-import com.marcorx6.library.ui.GameLibraryFeature
 import com.marcorx6.library.ui.GameOfTheDayController
 import com.marcorx6.library.ui.GamePersistenceController
 import com.marcorx6.library.ui.GoogleAdminFeature
 import com.marcorx6.library.ui.LanguageFeature
-import com.marcorx6.library.ui.LibraryFilterState
-import com.marcorx6.library.ui.MainLibraryFeature
-import com.marcorx6.library.ui.library.MainLibraryViewState
 import com.marcorx6.library.ui.MotionPreferencesApplier
 import com.marcorx6.library.ui.NotificationsFeature
 import com.marcorx6.library.ui.OfflineCatalogLoader
@@ -254,7 +249,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         startupExperienceController.dismiss()
-        mainLibraryFeature.dispose()
+        libraryRuntimeFeature.dispose()
         firstRunSetupFeature.dismiss()
         ioExecutor.shutdownNow()
         if (coverRuntimeFeatureCreated) coverRuntimeFeature.close()
@@ -340,50 +335,30 @@ class MainActivity : ComponentActivity() {
     private fun showAppearanceSettings() = appearanceRuntimeFeature.showAppearanceSettings()
     private fun showTypographySettings() = appearanceRuntimeFeature.showTypographySettings()
 
-    private val advancedFiltersFeature by lazy {
-        AdvancedFiltersFeature(
+    private val libraryRuntimeFeature by lazy {
+        MainLibraryRuntimeFeature(
             activity = this,
-            state = libraryFilterState,
-            games = { games },
-            dp = ::dp,
-            red = { red },
-            makeText = ::makeText,
-            styleDialog = ::styleAlertDialog,
-            renderGames = ::renderGames
-        )
-    }
-
-    private fun showAdvancedFilters() = advancedFiltersFeature.show()
-
-    private val mainLibraryFeature by lazy {
-        MainLibraryFeature(
             context = this,
             setContentView = { view -> setContentView(view) },
+            games = games,
             darkMode = ::isDarkMode,
             currentLanguage = ::currentLanguage,
             dp = ::dp,
             translate = ::tr,
             rounded = ::rounded,
             createText = { value, size, color, bold -> makeText(value, size, color, bold) },
-            games = { games },
             bg = bg,
             panel = panel,
             red = red,
             white = white,
             gray = gray,
             adminSession = { isAdminSession },
-            getSelected = { libraryViewState.selected },
-            setSelected = { libraryViewState.selected = it },
-            getSortMode = { libraryViewState.sortMode },
-            setSortMode = { libraryViewState.sortMode = it },
-            setSearch = { libraryViewState.search = it },
-            setFilters = { libraryViewState.filters = it },
-            setCountText = { libraryViewState.countText = it },
-            setGameList = { libraryViewState.gameList = it },
-            renderGames = ::renderGames,
+            accentForeground = ::accentForeground,
+            loadCover = ::loadCover,
+            showDetails = ::showDetails,
+            styleDialog = ::styleAlertDialog,
             showNotificationSettings = ::showNotificationSettings,
             showAppearanceSettings = ::showAppearanceSettings,
-            showAdvancedFilters = ::showAdvancedFilters,
             showGameDialog = { showGameDialog() },
             showProfile = ::showProfile,
             showSideMenu = ::showSideMenu,
@@ -393,7 +368,11 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private fun createInterface() = mainLibraryFeature.create()
+    private val libraryViewState get() = libraryRuntimeFeature.viewState
+
+    private fun showAdvancedFilters() = libraryRuntimeFeature.showAdvancedFilters()
+    private fun createInterface() = libraryRuntimeFeature.create()
+    private fun renderGames() = libraryRuntimeFeature.renderGames()
 
     private fun syncFromBlog(showResult: Boolean) = blogSyncFeature.sync(showResult)
 
@@ -467,36 +446,6 @@ class MainActivity : ComponentActivity() {
 
 
     private fun showProfile(): Unit = profileFeature.show()
-    private val gameLibraryFeature by lazy {
-        GameLibraryFeature(
-            activity = this,
-            dp = ::dp,
-            rounded = ::rounded,
-            makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
-            isDarkMode = ::isDarkMode,
-            accentForeground = ::accentForeground,
-            translate = ::tr,
-            loadCover = ::loadCover,
-            showDetails = ::showDetails,
-            gameList = { libraryViewState.gameList },
-            filters = { libraryViewState.filters },
-            countText = { libraryViewState.countText },
-            search = { libraryViewState.search },
-            games = { games },
-            selected = { libraryViewState.selected },
-            selectedGenre = { libraryFilterState.genre },
-            selectedYear = { libraryFilterState.year },
-            sortMode = { libraryViewState.sortMode },
-            bg = { bg },
-            panel = { panel },
-            red = { red },
-            white = { white },
-            gray = { gray }
-        )
-    }
-
-    private fun renderGames() = gameLibraryFeature.render()
-
     private val firstRunSetupFeature by lazy {
         FirstRunSetupFeature(
             activity = this,
