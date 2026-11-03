@@ -2258,14 +2258,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun loadOfflineCatalog() {
-        val offlineCatalog = assets.open("offline_catalog.json")
-            .bufferedReader(Charsets.UTF_8).use { it.readText() }
-        val entries = JSONArray(offlineCatalog)
-        for (i in 0 until entries.length()) {
-            val entry = entries.optJSONObject(i) ?: continue
-            BloggerFeedParser.parseBlogEntry(entry)?.let { games.add(it) }
-        }
-        if (games.isNotEmpty()) saveGames()
+        OfflineCatalogLoader.load(this, games) { saveGames() }
     }
 
 
