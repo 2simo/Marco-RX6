@@ -50,9 +50,8 @@ import androidx.core.view.WindowInsetsControllerCompat
 
 class MainActivity : ComponentActivity() {
 
-    private val downloadRepository by lazy { DownloadRepository(applicationContext) }
-    private val downloadUiController by lazy {
-        DownloadUiController(this, downloadRepository) { dialog -> styleAlertDialog(dialog) }
+    private val downloadFeature by lazy {
+        DownloadFeature(this, ::styleAlertDialog)
     }
 
     private fun appearancePreferences() = AppearancePreferencesStore.appearance(this)
@@ -704,17 +703,17 @@ class MainActivity : ComponentActivity() {
         hintedMimeType: String = "",
         referrer: String = ""
     ) {
-        downloadUiController.enqueueGameDownload(
+        downloadFeature.enqueueGameDownload(
             link, title, userAgent, contentDisposition, hintedMimeType, referrer
         )
     }
 
     private fun showDownloadManager() {
-        downloadUiController.showDownloadManager()
+        downloadFeature.showManager()
     }
 
     private fun openGameLink(link: String) {
-        downloadUiController.openGameLink(link)
+        downloadFeature.openGameLink(link)
     }
 
     /**
