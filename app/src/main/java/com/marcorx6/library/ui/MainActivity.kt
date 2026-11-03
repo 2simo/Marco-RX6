@@ -105,9 +105,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private val ioExecutor = Executors.newCachedThreadPool()
-    private var startupAnimator: ValueAnimator? = null
-    private var startupRunnable: Runnable? = null
-    private var startupDialog: Dialog? = null
     private var setupDialog: Dialog? = null
     private var searchRenderRunnable: Runnable? = null
     private val PICK_IMAGE_REQUEST = 1001
@@ -182,13 +179,8 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        startupAnimator?.cancel()
-        startupAnimator = null
-        startupRunnable?.let(mainHandler::removeCallbacks)
-        startupRunnable = null
+        startupExperienceController.dismiss()
         mainHandler.removeCallbacksAndMessages(null)
-        startupDialog?.let { if (it.isShowing) it.dismiss() }
-        startupDialog = null
         setupDialog?.let { if (it.isShowing) it.dismiss() }
         setupDialog = null
         ioExecutor.shutdownNow()
@@ -739,131 +731,17 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    private fun showStartupExperience() {
-        startupAnimator?.cancel()
-        startupRunnable?.let(mainHandler::removeCallbacks)
-        val splash = Dialog(this, android.R.style.Theme_Material_NoActionBar)
-        startupDialog = splash
-        val content = FrameLayout(this).apply {
-            setBackground(GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(
-                Color.rgb(3, 10, 22), Color.rgb(5, 19, 39), Color.rgb(2, 8, 19)
-            )))
-        }
-        val center = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            setPadding(dp(30), dp(24), dp(30), dp(24))
-        }
-        val logoHalo = FrameLayout(this).apply {
-            background = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setColor(Color.rgb(7, 24, 45))
-                setStroke(dp(2), Color.rgb(39, 160, 255))
-            }
-            elevation = dp(18).toFloat()
-        }
-        val logo = ImageView(this).apply {
-            setImageResource(R.drawable.marco_rx6_dragon)
-            scaleType = ImageView.ScaleType.FIT_CENTER
-            contentDescription = "MARCO RX6"
-            setPadding(dp(15), dp(15), dp(15), dp(15))
-            alpha = 0f
-            scaleX = 0.84f
-            scaleY = 0.84f
-        }
-        logoHalo.addView(logo, FrameLayout.LayoutParams(-1, -1))
-        center.addView(logoHalo, LinearLayout.LayoutParams(dp(154), dp(154)).apply { bottomMargin = dp(25) })
-        center.addView(makeText("MARCO RX6", 25f, Color.WHITE, true).apply {
-            gravity = Gravity.CENTER
-            letterSpacing = 0.16f
-        })
-        center.addView(makeText("GAME LIBRARY", 10f, Color.rgb(105, 190, 255), true).apply {
-            gravity = Gravity.CENTER
-            letterSpacing = 0.28f
-            setPadding(0, dp(9), 0, 0)
-        })
-        val loading = makeText("جارٍ تجهيز عالم الألعاب...", 11f, Color.rgb(153, 174, 199)).apply {
-            gravity = Gravity.CENTER
-            setPadding(0, dp(34), 0, 0)
-        }
-        center.addView(loading)
-        val progress = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
-            max = 100
-            progress = 1
-            progressTintList = android.content.res.ColorStateList.valueOf(Color.rgb(42, 145, 255))
-            progressBackgroundTintList = android.content.res.ColorStateList.valueOf(Color.rgb(29, 48, 70))
-            progressDrawable = progressDrawable.mutate().apply {
-                if (this is android.graphics.drawable.LayerDrawable) {
-                    findDrawableByLayerId(android.R.id.background)?.let {
-                        it.setTint(Color.rgb(29, 48, 70))
-                    }
-                    findDrawableByLayerId(android.R.id.progress)?.let {
-                        it.setTint(Color.rgb(42, 145, 255))
-                    }
-                }
-            }
-        }
-        center.addView(progress, LinearLayout.LayoutParams(dp(238), dp(7)).apply {
-            topMargin = dp(18)
-        })
-        val percent = makeText("1%", 12f, Color.rgb(105, 190, 255), true).apply {
-            gravity = Gravity.CENTER
-            setPadding(0, dp(9), 0, 0)
-        }
-        center.addView(percent)
-        content.addView(center, FrameLayout.LayoutParams(-1, -1))
-        splash.setContentView(content)
-        splash.setCancelable(false)
-        splash.setCanceledOnTouchOutside(false)
-        splash.show()
-        splash.window?.setBackgroundDrawableResource(android.R.color.transparent)
-        splash.window?.setLayout(-1, -1)
-        splash.window?.let { w ->
-            WindowCompat.setDecorFitsSystemWindows(w, false)
-            w.statusBarColor = Color.TRANSPARENT
-            w.navigationBarColor = Color.TRANSPARENT
-            WindowInsetsControllerCompat(w, w.decorView).apply {
-                isAppearanceLightStatusBars = false
-                isAppearanceLightNavigationBars = false
-                show(WindowInsetsCompat.Type.systemBars())
-            }
-        }
-        logo.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(700L)
-            .setInterpolator(android.view.animation.OvershootInterpolator(1.08f)).start()
-        startupAnimator = ValueAnimator.ofInt(1, 100).apply {
-            duration = 4500L
-            addUpdateListener { animator ->
-                if (!isFinishing && !isDestroyed && startupDialog === splash && splash.isShowing) {
-                    val value = animator.animatedValue as Int
-                    progress.progress = value
-                    percent.text = "$value%"
-                }
-            }
-            start()
-        }
-        startupRunnable = Runnable {
-            if (!isFinishing && !isDestroyed && startupDialog === splash && splash.isShowing) {
-                startupAnimator?.cancel()
-                startupAnimator = null
-                splash.dismiss()
-                startupDialog = null
-                val settings = getSharedPreferences("app_settings", MODE_PRIVATE)
-                if (!settings.getBoolean("setup_completed", false)) showFirstRunSetup()
-                else if (!settings.getBoolean("profile_prompted", false)) {
-                    settings.edit().putBoolean("profile_prompted", true).apply()
-                    showProfile()
-                }
-            }
-            startupRunnable = null
-        }.also { mainHandler.postDelayed(it, 4600L) }
-        splash.setOnDismissListener {
-            startupAnimator?.cancel()
-            startupAnimator = null
-            startupRunnable?.let(mainHandler::removeCallbacks)
-            startupRunnable = null
-            if (startupDialog === splash) startupDialog = null
-        }
+    private val startupExperienceController by lazy {
+        StartupExperienceController(
+            activity = this,
+            dp = ::dp,
+            makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
+            showFirstRunSetup = ::showFirstRunSetup,
+            showProfile = ::showProfile
+        )
     }
+
+    private fun showStartupExperience() = startupExperienceController.show()
 
     private fun showFirstRunSetup() {
         val settings = getSharedPreferences("app_settings", MODE_PRIVATE)
