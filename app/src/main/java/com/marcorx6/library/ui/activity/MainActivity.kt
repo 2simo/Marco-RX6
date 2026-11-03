@@ -1,18 +1,17 @@
 
 package com.marcorx6.library.ui.activity
 
-import com.marcorx6.library.ui.ActivityServicesRuntimeFeature
-import com.marcorx6.library.ui.AppearanceRuntimeFeature
-import com.marcorx6.library.ui.AppearancePaletteRuntimeFeature
-import com.marcorx6.library.ui.BloggerRuntimeFeature
-import com.marcorx6.library.ui.CoverRuntimeFeature
-import com.marcorx6.library.ui.CoverUploadRuntimeFeature
-import com.marcorx6.library.ui.GameExperienceRuntimeFeature
+import com.marcorx6.library.ui.appearance.AppearanceRuntimeFeature
+import com.marcorx6.library.ui.appearance.AppearancePaletteRuntimeFeature
+import com.marcorx6.library.ui.auth.GoogleAccountRuntimeFeature
+import com.marcorx6.library.ui.blog.BloggerRuntimeFeature
+import com.marcorx6.library.ui.covers.CoverRuntimeFeature
+import com.marcorx6.library.ui.covers.CoverUploadRuntimeFeature
+import com.marcorx6.library.ui.data.GameDataRuntimeFeature
+import com.marcorx6.library.ui.experience.UserExperienceRuntimeFeature
+import com.marcorx6.library.ui.game.GameExperienceRuntimeFeature
+import com.marcorx6.library.ui.library.MainLibraryRuntimeFeature
 import com.marcorx6.library.ui.GameImportMerger
-import com.marcorx6.library.ui.GameDataRuntimeFeature
-import com.marcorx6.library.ui.GoogleAccountRuntimeFeature
-import com.marcorx6.library.ui.MainLibraryRuntimeFeature
-import com.marcorx6.library.ui.UserExperienceRuntimeFeature
 import androidx.activity.ComponentActivity
 import android.app.AlertDialog
 import android.os.Bundle
