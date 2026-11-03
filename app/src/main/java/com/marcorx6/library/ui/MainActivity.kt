@@ -1106,20 +1106,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun keyForCover(localPath: String, imageUrl: String): String {
-        val localFile = localPath.takeIf { it.isNotBlank() && File(it).isFile }?.let(::File)
-        val asset = if (imageUrl.isNotBlank()) {
-            "offline_images/${coverRepository.stableCacheName(imageUrl)}.webp"
-        } else ""
-        val hasAsset = asset.isNotBlank() && try {
-            assets.open(asset).use { true }
-        } catch (_: Exception) { false }
-        return when {
-            localFile != null -> "file:${localFile.absolutePath}|url:$imageUrl"
-            hasAsset -> "asset:$asset|url:$imageUrl"
-            else -> "url:$imageUrl"
+    private fun keyForCover(localPath: String, imageUrl: String): String =
+        CoverKeyResolver.resolve(localPath, imageUrl, coverRepository::stableCacheName) { asset ->
+            try { assets.open(asset).use { true } } catch (_: Exception) { false }
         }
-    }
 
     private fun chooseCover() {
 
