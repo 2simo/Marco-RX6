@@ -259,11 +259,7 @@ class MainActivity : ComponentActivity() {
     private fun driveToken(): String = GoogleTokenProvider(this) { isAdminSession }.driveToken()
 
 
-    private fun bloggerHtml(game: Game): String {
-        val text = game.description.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>")
-        val image = if (game.coverUrl.isNotBlank()) "<p><img src=\"${game.coverUrl}\" /></p>" else ""
-        return "<div><p>$text</p>$image<p><a href=\"${game.url}\">تحميل اللعبة</a></p></div>"
-    }
+    private fun bloggerHtml(game: Game): String = BloggerHtmlBuilder.build(game)
 
     private fun requestNotificationPermissionIfNeeded() {
         if (Build.VERSION.SDK_INT >= 33 &&
