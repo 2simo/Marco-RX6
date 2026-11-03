@@ -183,21 +183,14 @@ class MainActivity : ComponentActivity() {
     private val lifecycleCoordinator by lazy {
         MainActivityLifecycleCoordinator(
             activity = this,
-            initializePreferredPlatform = {
-                libraryViewState.selected = getSharedPreferences("app_settings", MODE_PRIVATE)
-                    .getString("preferred_platform", "ALL")
-                    ?.takeIf { it in listOf("PS2", "PS3", "PS4") } ?: "ALL"
-            },
+            initializePreferredPlatform = { libraryRuntimeFeature.initializePreferredPlatform() },
             applySystemBarAppearance = activityServicesRuntimeFeature::applySystemBarAppearance,
             createNotificationChannel = activityServicesRuntimeFeature::createNotificationChannel,
             loadGames = gameDataRuntimeFeature::loadGames,
             restoreAdminSession = { googleAccountRuntimeFeature.isAdminSession = false; bloggerRuntimeFeature.refreshAccess() },
             createInterface = ::createInterface,
             showStartupExperience = ::showStartupExperience,
-            setupCompleted = {
-                getSharedPreferences("app_settings", MODE_PRIVATE)
-                    .getBoolean("setup_completed", false)
-            },
+            setupCompleted = userExperienceRuntimeFeature::isSetupCompleted,
             notificationsEnabled = activityServicesRuntimeFeature::areNotificationsEnabled,
             scheduleNotifications = activityServicesRuntimeFeature::scheduleNotifications,
             requestNotificationPermission = activityServicesRuntimeFeature::requestNotificationPermissionIfNeeded,
