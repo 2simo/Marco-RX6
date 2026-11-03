@@ -3,7 +3,7 @@ package com.marcorx6.library.ui
 import android.app.Activity
 import android.graphics.drawable.Drawable
 import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
+import android.app.AlertDialog
 import com.marcorx6.library.data.Game
 
 internal class GameWatchlistViewFactory(
