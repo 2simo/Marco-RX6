@@ -12,6 +12,7 @@ import com.marcorx6.library.data.GameRepository
 import com.marcorx6.library.network.SecureUrlPolicy
 import com.marcorx6.library.network.BloggerApiClient
 import com.marcorx6.library.network.BloggerFeedClient
+import com.marcorx6.library.network.BloggerArticleBuilder
 import com.marcorx6.library.network.BloggerFeedParser
 import android.app.DownloadManager
 import android.app.NotificationChannel
