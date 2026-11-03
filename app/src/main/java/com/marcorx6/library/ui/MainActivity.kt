@@ -109,11 +109,12 @@ class MainActivity : ComponentActivity() {
     private var coverUrlField: EditText? = null
     private var isSyncing = false
     private val adminSessionState = AdminSessionState()
-    private var bloggerBlogId = ""
+    private var bloggerBlogId: String
+        get() = adminSessionState.blogId()
+        set(value) = adminSessionState.setBlogId(value)
     private var isAdminSession: Boolean
         get() = adminSessionState.isAuthorized(
-            accountId = GoogleSignIn.getLastSignedInAccount(this)?.id,
-            blogId = bloggerBlogId
+            accountId = GoogleSignIn.getLastSignedInAccount(this)?.id
         )
         set(value) {
             if (value) {
