@@ -1737,144 +1737,57 @@ class MainActivity : ComponentActivity() {
         for (i in 0 until filters.childCount) {
             val chip = filters.getChildAt(i) as TextView
             val active = chip.tag?.toString() == selected
-            chip.background = rounded(if (active) red else panel, 15)
+            chip.background = rounded(if (active) red else panel, 13)
             chip.setTextColor(if (active) accentForeground() else gray)
         }
-
-        val query = search.text.toString().trim()
-        val sorted = GameLibraryManager.filterAndSort(
-            games = games,
-            category = selected,
-            query = query,
-            genre = selectedGenre,
-            year = selectedYear,
-            sortMode = sortMode
-        )
-        countText.text = sorted.size.toString() + " " + tr("مقال")
+        val sorted = GameLibraryManager.filterAndSort(games, selected, search.text.toString().trim(), selectedGenre, selectedYear, sortMode)
+        countText.text = sorted.size.toString() + " " + tr("لعبة")
         if (sorted.isEmpty()) {
-            gameList.addView(makeText(tr("لا توجد مقالات حالياً"), 15f, gray, true).apply {
-                gravity = Gravity.CENTER
-                setPadding(dp(10), dp(55), dp(10), dp(55))
+            gameList.addView(makeText(tr("لا توجد ألعاب حالياً"), 15f, gray, true).apply {
+                gravity = Gravity.CENTER; setPadding(dp(10), dp(55), dp(10), dp(55))
             })
             return
         }
-
-        val shelves: List<Pair<String, List<Game>>> = if (selected == "ALL" && query.isBlank()) {
-            val order = listOf("PS4", "PS3", "PS2", "PS1", "PSP", "BLOG")
-            order.mapNotNull { platform ->
-                val items = sorted.filter { if (platform == "BLOG") it.platform == "BLOG" else it.platform == platform }
-                if (items.isEmpty()) null else platform to items
-            } + sorted.filter { it.platform !in order }.groupBy { it.platform }.map { it.key to it.value }
-        } else {
-            val title = when (selected) {
-                "ALL" -> "الكل"
-                "FAVORITES" -> tr("المفضلة")
-                "WANT_TO_PLAY" -> "أريد لعبها"
-                "PLAYING" -> "ألعبها حالياً"
-                "COMPLETED" -> "أنهيتها"
-                "BLOG" -> "BLOG"
-                else -> selected
-            }
-            listOf(title to sorted)
+        val heading = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+        val title = when (selected) {
+            "ALL" -> tr("اكتشف الألعاب"); "FAVORITES" -> tr("المفضلة"); "BLOG" -> tr("المدونة")
+            "WANT_TO_PLAY" -> "أريد لعبها"; "PLAYING" -> "ألعبها حالياً"; "COMPLETED" -> "أنهيتها"
+            else -> "ألعاب " + selected
         }
-
-        shelves.forEach { (title, posts) ->
-            val heading = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(2), dp(9), dp(2), dp(10))
-            }
-            heading.addView(makeText(title, 17f, if (isDarkMode()) Color.rgb(226, 232, 242) else Color.rgb(43, 52, 68), true), LinearLayout.LayoutParams(0, -2, 1f))
-            heading.addView(makeText(posts.size.toString(), 10f, if (isDarkMode()) Color.rgb(169, 139, 255) else red, true))
-            gameList.addView(heading, LinearLayout.LayoutParams(-1, -2))
-
-            val horizontal = HorizontalScrollView(this).apply {
-                isHorizontalScrollBarEnabled = false
-                clipToPadding = false
-                overScrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS
-                layoutDirection = View.LAYOUT_DIRECTION_LTR
-            }
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                setPadding(dp(2), dp(2), dp(2), dp(13))
-            }
-            // Build cards in small batches so large libraries do not block the first draw.
-            var nextPostIndex = 0
-            fun appendNextBatch() {
-                val endIndex = (nextPostIndex + 8).coerceAtMost(posts.size)
-                while (nextPostIndex < endIndex) {
-                    val post = posts[nextPostIndex++]
-                    // Keep the original 142x190 cover intact; metadata sits below it.
-                    val card = LinearLayout(this).apply {
-                        orientation = LinearLayout.VERTICAL
-                        gravity = Gravity.CENTER_HORIZONTAL
-                        background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                            if (isDarkMode()) intArrayOf(Color.rgb(42, 48, 67), Color.rgb(22, 27, 42))
-                            else intArrayOf(Color.WHITE, Color.rgb(239, 243, 250))).apply {
-                            cornerRadius = dp(18).toFloat()
-                            setStroke(dp(1), if (isDarkMode()) Color.rgb(73, 84, 111) else Color.rgb(205, 213, 228))
-                        }
-                        setPadding(dp(4), dp(4), dp(4), dp(5))
-                        elevation = dp(3).toFloat()
-                        isClickable = true
-                        isFocusable = true
-                        setOnClickListener { showDetails(post) }
-                    }
-                    val frame = FrameLayout(this).apply {
-                        background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                            if (isDarkMode()) intArrayOf(Color.rgb(116, 127, 151), Color.rgb(35, 41, 59)) else intArrayOf(Color.rgb(235, 239, 247), Color.rgb(211, 220, 234))).apply {
-                            cornerRadius = dp(14).toFloat()
-                            setStroke(dp(1), if (isDarkMode()) Color.rgb(125, 139, 169) else Color.rgb(174, 185, 207))
-                        }
-                        clipToOutline = true
-                        elevation = dp(2).toFloat()
-                        isClickable = true
-                        isFocusable = true
-                        setOnClickListener { showDetails(post) }
-                    }
-                    val cover = ImageView(this).apply {
-                        scaleType = ImageView.ScaleType.CENTER_CROP
-                        setBackgroundColor(if (isDarkMode()) Color.rgb(29, 32, 58) else Color.rgb(238, 241, 247))
-                        contentDescription = post.name
-                        isClickable = true
-                        setOnClickListener { showDetails(post) }
-                    }
-                    frame.addView(cover, FrameLayout.LayoutParams(-1, -1))
-                    if (post.coverUrl.isNotBlank() || post.coverLocalPath.isNotBlank()) {
-                        loadCover(cover, post.coverLocalPath, post.coverUrl)
-                    } else {
-                        cover.setImageResource(android.R.drawable.ic_menu_gallery)
-                        cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
-                    }
-                    card.addView(frame, LinearLayout.LayoutParams(dp(142), dp(190)))
-
-                    val title = makeText(post.name, 12f, if (isDarkMode()) Color.rgb(238, 241, 248) else Color.rgb(43, 51, 68), true).apply {
-                        gravity = Gravity.CENTER
-                        maxLines = 1
-                        ellipsize = android.text.TextUtils.TruncateAt.END
-                        setPadding(dp(3), dp(7), dp(3), dp(3))
-                        isClickable = true
-                        setOnClickListener { showDetails(post) }
-                    }
-                    card.addView(title, LinearLayout.LayoutParams(dp(142), dp(30)))
-
-                    row.addView(card, LinearLayout.LayoutParams(dp(150), -2).apply {
-                        marginEnd = dp(11)
-                    })
+        heading.addView(makeText(title, 18f, white, true), LinearLayout.LayoutParams(0, -2, 1f))
+        heading.addView(makeText(sorted.size.toString() + " " + tr("لعبة"), 10f, red, true))
+        gameList.addView(heading, LinearLayout.LayoutParams(-1, -2).apply { setMargins(dp(2), dp(10), dp(2), dp(12)) })
+        for (index in sorted.indices step 2) {
+            val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.TOP }
+            for (offset in 0..1) {
+                val itemIndex = index + offset
+                if (itemIndex >= sorted.size) {
+                    row.addView(View(this), LinearLayout.LayoutParams(0, 1, 1f).apply { marginStart = dp(5); marginEnd = dp(5) })
+                    continue
                 }
-            }
-            appendNextBatch()
-            horizontal.setOnScrollChangeListener { view, scrollX, _, _, _ ->
-                if (nextPostIndex < posts.size &&
-                    scrollX + view.width >= row.width - dp(220)
-                ) {
-                    appendNextBatch()
+                val game = sorted[itemIndex]
+                val card = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL; background = rounded(panel, 16)
+                    setPadding(dp(5), dp(5), dp(5), dp(7)); isClickable = true; isFocusable = true
+                    setOnClickListener { showDetails(game) }
                 }
+                val imageFrame = FrameLayout(this).apply { clipToOutline = true; background = rounded(bg, 12) }
+                val image = ImageView(this).apply { scaleType = ImageView.ScaleType.CENTER_CROP; contentDescription = game.name }
+                imageFrame.addView(image, FrameLayout.LayoutParams(-1, -1))
+                if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) loadCover(image, game.coverLocalPath, game.coverUrl)
+                else { image.setImageResource(android.R.drawable.ic_menu_gallery); image.scaleType = ImageView.ScaleType.CENTER_INSIDE }
+                card.addView(imageFrame, LinearLayout.LayoutParams(-1, dp(174)))
+                card.addView(makeText(game.name, 12f, white, true).apply {
+                    maxLines = 2; minLines = 2; ellipsize = android.text.TextUtils.TruncateAt.END
+                    gravity = Gravity.CENTER_VERTICAL; setPadding(dp(4), dp(7), dp(4), dp(2))
+                })
+                val meta = listOf(game.platform, game.releaseYear).filter { it.isNotBlank() }.joinToString(" • ")
+                card.addView(makeText(meta, 9f, red, true).apply {
+                    maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END; setPadding(dp(4), 0, dp(4), dp(2))
+                })
+                row.addView(card, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(5); marginEnd = dp(5); bottomMargin = dp(10) })
             }
-            horizontal.addView(row)
-            gameList.addView(horizontal, LinearLayout.LayoutParams(-1, dp(250)).apply {
-                bottomMargin = dp(5)
-            })
+            gameList.addView(row, LinearLayout.LayoutParams(-1, -2))
         }
     }
 
