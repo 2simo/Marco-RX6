@@ -1,7 +1,6 @@
 package com.marcorx6.library.ui.activity
 
 import com.marcorx6.library.data.Game
-import com.marcorx6.library.ui.CoverUploadState
 
 /**
  * Mutable state shared by activity-level features.
@@ -9,6 +8,5 @@ import com.marcorx6.library.ui.CoverUploadState
  */
 internal class MainActivityRuntimeState {
     val games: MutableList<Game> = mutableListOf()
-    val coverUploadState = CoverUploadState()
     var isSyncing: Boolean = false
 }
