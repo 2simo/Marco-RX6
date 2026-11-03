@@ -472,35 +472,20 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun showTypographySettings() {
-        val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(22), dp(12), dp(22), dp(8)) }
-        val preview = makeText("MARCO RX6  •  معاينة شكل النص\nقراءة أوضح وتجربة مريحة", 17f, white, true)
-        preview.setPadding(dp(14), dp(14), dp(14), dp(14)); preview.background = rounded(panel, 13)
-        box.addView(preview, LinearLayout.LayoutParams(-1, -2))
-        box.addView(makeText("حجم الخط", 13f, red, true).apply { setPadding(0, dp(18), 0, dp(5)) })
-        val size = SeekBar(this).apply { max = 8; progress = ((fontScale() - 0.85f) / 0.05f).toInt().coerceIn(0, 8) }
-        box.addView(size)
-        val sizeLabel = makeText("حجم النص: " + (fontScale() * 100).toInt() + "%", 11f, gray)
-        box.addView(sizeLabel)
-        box.addView(makeText("نوع الخط", 13f, red, true).apply { setPadding(0, dp(16), 0, dp(5)) })
-        val family = themedSpinner(listOf("واضح (افتراضي)", "كلاسيكي", "أحادي المسافة"), when (fontPreferences().getString("family", "sans")) { "serif" -> 1; "mono" -> 2; else -> 0 })
-        box.addView(family)
-        size.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                val scale = 0.85f + progress * 0.05f
-                sizeLabel.text = "حجم النص: " + (scale * 100).toInt() + "%"
-                preview.textSize = 17f * scale
-            }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
-        AlertDialog.Builder(this).setTitle("تخصيص الخط").setView(box)
-            .setNegativeButton("إلغاء", null)
-            .setPositiveButton("حفظ") { _, _ ->
-                val familyValue = when (family.selectedItemPosition) { 1 -> "serif"; 2 -> "mono"; else -> "sans" }
-                fontPreferences().edit().putFloat("scale", 0.85f + size.progress * 0.05f).putString("family", familyValue).apply()
-                createInterface()
-                Toast.makeText(this, "تم حفظ إعدادات الخط", Toast.LENGTH_SHORT).show()
-            }.show().also { styleAlertDialog(it) }
+        TypographySettingsController(
+            activity = this,
+            preferences = fontPreferences(),
+            dp = ::dp,
+            makeText = ::makeText,
+            panelColor = { panel },
+            redColor = { red },
+            whiteColor = { white },
+            grayColor = { gray },
+            roundedBackground = ::rounded,
+            themedSpinner = ::themedSpinner,
+            recreateInterface = ::createInterface,
+            styleDialog = ::styleAlertDialog
+        ).show()
     }
 
     private fun showAdvancedFilters() {
