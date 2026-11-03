@@ -30,7 +30,11 @@ internal class BloggerAccessController(
                 false
             }
             postToUi {
-                if (version == requestVersion && currentAccountId() == accountId && currentBlogId() == blogId) {
+                if (
+                    version == requestVersion &&
+                    currentAccountId() == accountId &&
+                    currentBlogId() == blogId
+                ) {
                     setAdmin(allowed)
                     refreshUi()
                     if (!allowed) onDenied()
