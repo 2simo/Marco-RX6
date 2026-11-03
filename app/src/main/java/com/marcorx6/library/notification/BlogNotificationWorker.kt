@@ -19,7 +19,7 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 
-class BlogNotificationWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
+open class BlogNotificationWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
     override fun doWork(): Result {
         val prefs = applicationContext.getSharedPreferences("notification_settings", Context.MODE_PRIVATE)
         if (!prefs.getBoolean("enabled", false)) return Result.success()
