@@ -123,20 +123,22 @@ class MainActivity : ComponentActivity() {
         )
     }
     private val gameRepository by lazy { GameRepository(applicationContext) }
-    private val profileFeature: ProfileFeature by lazy {
-        ProfileFeature(
+    private val userExperienceRuntimeFeature by lazy {
+        UserExperienceRuntimeFeature(
             activity = this,
             contentResolver = contentResolver,
             filesDir = filesDir,
             executor = ioExecutor,
             postToUi = ::postToUi,
-            preferences = ProfilePreferences.open(this),
+            settings = getSharedPreferences("app_settings", MODE_PRIVATE),
+            appearancePreferences = ::appearancePreferences,
             games = { games },
             dp = ::dp,
             rounded = ::rounded,
             makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
             makeInput = ::makeInput,
-            tr = ::tr,
+            translate = ::tr,
+            currentLanguage = ::currentLanguage,
             isDarkMode = ::isDarkMode,
             panel = { panel },
             red = { red },
@@ -159,7 +161,16 @@ class MainActivity : ComponentActivity() {
             },
             onAvatarError = { message ->
                 Toast.makeText(this, "تعذر حفظ الصورة: $message", Toast.LENGTH_LONG).show()
-            }
+            },
+            isNotificationsEnabled = notificationFeature::isEnabled,
+            setNotificationsEnabled = notificationFeature::setEnabled,
+            scheduleNotifications = notificationFeature::schedule,
+            cancelNotifications = notificationFeature::cancel,
+            requestNotificationPermission = ::requestNotificationPermissionIfNeeded,
+            onPlatformSelected = { libraryViewState.selected = it },
+            recreateActivity = ::recreate,
+            showFirstRunSetup = ::showFirstRunSetup,
+            showProfileForStartup = ::showProfile
         )
     }
 
@@ -271,9 +282,8 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        startupExperienceController.dismiss()
+        userExperienceRuntimeFeature.dismiss()
         libraryRuntimeFeature.dispose()
-        firstRunSetupFeature.dismiss()
         ioExecutor.shutdownNow()
         if (coverRuntimeFeatureCreated) coverRuntimeFeature.close()
         super.onDestroy()
@@ -442,7 +452,7 @@ class MainActivity : ComponentActivity() {
                     }
                 )
             },
-            onAvatarSelected = profileFeature.avatarController::handle,
+            onAvatarSelected = userExperienceRuntimeFeature.avatarController::handle,
             onCoverSelected = coverFeature.selectionController::handle
         )
     }
@@ -453,43 +463,7 @@ class MainActivity : ComponentActivity() {
         data: Intent?
     ) = activityResultController.handle(requestCode, resultCode, data)
 
-    private val startupExperienceController by lazy {
-        StartupExperienceController(
-            activity = this,
-            dp = ::dp,
-            makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
-            showFirstRunSetup = ::showFirstRunSetup,
-            showProfile = ::showProfile
-        )
-    }
-
-    private fun showStartupExperience() = startupExperienceController.show()
-
-    private fun showFirstRunSetup() = firstRunSetupFeature.show()
-
-
-    private fun showProfile(): Unit = profileFeature.show()
-    private val firstRunSetupFeature by lazy {
-        FirstRunSetupFeature(
-            activity = this,
-            settings = getSharedPreferences("app_settings", MODE_PRIVATE),
-            appearancePreferences = ::appearancePreferences,
-            dp = ::dp,
-            rounded = ::rounded,
-            makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
-            currentLanguage = ::currentLanguage,
-            isDarkMode = ::isDarkMode,
-            isNotificationsEnabled = notificationFeature::isEnabled,
-            setNotificationsEnabled = notificationFeature::setEnabled,
-            scheduleNotifications = notificationFeature::schedule,
-            cancelNotifications = notificationFeature::cancel,
-            requestNotificationPermission = ::requestNotificationPermissionIfNeeded,
-            onPlatformSelected = { libraryViewState.selected = it },
-            applyUnifiedSkin = ::applyUnifiedSkin,
-            recreateActivity = ::recreate
-        )
-    }
-
+    private fun showProfile(): Unit = userExperienceRuntimeFeature.showProfile()
     private val gameExperienceFeature by lazy {
         GameExperienceRuntimeFeature(
             activity = this,
