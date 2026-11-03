@@ -9,6 +9,7 @@ import com.marcorx6.library.R
 import com.marcorx6.library.BlogNotificationWorker
 import com.marcorx6.library.data.Game
 import com.marcorx6.library.data.GameRepository
+import com.marcorx6.library.data.GameLibraryManager
 import com.marcorx6.library.data.BackupCodec
 import com.marcorx6.library.data.BloggerPostRepository
 import com.marcorx6.library.data.DownloadRepository
@@ -1253,60 +1254,9 @@ class MainActivity : ComponentActivity() {
     private fun mergeImportedGames(
         imported: List<Game>
     ): Triple<Int, Int, List<Pair<Game, String>>> {
-
-        var added = 0
-        var updated = 0
-        val warnings = mutableListOf<Pair<Game, String>>()
-
-        imported.forEach { incoming ->
-
-            val byPost = games.indexOfFirst {
-                it.sourcePostUrl.isNotBlank() &&
-                    it.sourcePostUrl == incoming.sourcePostUrl
-            }
-
-            if (byPost >= 0) {
-
-                val old = games[byPost]
-
-                games[byPost] = incoming.copy(
-                    coverLocalPath = old.coverLocalPath,
-                    coverUrl = if (old.coverLocalPath.isNotBlank())
-                        old.coverUrl else incoming.coverUrl,
-                    platform = if (old.platformManuallyCorrected)
-                        old.platform else incoming.platform,
-                    platformManuallyCorrected = old.platformManuallyCorrected,
-                    isFavorite = old.isFavorite,
-                    playStatus = old.playStatus,
-                    genre = old.genre.ifBlank { incoming.genre },
-                    releaseYear = old.releaseYear.ifBlank { incoming.releaseYear },
-                    bloggerPostId = incoming.bloggerPostId,
-                    bloggerHtml = incoming.bloggerHtml
-                )
-
-                updated++
-
-            } else {
-
-                val manualDuplicate = games.any {
-                    !it.blogImported &&
-                        it.name.equals(incoming.name, ignoreCase = true)
-                }
-
-                if (!manualDuplicate) {
-                    games.add(incoming)
-                    added++
-
-                    val mismatch = findPlatformMismatch(incoming)
-                    if (mismatch != null) {
-                        warnings.add(incoming to mismatch)
-                    }
-                }
-            }
-        }
-
+        val result = GameLibraryManager.merge(games, imported)
         saveGames()
-        return Triple(added, updated, warnings)
+        return Triple(result.added, result.updated, result.warnings)
     }
 
     private fun showPlatformWarnings(
@@ -1355,23 +1305,6 @@ class MainActivity : ComponentActivity() {
             }
             .setNegativeButton("إلغاء", null)
             .show().also { styleAlertDialog(it) }
-    }
-
-    private fun findPlatformMismatch(game: Game): String? {
-
-        val description = game.description
-
-        val regex = Regex(
-            "(?i)(?:نظام\\s*التشغيل|operating\\s*system)" +
-                "\\s*[:：\\-]?\\s*(PlayStation\\s*[1-4]|PS[1-4]|PSP)"
-        )
-
-        val found = regex.find(description)
-            ?.groupValues?.getOrNull(1) ?: return null
-
-        val fieldPlatform = BloggerFeedParser.normalizePlatform(found) ?: return null
-
-        return if (fieldPlatform != game.platform) fieldPlatform else null
     }
 
     // IMAGE LOADER
@@ -1835,30 +1768,14 @@ class MainActivity : ComponentActivity() {
             chip.setTextColor(if (active) accentForeground() else gray)
         }
 
-        val query = search.text.toString().trim()
-        val filtered = games.filter { item ->
-            val categoryMatch = when (selected) {
-                "ALL" -> true
-                "FAVORITES" -> item.isFavorite
-                "WANT_TO_PLAY" -> item.playStatus == "WANT_TO_PLAY"
-                "PLAYING" -> item.playStatus == "PLAYING"
-                "COMPLETED" -> item.playStatus == "COMPLETED"
-                "BLOG" -> item.blogImported
-                else -> item.platform == selected
-            }
-            val searchMatch = item.name.contains(query, ignoreCase = true) ||
-                item.platform.contains(query, ignoreCase = true) ||
-                item.description.contains(query, ignoreCase = true)
-            val genreMatch = selectedGenre.isBlank() || item.genre.equals(selectedGenre, ignoreCase = true)
-            val yearMatch = selectedYear.isBlank() || item.releaseYear == selectedYear
-            categoryMatch && searchMatch && genreMatch && yearMatch
-        }
-        val sorted = when (sortMode) {
-            "A-Z" -> filtered.sortedBy { it.name.lowercase(Locale.ROOT) }
-            "FAVORITES" -> filtered.sortedByDescending { it.isFavorite }
-            "NEW" -> filtered.reversed()
-            else -> filtered
-        }
+        val sorted = GameLibraryManager.filterAndSort(
+            games = games,
+            category = selected,
+            query = search.text.toString().trim(),
+            genre = selectedGenre,
+            year = selectedYear,
+            sortMode = sortMode
+        )
         countText.text = sorted.size.toString() + " " + tr("مقال")
         if (sorted.isEmpty()) {
             gameList.addView(makeText(tr("لا توجد مقالات حالياً"), 15f, gray, true).apply {
