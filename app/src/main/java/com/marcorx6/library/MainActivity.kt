@@ -141,7 +141,15 @@ class MainActivity : Activity() {
     private var isAdminSession = false
     private var bloggerBlogId = ""
     private var googleSignInClient: com.google.android.gms.auth.api.signin.GoogleSignInClient? = null
-    private val adminEmail = "xpangwan@gmail.com"
+    // App owner plus the two Blogger administrators approved by the owner.
+    // Blogger itself remains the authority: its API validates each signed-in account.
+    private val adminEmails = setOf(
+        "xpangwan@gmail.com",
+        "an9910106@gmail.com",
+        "slmankabos@gmail.com"
+    )
+    private fun isApprovedAdmin(email: String?): Boolean =
+        email?.trim()?.lowercase(Locale.ROOT) in adminEmails
     private val SIGN_IN_REQUEST = 1002
 
     private val bloggerFeedUrl =
@@ -179,7 +187,7 @@ class MainActivity : Activity() {
     }
     private fun restoreAdminSession() {
         val account = GoogleSignIn.getLastSignedInAccount(this)
-        isAdminSession = account?.email.equals(adminEmail, ignoreCase = true)
+        isAdminSession = isApprovedAdmin(account?.email)
     }
     private fun startGoogleSignIn() { googleSignInClient?.let { startActivityForResult(it.signInIntent, SIGN_IN_REQUEST) } }
     private fun signOutAdmin() {
@@ -187,7 +195,7 @@ class MainActivity : Activity() {
     }
     private fun adminToken(): String {
         val account = GoogleSignIn.getLastSignedInAccount(this) ?: throw IllegalStateException("يرجى تسجيل الدخول بحساب مسؤول المدونة")
-        if (!account.email.equals(adminEmail, ignoreCase = true)) throw SecurityException("حساب Google غير مخوّل")
+        if (!isApprovedAdmin(account.email)) throw SecurityException("حساب Google غير مخوّل")
         val androidAccount = account.account ?: throw IllegalStateException("بيانات حساب Google غير متاحة")
         return GoogleAuthUtil.getToken(applicationContext, androidAccount, "oauth2:https://www.googleapis.com/auth/blogger")
     }
@@ -204,7 +212,7 @@ class MainActivity : Activity() {
     private fun driveToken(): String {
         val account = GoogleSignIn.getLastSignedInAccount(this)
             ?: throw IllegalStateException("يرجى تسجيل الدخول بحساب المسؤول")
-        if (!account.email.equals(adminEmail, ignoreCase = true)) {
+        if (!isApprovedAdmin(account.email)) {
             throw SecurityException("حساب Google غير مخوّل لرفع الأغلفة")
         }
         val androidAccount = account.account
@@ -1896,7 +1904,7 @@ class MainActivity : Activity() {
         if (requestCode == SIGN_IN_REQUEST && resultCode == RESULT_OK) {
             try {
                 val account = GoogleSignIn.getSignedInAccountFromIntent(data).getResult(com.google.android.gms.common.api.ApiException::class.java)
-                isAdminSession = account.email.equals(adminEmail, ignoreCase = true)
+                isAdminSession = isApprovedAdmin(account.email)
                 if (!isAdminSession) googleSignInClient?.signOut()
                 createInterface()
                 Toast.makeText(this, if (isAdminSession) "تم ربط حساب Google المسؤول" else "هذا الحساب لا يملك صلاحية المسؤول. يمكنك المتابعة كزائر.", Toast.LENGTH_LONG).show()
