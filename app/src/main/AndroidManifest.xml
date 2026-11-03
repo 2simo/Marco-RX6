@@ -6,6 +6,7 @@
 
     <application
         android:allowBackup="false"
+        android:usesCleartextTraffic="false"
         android:label="MARCO RX6"
         android:icon="@drawable/ic_launcher"
         android:supportsRtl="true"

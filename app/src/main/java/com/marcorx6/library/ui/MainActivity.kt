@@ -1679,10 +1679,12 @@ class MainActivity : ComponentActivity() {
     // Blogger serves the same uploaded image through size-specific URL paths
     // such as /s320/filename.jpg. Use a larger rendition for the app's cover cards.
     private fun normalizeBloggerImageUrl(rawUrl: String): String {
-        val decoded = rawUrl.trim()
-            .replace("&amp;", "&")
-            .replace("\\/", "/")
-            .replace("\\u003d", "=")
+        val decoded = SecureUrlPolicy.upgradeToHttps(
+            rawUrl.trim()
+                .replace("&amp;", "&")
+                .replace("\\/", "/")
+                .replace("\\u003d", "=")
+        )
         if (decoded.isBlank()) return ""
         return try {
             val uri = Uri.parse(decoded)
@@ -3249,10 +3251,11 @@ class MainActivity : ComponentActivity() {
         }
 
         try {
+            val secureLink = SecureUrlPolicy.upgradeToHttps(link)
             startActivity(
                 Intent(
                     Intent.ACTION_VIEW,
-                    Uri.parse(link)
+                    Uri.parse(secureLink)
                 )
             )
         } catch (_: Exception) {
