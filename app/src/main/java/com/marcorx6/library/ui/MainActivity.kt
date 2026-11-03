@@ -550,7 +550,7 @@ class MainActivity : ComponentActivity() {
         data: Intent?
     ) {
 
-        if (requestCode == SIGN_IN_REQUEST && resultCode == RESULT_OK) {
+        if (requestCode == SIGN_IN_REQUEST) {
             googleSignInResultHandler.handle(
                 data = data,
                 onSuccess = {
