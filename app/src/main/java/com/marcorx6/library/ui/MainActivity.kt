@@ -95,7 +95,7 @@ class MainActivity : ComponentActivity() {
     private val white: Int get() = if (isDarkMode()) Color.WHITE else Color.rgb(24, 29, 42)
     private fun accentForeground(): Int = Color.WHITE
     private val gray: Int get() = if (isDarkMode()) Color.LTGRAY else Color.rgb(86, 96, 115)
-    private val platforms = listOf("الكل", "BLOG", "FAVORITES", "PSP", "PS1", "PS2", "PS3", "PS4")
+    private val platforms = listOf("الكل", "BLOG", "FAVORITES", "PS2", "PS3", "PS4")
     private val games = mutableListOf<Game>()
     private val googleDriveClient by lazy { com.marcorx6.library.network.GoogleDriveClient() }
     private val coverUploadRepository by lazy { com.marcorx6.library.data.CoverUploadRepository(filesDir, contentResolver, googleDriveClient) }
@@ -885,15 +885,13 @@ class MainActivity : ComponentActivity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        listOf("ALL", "PS4", "PS3", "PS2", "PS1", "PSP", "BLOG", "FAVORITES", "WANT_TO_PLAY", "PLAYING", "COMPLETED").forEach { category ->
+        listOf("ALL", "PS4", "PS3", "PS2", "BLOG", "FAVORITES", "WANT_TO_PLAY", "PLAYING", "COMPLETED").forEach { category ->
             val chip = TextView(this).apply {
                 text = when (category) {
                     "ALL" -> tr("الكل")
                     "PS4" -> "PS4"
                     "PS3" -> "PS3"
                     "PS2" -> "PS2"
-                    "PS1" -> "PS1"
-                    "PSP" -> "PSP"
                     "BLOG" -> tr("المدونة")
                     "FAVORITES" -> tr("المفضلة")
                     "WANT_TO_PLAY" -> "أريد لعبها"
