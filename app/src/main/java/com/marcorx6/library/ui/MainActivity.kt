@@ -918,132 +918,48 @@ class MainActivity : ComponentActivity() {
 
 
     // BLOG POST COMPOSER: reusable article template published directly to Blogger
-    private fun showGameDialog(existing: Game? = null) {
-        if (!isAdminSession) { Toast.makeText(this, "يجب تسجيل الدخول بصلاحية المسؤول للنشر.", Toast.LENGTH_SHORT).show(); return }
-        pendingCoverLocalPath = existing?.coverLocalPath ?: pendingCoverLocalPath
-        val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(10), dp(16), dp(16)); background = rounded(bg, 18) }
-        val intro = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(14), dp(13), dp(14), dp(13)); background = rounded(panel, 15) }
-        intro.addView(makeText(if (existing == null) "استوديو النشر • MARCO RX6" else "استوديو التحرير • MARCO RX6", 17f, white, true))
-        intro.addView(makeText("جهّز الغلاف والتفاصيل والمحتوى، ثم عاين المقال قبل إرساله إلى Blogger.", 11f, gray).apply { setPadding(0, dp(5), 0, 0) })
-        box.addView(intro, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
-        val labelsUi = gamePostLabelsController.create(
-            initialLabel = existing?.platform,
-            isNewPost = existing == null
-        )
-        val categoryButton = labelsUi.button
-        val selectedLabels = labelsUi.selectedLabels
-        val formFields = bloggerPostFormFieldsFactory.create()
-        val title = formFields.title
-        val body = formFields.body
-        val coverUrl = formFields.coverUrl
-        val link = formFields.relatedLink
-        val genre = formFields.genre
-        val releaseYear = formFields.releaseYear
-        coverUrlField = coverUrl
-        if (existing != null) {
-            title.setText(existing.name)
-            if (existing.platform.isNotBlank()) selectedLabels.add(existing.platform)
-            body.setText(existing.description)
-            coverUrl.setText(existing.coverUrl)
-            link.setText(existing.url.takeIf { it != existing.sourcePostUrl } ?: "")
-            genre.setText(existing.genre)
-            releaseYear.setText(existing.releaseYear)
-        } else {
-            body.setText("")
-            if (pendingCoverPublicUrl.isNotBlank()) coverUrl.setText(pendingCoverPublicUrl)
-        }
-        val preview = formFields.coverPreview
-        coverPreview = preview
-        box.addView(makeText("02 • صورة الغلاف", 12f, red, true).apply { setPadding(0, dp(8), 0, dp(6)) })
-        box.addView(preview, LinearLayout.LayoutParams(-1, dp(165)).apply { bottomMargin = dp(8) })
-        loadCover(preview, pendingCoverLocalPath, existing?.coverUrl ?: "")
-        box.addView(Button(this).apply { text = "اختيار صورة الغلاف من الهاتف"; tag = "marco_primary_action"; setTextColor(accentForeground()); background = rounded(red, 12); setOnClickListener { chooseCover() } }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
-        box.addView(makeText("أقسام المقال • Labels من المدونة", 10f, red, true)); box.addView(categoryButton)
-        box.addView(genre); box.addView(releaseYear); box.addView(title)
-        box.addView(makeText("03 • محتوى المقال", 12f, red, true).apply { setPadding(0, dp(12), 0, dp(5)) })
-        box.addView(body, LinearLayout.LayoutParams(-1, dp(190))); box.addView(coverUrl); box.addView(link)
-        val scroll = ScrollView(this).apply { isFillViewport = true; overScrollMode = View.OVER_SCROLL_NEVER; clipToPadding = false; setPadding(0, dp(4), 0, dp(8)); addView(box) }
-        val dialog = AlertDialog.Builder(this).setTitle(if (existing == null) "إنشاء مقال جديد" else "تعديل المقال").setView(scroll).setNegativeButton("إغلاق", null).setNeutralButton("معاينة", null).setPositiveButton(if (existing == null) "نشر المقال" else "حفظ التعديلات", null).create()
-        dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
-                val web = bloggerArticlePreviewFactory.create(
-                    title = title.text.toString(),
-                    labels = selectedLabels.joinToString("، "),
-                    genre = genre.text.toString(),
-                    releaseYear = releaseYear.text.toString(),
-                    body = body.text.toString(),
-                    coverUrl = coverUrl.text.toString(),
-                    relatedLink = link.text.toString()
-                )
-                AlertDialog.Builder(this).setTitle("معاينة قبل النشر").setView(web)
-                    .setPositiveButton("إغلاق", null).show().also { styleAlertDialog(it) }
-            }
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val postTitle = title.text.toString().trim(); val coverLink = coverUrl.text.toString().trim(); val relatedLink = link.text.toString().trim()
-                val contentText = body.text.toString().trim()
-                val validationFailure = BloggerPostInputValidator.validate(
-                    coverUploadInProgress = coverUploadInProgress,
-                    pendingCoverLocalPath = pendingCoverLocalPath,
-                    selectedLabels = selectedLabels,
-                    title = postTitle,
-                    coverUrl = coverLink,
-                    relatedLink = relatedLink,
-                    content = contentText
-                )
-                if (validationFailure != null) {
-                    when (validationFailure.field) {
-                        BloggerPostInputValidator.Field.TITLE -> title.error = validationFailure.message
-                        BloggerPostInputValidator.Field.COVER_URL -> coverUrl.error = validationFailure.message
-                        BloggerPostInputValidator.Field.RELATED_LINK -> link.error = validationFailure.message
-                        BloggerPostInputValidator.Field.BODY -> body.error = validationFailure.message
-                        null -> Toast.makeText(
-                            this,
-                            validationFailure.message,
-                            if (validationFailure.longMessage) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                    return@setOnClickListener
-                }
-                val post = bloggerGamePostFactory.create(
-                    existing = existing,
-                    title = postTitle,
-                    labels = selectedLabels.toList(),
-                    description = contentText,
-                    coverLink = coverLink,
-                    relatedLink = relatedLink,
-                    genre = genre.text.toString(),
-                    releaseYear = releaseYear.text.toString(),
-                    pendingCoverLocalPath = pendingCoverLocalPath,
-                    pendingCoverPublicUrl = pendingCoverPublicUrl
-                )
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
-                bloggerPostSaveController.save(
-                    post = post,
-                    labels = selectedLabels.toList(),
-                    existing = existing,
-                    onSuccess = { saved ->
-                        val previousCoverPath = existing?.coverLocalPath.orEmpty()
-                        gameLibraryStore.upsert(saved, existing)
-                        deleteCoverFileIfUnused(previousCoverPath)
-                        pendingCoverLocalPath = ""; pendingCoverPublicUrl = ""; coverUploadFailed = false
-                        saveGames(); renderGames(); dialog.dismiss()
-                        Toast.makeText(this, "تم نشر المقال على Blogger", Toast.LENGTH_LONG).show()
-                    },
-                    onError = { message ->
-                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true
-                        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
-                    }
-                )
-            }
-        }
-        dialog.show()
-        styleAlertDialog(dialog)
-        applyUnifiedSkin(box)
-        dialog.window?.setLayout(
-            -1,
-            (resources.displayMetrics.heightPixels * 0.88f).toInt()
+    private val bloggerPostComposerController by lazy {
+        BloggerPostComposerController(
+            activity = this,
+            isAdminSession = { isAdminSession },
+            dp = ::dp,
+            bg = { bg },
+            panel = { panel },
+            white = { white },
+            gray = { gray },
+            red = { red },
+            makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
+            rounded = ::rounded,
+            accentForeground = ::accentForeground,
+            labelsController = gamePostLabelsController,
+            formFieldsFactory = bloggerPostFormFieldsFactory,
+            setCoverFields = { url, preview ->
+                coverUrlField = url
+                coverPreview = preview
+            },
+            pendingCoverLocalPath = { pendingCoverLocalPath },
+            setPendingCoverLocalPath = { pendingCoverLocalPath = it },
+            pendingCoverPublicUrl = { pendingCoverPublicUrl },
+            setPendingCoverPublicUrl = { pendingCoverPublicUrl = it },
+            coverUploadInProgress = { coverUploadInProgress },
+            loadCover = ::loadCover,
+            chooseCover = ::chooseCover,
+            previewFactory = bloggerArticlePreviewFactory,
+            styleAlertDialog = ::styleAlertDialog,
+            postFactory = bloggerGamePostFactory,
+            saveController = bloggerPostSaveController,
+            upsertGame = { saved, existing -> gameLibraryStore.upsert(saved, existing) },
+            deleteCoverFileIfUnused = ::deleteCoverFileIfUnused,
+            resetCoverUploadFailed = { coverUploadFailed = false },
+            saveGames = ::saveGames,
+            renderGames = ::renderGames,
+            applyUnifiedSkin = ::applyUnifiedSkin
         )
     }
+
+    private fun showGameDialog(existing: Game? = null) =
+        bloggerPostComposerController.show(existing)
+
     private val gameDeletionController by lazy {
         GameDeletionController(
             activity = this,
