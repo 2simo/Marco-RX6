@@ -10,6 +10,7 @@ import com.marcorx6.library.BlogNotificationWorker
 import com.marcorx6.library.data.Game
 import com.marcorx6.library.data.GameRepository
 import com.marcorx6.library.data.BackupCodec
+import com.marcorx6.library.data.BloggerPostRepository
 import com.marcorx6.library.network.SecureUrlPolicy
 import com.marcorx6.library.network.BloggerApiClient
 import com.marcorx6.library.network.BloggerFeedClient
@@ -124,6 +125,9 @@ class MainActivity : ComponentActivity() {
     private var bloggerBlogId = ""
     private var googleSignInClient: com.google.android.gms.auth.api.signin.GoogleSignInClient? = null
     private val bloggerApiClient by lazy { BloggerApiClient { googleBloggerToken() } }
+    private val bloggerPostRepository by lazy {
+        BloggerPostRepository(bloggerApiClient, { bloggerBlogId }, { isAdminSession })
+    }
     private val gameRepository by lazy { GameRepository(applicationContext) }
     private val SIGN_IN_REQUEST = 1002
 
@@ -239,14 +243,6 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private fun adminToken(): String {
-        if (!isAdminSession) throw SecurityException("لم يتم التحقق من صلاحيات Blogger لهذا الحساب")
-        return googleBloggerToken()
-    }
-    private fun bloggerRequest(method: String, path: String, payload: JSONObject? = null): JSONObject {
-        if (!isAdminSession) throw SecurityException("لم يتم التحقق من صلاحيات Blogger لهذا الحساب")
-        return bloggerApiClient.request(method, path, payload)
-    }
     private fun driveToken(): String {
         val account = GoogleSignIn.getLastSignedInAccount(this)
             ?: throw IllegalStateException("يرجى تسجيل الدخول بحساب المسؤول")
@@ -262,25 +258,6 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-
-    private fun fetchBlogLabels(): List<String> {
-        if (bloggerBlogId.isBlank()) throw IllegalStateException("زامن المدونة أولاً ثم حدّث التسميات.")
-        val labels = linkedSetOf<String>()
-        var pageToken = ""
-        var pages = 0
-        do {
-            val tokenPart = if (pageToken.isBlank()) "" else "&pageToken=" + Uri.encode(pageToken)
-            val response = bloggerRequest("GET", "blogs/$bloggerBlogId/posts?fetchBodies=false&maxResults=500$tokenPart")
-            val posts = response.optJSONArray("items") ?: JSONArray()
-            for (i in 0 until posts.length()) {
-                val postLabels = posts.optJSONObject(i)?.optJSONArray("labels") ?: continue
-                for (j in 0 until postLabels.length()) postLabels.optString(j).trim().takeIf { it.isNotBlank() }?.let { labels.add(it) }
-            }
-            pageToken = response.optString("nextPageToken", "")
-            pages++
-        } while (pageToken.isNotBlank() && pages < 10)
-        return labels.toList().sortedBy { it.lowercase(Locale.ROOT) }
-    }
 
     private fun bloggerHtml(game: Game): String {
         val text = game.description.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>")
@@ -2326,7 +2303,7 @@ class MainActivity : ComponentActivity() {
                 .setNeutralButton("تحديث التسميات") { _, _ ->
                     Thread {
                         try {
-                            val latest = fetchBlogLabels()
+                            val latest = bloggerPostRepository.fetchLabels()
                             mainHandler.post {
                                 availableLabels.clear(); availableLabels.addAll(latest)
                                 selectedLabels.retainAll(availableLabels.toSet()); refreshLabelButton()
@@ -2364,7 +2341,7 @@ class MainActivity : ComponentActivity() {
         box.addView(makeText("أقسام المقال • Labels من المدونة", 10f, red, true)); box.addView(categoryButton)
         Thread {
             try {
-                val labels = fetchBlogLabels()
+                val labels = bloggerPostRepository.fetchLabels()
                 mainHandler.post {
                     availableLabels.clear(); availableLabels.addAll(labels)
                     if (existing == null && selectedLabels.isEmpty() && labels.isNotEmpty()) selectedLabels.add(labels.first())
@@ -2411,9 +2388,11 @@ class MainActivity : ComponentActivity() {
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
                 Thread {
                     try {
-                        if (bloggerBlogId.isBlank()) throw IllegalStateException("زامن المدونة أولاً، ثم حاول النشر.")
-                        val payload = JSONObject().put("kind", "blogger#post").put("title", post.name).put("content", htmlContent).put("labels", JSONArray().apply { selectedLabels.forEach { put(it) } })
-                        val result = if (existing == null) bloggerRequest("POST", "blogs/$bloggerBlogId/posts/", payload) else { if (existing.bloggerPostId.isBlank()) throw IllegalStateException("لا يملك هذا المقال معرّف Blogger. زامن المدونة ثم حاول مجدداً."); bloggerRequest("PUT", "blogs/$bloggerBlogId/posts/${existing.bloggerPostId}", payload) }
+                        val result = bloggerPostRepository.savePost(
+                            post,
+                            selectedLabels.toList(),
+                            existing?.bloggerPostId?.takeIf { it.isNotBlank() }
+                        )
                         mainHandler.post {
                             val saved = post.copy(bloggerPostId = result.optString("id", post.bloggerPostId), bloggerHtml = result.optString("content", htmlContent), url = result.optString("url", post.url), sourcePostUrl = result.optString("url", post.sourcePostUrl), blogImported = true)
                             val idx = if (existing == null) -1 else games.indexOf(existing); if (idx >= 0) games[idx] = saved else games.add(0, saved)
@@ -2441,7 +2420,7 @@ class MainActivity : ComponentActivity() {
             .setPositiveButton("حذف") { _, _ ->
                 if (!isAdminSession || bloggerBlogId.isBlank() || game.bloggerPostId.isBlank()) { Toast.makeText(this, "يلزم تسجيل دخول المسؤول ومعرّف المقال في Blogger", Toast.LENGTH_LONG).show(); return@setPositiveButton }
                 Thread { try {
-                    bloggerRequest("DELETE", "blogs/$bloggerBlogId/posts/${game.bloggerPostId}")
+                    bloggerPostRepository.deletePost(game.bloggerPostId)
                     mainHandler.post { games.remove(game); if (game.coverLocalPath.isNotBlank()) File(game.coverLocalPath).delete(); saveGames(); renderGames(); Toast.makeText(this, "تم الحذف من Blogger", Toast.LENGTH_SHORT).show() }
                 } catch (e: Exception) { mainHandler.post { Toast.makeText(this, e.message ?: "تعذر حذف المقال من Blogger", Toast.LENGTH_LONG).show() } } }.start()
             }
