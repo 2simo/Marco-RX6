@@ -40,9 +40,6 @@ jobs:
       - name: Run Android lint
         run: gradle --no-daemon lintDebug
 
-      - name: Build debug APK
-        run: gradle --no-daemon assembleDebug
-
       - name: Build signed release APK
         env:
           KEYSTORE_FILE: ${{ runner.temp }}/marcorx6-release.jks
@@ -50,6 +47,30 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: gradle --no-daemon assembleRelease
+
+      - name: Build debug APK with release OAuth certificate
+        env:
+          MARCO_DEBUG_USE_RELEASE_KEY: "true"
+          KEYSTORE_FILE: ${{ runner.temp }}/marcorx6-release.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: gradle --no-daemon assembleDebug
+
+      - name: Verify debug and release signing certificates
+        shell: bash
+        run: |
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort | tail -n 1)"
+          test -n "$APKSIGNER"
+          echo "Release APK signer:"
+          "$APKSIGNER" verify --print-certs app/build/outputs/apk/release/app-release.apk
+          echo "Debug APK signer:"
+          "$APKSIGNER" verify --print-certs app/build/outputs/apk/debug/app-debug.apk
+          RELEASE_CERT="$("$APKSIGNER" verify --print-certs app/build/outputs/apk/release/app-release.apk | awk -F': ' '/Signer #1 certificate SHA-256 digest/ {print $2}')"
+          DEBUG_CERT="$("$APKSIGNER" verify --print-certs app/build/outputs/apk/debug/app-debug.apk | awk -F': ' '/Signer #1 certificate SHA-256 digest/ {print $2}')"
+          test -n "$RELEASE_CERT"
+          test -n "$DEBUG_CERT"
+          test "$DEBUG_CERT" = "$RELEASE_CERT"
 
       - name: Upload signed release APK
         uses: actions/upload-artifact@v6
@@ -63,6 +84,6 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: marco-rx6-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
