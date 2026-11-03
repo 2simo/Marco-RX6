@@ -461,6 +461,9 @@ class MainActivity : ComponentActivity() {
         )
     }
 
+    private fun applyTypography(view: View) =
+        appearanceFeature.applyTypography(view, resources.displayMetrics.scaledDensity)
+
     private fun fontScale(): Float = appearanceFeature.fontScale()
     private fun fontFamilyName(): String = appearanceFeature.fontFamilyName()
     private fun showAppearanceSettings() = appearanceFeature.showAppearanceSettings()
