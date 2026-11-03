@@ -793,6 +793,8 @@ class MainActivity : ComponentActivity() {
 
 
     // BLOG POST COMPOSER: reusable article template published directly to Blogger
+    private val bloggerGamePostFactory by lazy { BloggerGamePostFactory() }
+
     private val bloggerPostComposerController by lazy {
         BloggerPostComposerController(
             activity = this,
