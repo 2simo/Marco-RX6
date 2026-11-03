@@ -647,8 +647,7 @@ class MainActivity : ComponentActivity() {
             view.setPadding(0, safeAreas.top, 0, safeAreas.bottom)
             insets
         }
-        applyMotionPreferences(menuScroll)
-        applyUnifiedSkin(menuScroll)
+        applyMotionPreferences(menuScroll)        applyUnifiedSkin(menuScroll)
         drawer.setContentView(menuScroll)
         val drawerWidth = minOf(dp(360), resources.displayMetrics.widthPixels - dp(24))
         drawer.window?.let { w ->
@@ -1297,8 +1296,7 @@ class MainActivity : ComponentActivity() {
                         textSize = 13f
                         setPadding(dp(16), dp(12), dp(16), dp(12))
                     }
-                    val scroll = ScrollView(this).apply {
-                        addView(detailsView)
+                    val scroll = ScrollView(this).apply {                        addView(detailsView)
                         setPadding(dp(8), 0, dp(8), 0)
                     }
                     AlertDialog.Builder(this)
@@ -1430,95 +1428,227 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun showFirstRunSetup() {
-        val box = LinearLayout(this).apply {
+        val settings = getSharedPreferences("app_settings", MODE_PRIVATE)
+        val appearance = appearancePreferences()
+        var step = 0
+        var preferredPlatform = settings.getString("preferred_platform", "PS3")
+            ?.takeIf { it in listOf("PS2", "PS3", "PS4") } ?: "PS3"
+        var languageCode = currentLanguage()
+        var darkMode = isDarkMode()
+        var accentKey = appearance.getString("accent", "blue")
+            ?.takeIf { it in listOf("violet", "blue", "green", "gold", "rose") } ?: "blue"
+        var notificationsEnabled = notificationScheduler.isEnabled()
+
+        val steps = listOf(
+            "منصة المكتبة", "لغة التطبيق", "المظهر", "لون الواجهة", "الإشعارات"
+        )
+        val dialog = Dialog(this, android.R.style.Theme_Material_NoActionBar)
+        val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(8), dp(20), dp(6))
+            setPadding(dp(22), dp(24), dp(22), dp(18))
+            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Color.rgb(3, 10, 22), Color.rgb(8, 22, 42), Color.rgb(4, 11, 24)))
         }
-        fun heading(value: String) {
-            box.addView(makeText(value, 12f, red, true).apply { setPadding(0, dp(12), 0, dp(5)) })
+        val top = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
         }
-        heading("اختر منصة مكتبتك المفضلة")
-        box.addView(makeText("سنبدأ بعرض ألعاب المنصة التي تختارها، ويمكنك تغييرها لاحقاً.", 11f, gray).apply {
-            setPadding(0, 0, 0, dp(8))
+        val brand = makeText("MARCO RX6", 13f, Color.WHITE, true).apply { letterSpacing = 0.12f }
+        val stepCount = makeText("1 / 5", 11f, Color.rgb(126, 190, 245), true)
+        top.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
+        top.addView(stepCount)
+        root.addView(top)
+
+        val progressTrack = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            background = rounded(Color.rgb(24, 43, 65), 8)
+        }
+        val progressFill = View(this).apply {
+            background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(Color.rgb(42, 145, 255), Color.rgb(23, 194, 224))).apply {
+                cornerRadius = dp(8).toFloat()
+            }
+        }
+        progressTrack.addView(progressFill, LinearLayout.LayoutParams(0, dp(5), 1f))
+        root.addView(progressTrack, LinearLayout.LayoutParams(-1, dp(5)).apply {
+            topMargin = dp(18)
+            bottomMargin = dp(28)
         })
-        var preferredPlatform = "PS3"
-        val platformCards = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        val platformOptions = listOf("PS2", "PS3", "PS4")
-        val platformViews = mutableMapOf<String, TextView>()
-        fun refreshPlatformCards() {
-            platformViews.forEach { (platform, view) ->
-                val active = platform == preferredPlatform
-                view.background = GradientDrawable().apply {
-                    cornerRadius = dp(14).toFloat()
-                    setColor(if (active) Color.rgb(12, 48, 83) else panel)
-                    setStroke(dp(if (active) 2 else 1), if (active) Color.rgb(42, 145, 255) else gray)
-                }
-                view.setTextColor(if (active) Color.WHITE else white)
-                view.text = if (active) "✓     $platform" else platform
-            }
+
+        val content = FrameLayout(this).apply { layoutParams = LinearLayout.LayoutParams(-1, 0, 1f) }
+        root.addView(content)
+        val footer = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
         }
-        platformOptions.forEach { platform ->
-            val card = TextView(this).apply {
-                textSize = 16f
-                typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
+        val back = Button(this).apply { text = "السابق"; setOnClickListener { renderStep(step - 1, true) } }
+        val next = Button(this).apply { text = "التالي"; tag = "marco_primary_action" }
+        footer.addView(back, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(8) })
+        footer.addView(next, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(8) })
+        root.addView(footer, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(18) })
+
+        fun optionCard(label: String, selected: Boolean, detail: String = ""): LinearLayout {
+            return LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(18), dp(15), dp(18), dp(15))
-                minHeight = dp(54)
-                setOnClickListener {
-                    preferredPlatform = platform
-                    refreshPlatformCards()
+                setPadding(dp(18), dp(14), dp(18), dp(14))
+                background = GradientDrawable().apply {
+                    cornerRadius = dp(17).toFloat()
+                    setColor(if (selected) Color.rgb(12, 48, 83) else Color.rgb(14, 29, 48))
+                    setStroke(dp(if (selected) 2 else 1),
+                        if (selected) Color.rgb(42, 145, 255) else Color.rgb(54, 76, 103))
                 }
+                addView(makeText(if (selected) "✓   $label" else label, 16f,
+                    if (selected) Color.WHITE else Color.rgb(222, 232, 245), true))
+                if (detail.isNotBlank()) addView(makeText(detail, 10f, Color.rgb(153, 174, 199)).apply {
+                    setPadding(0, dp(5), 0, 0)
+                })
+                isClickable = true
+                isFocusable = true
             }
-            platformViews[platform] = card
-            platformCards.addView(card, LinearLayout.LayoutParams(-1, -2).apply {
-                bottomMargin = dp(8)
+        }
+
+        fun animateIn(view: View) {
+            view.alpha = 0f
+            view.translationY = dp(18).toFloat()
+            view.animate().alpha(1f).translationY(0f).setDuration(360L)
+                .setInterpolator(android.view.animation.DecelerateInterpolator()).start()
+        }
+
+        fun renderStep(target: Int, animate: Boolean) {
+            step = target.coerceIn(0, steps.lastIndex)
+            stepCount.text = "${step + 1} / ${steps.size}"
+            progressFill.layoutParams = LinearLayout.LayoutParams(0, dp(5), (step + 1).toFloat())
+            progressTrack.removeAllViews()
+            progressTrack.addView(progressFill)
+            back.isEnabled = step > 0
+            back.alpha = if (step > 0) 1f else 0.35f
+            next.text = if (step == steps.lastIndex) "ابدأ الآن" else "التالي"
+            content.animate().cancel()
+            content.removeAllViews()
+            val page = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.TOP
+                setPadding(0, dp(8), 0, dp(8))
+            }
+            page.addView(makeText("خطوة ${step + 1}", 10f, Color.rgb(92, 180, 255), true))
+            page.addView(makeText(steps[step], 27f, Color.WHITE, true).apply {
+                setPadding(0, dp(8), 0, dp(8))
             })
-        }
-        refreshPlatformCards()
-        box.addView(platformCards)
-        heading("لغة التطبيق")
-        val language = themedSpinner(listOf("العربية", "English", "Français", "Español"), listOf("ar", "en", "fr", "es").indexOf(currentLanguage()).coerceAtLeast(0))
-        box.addView(language)
-        heading("المظهر")
-        val mode = themedSpinner(listOf("الوضع الليلي", "الوضع النهاري"), if (isDarkMode()) 0 else 1)
-        box.addView(mode)
-        heading("لون واجهة MARCO RX6")
-        val themeKeys = listOf("violet", "blue", "green", "gold", "rose")
-        val theme = themedSpinner(listOf("بنفسجي", "أزرق", "أخضر", "ذهبي", "وردي"), themeKeys.indexOf(appearancePreferences().getString("accent", "blue")).coerceAtLeast(0))
-        box.addView(theme)
-        heading("الإشعارات")
-        val notifications = CheckBox(this).apply {
-            text = "أريد استقبال إشعارات المقالات الجديدة"
-            setTextColor(white)
-            isChecked = false
-            buttonTintList = android.content.res.ColorStateList.valueOf(red)
-        }
-        box.addView(notifications)
-        AlertDialog.Builder(this)
-            .setTitle("مرحباً بك في MARCO RX6")
-            .setMessage("خصص تجربتك قبل البدء. يمكنك تغيير هذه الخيارات لاحقاً من القائمة.")
-            .setView(ScrollView(this).apply { addView(box) })
-            .setPositiveButton("حفظ وابدأ") { _, _ ->
-                val languageCode = listOf("ar", "en", "fr", "es")[language.selectedItemPosition]
-                getSharedPreferences("app_settings", MODE_PRIVATE).edit()
-                     .putString("language", languageCode)
-                    .putString("preferred_platform", preferredPlatform)
-                    .putBoolean("setup_completed", true).apply()
-                appearancePreferences().edit()
-                    .putBoolean("dark_mode", mode.selectedItemPosition == 0)
-                    .putString("accent", themeKeys[theme.selectedItemPosition]).apply()
-                selected = preferredPlatform
-                notificationScheduler.setEnabled(notifications.isChecked)
-                if (notifications.isChecked) {
-                    notificationScheduler.schedule()
-                    requestNotificationPermissionIfNeeded()
-                } else {
-                    notificationScheduler.cancel()
-                }
-                recreate()
+            val description = when (step) {
+                0 -> "اختر المنصة التي تريد أن تبدأ بها مكتبتك. يمكنك تغييرها في أي وقت."
+                1 -> "اختر اللغة التي تناسبك لعرض واجهة MARCO RX6."
+                2 -> "اختر المظهر الذي يريح عينيك أثناء التصفح."
+                3 -> "اختر اللون الذي سيظهر في الأزرار والعناصر التفاعلية."
+                else -> "هل ترغب في تلقي إشعار عند نشر مقالات جديدة في المدونة؟"
             }
-            .setCancelable(false)
-            .create().apply { setOnShowListener { styleAlertDialog(this) } }.show()
+            page.addView(makeText(description, 13f, Color.rgb(164, 184, 207)).apply {
+                setPadding(0, 0, 0, dp(24))
+            })
+
+            val choices = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+            fun addChoice(label: String, detail: String = "", selectedNow: Boolean, action: () -> Unit) {
+                val card = optionCard(label, selectedNow, detail)
+                choices.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(11) })
+                card.setOnClickListener {
+                    action()
+                    renderStep(step, false)
+                }
+                if (animate) {
+                    card.alpha = 0f
+                    card.translationY = dp(14).toFloat()
+                    card.animate().alpha(1f).translationY(0f).setStartDelay((choices.childCount - 1) * 65L)
+                        .setDuration(300L).start()
+                }
+            }
+
+            when (step) {
+                0 -> listOf("PS2", "PS3", "PS4").forEach { platform ->
+                    addChoice(platform, when (platform) {
+                        "PS2" -> "PlayStation 2"
+                        "PS3" -> "PlayStation 3"
+                        else -> "PlayStation 4"
+                    }, preferredPlatform == platform) { preferredPlatform = platform }
+                }
+                1 -> listOf("ar" to "العربية", "en" to "English", "fr" to "Français", "es" to "Español")
+                    .forEach { (code, label) -> addChoice(label, "", languageCode == code) { languageCode = code } }
+                2 -> listOf(true to "الوضع الليلي", false to "الوضع النهاري")
+                    .forEach { (dark, label) -> addChoice(label, "", darkMode == dark) { darkMode = dark } }
+                3 -> listOf(
+                    "violet" to "بنفسجي", "blue" to "أزرق", "green" to "أخضر",
+                    "gold" to "ذهبي", "rose" to "وردي"
+                ).forEach { (key, label) ->
+                    val swatchColor = when (key) {
+                        "violet" -> Color.rgb(145, 95, 235)
+                        "green" -> Color.rgb(35, 170, 125)
+                        "gold" -> Color.rgb(205, 157, 70)
+                        "rose" -> Color.rgb(215, 90, 135)
+                        else -> Color.rgb(42, 145, 255)
+                    }
+                    val card = optionCard(label, accentKey == key)
+                    val dot = View(this).apply { background = rounded(swatchColor, 20) }
+                    card.addView(dot, LinearLayout.LayoutParams(dp(24), dp(24)).apply { topMargin = dp(9) })
+                    choices.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(9) })
+                    card.setOnClickListener { accentKey = key; renderStep(step, false) }
+                    if (animate) animateIn(card)
+                }
+                4 -> {
+                    addChoice("تفعيل الإشعارات", "تنبيه عند وصول مقال جديد", notificationsEnabled) { notificationsEnabled = true }
+                    addChoice("إيقاف الإشعارات", "يمكنك تفعيلها لاحقاً من الإعدادات", !notificationsEnabled) { notificationsEnabled = false }
+                }
+            }
+            val scroll = ScrollView(this).apply {
+                isFillViewport = true
+                overScrollMode = View.OVER_SCROLL_NEVER
+                addView(choices)
+            }
+            page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
+            content.addView(page, FrameLayout.LayoutParams(-1, -1))
+            if (animate) animateIn(page)
+            next.setOnClickListener {
+                if (step < steps.lastIndex) {
+                    val old = step
+                    content.animate().alpha(0f).translationX(-dp(28).toFloat()).setDuration(150L)
+                        .withEndAction { renderStep(old + 1, true); content.translationX = dp(28).toFloat(); content.animate().alpha(1f).translationX(0f).setDuration(230L).start() }
+                        .start()
+                } else {
+                    settings.edit()
+                        .putString("language", languageCode)
+                        .putString("preferred_platform", preferredPlatform)
+                        .putBoolean("setup_completed", true)
+                        .putBoolean("profile_prompted", true)
+                        .apply()
+                    appearance.edit().putBoolean("dark_mode", darkMode).putString("accent", accentKey).apply()
+                    selected = preferredPlatform
+                    notificationScheduler.setEnabled(notificationsEnabled)
+                    if (notificationsEnabled) {
+                        notificationScheduler.schedule()
+                        requestNotificationPermissionIfNeeded()
+                    } else notificationScheduler.cancel()
+                    dialog.dismiss()
+                    recreate()
+                }
+            }
+        }
+
+        dialog.setContentView(root)
+        dialog.setCancelable(false)
+        dialog.setCanceledOnTouchOutside(false)
+        dialog.show()
+        dialog.window?.let { window ->
+            window.setBackgroundDrawableResource(android.R.color.transparent)
+            window.setLayout(-1, -1)
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+            window.statusBarColor = Color.TRANSPARENT
+            window.navigationBarColor = Color.TRANSPARENT
+            WindowInsetsControllerCompat(window, window.decorView).apply {
+                isAppearanceLightStatusBars = false
+                isAppearanceLightNavigationBars = false
+                show(WindowInsetsCompat.Type.systemBars())
+            }
+        }
+        applyUnifiedSkin(root)
+        renderStep(0, true)
     }
 
     private var activeProfileDialog: AlertDialog? = null
@@ -1947,8 +2077,7 @@ class MainActivity : ComponentActivity() {
                 articleWebView.saveWebArchive(archiveFile.absolutePath, false) { savedPath ->
                     mainHandler.post {
                         if (!savedPath.isNullOrBlank() && File(savedPath).isFile) {
-                            Toast.makeText(this, "تم حفظ المقال للقراءة دون اتصال", Toast.LENGTH_LONG).show()
-                        } else {
+                            Toast.makeText(this, "تم حفظ المقال للقراءة دون اتصال", Toast.LENGTH_LONG).show()                        } else {
                             Toast.makeText(this, "تعذر حفظ المقال. انتظر اكتمال تحميل الصور ثم حاول مجدداً.", Toast.LENGTH_LONG).show()
                         }
                     }
