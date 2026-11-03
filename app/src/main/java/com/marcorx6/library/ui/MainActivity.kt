@@ -13,7 +13,6 @@ import com.marcorx6.library.data.Game
 import com.marcorx6.library.data.GameRepository
 import com.marcorx6.library.data.GameLibraryManager
 import com.marcorx6.library.data.GameLibraryStore
-import com.marcorx6.library.data.DownloadRepository
 import com.marcorx6.library.network.BloggerArticleBuilder
 import com.marcorx6.library.network.BloggerFeedParser
 import android.app.AlertDialog
