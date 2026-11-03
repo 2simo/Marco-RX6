@@ -133,21 +133,16 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private val bloggerAccessController by lazy {
-        bloggerServices.createAccessController(
+    private val bloggerAccessFeature by lazy {
+        BloggerAccessFeature(
+            context = this,
+            services = bloggerServices,
             executor = ioExecutor,
-            currentAccountId = { GoogleSignIn.getLastSignedInAccount(this)?.id },
+            currentAccount = { GoogleSignIn.getLastSignedInAccount(this) },
             currentBlogId = { bloggerBlogId },
             setAdmin = { isAdminSession = it },
             postToUi = ::postToUi,
-            refreshUi = ::createInterface,
-            onDenied = {
-                Toast.makeText(
-                    this,
-                    "هذا الحساب لا يملك صلاحية النشر أو التعديل في مدونة Blogger",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
+            refreshUi = ::createInterface
         )
     }
 
@@ -237,14 +232,7 @@ class MainActivity : ComponentActivity() {
         refreshBloggerAccess()
     }
 
-    private fun refreshBloggerAccess() {
-        val account = GoogleSignIn.getLastSignedInAccount(this)
-        bloggerAccessController.refresh(
-            blogId = bloggerBlogId,
-            accountId = account?.id,
-            hasAccount = account?.account != null
-        )
-    }
+    private fun refreshBloggerAccess() = bloggerAccessFeature.refresh()
     private fun startGoogleSignIn() = googleSignInLauncher.launch(googleAdminFeature.accountController.signInIntent())
     private fun signOutAdmin() {
         googleAdminFeature.accountController.signOut {
