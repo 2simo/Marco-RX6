@@ -1,6 +1,7 @@
 package com.marcorx6.library.ui
 
-import com.marcorx6.library.ui.activity.MainActivity
+import android.content.Context
+import android.view.View
 
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -9,7 +10,8 @@ import com.marcorx6.library.data.Game
 
 /** Owns main library screen composition and its view lifecycle. */
 internal class MainLibraryFeature(
-    activity: MainActivity,
+    context: Context,
+    setContentView: (View) -> Unit,
     darkMode: () -> Boolean,
     currentLanguage: () -> String,
     dp: (Int) -> Int,
@@ -43,7 +45,8 @@ internal class MainLibraryFeature(
     applyMotionPreferences: (android.view.View) -> Unit
 ) {
     private val controller = MainLibraryInterfaceController(
-        activity = activity,
+        context = context,
+        setContentView = setContentView,
         darkMode = darkMode,
         currentLanguage = currentLanguage,
         dp = dp,
