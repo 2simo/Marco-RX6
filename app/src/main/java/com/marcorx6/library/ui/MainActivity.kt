@@ -435,17 +435,6 @@ class MainActivity : ComponentActivity() {
 
     private fun showSideMenu() = sideMenuController.show()
 
-    private fun fontPreferences() = AppearancePreferencesStore.typography(this)
-    private fun fontScale(): Float = TypographyPreferences.scale(fontPreferences())
-    private fun fontFamilyName(): String = TypographyPreferences.family(fontPreferences())
-    private fun applyTypography(view: View) {
-        TypographyApplier.apply(
-            view = view,
-            fontFamily = fontFamilyName(),
-            fontScale = fontScale(),
-            scaledDensity = resources.displayMetrics.scaledDensity
-        )
-    }
     private val motionPreferencesApplier by lazy {
         MotionPreferencesApplier(::appearancePreferences)
     }
@@ -453,21 +442,10 @@ class MainActivity : ComponentActivity() {
     private fun applyMotionPreferences(view: View) =
         motionPreferencesApplier.apply(view)
 
-
-    private fun showAppearanceSettings() {
-        AppearanceSettingsController(
+    private val appearanceFeature by lazy {
+        AppearanceFeature(
             activity = this,
-            preferences = appearancePreferences(),
-            applyMotionPreferences = ::applyMotionPreferences,
-            styleDialog = ::styleAlertDialog,
-            recreateActivity = ::recreate
-        ).show()
-    }
-
-    private fun showTypographySettings() {
-        TypographySettingsController(
-            activity = this,
-            preferences = fontPreferences(),
+            appearancePreferences = ::appearancePreferences,
             dp = ::dp,
             makeText = ::makeText,
             panelColor = { panel },
@@ -476,10 +454,17 @@ class MainActivity : ComponentActivity() {
             grayColor = { gray },
             roundedBackground = ::rounded,
             themedSpinner = ::themedSpinner,
-            recreateInterface = ::createInterface,
-            styleDialog = ::styleAlertDialog
-        ).show()
+            applyMotionPreferences = ::applyMotionPreferences,
+            styleDialog = ::styleAlertDialog,
+            recreateActivity = ::recreate,
+            recreateInterface = ::createInterface
+        )
     }
+
+    private fun fontScale(): Float = appearanceFeature.fontScale()
+    private fun fontFamilyName(): String = appearanceFeature.fontFamilyName()
+    private fun showAppearanceSettings() = appearanceFeature.showAppearanceSettings()
+    private fun showTypographySettings() = appearanceFeature.showTypographySettings()
 
     private fun showAdvancedFilters() {
         AdvancedFiltersController(
