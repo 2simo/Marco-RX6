@@ -2,6 +2,7 @@ package com.marcorx6.library.ui
 
 import android.content.ContentResolver
 import android.content.Context
+import android.content.Intent
 import android.widget.EditText
 import android.widget.ImageView
 import java.io.File
@@ -20,7 +21,8 @@ internal class CoverUploadRuntimeFeature(
     deleteCoverFileIfUnused: (String) -> Unit,
     dp: (Int) -> Int,
     white: () -> Int,
-    styleDialog: (android.app.AlertDialog) -> Unit
+    styleDialog: (android.app.AlertDialog) -> Unit,
+    launchCoverPicker: (Intent) -> Unit
 ) {
     val state = CoverUploadState()
 
@@ -42,4 +44,12 @@ internal class CoverUploadRuntimeFeature(
     )
 
     val selectionController get() = feature.selectionController
+
+    fun chooseCover() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "image/*"
+        }
+        launchCoverPicker(intent)
+    }
 }
