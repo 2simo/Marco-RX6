@@ -249,6 +249,14 @@ internal class MainLibraryInterfaceController(
             orientation = LinearLayout.VERTICAL
             setPadding(0, dp(4), 0, dp(18))
         }
+
+        // Publish the newly created views to MainActivity before the first render.
+        // renderGames() reads these fields, so leaving them unwired causes a lateinit crash.
+        setSearch(search)
+        setFilters(filters)
+        setCountText(countText)
+        setGameList(gameList)
+
         root.addView(gameList, LinearLayout.LayoutParams(-1, -2))
 
         if (adminSession()) {
