@@ -7,6 +7,7 @@ on:
     branches:
       - main
       - redesign/game-catalog-ui
+      - redesign/android-15-16-ui
 
 permissions:
   contents: read
