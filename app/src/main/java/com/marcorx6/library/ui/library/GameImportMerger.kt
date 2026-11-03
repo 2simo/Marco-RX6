@@ -1,7 +1,7 @@
 package com.marcorx6.library.ui
 
 import com.marcorx6.library.data.GameLibraryStore
-import com.marcorx6.library.model.Game
+import com.marcorx6.library.data.Game
 
 /** Applies imported Blogger games through the existing store merge policy. */
 internal object GameImportMerger {
