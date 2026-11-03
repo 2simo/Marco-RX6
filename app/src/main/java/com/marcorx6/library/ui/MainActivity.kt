@@ -2214,9 +2214,7 @@ class MainActivity : ComponentActivity() {
             Toast.makeText(this, "لا توجد ألعاب متاحة لاختيار لعبة اليوم", Toast.LENGTH_SHORT).show()
             return
         }
-        val calendar = Calendar.getInstance()
-        val dayKey = calendar.get(Calendar.YEAR) * 366 + calendar.get(Calendar.DAY_OF_YEAR)
-        val game = games[Math.floorMod(dayKey, games.size)]
+        val game = GameOfDaySelector.select(games, Calendar.getInstance()) ?: return
         val box = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(18), dp(6), dp(18), dp(4))
