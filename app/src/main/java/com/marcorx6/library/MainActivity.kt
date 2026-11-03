@@ -2637,6 +2637,12 @@ class MainActivity : Activity() {
             isVerticalScrollBarEnabled = false
             settings.javaScriptEnabled = false
             settings.domStorageEnabled = false
+            // Article content is remote Blogger HTML; keep local file/content access
+            // disabled unless the user explicitly opens a saved offline archive.
+            settings.allowFileAccess = false
+            settings.allowContentAccess = false
+            settings.allowFileAccessFromFileURLs = false
+            settings.allowUniversalAccessFromFileURLs = false
             settings.cacheMode = android.webkit.WebSettings.LOAD_DEFAULT
             settings.loadsImagesAutomatically = true
             settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW
