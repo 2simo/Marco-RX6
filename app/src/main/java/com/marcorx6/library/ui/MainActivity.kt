@@ -1184,15 +1184,31 @@ class MainActivity : ComponentActivity() {
                     .setPositiveButton("إغلاق", null).show().also { styleAlertDialog(it) }
             }
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val postTitle = title.text.toString().trim(); val categoryName = selectedLabels.firstOrNull() ?: ""; val coverLink = coverUrl.text.toString().trim(); val relatedLink = link.text.toString().trim()
-                if (coverUploadInProgress) { Toast.makeText(this, "انتظر حتى يكتمل رفع صورة الغلاف", Toast.LENGTH_LONG).show(); return@setOnClickListener }
-                if (pendingCoverLocalPath.isNotBlank() && coverUrl.text.toString().isBlank()) { Toast.makeText(this, "صورة الغلاف لم تكتمل عملية رفعها. أعد اختيار الصورة وانتظر رسالة نجاح الرفع.", Toast.LENGTH_LONG).show(); return@setOnClickListener }
-                if (selectedLabels.isEmpty()) { Toast.makeText(this, "اختر Label واحداً على الأقل من المدونة", Toast.LENGTH_SHORT).show(); return@setOnClickListener }
-                if (postTitle.isBlank()) { title.error = "أدخل عنوان المقال"; return@setOnClickListener }
-                if (coverLink.isNotBlank() && !coverLink.startsWith("https://")) { coverUrl.error = "أدخل رابط صورة يبدأ بـ HTTPS"; return@setOnClickListener }
-                if (relatedLink.isNotBlank() && !relatedLink.startsWith("https://")) { link.error = "أدخل رابطاً يبدأ بـ HTTPS"; return@setOnClickListener }
+                val postTitle = title.text.toString().trim(); val coverLink = coverUrl.text.toString().trim(); val relatedLink = link.text.toString().trim()
                 val contentText = body.text.toString().trim()
-                if (contentText.isBlank()) { body.error = "أدخل وصف المقال"; return@setOnClickListener }
+                val validationFailure = BloggerPostInputValidator.validate(
+                    coverUploadInProgress = coverUploadInProgress,
+                    pendingCoverLocalPath = pendingCoverLocalPath,
+                    selectedLabels = selectedLabels,
+                    title = postTitle,
+                    coverUrl = coverLink,
+                    relatedLink = relatedLink,
+                    content = contentText
+                )
+                if (validationFailure != null) {
+                    when (validationFailure.field) {
+                        BloggerPostInputValidator.Field.TITLE -> title.error = validationFailure.message
+                        BloggerPostInputValidator.Field.COVER_URL -> coverUrl.error = validationFailure.message
+                        BloggerPostInputValidator.Field.RELATED_LINK -> link.error = validationFailure.message
+                        BloggerPostInputValidator.Field.BODY -> body.error = validationFailure.message
+                        null -> Toast.makeText(
+                            this,
+                            validationFailure.message,
+                            if (validationFailure.longMessage) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    return@setOnClickListener
+                }
                 val post = bloggerGamePostFactory.create(
                     existing = existing,
                     title = postTitle,
@@ -1205,7 +1221,6 @@ class MainActivity : ComponentActivity() {
                     pendingCoverLocalPath = pendingCoverLocalPath,
                     pendingCoverPublicUrl = pendingCoverPublicUrl
                 )
-                val htmlContent = post.bloggerHtml
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
                 bloggerPostSaveController.save(
                     post = post,
