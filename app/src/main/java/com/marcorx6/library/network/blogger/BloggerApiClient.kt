@@ -11,8 +11,8 @@ import java.util.Locale
  */
 internal class BloggerApiClient(
     private val tokenProvider: () -> String
-) {
-    fun request(method: String, path: String, payload: JSONObject? = null): JSONObject {
+) : BloggerApi {
+    override fun request(method: String, path: String, payload: JSONObject?): JSONObject {
         val connection = URL("https://www.googleapis.com/blogger/v3/$path")
             .openConnection() as HttpURLConnection
         try {

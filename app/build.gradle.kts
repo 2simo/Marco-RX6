@@ -28,9 +28,8 @@ android {
 
     buildTypes {
         getByName("debug") {
-            // CI debug APKs use the same certificate as the working release APK so
-            // Google OAuth sees the registered Android package/certificate pair.
-            // Local debug builds keep Android's normal local debug keystore.
+            // CI debug uses the registered release certificate for the same OAuth pair.
+            // Local builds retain the normal Android debug keystore.
             if (System.getenv("MARCO_DEBUG_USE_RELEASE_KEY") == "true") {
                 signingConfig = signingConfigs.getByName("release")
             }

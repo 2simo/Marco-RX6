@@ -1,4 +1,3 @@
-
 name: Build Marco RX6 APK
 
 on:
@@ -7,6 +6,7 @@ on:
     branches:
       - main
       - redesign/game-catalog-ui
+      - refactor/split-mainactivity
 
 permissions:
   contents: read
@@ -80,8 +80,8 @@ jobs:
         run: |
           APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort | tail -n 1)"
           test -n "$APKSIGNER"
-          RELEASE_CERT="$("$APKSIGNER" verify --print-certs app/build/outputs/apk/release/app-release.apk | sed -n 's/^Signer #1 certificate SHA-256 digest: //p')"
-          DEBUG_CERT="$("$APKSIGNER" verify --print-certs app/build/outputs/apk/debug/app-debug.apk | sed -n 's/^Signer #1 certificate SHA-256 digest: //p')"
+          RELEASE_CERT="$("$APKSIGNER" verify --print-certs app/build/outputs/apk/release/app-release.apk | awk '/certificate SHA-256 digest:/ {print $NF; exit}')"
+          DEBUG_CERT="$("$APKSIGNER" verify --print-certs app/build/outputs/apk/debug/app-debug.apk | awk '/certificate SHA-256 digest:/ {print $NF; exit}')"
           test -n "$RELEASE_CERT"
           test "$DEBUG_CERT" = "$RELEASE_CERT"
 

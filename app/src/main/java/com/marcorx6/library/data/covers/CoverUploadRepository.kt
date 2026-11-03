@@ -2,7 +2,7 @@ package com.marcorx6.library.data
 
 import android.content.ContentResolver
 import android.net.Uri
-import com.marcorx6.library.network.GoogleDriveClient
+import com.marcorx6.library.network.DriveCoverUploader
 import java.io.File
 import java.io.FileOutputStream
 
@@ -13,7 +13,7 @@ import java.io.FileOutputStream
 internal class CoverUploadRepository(
     private val filesDir: File,
     private val contentResolver: ContentResolver,
-    private val driveClient: GoogleDriveClient
+    private val driveClient: DriveCoverUploader
 ) {
     /** Copies a picked image into the app's private covers directory. */
     fun savePickedCover(uri: Uri): File {
