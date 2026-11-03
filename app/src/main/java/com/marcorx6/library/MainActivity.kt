@@ -594,7 +594,7 @@ class MainActivity : Activity() {
         brand.addView(makeText("RX6", 27f, white, true))
         top.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
         top.addView(TextView(this).apply {
-            text = "×"; textSize = 30f; setTextColor(Color.LTGRAY); gravity = Gravity.CENTER
+            text = "×"; textSize = 30f; setTextColor(if (isDarkMode()) Color.LTGRAY else Color.rgb(67, 76, 94)); gravity = Gravity.CENTER
             setPadding(dp(12), 0, dp(12), 0); setOnClickListener { drawer.dismiss() }
         })
         panel.addView(top)
