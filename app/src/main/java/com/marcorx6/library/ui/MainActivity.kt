@@ -52,7 +52,6 @@ import androidx.core.view.WindowInsetsControllerCompat
 
 class MainActivity : ComponentActivity() {
 
-    private val notificationScheduler by lazy { BlogNotificationScheduler(applicationContext) }
     private val downloadRepository by lazy { DownloadRepository(applicationContext) }
     private val downloadUiController by lazy {
         DownloadUiController(this, downloadRepository) { dialog -> styleAlertDialog(dialog) }
@@ -265,7 +264,7 @@ class MainActivity : ComponentActivity() {
 
         applySystemBarAppearance()
 
-        notificationScheduler.createNotificationChannel()
+        notificationFeature.createChannel()
         loadGames()
         restoreAdminSession()
         createInterface()
@@ -275,8 +274,8 @@ class MainActivity : ComponentActivity() {
         val setupCompleted = getSharedPreferences("app_settings", MODE_PRIVATE)
             .getBoolean("setup_completed", false)
         if (setupCompleted) {
-            if (notificationScheduler.isEnabled()) {
-                notificationScheduler.schedule()
+            if (notificationFeature.isEnabled()) {
+                notificationFeature.schedule()
                 requestNotificationPermissionIfNeeded()
             }
             syncFromBlog(showResult = false)
@@ -325,20 +324,14 @@ class MainActivity : ComponentActivity() {
 
     private fun bloggerHtml(game: Game): String = BloggerHtmlBuilder.build(game)
 
-    private val notificationPermissionController by lazy {
-        NotificationPermissionController(this)
+    private val notificationFeature by lazy {
+        NotificationsFeature(this, ::styleAlertDialog)
     }
 
     private fun requestNotificationPermissionIfNeeded() =
-        notificationPermissionController.requestIfNeeded()
+        notificationFeature.requestPermissionIfNeeded()
 
-    private val notificationSettingsController by lazy {
-        NotificationSettingsController(this, notificationScheduler, ::styleAlertDialog) {
-            requestNotificationPermissionIfNeeded()
-        }
-    }
-
-    private fun showNotificationSettings() = notificationSettingsController.show()
+    private fun showNotificationSettings() = notificationFeature.showSettings()
 
     private val basicUiFactory by lazy { BasicUiFactory(this) }
 
@@ -671,10 +664,10 @@ class MainActivity : ComponentActivity() {
             makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
             currentLanguage = ::currentLanguage,
             isDarkMode = ::isDarkMode,
-            isNotificationsEnabled = notificationScheduler::isEnabled,
-            setNotificationsEnabled = notificationScheduler::setEnabled,
-            scheduleNotifications = notificationScheduler::schedule,
-            cancelNotifications = notificationScheduler::cancel,
+            isNotificationsEnabled = notificationFeature::isEnabled,
+            setNotificationsEnabled = notificationFeature::setEnabled,
+            scheduleNotifications = notificationFeature::schedule,
+            cancelNotifications = notificationFeature::cancel,
             requestNotificationPermission = ::requestNotificationPermissionIfNeeded,
             onPlatformSelected = { selected = it },
             applyUnifiedSkin = ::applyUnifiedSkin,
