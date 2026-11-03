@@ -213,9 +213,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun configureGoogleSignIn() {
-        val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestEmail().requestScopes(Scope("https://www.googleapis.com/auth/blogger"), Scope("https://www.googleapis.com/auth/drive.file")).build()
-        googleSignInClient = GoogleSignIn.getClient(this, options)
+        googleSignInClient = GoogleSignInFactory.create(this)
     }
     private fun restoreAdminSession() {
         isAdminSession = false
