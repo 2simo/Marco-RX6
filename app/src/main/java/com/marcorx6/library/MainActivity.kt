@@ -728,21 +728,30 @@ class MainActivity : Activity() {
             isVerticalScrollBarEnabled = false
             addView(panel, ViewGroup.LayoutParams(-1, -2))
         }
+        ViewCompat.setOnApplyWindowInsetsListener(menuScroll) { view, insets ->
+            val safeAreas = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            view.setPadding(0, safeAreas.top, 0, safeAreas.bottom)
+            insets
+        }
         applyMotionPreferences(menuScroll)
         applyUnifiedSkin(menuScroll)
         drawer.setContentView(menuScroll)
+        val drawerWidth = minOf(dp(360), resources.displayMetrics.widthPixels - dp(24))
         drawer.window?.let { w ->
             w.setBackgroundDrawableResource(android.R.color.transparent)
             w.addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
             val lp = w.attributes
-            lp.width = dp(310)
+            lp.width = drawerWidth
             lp.height = -1
             lp.gravity = if (currentLanguage() == "ar") Gravity.RIGHT else Gravity.LEFT
             lp.dimAmount = 0.62f
             w.attributes = lp
         }
         drawer.show()
-        drawer.window?.setLayout(dp(310), -1)
+        drawer.window?.setLayout(drawerWidth, -1)
+        menuScroll.requestApplyInsets()
     }
 
     private fun fontPreferences() = getSharedPreferences("font_settings", MODE_PRIVATE)
