@@ -9,7 +9,7 @@ import android.graphics.drawable.GradientDrawable
 
 /** Groups appearance dialogs and typography preferences under one feature boundary. */
 internal class AppearanceFeature(
-    activity: Activity,
+    private val activity: Activity,
     appearancePreferences: () -> SharedPreferences,
     dp: (Int) -> Int,
     makeText: (String, Float, Int, Boolean) -> TextView,
