@@ -4,32 +4,23 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Blue dragon emblem -->
+    <!-- Keep the complete emblem inside the adaptive-icon safe zone. -->
     <path
         android:fillColor="#071A2E"
         android:strokeColor="#168BFA"
-        android:strokeWidth="2.2"
+        android:strokeWidth="2.8"
         android:strokeLineJoin="round"
-        android:pathData="M54,5 C43,9 36,18 34,29 C25,25 19,18 16,11 C14,26 19,37 29,44 C23,53 23,65 31,73 C36,78 42,80 48,80 L48,70 C40,68 36,62 37,55 C38,48 43,43 51,42 C46,36 44,29 47,22 C50,27 55,31 62,32 C59,24 60,16 66,9 C68,18 74,24 84,27 C78,31 75,37 75,44 C84,39 91,31 93,20 C99,36 94,49 83,58 C84,69 77,78 66,81 L61,71 C69,67 72,60 69,53 C65,46 59,44 53,48 C59,51 62,56 61,62 C60,68 55,72 49,73 L49,82 C60,86 75,82 83,72 C91,62 90,50 85,43 C96,32 98,17 92,5 C86,16 78,20 70,18 C65,10 60,6 54,5 Z" />
+        android:pathData="M54,20 C43,20 34,27 31,38 C25,34 22,28 22,22 C17,34 20,45 29,52 C24,61 27,72 36,78 C42,82 49,83 55,80 L52,70 C45,72 39,68 38,62 C37,55 42,49 50,48 C44,42 43,35 47,29 C51,35 58,38 65,37 C61,31 62,25 67,21 C70,29 77,34 86,34 C80,39 78,46 80,52 C87,47 91,39 91,30 C98,43 94,56 84,64 C85,74 78,82 68,85 L62,76 C69,72 72,66 69,60 C66,54 60,52 54,55 C60,58 62,63 60,68 C58,73 53,76 47,76 L49,85 C61,89 75,85 83,76 C92,66 92,53 87,45 C96,34 96,22 91,15 C84,25 76,27 69,25 C65,22 60,20 54,20 Z" />
     <path
-        android:fillColor="#071A2E"
-        android:strokeColor="#67D5FF"
-        android:strokeWidth="1.8"
-        android:strokeLineJoin="round"
-        android:pathData="M52,36 C59,34 67,37 70,43 C65,41 61,42 58,46 C55,43 52,40 52,36 Z" />
+        android:fillColor="#67D5FF"
+        android:pathData="M61,43 L70,46 L63,52 Z" />
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M66,38 L71,40 L67,43 Z" />
+        android:pathData="M69,44 L73,46 L69,48 Z" />
     <path
         android:fillColor="#168BFA"
-        android:pathData="M28,46 L17,42 L25,55 L19,62 L34,61 Z M78,48 L91,42 L84,56 L91,63 L74,62 Z" />
+        android:pathData="M33,57 L23,54 L29,65 L24,72 L38,68 Z M78,58 L89,53 L83,66 L89,72 L75,69 Z" />
     <path
-        android:fillColor="#168BFA"
-        android:pathData="M45,79 L42,88 L49,85 L54,91 L58,83 L65,87 L62,77 Z" />
-    <!-- MARCO RX6 wordmark -->
-    <path android:fillColor="#FFFFFF"
-        android:pathData="M18,94 L18,88 L20,88 L23,92 L26,88 L28,88 L28,94 L26,94 L26,91 L23,94 L20,91 L20,94 Z M30,94 L30,88 L35,88 C37,88 38,89 38,91 C38,92 37,93 36,93 L38,94 L35,94 L33,92 L32,92 L32,94 Z M32,90 L32,91 L35,91 C35.7,91 36,90.8 36,90.5 C36,90.2 35.7,90 35,90 Z M40,94 L43,88 L46,88 L49,94 L46.8,94 L46.2,93 L42.8,93 L42.2,94 Z M43.5,91.5 L45.5,91.5 L44.5,89.8 Z M51,88 L57,88 L57,90 L53,90 L53,91 L56.5,91 L56.5,93 L53,93 L53,94 L51,94 Z M59,88 L61,88 L61,92 L65,92 L65,94 L59,94 Z M67,88 L73,88 L73,90 L69,90 L69,91 L72.5,91 L72.5,93 L69,93 L69,94 L67,94 Z M75,88 L77,88 L79,90 L81,88 L83.5,88 L80.5,91 L83.5,94 L81,94 L79,92 L77,94 L74.5,94 L77.5,91 Z M85,88 L90,88 L90,90 L87,90 L87,91 L90,91 L90,94 L85,94 L85,92 L88,92 L88,91 L85,91 Z" />
-    <!-- XPANGWAN small secondary signature -->
-    <path android:fillColor="#67D5FF"
-        android:pathData="M36,98 L36,96 L39,96 C40,96 40.5,96.5 40.5,97 C40.5,97.5 40,98 39,98 Z M37,97 L39,97 L39,97.5 L37,97.5 Z M42,98 L44,96 L46,98 L45,98 L44,97 L43,98 Z M48,96 L49,96 L49,98 L52,98 L52,99 L48,99 Z M54,96 L55,96 L55,98 L58,98 L58,99 L54,99 Z M60,96 L61,96 L61,99 L60,99 Z M63,96 L64,96 L66,98 L66,96 L67,96 L67,99 L66,99 L64,97 L64,99 L63,99 Z M69,96 L72,96 L72,97 L70,97 L70,97.5 L72,97.5 L72,98.5 L70,98.5 L70,99 L69,99 Z" />
+        android:fillColor="#67D5FF"
+        android:pathData="M43,79 L40,87 L48,83 L54,89 L59,81 L66,85 L62,76 Z" />
 </vector>
