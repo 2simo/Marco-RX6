@@ -3,7 +3,7 @@ package com.marcorx6.library.ui.activity
 
 import com.marcorx6.library.ui.AccentPalette
 import com.marcorx6.library.ui.AdvancedFiltersFeature
-import com.marcorx6.library.ui.AppearanceFeature
+import com.marcorx6.library.ui.AppearanceRuntimeFeature
 import com.marcorx6.library.ui.AppearancePreferencesStore
 import com.marcorx6.library.ui.BlogSyncFeature
 import com.marcorx6.library.ui.BloggerAccessFeature
