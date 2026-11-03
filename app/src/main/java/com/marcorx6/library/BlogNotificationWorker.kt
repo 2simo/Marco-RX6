@@ -1,5 +1,7 @@
 package com.marcorx6.library
 
+import com.marcorx6.library.ui.MainActivity
+
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
