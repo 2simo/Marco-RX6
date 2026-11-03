@@ -301,127 +301,39 @@ class MainActivity : ComponentActivity() {
         getSharedPreferences("app_settings", MODE_PRIVATE).getString("language", "ar") ?: "ar"
 
 
-    private fun showSideMenu() {
-        val gold = red
-        val ink = bg
-        val surface = if (isDarkMode()) panel else Color.rgb(255, 255, 255)
-        val drawer = Dialog(this)
-        val panel = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutDirection = if (currentLanguage() == "ar") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
-            setPadding(dp(20), dp(24), dp(20), dp(18))
-            setBackground(GradientDrawable().apply {
-                setColor(ink)
-                cornerRadii = floatArrayOf(0f, 0f, dp(24).toFloat(), dp(24).toFloat(),
-                    dp(24).toFloat(), dp(24).toFloat(), 0f, 0f)
-                setStroke(dp(1), Color.rgb(57, 105, 158))
-            })
-        }
-        val top = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
-        val brand = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        brand.addView(makeText("MARCO", 10f, gold, true))
-        brand.addView(makeText("RX6", 27f, white, true))
-        top.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
-        top.addView(TextView(this).apply {
-            text = "×"; textSize = 30f; setTextColor(if (isDarkMode()) Color.LTGRAY else Color.rgb(67, 76, 94)); gravity = Gravity.CENTER
-            setPadding(dp(12), 0, dp(12), 0); setOnClickListener { drawer.dismiss() }
-        })
-        panel.addView(top)
-        panel.addView(makeText("القائمة الرئيسية", 10f, gray, true).apply {
-            setPadding(0, dp(24), 0, dp(12))
-        })
-        fun menuItem(icon: String, label: String, detail: String = "", action: () -> Unit) {
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                    if (isDarkMode()) intArrayOf(Color.rgb(24, 39, 63), Color.rgb(12, 22, 39))
-                    else intArrayOf(Color.WHITE, Color.rgb(237, 243, 252))).apply {
-                    cornerRadius = dp(16).toFloat()
-                    setStroke(dp(1), if (isDarkMode()) Color.rgb(43, 83, 128) else Color.rgb(207, 220, 239))
-                }
-                elevation = dp(1).toFloat()
-                setPadding(dp(14), dp(14), dp(14), dp(14))
-                isClickable = true
-                isFocusable = true
-                setOnClickListener { drawer.dismiss(); action() }
-            }
-            val iconView = TextView(this).apply {
-                text = icon
-                textSize = 17f
-                gravity = Gravity.CENTER
-                setTextColor(if (isDarkMode()) Color.WHITE else Color.rgb(68, 76, 96))
-                background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                    if (isDarkMode()) intArrayOf(Color.rgb(29, 103, 169), Color.rgb(18, 55, 91))
-                    else intArrayOf(Color.rgb(220, 239, 255), Color.rgb(195, 222, 250))).apply {
-                    cornerRadius = dp(12).toFloat()
-                    setStroke(dp(1), if (isDarkMode()) Color.rgb(69, 139, 201) else Color.rgb(165, 204, 239))
-                }
-                setPadding(dp(11), dp(9), dp(11), dp(9))
-                minWidth = dp(42)
-            }
-            val labels = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-            labels.addView(makeText(label, 14f, white, true))
-            if (detail.isNotBlank()) labels.addView(makeText(detail, 10f, gray).apply { setPadding(0, dp(4), 0, 0) })
-            row.addView(iconView, LinearLayout.LayoutParams(-2, -2).apply { marginEnd = dp(12) })
-            row.addView(labels, LinearLayout.LayoutParams(0, -2, 1f))
-            panel.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(9) })
-        }
-        // الأكثر استخداماً أولاً، ثم الحساب والإدارة والتخصيص والقنوات
-        menuItem("⟳", tr("⟳  مزامنة"), if (isSyncing) "المزامنة قيد التنفيذ" else "تحديث المقالات من المدونة") {
-            syncFromBlog(showResult = true)
-        }
-        menuItem("⬇", "مدير التنزيلات", "متابعة التنزيلات وحالاتها") { showDownloadManager() }
-        menuItem("♧", tr("♧  التنبيهات"), "التحكم في إشعارات المقالات الجديدة") { showNotificationSettings() }
-        menuItem("♙", tr("حسابي"), tr("ملفي الشخصي")) { showProfile() }
-        menuItem("♛", if (isAdminSession) tr("● مسؤول") else tr("دخول المسؤول  ↗"),
-            if (isAdminSession) "تسجيل الخروج من حساب المسؤول" else "إدارة ونشر مقالات المدونة") {
-            if (isAdminSession) signOutAdmin() else startGoogleSignIn()
-        }
-        if (isAdminSession) {
-            menuItem("＋", tr("＋  نشر"), "إضافة مقال جديد إلى المدونة") { showGameDialog() }
-        }
-        menuItem("✧", "لعبة اليوم", "اكتشف اختيار MARCO RX6 اليومي") { showGameOfTheDay() }
-        menuItem("文", tr("إعدادات اللغة"), tr("اختر لغة التطبيق")) { showLanguagePicker() }
-        menuItem("✦", "ألوان وحركات الواجهة", "تخصيص اللون الرئيسي وتأثيرات الحركة") { showAppearanceSettings() }
-        menuItem("Aa", "الخط وحجم النص", "تخصيص قراءة وواجهة التطبيق") { showTypographySettings() }
-        menuItem("▶", "قناة YouTube", "@marco_rx7") { openGameLink("https://youtube.com/@marco_rx7") }
-        menuItem("➤", "قناة Telegram", "@MARCO_RX1") { openGameLink("https://t.me/MARCO_RX1") }
-        panel.addView(View(this), LinearLayout.LayoutParams(1, dp(12)))
-        panel.addView(makeText("MARCO RX6  •  PREMIUM", 9f, gray, true).apply {
-            gravity = Gravity.CENTER
-            setPadding(0, dp(16), 0, dp(4))
-        })
-        val menuScroll = ScrollView(this).apply {
-            isFillViewport = true
-            isVerticalScrollBarEnabled = false
-            addView(panel, ViewGroup.LayoutParams(-1, -2))
-        }
-        ViewCompat.setOnApplyWindowInsetsListener(menuScroll) { view, insets ->
-            val safeAreas = insets.getInsets(
-                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
-            )
-            view.setPadding(0, safeAreas.top, 0, safeAreas.bottom)
-            insets
-        }
-        applyMotionPreferences(menuScroll)
-        applyUnifiedSkin(menuScroll)
-        drawer.setContentView(menuScroll)
-        val drawerWidth = minOf(dp(360), resources.displayMetrics.widthPixels - dp(24))
-        drawer.window?.let { w ->
-            w.setBackgroundDrawableResource(android.R.color.transparent)
-            w.addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-            val lp = w.attributes
-            lp.width = drawerWidth
-            lp.height = -1
-            lp.gravity = if (currentLanguage() == "ar") Gravity.RIGHT else Gravity.LEFT
-            lp.dimAmount = 0.62f
-            w.attributes = lp
-        }
-        drawer.show()
-        drawer.window?.setLayout(drawerWidth, -1)
-        menuScroll.requestApplyInsets()
+    private val sideMenuController by lazy {
+        SideMenuController(
+            activity = this,
+            dp = ::dp,
+            makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
+            tr = ::tr,
+            isDark = ::isDarkMode,
+            language = ::currentLanguage,
+            gold = red,
+            ink = bg,
+            surface = panel,
+            white = white,
+            gray = gray,
+            syncing = { isSyncing },
+            isAdmin = { isAdminSession },
+            sync = { syncFromBlog(showResult = true) },
+            showDownloads = ::showDownloadManager,
+            showNotifications = ::showNotificationSettings,
+            showProfile = ::showProfile,
+            signOut = ::signOutAdmin,
+            signIn = ::startGoogleSignIn,
+            showGameDialog = ::showGameDialog,
+            showGameOfDay = ::showGameOfTheDay,
+            showLanguage = ::showLanguagePicker,
+            showAppearance = ::showAppearanceSettings,
+            showTypography = ::showTypographySettings,
+            openLink = ::openGameLink,
+            applyMotion = ::applyMotionPreferences,
+            applySkin = ::applyUnifiedSkin
+        )
     }
+
+    private fun showSideMenu() = sideMenuController.show()
 
     private fun fontPreferences() = AppearancePreferencesStore.typography(this)
     private fun fontScale(): Float = TypographyPreferences.scale(fontPreferences())
