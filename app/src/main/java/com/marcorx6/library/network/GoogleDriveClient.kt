@@ -9,9 +9,9 @@ import java.net.URL
 import java.util.Locale
 
 /** Handles Google Drive cover uploads and verifies the resulting public image URL. */
-internal class GoogleDriveClient {
+internal class GoogleDriveClient : DriveCoverUploader {
 
-    fun uploadCover(file: File, accessToken: String): String {
+    override fun uploadCover(file: File, accessToken: String): String {
         require(accessToken.isNotBlank()) { "رمز الوصول إلى Google Drive غير متاح" }
         if (!file.exists() || file.length() == 0L) {
             throw IllegalStateException("ملف الصورة فارغ أو غير موجود")
