@@ -485,6 +485,7 @@ class MainActivity : ComponentActivity() {
             showAdvancedFilters = ::showAdvancedFilters,
             showGameDialog = ::showGameDialog,
             showProfile = ::showProfile,
+            showSideMenu = ::showSideMenu,
             applyTypography = ::applyTypography,
             applyUnifiedSkin = ::applyUnifiedSkin,
             applyMotionPreferences = ::applyMotionPreferences
