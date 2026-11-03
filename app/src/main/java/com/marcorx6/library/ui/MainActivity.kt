@@ -572,7 +572,7 @@ class MainActivity : ComponentActivity() {
         menuScroll.requestApplyInsets()
     }
 
-    private fun fontPreferences() = getSharedPreferences("font_settings", MODE_PRIVATE)
+    private fun fontPreferences() = AppearancePreferencesStore.typography(this)
     private fun fontScale(): Float = TypographyPreferences.scale(fontPreferences())
     private fun fontFamilyName(): String = TypographyPreferences.family(fontPreferences())
     private fun applyTypography(view: View) {
