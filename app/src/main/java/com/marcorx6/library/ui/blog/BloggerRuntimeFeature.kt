@@ -1,5 +1,6 @@
 package com.marcorx6.library.ui
 
+import android.widget.EditText
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
@@ -43,11 +44,11 @@ internal class BloggerRuntimeFeature(
     executeIo: (() -> Unit) -> Unit,
     styleAlertDialog: (android.app.AlertDialog) -> Unit,
     applyUnifiedSkin: (android.view.View) -> Unit,
-    setCoverFields: (String?, ImageView?) -> Unit,
-    pendingCoverLocalPath: () -> String?,
-    setPendingCoverLocalPath: (String?) -> Unit,
-    pendingCoverPublicUrl: () -> String?,
-    setPendingCoverPublicUrl: (String?) -> Unit,
+    setCoverFields: (EditText, ImageView) -> Unit,
+    pendingCoverLocalPath: () -> String,
+    setPendingCoverLocalPath: (String) -> Unit,
+    pendingCoverPublicUrl: () -> String,
+    setPendingCoverPublicUrl: (String) -> Unit,
     coverUploadInProgress: () -> Boolean,
     loadCover: (ImageView, String, String) -> Unit,
     chooseCover: () -> Unit,
