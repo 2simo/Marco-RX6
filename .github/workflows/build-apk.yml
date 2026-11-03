@@ -1,4 +1,3 @@
-
 name: Build Marco RX6 APK
 
 on:
@@ -67,8 +66,33 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: gradle --no-daemon assembleRelease
 
-      - name: Upload APK
+      - name: Build debug APK with the registered OAuth certificate
+        env:
+          MARCO_DEBUG_USE_RELEASE_KEY: "true"
+          KEYSTORE_FILE: ${{ runner.temp }}/marcorx6-release.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: gradle --no-daemon assembleDebug
+
+      - name: Verify debug and release certificates match
+        shell: bash
+        run: |
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort | tail -n 1)"
+          test -n "$APKSIGNER"
+          RELEASE_CERT="$("$APKSIGNER" verify --print-certs app/build/outputs/apk/release/app-release.apk | sed -n 's/^Signer #1 certificate SHA-256 digest: //p')"
+          DEBUG_CERT="$("$APKSIGNER" verify --print-certs app/build/outputs/apk/debug/app-debug.apk | sed -n 's/^Signer #1 certificate SHA-256 digest: //p')"
+          test -n "$RELEASE_CERT"
+          test "$DEBUG_CERT" = "$RELEASE_CERT"
+
+      - name: Upload Debug APK
         uses: actions/upload-artifact@v7
         with:
-          name: Marco-RX6-APK
+          name: marco-rx6-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: marco-rx6-signed-release-apk
           path: app/build/outputs/apk/release/app-release.apk
