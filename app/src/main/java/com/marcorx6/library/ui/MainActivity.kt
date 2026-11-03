@@ -101,7 +101,6 @@ class MainActivity : ComponentActivity() {
     private fun postToUi(action: () -> Unit) = uiThreadDispatcher.post(action)
 
     private val ioExecutor = Executors.newCachedThreadPool()
-    private var setupDialog: Dialog? = null
     private var searchRenderRunnable: Runnable? = null
     private val PICK_IMAGE_REQUEST = 1001
     private val coverUploadState = CoverUploadState()
@@ -288,8 +287,7 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         startupExperienceController.dismiss()
         mainLibraryInterfaceController.dispose()
-        setupDialog?.let { if (it.isShowing) it.dismiss() }
-        setupDialog = null
+        firstRunSetupFeature.dismiss()
         ioExecutor.shutdownNow()
         if (coverRepositoryCreated) coverRepository.close()
         super.onDestroy()
@@ -650,7 +648,7 @@ class MainActivity : ComponentActivity() {
 
     private fun showStartupExperience() = startupExperienceController.show()
 
-    private fun showFirstRunSetup() = firstRunSetupController.show()
+    private fun showFirstRunSetup() = firstRunSetupFeature.show()
 
 
     private fun showProfile() = profileFeature.show()
@@ -687,42 +685,24 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private val firstRunSetupCompletionController by lazy {
-        FirstRunSetupCompletionController(
+    private val firstRunSetupFeature by lazy {
+        FirstRunSetupFeature(
+            activity = this,
             settings = getSharedPreferences("app_settings", MODE_PRIVATE),
-            appearance = appearancePreferences(),
+            appearancePreferences = ::appearancePreferences,
+            dp = ::dp,
+            rounded = ::rounded,
+            makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
+            currentLanguage = ::currentLanguage,
+            isDarkMode = ::isDarkMode,
+            isNotificationsEnabled = notificationScheduler::isEnabled,
             setNotificationsEnabled = notificationScheduler::setEnabled,
             scheduleNotifications = notificationScheduler::schedule,
             cancelNotifications = notificationScheduler::cancel,
             requestNotificationPermission = ::requestNotificationPermissionIfNeeded,
-            onPlatformSelected = { selected = it }
-        )
-    }
-
-    private val firstRunSetupController by lazy {
-        FirstRunSetupController(
-            activity = this,
-            dp = ::dp,
-            rounded = ::rounded,
-            makeText = { value, size, color, bold -> makeText(value, size, color, bold) },
-            appearancePreferences = ::appearancePreferences,
-            currentLanguage = ::currentLanguage,
-            isDarkMode = ::isDarkMode,
-            isNotificationsEnabled = notificationScheduler::isEnabled,
-            viewFactory = firstRunSetupViewFactory,
-            completionController = firstRunSetupCompletionController,
+            onPlatformSelected = { selected = it },
             applyUnifiedSkin = ::applyUnifiedSkin,
-            getSetupDialog = { setupDialog },
-            setSetupDialog = { setupDialog = it },
             recreateActivity = ::recreate
-        )
-    }
-
-    private val firstRunSetupViewFactory by lazy {
-        FirstRunSetupViewFactory(
-            activity = this,
-            dp = ::dp,
-            makeText = { value, size, color, bold -> makeText(value, size, color, bold) }
         )
     }
 
