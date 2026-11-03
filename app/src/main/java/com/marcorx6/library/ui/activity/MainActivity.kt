@@ -10,9 +10,8 @@ import com.marcorx6.library.ui.BloggerHtmlBuilder
 import com.marcorx6.library.ui.BloggerPostFeature
 import com.marcorx6.library.ui.BloggerServices
 import com.marcorx6.library.ui.BloggerRuntimeFeature
-import com.marcorx6.library.ui.CoverFeature
-import com.marcorx6.library.ui.CoverUploadState
 import com.marcorx6.library.ui.CoverRuntimeFeature
+import com.marcorx6.library.ui.CoverUploadRuntimeFeature
 import com.marcorx6.library.ui.DownloadFeature
 import com.marcorx6.library.ui.FirstRunSetupFeature
 import com.marcorx6.library.ui.GameExperienceRuntimeFeature
@@ -87,18 +86,14 @@ class MainActivity : ComponentActivity() {
 
     private val ioExecutor = Executors.newCachedThreadPool()
     private val PICK_IMAGE_REQUEST = 1001
-    private val coverUploadState get() = runtimeState.coverUploadState
     private val coverFeature by lazy {
-        CoverFeature(
+        CoverUploadRuntimeFeature(
             context = this,
             filesDir = filesDir,
             contentResolver = contentResolver,
             accessToken = ::driveToken,
-            state = coverUploadState,
             executeIo = { task -> ioExecutor.execute { task() } },
             postToUi = ::postToUi,
-            coverUrlField = { coverUploadState.urlField },
-            coverPreview = { coverUploadState.preview },
             loadCover = ::loadCover,
             deleteCoverFileIfUnused = ::deleteCoverFileIfUnused,
             dp = ::dp,
@@ -106,6 +101,8 @@ class MainActivity : ComponentActivity() {
             styleDialog = ::styleAlertDialog
         )
     }
+    private val coverUploadState get() = coverFeature.state
+
     private var isSyncing: Boolean
         get() = runtimeState.isSyncing
         set(value) { runtimeState.isSyncing = value }
