@@ -5,31 +5,16 @@ import com.marcorx6.library.ui.ActivityServicesRuntimeFeature
 import com.marcorx6.library.ui.AccentPalette
 import com.marcorx6.library.ui.AppearanceRuntimeFeature
 import com.marcorx6.library.ui.AppearancePreferencesStore
-import com.marcorx6.library.ui.BlogSyncFeature
-import com.marcorx6.library.ui.BloggerAccessFeature
-import com.marcorx6.library.ui.BloggerHtmlBuilder
-import com.marcorx6.library.ui.BloggerPostFeature
 import com.marcorx6.library.ui.BloggerRuntimeFeature
 import com.marcorx6.library.ui.CoverRuntimeFeature
 import com.marcorx6.library.ui.CoverUploadRuntimeFeature
-import com.marcorx6.library.ui.FirstRunSetupFeature
 import com.marcorx6.library.ui.GameExperienceRuntimeFeature
 import com.marcorx6.library.ui.GameImportMerger
 import com.marcorx6.library.ui.GameDataRuntimeFeature
-import com.marcorx6.library.ui.GameOfTheDayController
 import com.marcorx6.library.ui.GoogleAccountRuntimeFeature
-import com.marcorx6.library.ui.LanguageFeature
-import com.marcorx6.library.ui.MotionPreferencesApplier
 import com.marcorx6.library.ui.MainLibraryRuntimeFeature
-import com.marcorx6.library.ui.PlatformCorrectionController
-import com.marcorx6.library.ui.ProfileFeature
-import com.marcorx6.library.ui.ProfilePreferences
-import com.marcorx6.library.ui.SideMenuFeature
-import com.marcorx6.library.ui.StartupExperienceController
-import com.marcorx6.library.ui.UiToolkitFeature
 import com.marcorx6.library.ui.UserExperienceRuntimeFeature
 import androidx.activity.ComponentActivity
-import androidx.activity.result.contract.ActivityResultContracts
 import com.marcorx6.library.data.Game
 import android.app.AlertDialog
 import android.content.Intent
@@ -294,8 +279,6 @@ class MainActivity : ComponentActivity() {
     private fun driveToken(): String = googleAccountRuntimeFeature.driveToken()
 
 
-    private fun bloggerHtml(game: Game): String = BloggerHtmlBuilder.build(game)
-
     private val appearanceRuntimeFeature by lazy {
         AppearanceRuntimeFeature(
             activity = this,
@@ -328,12 +311,8 @@ class MainActivity : ComponentActivity() {
     private fun rounded(color: Int, radius: Int) = appearanceRuntimeFeature.rounded(color, radius)
     private fun makeText(value: String, size: Float, color: Int, bold: Boolean = false) =
         appearanceRuntimeFeature.makeText(value, size, color, bold)
-    private fun stylePrimaryButton(button: Button, primary: Boolean = false) =
-        appearanceRuntimeFeature.stylePrimaryButton(button, primary)
     private fun applyUnifiedSkin(view: View) = appearanceRuntimeFeature.applyUnifiedSkin(view)
     private fun styleAlertDialog(dialog: AlertDialog) = appearanceRuntimeFeature.styleAlertDialog(dialog)
-    private fun themedSpinner(items: List<String>, selectedIndex: Int = 0): Spinner =
-        appearanceRuntimeFeature.themedSpinner(items, selectedIndex)
     private fun makeInput(hintText: String): EditText = appearanceRuntimeFeature.makeInput(hintText)
 
     private fun currentLanguage(): String = appearanceRuntimeFeature.currentLanguage()
@@ -391,11 +370,6 @@ class MainActivity : ComponentActivity() {
 
     private fun mergeImportedGames(imported: List<Game>): Pair<Int, Int> =
         GameImportMerger.merge(gameDataRuntimeFeature.libraryStore, imported)
-
-    private fun showPlatformCorrection(game: Game) {
-        PlatformCorrectionController(this, gameDataRuntimeFeature.libraryStore, ::renderGames, ::styleAlertDialog)
-            .show(game)
-    }
 
     // COVER RUNTIME
     private fun loadCover(image: ImageView, localPath: String, imageUrl: String) =
@@ -482,9 +456,6 @@ class MainActivity : ComponentActivity() {
 
     private fun loadGames() = gameDataRuntimeFeature.loadGames()
 
-    private fun loadOfflineCatalog() {
-        gameDataRuntimeFeature.loadOfflineCatalog()
-    }
 
 
 }
