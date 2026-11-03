@@ -1768,10 +1768,11 @@ class MainActivity : ComponentActivity() {
             chip.setTextColor(if (active) accentForeground() else gray)
         }
 
+        val query = search.text.toString().trim()
         val sorted = GameLibraryManager.filterAndSort(
             games = games,
             category = selected,
-            query = search.text.toString().trim(),
+            query = query,
             genre = selectedGenre,
             year = selectedYear,
             sortMode = sortMode
