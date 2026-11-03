@@ -9,6 +9,7 @@ import com.marcorx6.library.R
 import com.marcorx6.library.BlogNotificationWorker
 import com.marcorx6.library.data.Game
 import com.marcorx6.library.data.GameRepository
+import com.marcorx6.library.data.BackupCodec
 import com.marcorx6.library.network.SecureUrlPolicy
 import com.marcorx6.library.network.BloggerApiClient
 import com.marcorx6.library.network.BloggerFeedClient
@@ -740,33 +741,16 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun exportBackup() {
-        val payload = JSONObject()
-            .put("format", "MARCO_RX6_BACKUP")
-            .put("version", 1)
-            .put("createdAt", System.currentTimeMillis())
-            .put("games", JSONArray().also { array ->
-                games.forEach { game ->
-                    array.put(JSONObject()
-                        .put("name", game.name).put("platform", game.platform)
-                        .put("description", game.description).put("url", game.url)
-                        .put("coverUrl", game.coverUrl).put("coverLocalPath", "")
-                        .put("sourcePostUrl", game.sourcePostUrl).put("downloadLinks", game.downloadLinks)
-                        .put("blogImported", game.blogImported)
-                        .put("platformManuallyCorrected", game.platformManuallyCorrected)
-                        .put("isFavorite", game.isFavorite).put("bloggerPostId", game.bloggerPostId)
-                        .put("bloggerHtml", game.bloggerHtml).put("playStatus", game.playStatus)
-                        .put("genre", game.genre).put("releaseYear", game.releaseYear))
-                }
-            })
-            .put("appearance", JSONObject()
-                .put("darkMode", isDarkMode())
-                .put("accent", appearancePreferences().getString("accent", "violet"))
-                .put("animations", appearancePreferences().getBoolean("animations", true)))
+        backupExportPayload = BackupCodec.encode(
+            games = games,
+            darkMode = isDarkMode(),
+            accent = appearancePreferences().getString("accent", "violet") ?: "violet",
+            animations = appearancePreferences().getBoolean("animations", true)
+        )
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE); type = "application/json"
             putExtra(Intent.EXTRA_TITLE, "MARCO-RX6-backup.json")
         }
-        backupExportPayload = payload.toString(2)
         backupExportLauncher.launch(intent)
     }
     private var backupExportPayload: String = ""
@@ -789,32 +773,18 @@ class MainActivity : ComponentActivity() {
             } else if (requestCode == BACKUP_IMPORT_REQUEST) {
                 val raw = contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
                     ?: throw IllegalStateException("تعذر قراءة الملف")
-                val backup = JSONObject(raw)
-                require(backup.optString("format") == "MARCO_RX6_BACKUP") { "ملف النسخة الاحتياطية غير صالح" }
-                require(backup.optInt("version", 0) == 1) { "إصدار النسخة الاحتياطية غير مدعوم" }
-                val array = backup.optJSONArray("games") ?: JSONArray()
-                val restored = mutableListOf<Game>()
-                for (i in 0 until array.length()) {
-                    val item = array.optJSONObject(i) ?: continue
-                    val name = item.optString("name")
-                    if (name.isBlank()) continue
-                    restored.add(Game(name, item.optString("platform", "BLOG"), item.optString("description"),
-                        item.optString("url"), item.optString("coverUrl"), "", item.optString("sourcePostUrl"),
-                        item.optString("downloadLinks"), item.optBoolean("blogImported"),
-                        item.optBoolean("platformManuallyCorrected"), item.optBoolean("isFavorite"),
-                        item.optString("bloggerPostId"), item.optString("bloggerHtml"), item.optString("playStatus", ""),
-                        item.optString("genre", ""), item.optString("releaseYear", "")))
-                }
+                val backup = BackupCodec.decode(raw)
+                val restored = backup.games
                 AlertDialog.Builder(this).setTitle("استعادة النسخة الاحتياطية")
                     .setMessage("سيتم استبدال المكتبة الحالية بـ ${restored.size} عنصر. يُفضّل تصدير نسخة من بياناتك الحالية أولاً. هل تريد المتابعة؟")
                     .setNegativeButton("إلغاء", null)
                     .setPositiveButton("استعادة") { _, _ ->
                         games.clear(); games.addAll(restored); saveGames()
-                        backup.optJSONObject("appearance")?.let { a ->
+                        backup.appearance?.let { a ->
                             appearancePreferences().edit()
-                                .putBoolean("dark_mode", a.optBoolean("darkMode", true))
-                                .putString("accent", a.optString("accent", "violet"))
-                                .putBoolean("animations", a.optBoolean("animations", true)).apply()
+                                .putBoolean("dark_mode", a.darkMode)
+                                .putString("accent", a.accent)
+                                .putBoolean("animations", a.animations).apply()
                         }
                         recreate()
                         Toast.makeText(this, "تمت استعادة المكتبة", Toast.LENGTH_LONG).show()
