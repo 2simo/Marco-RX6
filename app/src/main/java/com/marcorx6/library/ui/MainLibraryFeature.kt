@@ -1,6 +1,5 @@
 package com.marcorx6.library.ui
 
-import androidx.activity.ComponentActivity
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -8,7 +7,7 @@ import com.marcorx6.library.data.Game
 
 /** Owns main library screen composition and its view lifecycle. */
 internal class MainLibraryFeature(
-    activity: ComponentActivity,
+    activity: MainActivity,
     darkMode: () -> Boolean,
     currentLanguage: () -> String,
     dp: (Int) -> Int,
