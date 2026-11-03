@@ -1,4 +1,6 @@
-package com.marcorx6.library.ui
+package com.marcorx6.library.ui.blog
+
+import com.marcorx6.library.ui.*
 
 import android.widget.EditText
 import android.widget.ImageView
