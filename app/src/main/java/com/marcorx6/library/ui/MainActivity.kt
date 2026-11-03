@@ -161,6 +161,7 @@ class MainActivity : ComponentActivity() {
         bloggerServices.createAccessController(
             executor = ioExecutor,
             currentAccountId = { GoogleSignIn.getLastSignedInAccount(this)?.id },
+            currentBlogId = { bloggerBlogId },
             setAdmin = { isAdminSession = it },
             postToUi = ::postToUi,
             refreshUi = ::createInterface,
