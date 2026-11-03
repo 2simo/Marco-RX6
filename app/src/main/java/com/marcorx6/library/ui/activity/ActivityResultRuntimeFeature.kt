@@ -11,17 +11,20 @@ import android.net.Uri
  */
 internal class ActivityResultRuntimeFeature(
     activity: ComponentActivity,
-    signInRequestCode: Int,
-    avatarRequestCode: Int,
-    coverRequestCode: Int,
     onGoogleSignInResult: (Intent?) -> Unit,
     onAvatarSelected: (Uri) -> Unit,
     onCoverSelected: (Uri) -> Unit
 ) {
+    companion object {
+        private const val SIGN_IN_REQUEST_CODE = 1002
+        private const val COVER_REQUEST_CODE = 1001
+        private const val AVATAR_REQUEST_CODE = 1005
+    }
+
     private val controller = MainActivityResultController(
-        signInRequestCode = signInRequestCode,
-        avatarRequestCode = avatarRequestCode,
-        coverRequestCode = coverRequestCode,
+        signInRequestCode = SIGN_IN_REQUEST_CODE,
+        avatarRequestCode = AVATAR_REQUEST_CODE,
+        coverRequestCode = COVER_REQUEST_CODE,
         onGoogleSignInResult = onGoogleSignInResult,
         onAvatarSelected = onAvatarSelected,
         onCoverSelected = onCoverSelected
@@ -29,17 +32,17 @@ internal class ActivityResultRuntimeFeature(
 
     private val googleSignInLauncher =
         activity.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            controller.handle(signInRequestCode, result.resultCode, result.data)
+            controller.handle(SIGN_IN_REQUEST_CODE, result.resultCode, result.data)
         }
 
     private val coverPickerLauncher =
         activity.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            controller.handle(coverRequestCode, result.resultCode, result.data)
+            controller.handle(COVER_REQUEST_CODE, result.resultCode, result.data)
         }
 
     private val profileAvatarLauncher =
         activity.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            controller.handle(avatarRequestCode, result.resultCode, result.data)
+            controller.handle(AVATAR_REQUEST_CODE, result.resultCode, result.data)
         }
 
     fun launchGoogleSignIn(intent: Intent) = googleSignInLauncher.launch(intent)
