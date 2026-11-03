@@ -225,7 +225,7 @@ class MainActivity : ComponentActivity() {
         applySystemBarAppearance()
 
         notificationScheduler.createNotificationChannel()
-         loadGames()
+        loadGames()
         restoreAdminSession()
         createInterface()
         showStartupExperience()
