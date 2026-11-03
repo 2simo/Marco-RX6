@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/marco_rx6_icon_background" />
-    <item android:drawable="@drawable/marco_rx6_dragon" />
+    <item
+        android:drawable="@drawable/marco_rx6_dragon"
+        android:left="18%"
+        android:top="18%"
+        android:right="18%"
+        android:bottom="18%" />
 </layer-list>

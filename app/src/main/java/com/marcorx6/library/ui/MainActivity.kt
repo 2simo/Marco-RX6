@@ -4,6 +4,7 @@ package com.marcorx6.library.ui
 import android.Manifest
 import android.animation.LayoutTransition
 import android.animation.ValueAnimator
+import java.util.concurrent.Executors
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import com.marcorx6.library.R
@@ -113,6 +114,11 @@ class MainActivity : ComponentActivity() {
     private var selectedGenre = ""
     private var selectedYear = ""
     private val mainHandler = Handler(Looper.getMainLooper())
+    private val ioExecutor = Executors.newCachedThreadPool()
+    private var startupAnimator: ValueAnimator? = null
+    private var startupRunnable: Runnable? = null
+    private var startupDialog: Dialog? = null
+    private var setupDialog: Dialog? = null
     private var searchRenderRunnable: Runnable? = null
     private val PICK_IMAGE_REQUEST = 1001
     private var pendingCoverLocalPath = ""
@@ -163,7 +169,7 @@ class MainActivity : ComponentActivity() {
         loadGames()
         restoreAdminSession()
         createInterface()
-        if (savedInstanceState == null) showStartupExperience()
+        showStartupExperience()
         // Keep background prompts and sync away from the full-screen first-run setup.
         // They resume on the next activity creation after setup has been completed.
         val setupCompleted = getSharedPreferences("app_settings", MODE_PRIVATE)
@@ -186,7 +192,16 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        searchRenderRunnable?.let { mainHandler.removeCallbacks(it) }
+        startupAnimator?.cancel()
+        startupAnimator = null
+        startupRunnable?.let(mainHandler::removeCallbacks)
+        startupRunnable = null
+        mainHandler.removeCallbacksAndMessages(null)
+        startupDialog?.let { if (it.isShowing) it.dismiss() }
+        startupDialog = null
+        setupDialog?.let { if (it.isShowing) it.dismiss() }
+        setupDialog = null
+        ioExecutor.shutdownNow()
         if (coverRepositoryCreated) coverRepository.close()
         super.onDestroy()
     }
@@ -209,7 +224,7 @@ class MainActivity : ComponentActivity() {
             return
         }
         isAdminSession = false
-        Thread {
+        ioExecutor.execute {
             val allowed = try {
                 bloggerApiClient.hasWriteAccess(blogId)
             } catch (_: Exception) {
@@ -229,7 +244,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-        }.start()
+        }
     }
     private fun startGoogleSignIn() { googleSignInClient?.let { googleSignInLauncher.launch(it.signInIntent) } }
     private fun signOutAdmin() {
@@ -1098,7 +1113,7 @@ class MainActivity : ComponentActivity() {
             ).show()
         }
 
-        Thread {
+        ioExecutor.execute {
             try {
                 val feedResult = BloggerFeedClient(bloggerFeedUrl).fetch()
                 val imported = feedResult.games
@@ -1132,19 +1147,17 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-        }.start()
+        }
     }
 
-    private fun mergeImportedGames(
-        imported: List<Game>
-    ): Triple<Int, Int, List<Pair<Game, String>>> {
+    private fun mergeImportedGames(imported: List<Game>): Pair<Int, Int> {
         val result = gameLibraryStore.mergeImported(imported)
-        return Triple(result.added, result.updated, result.warnings)
+        return result.added to result.updated
     }
 
     private fun showPlatformCorrection(game: Game) {
 
-        val choices = platforms.drop(1).toTypedArray()
+        val choices = arrayOf("PS2", "PS3", "PS4")
 
         AlertDialog.Builder(this)
             .setTitle("اختر المنصة")
@@ -1220,7 +1233,7 @@ class MainActivity : ComponentActivity() {
         }
         if (requestCode == 1005 && resultCode == RESULT_OK) {
             val uri = data?.data ?: return
-            Thread {
+            ioExecutor.execute {
                 try {
                     val destination = profileAvatarRepository.save(uri)
                     profilePreferences().edit().putString("avatar_path", destination.absolutePath).apply()
@@ -1231,7 +1244,7 @@ class MainActivity : ComponentActivity() {
                 } catch (e: Exception) {
                     mainHandler.post { Toast.makeText(this, "تعذر حفظ الصورة: ${e.message}", Toast.LENGTH_LONG).show() }
                 }
-            }.start()
+            }
             return
         }
         if (requestCode != PICK_IMAGE_REQUEST || resultCode != RESULT_OK) return
@@ -1242,7 +1255,7 @@ class MainActivity : ComponentActivity() {
         pendingCoverPublicUrl = ""
         coverUrlField?.setText("")
 
-        Thread {
+        ioExecutor.execute {
             try {
                 val uploadResult = coverUploadRepository.saveAndUploadCover(
                     uri,
@@ -1295,12 +1308,15 @@ class MainActivity : ComponentActivity() {
                         .show().also { styleAlertDialog(it) }
                 }
             }
-        }.start()
+        }
     }
 
 
     private fun showStartupExperience() {
+        startupAnimator?.cancel()
+        startupRunnable?.let(mainHandler::removeCallbacks)
         val splash = Dialog(this, android.R.style.Theme_Material_NoActionBar)
+        startupDialog = splash
         val content = FrameLayout(this).apply {
             setBackground(GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(
                 Color.rgb(3, 10, 22), Color.rgb(5, 19, 39), Color.rgb(2, 8, 19)
@@ -1387,27 +1403,39 @@ class MainActivity : ComponentActivity() {
         }
         logo.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(700L)
             .setInterpolator(android.view.animation.OvershootInterpolator(1.08f)).start()
-        ValueAnimator.ofInt(1, 100).apply {
+        startupAnimator = ValueAnimator.ofInt(1, 100).apply {
             duration = 4500L
             addUpdateListener { animator ->
-                val value = animator.animatedValue as Int
-                progress.progress = value
-                percent.text = "$value%"
+                if (!isFinishing && !isDestroyed && startupDialog === splash && splash.isShowing) {
+                    val value = animator.animatedValue as Int
+                    progress.progress = value
+                    percent.text = "$value%"
+                }
             }
             start()
         }
-        mainHandler.postDelayed({
-            if (!isFinishing) {
+        startupRunnable = Runnable {
+            if (!isFinishing && !isDestroyed && startupDialog === splash && splash.isShowing) {
+                startupAnimator?.cancel()
+                startupAnimator = null
                 splash.dismiss()
+                startupDialog = null
                 val settings = getSharedPreferences("app_settings", MODE_PRIVATE)
-                if (!settings.getBoolean("setup_completed", false)) {
-                    showFirstRunSetup()
-                } else if (!settings.getBoolean("profile_prompted", false)) {
+                if (!settings.getBoolean("setup_completed", false)) showFirstRunSetup()
+                else if (!settings.getBoolean("profile_prompted", false)) {
                     settings.edit().putBoolean("profile_prompted", true).apply()
                     showProfile()
                 }
             }
-        }, 4600L)
+            startupRunnable = null
+        }.also { mainHandler.postDelayed(it, 4600L) }
+        splash.setOnDismissListener {
+            startupAnimator?.cancel()
+            startupAnimator = null
+            startupRunnable?.let(mainHandler::removeCallbacks)
+            startupRunnable = null
+            if (startupDialog === splash) startupDialog = null
+        }
     }
 
     private fun showFirstRunSetup() {
@@ -1426,6 +1454,8 @@ class MainActivity : ComponentActivity() {
             "منصة المكتبة", "لغة التطبيق", "المظهر", "لون الواجهة", "الإشعارات", "جاهز للانطلاق"
         )
         val dialog = Dialog(this, android.R.style.Theme_Material_NoActionBar)
+        setupDialog = dialog
+        dialog.setOnDismissListener { if (setupDialog === dialog) setupDialog = null }
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(22), dp(24), dp(22), dp(18))
@@ -2138,7 +2168,7 @@ class MainActivity : ComponentActivity() {
                     refreshLabelButton()
                 }.setPositiveButton("تم", null)
                 .setNeutralButton("تحديث التسميات") { _, _ ->
-                    Thread {
+                    ioExecutor.execute {
                         try {
                             val latest = bloggerPostRepository.fetchLabels()
                             mainHandler.post {
@@ -2147,7 +2177,7 @@ class MainActivity : ComponentActivity() {
                                 Toast.makeText(this, "تم تحديث ${latest.size} تسمية من المدونة", Toast.LENGTH_SHORT).show()
                             }
                         } catch (e: Exception) { mainHandler.post { Toast.makeText(this, e.message ?: "تعذر تحديث التسميات", Toast.LENGTH_LONG).show() } }
-                    }.start()
+                    }
                 }.show().also { styleAlertDialog(it) }
         }
         if (existing != null && existing.platform.isNotBlank()) selectedLabels.add(existing.platform)
@@ -2176,7 +2206,7 @@ class MainActivity : ComponentActivity() {
         loadCover(preview, pendingCoverLocalPath, existing?.coverUrl ?: "")
         box.addView(Button(this).apply { text = "اختيار صورة الغلاف من الهاتف"; tag = "marco_primary_action"; setTextColor(accentForeground()); background = rounded(red, 12); setOnClickListener { chooseCover() } }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
         box.addView(makeText("أقسام المقال • Labels من المدونة", 10f, red, true)); box.addView(categoryButton)
-        Thread {
+        ioExecutor.execute {
             try {
                 val labels = bloggerPostRepository.fetchLabels()
                 mainHandler.post {
@@ -2189,7 +2219,7 @@ class MainActivity : ComponentActivity() {
             } catch (e: Exception) {
                 mainHandler.post { categoryButton.text = "تعذر تحميل Labels • حاول التحديث"; categoryButton.isEnabled = true }
             }
-        }.start()
+        }
         box.addView(genre); box.addView(releaseYear); box.addView(title)
         box.addView(makeText("03 • محتوى المقال", 12f, red, true).apply { setPadding(0, dp(12), 0, dp(5)) })
         box.addView(body, LinearLayout.LayoutParams(-1, dp(190))); box.addView(coverUrl); box.addView(link)
@@ -2223,7 +2253,7 @@ class MainActivity : ComponentActivity() {
                 val htmlContent = BloggerArticleBuilder.build(postTitle, selectedLabels.joinToString("، "), genre.text.toString().trim(), releaseYear.text.toString().trim(), contentText, publishedCoverLink, relatedLink)
                 val post = Game(name = postTitle, platform = categoryName, description = contentText, url = relatedLink.ifBlank { existing?.url ?: "" }, coverUrl = publishedCoverLink, coverLocalPath = if (coverLink.isBlank() || coverLink == pendingCoverPublicUrl || (existing != null && coverLink == existing.coverUrl)) pendingCoverLocalPath else "", sourcePostUrl = existing?.sourcePostUrl ?: "", downloadLinks = existing?.downloadLinks ?: "", blogImported = true, isFavorite = existing?.isFavorite ?: false, bloggerPostId = existing?.bloggerPostId ?: "", bloggerHtml = htmlContent, playStatus = existing?.playStatus ?: "", genre = genre.text.toString().trim(), releaseYear = releaseYear.text.toString().trim())
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
-                Thread {
+                ioExecutor.execute {
                     try {
                         val result = bloggerPostRepository.savePost(
                             post,
@@ -2239,7 +2269,7 @@ class MainActivity : ComponentActivity() {
                             saveGames(); renderGames(); dialog.dismiss(); Toast.makeText(this, "تم نشر المقال على Blogger", Toast.LENGTH_LONG).show()
                         }
                     } catch (e: Exception) { mainHandler.post { dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true; Toast.makeText(this, e.message ?: "فشل نشر المقال", Toast.LENGTH_LONG).show() } }
-                }.start()
+                }
             }
         }
         dialog.show()
@@ -2258,7 +2288,7 @@ class MainActivity : ComponentActivity() {
             .setNegativeButton("إلغاء", null)
             .setPositiveButton("حذف") { _, _ ->
                 if (!isAdminSession || bloggerBlogId.isBlank() || game.bloggerPostId.isBlank()) { Toast.makeText(this, "يلزم تسجيل دخول المسؤول ومعرّف المقال في Blogger", Toast.LENGTH_LONG).show(); return@setPositiveButton }
-                Thread { try {
+                ioExecutor.execute { try {
                     bloggerPostRepository.deletePost(game.bloggerPostId)
                     mainHandler.post {
                         if (gameLibraryStore.remove(game)) {
@@ -2267,7 +2297,7 @@ class MainActivity : ComponentActivity() {
                         renderGames()
                         Toast.makeText(this, "تم الحذف من Blogger", Toast.LENGTH_SHORT).show()
                     }
-                } catch (e: Exception) { mainHandler.post { Toast.makeText(this, e.message ?: "تعذر حذف المقال من Blogger", Toast.LENGTH_LONG).show() } } }.start()
+                } catch (e: Exception) { mainHandler.post { Toast.makeText(this, e.message ?: "تعذر حذف المقال من Blogger", Toast.LENGTH_LONG).show() } } }
             }
             .create().apply { setOnShowListener { styleAlertDialog(this) } }
             .show()
