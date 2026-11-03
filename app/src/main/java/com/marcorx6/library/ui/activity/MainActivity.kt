@@ -336,7 +336,7 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private val libraryViewState get() = libraryRuntimeFeature.viewState
+
 
     private fun createInterface() = libraryRuntimeFeature.create()
     private fun renderGames() = libraryRuntimeFeature.renderGames()
