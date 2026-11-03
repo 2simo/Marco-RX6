@@ -1,5 +1,7 @@
 package com.marcorx6.library.ui
 
+import com.marcorx6.library.ui.activity.MainActivity
+
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
