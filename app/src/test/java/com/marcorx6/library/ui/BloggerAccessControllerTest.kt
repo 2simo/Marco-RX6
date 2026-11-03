@@ -116,6 +116,7 @@ class BloggerAccessControllerTest {
             executor = directExecutor,
             checkAccess = { checks++; true },
             currentAccountId = { "account-1" },
+            currentBlogId = { "blog-1" },
             setAdmin = { admin = it },
             postToUi = { it() },
             refreshUi = {},
