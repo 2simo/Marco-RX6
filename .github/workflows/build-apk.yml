@@ -14,7 +14,14 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    name: Build on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-24.04
+          - ubuntu-26.04
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout project
@@ -65,6 +72,7 @@ jobs:
         run: gradle --no-daemon assembleRelease
 
       - name: Upload APK
+        if: matrix.os == 'ubuntu-24.04'
         uses: actions/upload-artifact@v4
         with:
           name: Marco-RX6-APK
