@@ -1072,19 +1072,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun showPlatformCorrection(game: Game) {
-
-        val choices = arrayOf("PS2", "PS3", "PS4")
-
-        AlertDialog.Builder(this)
-            .setTitle("اختر المنصة")
-            .setItems(choices) { _, which ->
-
-                if (gameLibraryStore.correctPlatform(game.sourcePostUrl, choices[which])) {
-                    renderGames()
-                }
-            }
-            .setNegativeButton("إلغاء", null)
-            .show().also { styleAlertDialog(it) }
+        PlatformCorrectionController(this, gameLibraryStore, ::renderGames, ::styleAlertDialog)
+            .show(game)
     }
 
     // IMAGE LOADER
