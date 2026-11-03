@@ -95,7 +95,7 @@ class MainActivity : ComponentActivity() {
         )
     }
     private val gameRepository by lazy { GameRepository(applicationContext) }
-    private val profileFeature by lazy {
+    private val profileFeature: ProfileFeature by lazy {
         ProfileFeature(
             activity = this,
             contentResolver = contentResolver,
@@ -504,7 +504,7 @@ class MainActivity : ComponentActivity() {
     private fun showFirstRunSetup() = firstRunSetupFeature.show()
 
 
-    private fun showProfile() = profileFeature.show()
+    private fun showProfile(): Unit = profileFeature.show()
     private val gameLibraryFeature by lazy {
         GameLibraryFeature(
             activity = this,
@@ -583,9 +583,9 @@ class MainActivity : ComponentActivity() {
                 coverUploadState.preview = preview
             },
             pendingCoverLocalPath = { coverUploadState.pendingLocalPath },
-            setPendingCoverLocalPath = { coverFeature.state.pendingLocalPath = it },
+            setPendingCoverLocalPath = { coverUploadState.pendingLocalPath = it },
             pendingCoverPublicUrl = { coverUploadState.pendingPublicUrl },
-            setPendingCoverPublicUrl = { coverFeature.state.pendingPublicUrl = it },
+            setPendingCoverPublicUrl = { coverUploadState.pendingPublicUrl = it },
             coverUploadInProgress = { coverUploadState.inProgress },
             loadCover = ::loadCover,
             chooseCover = ::chooseCover,
