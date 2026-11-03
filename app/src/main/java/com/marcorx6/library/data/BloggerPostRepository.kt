@@ -1,6 +1,6 @@
 package com.marcorx6.library.data
 
-import com.marcorx6.library.network.BloggerApiClient
+import com.marcorx6.library.network.BloggerApi
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URLEncoder
@@ -11,7 +11,7 @@ import java.util.Locale
  * UI state and callbacks stay in MainActivity; this class owns API payloads and paging.
  */
 internal class BloggerPostRepository(
-    private val api: BloggerApiClient,
+    private val api: BloggerApi,
     private val blogIdProvider: () -> String,
     private val authorizationCheck: () -> Boolean
 ) {
