@@ -10,7 +10,7 @@ internal object BloggerArticleBuilder {
 
     // Structured article template shared by the preview and Blogger publishing.
     // Modern responsive editorial template shared by preview and Blogger publishing.
-    private fun buildBloggerArticleHtml(title: String, categories: String, genre: String, releaseYear: String, description: String, coverUrl: String, downloadUrl: String): String {
+    fun build(title: String, categories: String, genre: String, releaseYear: String, description: String, coverUrl: String, downloadUrl: String): String {
         val safeTitle = escape(title)
         val safeCategories = escape(categories)
         val safeGenre = escape(genre)
