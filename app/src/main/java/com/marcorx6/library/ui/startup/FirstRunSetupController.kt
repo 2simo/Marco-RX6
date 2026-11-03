@@ -6,15 +6,13 @@ import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
 import android.view.View
-import android.view.WindowInsetsController
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ScrollView
-import android.view.WindowInsets
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import com.marcorx6.library.notification.BlogNotificationScheduler
 
 internal class FirstRunSetupController(
     private val activity: Activity,
@@ -33,7 +31,7 @@ internal class FirstRunSetupController(
     private val recreateActivity: () -> Unit
 ) {
     fun show() {
-        val settings = getSharedPreferences("app_settings", MODE_PRIVATE)
+        val settings = activity.getSharedPreferences("app_settings", Activity.MODE_PRIVATE)
         val appearance = appearancePreferences()
         var step = 0
         var preferredPlatform = settings.getString("preferred_platform", "PS3")
