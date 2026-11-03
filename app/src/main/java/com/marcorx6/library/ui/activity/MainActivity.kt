@@ -34,7 +34,6 @@ class MainActivity : ComponentActivity() {
 
     private fun appearancePreferences() = appearancePaletteFeature.preferences()
     private fun isDarkMode() = appearancePaletteFeature.isDarkMode()
-    private fun accentColor(): Int = appearancePaletteFeature.accentColor()
     private val bg: Int get() = appearancePaletteFeature.bg
     private val panel: Int get() = appearancePaletteFeature.panel
     private val red: Int get() = appearancePaletteFeature.red
@@ -129,7 +128,7 @@ class MainActivity : ComponentActivity() {
             onPlatformSelected = { libraryViewState.selected = it },
             recreateActivity = ::recreate,
             showFirstRunSetup = ::showFirstRunSetup,
-            showProfileForStartup = { userExperienceRuntimeFeature.userExperienceRuntimeFeature.showProfile() }
+            showProfileForStartup = { userExperienceRuntimeFeature.showProfile() }
         )
     }
 
@@ -279,7 +278,7 @@ class MainActivity : ComponentActivity() {
             sync = { bloggerRuntimeFeature.sync(showResult = true) },
             showDownloads = activityServicesRuntimeFeature::showDownloadManager,
             showNotifications = activityServicesRuntimeFeature::showNotificationSettings,
-            showProfile = { userExperienceRuntimeFeature.userExperienceRuntimeFeature.showProfile() },
+            showProfile = { userExperienceRuntimeFeature.showProfile() },
             signOut = { googleAccountRuntimeFeature.accountController.signOut { isAdminSession = false; createInterface() } },
             signIn = { activityResultRuntimeFeature.launchGoogleSignIn(googleAccountRuntimeFeature.accountController.signInIntent()) },
             showGameDialog = { bloggerRuntimeFeature.showComposer() },
@@ -299,17 +298,12 @@ class MainActivity : ComponentActivity() {
     private fun styleAlertDialog(dialog: AlertDialog) = appearanceRuntimeFeature.styleAlertDialog(dialog)
     private fun makeInput(hintText: String): EditText = appearanceRuntimeFeature.makeInput(hintText)
 
-    private fun currentLanguage(): String = appearanceRuntimeFeature.currentLanguage()
     private fun tr(value: String): String = appearanceRuntimeFeature.translate(value)
-    private fun showLanguagePicker() = appearanceRuntimeFeature.showLanguagePicker()
-    private fun showSideMenu() = appearanceRuntimeFeature.showSideMenu()
     private fun applyMotionPreferences(view: View) = appearanceRuntimeFeature.applyMotionPreferences(view)
     private fun applyTypography(view: View) =
         appearanceRuntimeFeature.applyTypography(view, resources.displayMetrics.scaledDensity)
     private fun fontScale(): Float = appearanceRuntimeFeature.fontScale()
     private fun fontFamilyName(): String = appearanceRuntimeFeature.fontFamilyName()
-    private fun showAppearanceSettings() = appearanceRuntimeFeature.showAppearanceSettings()
-    private fun showTypographySettings() = appearanceRuntimeFeature.showTypographySettings()
 
     private val libraryRuntimeFeature by lazy {
         MainLibraryRuntimeFeature(
@@ -336,7 +330,7 @@ class MainActivity : ComponentActivity() {
             showNotificationSettings = activityServicesRuntimeFeature::showNotificationSettings,
             showAppearanceSettings = { appearanceRuntimeFeature.showAppearanceSettings() },
             showGameDialog = { bloggerRuntimeFeature.showComposer() },
-            showProfile = { userExperienceRuntimeFeature.userExperienceRuntimeFeature.showProfile() },
+            showProfile = { userExperienceRuntimeFeature.showProfile() },
             showSideMenu = { appearanceRuntimeFeature.showSideMenu() },
             applyTypography = ::applyTypography,
             applyUnifiedSkin = ::applyUnifiedSkin,
@@ -360,7 +354,6 @@ class MainActivity : ComponentActivity() {
         activityResultRuntimeFeature.launchCoverPicker(intent)
     }
 
-    private fun userExperienceRuntimeFeature.showProfile(): Unit = userExperienceRuntimeFeature.userExperienceRuntimeFeature.showProfile()
     private val gameExperienceFeature by lazy {
         GameExperienceRuntimeFeature(
             activity = this,
