@@ -9,6 +9,7 @@ import com.marcorx6.library.ui.BloggerAccessFeature
 import com.marcorx6.library.ui.BloggerHtmlBuilder
 import com.marcorx6.library.ui.BloggerPostFeature
 import com.marcorx6.library.ui.BloggerServices
+import com.marcorx6.library.ui.BloggerRuntimeFeature
 import com.marcorx6.library.ui.CoverFeature
 import com.marcorx6.library.ui.CoverUploadState
 import com.marcorx6.library.ui.CoverRuntimeFeature
