@@ -793,6 +793,11 @@ class MainActivity : ComponentActivity() {
     private fun showDetails(game: Game) = gameDetailsFeature.show(game)
 
 
+    private fun showGameDialog(existing: Game? = null) =
+        bloggerPostFeature.showComposer(existing)
+
+    private fun deleteGame(game: Game) = bloggerPostFeature.delete(game)
+
     private val gameOfTheDayController by lazy {
         GameOfTheDayController(
             activity = this,
