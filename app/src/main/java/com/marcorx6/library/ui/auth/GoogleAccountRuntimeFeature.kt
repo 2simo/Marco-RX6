@@ -1,6 +1,7 @@
 package com.marcorx6.library.ui
 
 import android.content.Context
+import android.content.Intent
 
 /**
  * Owns Google account/session operations and the Blogger service composition that depends on them.
@@ -8,7 +9,6 @@ import android.content.Context
 internal class GoogleAccountRuntimeFeature(context: Context) {
     private val googleAdminFeature = GoogleAdminFeature(context)
 
-    val accountController get() = googleAdminFeature.accountController
     val tokenProvider get() = googleAdminFeature.tokenProvider
 
     var blogId: String
@@ -26,6 +26,21 @@ internal class GoogleAccountRuntimeFeature(context: Context) {
             isAdminSession = { isAdminSession }
         )
     }
+
+    fun signInIntent(): Intent = googleAdminFeature.accountController.signInIntent()
+
+    fun signOut(onSignedOut: () -> Unit) =
+        googleAdminFeature.accountController.signOut(onSignedOut)
+
+    fun handleSignInResult(
+        data: Intent?,
+        onSuccess: () -> Unit,
+        onFailure: (String) -> Unit
+    ) = googleAdminFeature.accountController.handleSignInResult(
+        data = data,
+        onSuccess = onSuccess,
+        onFailure = onFailure
+    )
 
     fun driveToken(): String = googleAdminFeature.driveToken()
 }
