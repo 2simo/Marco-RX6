@@ -926,6 +926,14 @@ class MainActivity : ComponentActivity() {
 
     private val bloggerGamePostFactory by lazy { BloggerGamePostFactory() }
 
+    private val bloggerPostSaveController by lazy {
+        BloggerPostSaveController(
+            executeIo = { task -> ioExecutor.execute { task() } },
+            postToUi = ::postToUi,
+            savePost = bloggerPostRepository::savePost
+        )
+    }
+
     private val bloggerArticlePreviewFactory by lazy {
         BloggerArticlePreviewFactory(
             activity = this,
@@ -1267,23 +1275,23 @@ class MainActivity : ComponentActivity() {
                 )
                 val htmlContent = post.bloggerHtml
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
-                ioExecutor.execute {
-                    try {
-                        val result = bloggerPostRepository.savePost(
-                            post,
-                            selectedLabels.toList(),
-                            existing?.bloggerPostId
-                        )
-                        postToUi {
-                            val saved = post.copy(bloggerPostId = result.optString("id", post.bloggerPostId), bloggerHtml = result.optString("content", htmlContent), url = result.optString("url", post.url), sourcePostUrl = result.optString("url", post.sourcePostUrl), blogImported = true)
-                            val previousCoverPath = existing?.coverLocalPath.orEmpty()
-                            gameLibraryStore.upsert(saved, existing)
-                            deleteCoverFileIfUnused(previousCoverPath)
-                            pendingCoverLocalPath = ""; pendingCoverPublicUrl = ""; coverUploadFailed = false
-                            saveGames(); renderGames(); dialog.dismiss(); Toast.makeText(this, "تم نشر المقال على Blogger", Toast.LENGTH_LONG).show()
-                        }
-                    } catch (e: Exception) { postToUi { dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true; Toast.makeText(this, e.message ?: "فشل نشر المقال", Toast.LENGTH_LONG).show() } }
-                }
+                bloggerPostSaveController.save(
+                    post = post,
+                    labels = selectedLabels.toList(),
+                    existing = existing,
+                    onSuccess = { saved ->
+                        val previousCoverPath = existing?.coverLocalPath.orEmpty()
+                        gameLibraryStore.upsert(saved, existing)
+                        deleteCoverFileIfUnused(previousCoverPath)
+                        pendingCoverLocalPath = ""; pendingCoverPublicUrl = ""; coverUploadFailed = false
+                        saveGames(); renderGames(); dialog.dismiss()
+                        Toast.makeText(this, "تم نشر المقال على Blogger", Toast.LENGTH_LONG).show()
+                    },
+                    onError = { message ->
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true
+                        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+                    }
+                )
             }
         }
         dialog.show()
