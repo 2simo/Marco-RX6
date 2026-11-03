@@ -11,6 +11,7 @@ import com.marcorx6.library.ui.BloggerHtmlBuilder
 import com.marcorx6.library.ui.BloggerServices
 import com.marcorx6.library.ui.CoverFeature
 import com.marcorx6.library.ui.CoverUploadState
+import com.marcorx6.library.ui.CoverRuntimeFeature
 import com.marcorx6.library.ui.DownloadFeature
 import com.marcorx6.library.ui.FirstRunSetupFeature
 import com.marcorx6.library.ui.GameDetailsFeature
