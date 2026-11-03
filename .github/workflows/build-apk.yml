@@ -47,6 +47,14 @@ jobs:
           echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/marcorx6-release.jks"
           test -s "$RUNNER_TEMP/marcorx6-release.jks"
 
+      - name: Run Android lint checks
+        env:
+          KEYSTORE_FILE: ${{ runner.temp }}/marcorx6-release.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: gradle --no-daemon lintRelease
+
       - name: Build signed APK
         env:
           KEYSTORE_FILE: ${{ runner.temp }}/marcorx6-release.jks
