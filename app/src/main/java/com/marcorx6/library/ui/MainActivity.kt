@@ -272,8 +272,6 @@ class MainActivity : ComponentActivity() {
             createInterface()
         }
     }
-    private fun googleBloggerToken(): String = googleTokenProvider.bloggerToken()
-
     private fun driveToken(): String = googleTokenProvider.driveToken()
 
 
