@@ -2265,7 +2265,7 @@ class MainActivity : Activity() {
             val chip = filters.getChildAt(i) as TextView
             val active = chip.tag?.toString() == selected
             chip.background = rounded(if (active) red else panel, 15)
-            chip.setTextColor(if (active) bg else gray)
+            chip.setTextColor(if (active) Color.WHITE else gray)
         }
 
         val query = search.text.toString().trim()
@@ -2897,7 +2897,7 @@ class MainActivity : Activity() {
         AlertDialog.Builder(this)
             .setTitle("حذف المقال")
             .setMessage("هل تريد حذف المقال ${game.name}؟")
-            .setNegativeButton("CANCEL", null)
+            .setNegativeButton("إلغاء", null)
             .setPositiveButton("حذف") { _, _ ->
                 if (!isAdminSession || bloggerBlogId.isBlank() || game.bloggerPostId.isBlank()) { Toast.makeText(this, "يلزم تسجيل دخول المسؤول ومعرّف المقال في Blogger", Toast.LENGTH_LONG).show(); return@setPositiveButton }
                 Thread { try {
