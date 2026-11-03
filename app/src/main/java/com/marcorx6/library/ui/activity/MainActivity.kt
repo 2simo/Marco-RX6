@@ -24,6 +24,7 @@ import com.marcorx6.library.ui.GoogleAdminFeature
 import com.marcorx6.library.ui.LanguageFeature
 import com.marcorx6.library.ui.LibraryFilterState
 import com.marcorx6.library.ui.MainLibraryFeature
+import com.marcorx6.library.ui.library.MainLibraryViewState
 import com.marcorx6.library.ui.MotionPreferencesApplier
 import com.marcorx6.library.ui.NotificationsFeature
 import com.marcorx6.library.ui.OfflineCatalogLoader
@@ -80,13 +81,7 @@ class MainActivity : ComponentActivity() {
             .also { coverRuntimeFeatureCreated = true }
     }
 
-    private lateinit var gameList: LinearLayout
-    private lateinit var search: EditText
-    private lateinit var filters: LinearLayout
-    private lateinit var countText: TextView
-
-    private var selected = "ALL"
-    private var sortMode = "الأحدث"
+    private val libraryViewState = MainLibraryViewState()
     private val libraryFilterState = LibraryFilterState()
     private val uiThreadDispatcher by lazy { UiThreadDispatcher(this) }
     private fun postToUi(action: () -> Unit) = uiThreadDispatcher.post(action)
@@ -221,7 +216,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        selected = getSharedPreferences("app_settings", MODE_PRIVATE)
+        libraryViewState.selected = getSharedPreferences("app_settings", MODE_PRIVATE)
             .getString("preferred_platform", "ALL")
             ?.takeIf { it in listOf("PS2", "PS3", "PS4") } ?: "ALL"
 
@@ -429,14 +424,14 @@ class MainActivity : ComponentActivity() {
             white = white,
             gray = gray,
             adminSession = { isAdminSession },
-            getSelected = { selected },
-            setSelected = { selected = it },
-            getSortMode = { sortMode },
-            setSortMode = { sortMode = it },
-            setSearch = { search = it },
-            setFilters = { filters = it },
-            setCountText = { countText = it },
-            setGameList = { gameList = it },
+            getSelected = { libraryViewState.selected },
+            setSelected = { libraryViewState.selected = it },
+            getSortMode = { libraryViewState.sortMode },
+            setSortMode = { libraryViewState.sortMode = it },
+            setSearch = { libraryViewState.search = it },
+            setFilters = { libraryViewState.filters = it },
+            setCountText = { libraryViewState.countText = it },
+            setGameList = { libraryViewState.gameList = it },
             renderGames = ::renderGames,
             showNotificationSettings = ::showNotificationSettings,
             showAppearanceSettings = ::showAppearanceSettings,
@@ -535,15 +530,15 @@ class MainActivity : ComponentActivity() {
             translate = ::tr,
             loadCover = ::loadCover,
             showDetails = ::showDetails,
-            gameList = { gameList },
-            filters = { filters },
-            countText = { countText },
-            search = { search },
+            libraryViewState.gameList = { libraryViewState.gameList },
+            libraryViewState.filters = { libraryViewState.filters },
+            libraryViewState.countText = { libraryViewState.countText },
+            libraryViewState.search = { libraryViewState.search },
             games = { games },
-            selected = { selected },
+            libraryViewState.selected = { libraryViewState.selected },
             selectedGenre = { libraryFilterState.genre },
             selectedYear = { libraryFilterState.year },
-            sortMode = { sortMode },
+            libraryViewState.sortMode = { libraryViewState.sortMode },
             bg = { bg },
             panel = { panel },
             red = { red },
@@ -569,7 +564,7 @@ class MainActivity : ComponentActivity() {
             scheduleNotifications = notificationFeature::schedule,
             cancelNotifications = notificationFeature::cancel,
             requestNotificationPermission = ::requestNotificationPermissionIfNeeded,
-            onPlatformSelected = { selected = it },
+            onPlatformSelected = { libraryViewState.selected = it },
             applyUnifiedSkin = ::applyUnifiedSkin,
             recreateActivity = ::recreate
         )
