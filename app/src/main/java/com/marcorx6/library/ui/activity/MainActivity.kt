@@ -65,17 +65,9 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private val isSyncing: Boolean get() = bloggerRuntimeFeature.isSyncing
     private val googleAccountRuntimeFeature by lazy {
         GoogleAccountRuntimeFeature(applicationContext)
     }
-    private var bloggerBlogId: String
-        get() = googleAccountRuntimeFeature.blogId
-        set(value) { googleAccountRuntimeFeature.blogId = value }
-    private var isAdminSession: Boolean
-        get() = googleAccountRuntimeFeature.isAdminSession
-        set(value) { googleAccountRuntimeFeature.isAdminSession = value }
-    private val bloggerServices get() = googleAccountRuntimeFeature.bloggerServices
     private val gameDataRuntimeFeature by lazy { GameDataRuntimeFeature(this) }
     private val userExperienceRuntimeFeature by lazy {
         UserExperienceRuntimeFeature(
@@ -125,17 +117,17 @@ class MainActivity : ComponentActivity() {
     private val bloggerRuntimeFeature by lazy {
         BloggerRuntimeFeature(
             activity = this,
-            services = bloggerServices,
+            services = googleAccountRuntimeFeature.bloggerServices,
             executor = activityServicesRuntimeFeature.ioExecutor,
             currentAccount = { GoogleSignIn.getLastSignedInAccount(this) },
-            currentBlogId = { bloggerBlogId },
-            setAdmin = { isAdminSession = it },
-            isAdminSession = { isAdminSession },
+            currentBlogId = { googleAccountRuntimeFeature.blogId },
+            setAdmin = { googleAccountRuntimeFeature.isAdminSession = it },
+            googleAccountRuntimeFeature.isAdminSession = { googleAccountRuntimeFeature.isAdminSession },
             feedUrl = bloggerFeedUrl,
             postToUi = activityServicesRuntimeFeature::postToUi,
             refreshUi = ::createInterface,
             merge = { imported -> GameImportMerger.merge(gameDataRuntimeFeature.libraryStore, imported) },
-            setBlogId = { bloggerBlogId = it },
+            setBlogId = { googleAccountRuntimeFeature.blogId = it },
             refreshAccess = { bloggerRuntimeFeature.refreshAccess() },
             renderGames = ::renderGames,
             gameLibraryStore = gameDataRuntimeFeature.libraryStore,
@@ -181,13 +173,13 @@ class MainActivity : ComponentActivity() {
             googleAccountRuntimeFeature.handleSignInResult(
                 data = data,
                 onSuccess = {
-                    isAdminSession = false
+                    googleAccountRuntimeFeature.isAdminSession = false
                     createInterface()
                     bloggerRuntimeFeature.refreshAccess()
                     Toast.makeText(this, "تم ربط حساب Google؛ جارٍ التحقق من صلاحيات Blogger…", Toast.LENGTH_LONG).show()
                 },
                 onFailure = { message ->
-                    isAdminSession = false
+                    googleAccountRuntimeFeature.isAdminSession = false
                     createInterface()
                     Toast.makeText(this, "فشل تسجيل الدخول إلى Google: $message", Toast.LENGTH_LONG).show()
                 }
@@ -211,7 +203,7 @@ class MainActivity : ComponentActivity() {
             applySystemBarAppearance = activityServicesRuntimeFeature::applySystemBarAppearance,
             createNotificationChannel = activityServicesRuntimeFeature::createNotificationChannel,
             loadGames = gameDataRuntimeFeature::loadGames,
-            restoreAdminSession = { isAdminSession = false; bloggerRuntimeFeature.refreshAccess() },
+            restoreAdminSession = { googleAccountRuntimeFeature.isAdminSession = false; bloggerRuntimeFeature.refreshAccess() },
             createInterface = ::createInterface,
             showStartupExperience = ::showStartupExperience,
             setupCompleted = {
@@ -259,13 +251,13 @@ class MainActivity : ComponentActivity() {
             white = { white },
             gray = { gray },
             accentForeground = ::accentForeground,
-            isSyncing = { isSyncing },
-            isAdminSession = { isAdminSession },
+            googleAccountRuntimeFeature.googleAccountRuntimeFeature.isAdminSession = { googleAccountRuntimeFeature.googleAccountRuntimeFeature.isAdminSession },
+            googleAccountRuntimeFeature.isAdminSession = { googleAccountRuntimeFeature.isAdminSession },
             sync = { bloggerRuntimeFeature.sync(showResult = true) },
             showDownloads = activityServicesRuntimeFeature::showDownloadManager,
             showNotifications = activityServicesRuntimeFeature::showNotificationSettings,
             showProfile = { userExperienceRuntimeFeature.showProfile() },
-            signOut = { googleAccountRuntimeFeature.signOut { isAdminSession = false; createInterface() } },
+            signOut = { googleAccountRuntimeFeature.signOut { googleAccountRuntimeFeature.isAdminSession = false; createInterface() } },
             signIn = { activityResultRuntimeFeature.launchGoogleSignIn(googleAccountRuntimeFeature.signInIntent()) },
             showGameDialog = { bloggerRuntimeFeature.showComposer() },
             showGameOfDay = { gameExperienceFeature.showGameOfTheDay() },
@@ -308,7 +300,7 @@ class MainActivity : ComponentActivity() {
             red = red,
             white = white,
             gray = gray,
-            adminSession = { isAdminSession },
+            adminSession = { googleAccountRuntimeFeature.isAdminSession },
             accentForeground = ::accentForeground,
             loadCover = coverRuntimeFeature::load,
             showDetails = { game -> gameExperienceFeature.showDetails(game) },
@@ -355,7 +347,7 @@ class MainActivity : ComponentActivity() {
             styleAlertDialog = ::styleAlertDialog,
             filesDir = filesDir,
             stableCacheName = coverRuntimeFeature::stableCacheName,
-            isAdmin = { isAdminSession },
+            isAdmin = { googleAccountRuntimeFeature.isAdminSession },
             postToUi = activityServicesRuntimeFeature::postToUi,
             openGameLink = activityServicesRuntimeFeature::openGameLink,
             showGameDialog = { game -> bloggerRuntimeFeature.showComposer(game) },
