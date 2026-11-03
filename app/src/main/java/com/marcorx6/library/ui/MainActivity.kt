@@ -1043,10 +1043,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun mergeImportedGames(imported: List<Game>): Pair<Int, Int> {
-        val result = gameLibraryStore.mergeImported(imported)
-        return result.added to result.updated
-    }
+    private fun mergeImportedGames(imported: List<Game>): Pair<Int, Int> =
+        GameImportMerger.merge(gameLibraryStore, imported)
 
     private fun showPlatformCorrection(game: Game) {
         PlatformCorrectionController(this, gameLibraryStore, ::renderGames, ::styleAlertDialog)
