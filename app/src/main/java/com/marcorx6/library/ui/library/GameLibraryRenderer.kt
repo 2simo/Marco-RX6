@@ -75,12 +75,28 @@ internal class GameLibraryRenderer(
                         val game = sorted[itemIndex]
                         val card = LinearLayout(activity).apply {
                             orientation = LinearLayout.VERTICAL
-                            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                                if (isDarkMode()) intArrayOf(Color.rgb(17, 39, 66), Color.rgb(9, 22, 40)) else intArrayOf(Color.WHITE, Color.rgb(234, 244, 255))).apply {
+                            val surface = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                                if (isDarkMode())
+                                    intArrayOf(Color.argb(224, 20, 52, 84), Color.argb(210, 7, 24, 43))
+                                else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(218, 225, 241, 255))).apply {
                                 cornerRadius = dp(20).toFloat()
-                                setStroke(dp(1), if (isDarkMode()) Color.rgb(45, 112, 181) else Color.rgb(195, 219, 244))
+                                setStroke(dp(1), if (isDarkMode()) Color.argb(175, 78, 157, 224) else Color.argb(185, 153, 198, 239))
                             }
-                            setPadding(dp(7), dp(7), dp(7), dp(10)); elevation = dp(4).toFloat(); isClickable = true; isFocusable = true
+                            background = android.graphics.drawable.RippleDrawable(
+                                android.content.res.ColorStateList.valueOf(
+                                    if (isDarkMode()) Color.argb(86, 83, 177, 255) else Color.argb(62, 35, 126, 224)
+                                ),
+                                surface,
+                                GradientDrawable().apply {
+                                    setColor(Color.WHITE)
+                                    cornerRadius = dp(20).toFloat()
+                                }
+                            )
+                            setPadding(dp(7), dp(7), dp(7), dp(10))
+                            elevation = dp(5).toFloat()
+                            stateListAnimator = null
+                            isClickable = true
+                            isFocusable = true
                             setOnClickListener { showDetails(game) }
                         }
                         val imageFrame = FrameLayout(activity).apply { clipToOutline = true; background = rounded(bg, 12) }
@@ -120,7 +136,11 @@ internal class GameLibraryRenderer(
                         }
                         if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) loadCover(image, game.coverLocalPath, game.coverUrl)
                         else { image.setImageResource(android.R.drawable.ic_menu_gallery); image.scaleType = ImageView.ScaleType.CENTER_INSIDE }
-                        imageFrame.background = rounded(if (isDarkMode()) Color.rgb(7, 18, 34) else Color.rgb(225, 240, 255), 13)
+                        imageFrame.background = GradientDrawable().apply {
+                            setColor(if (isDarkMode()) Color.rgb(7, 18, 34) else Color.rgb(225, 240, 255))
+                            cornerRadius = dp(13).toFloat()
+                            setStroke(dp(1), if (isDarkMode()) Color.argb(125, 81, 157, 224) else Color.argb(135, 150, 197, 241))
+                        }
                         card.addView(imageFrame, LinearLayout.LayoutParams(-1, dp(184)))
                         card.addView(makeText(game.name, 13f, white, true).apply {
                             maxLines = 2; minLines = 2; ellipsize = android.text.TextUtils.TruncateAt.END
