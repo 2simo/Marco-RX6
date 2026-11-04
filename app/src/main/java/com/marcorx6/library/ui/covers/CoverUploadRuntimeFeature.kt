@@ -23,6 +23,7 @@ internal class CoverUploadRuntimeFeature(
     dp: (Int) -> Int,
     white: () -> Int,
     styleDialog: (android.app.AlertDialog) -> Unit,
+    translate: (String) -> String,
     private val launchCoverPicker: (Intent) -> Unit
 ) {
     val state = CoverUploadState()
@@ -41,7 +42,8 @@ internal class CoverUploadRuntimeFeature(
         deleteCoverFileIfUnused = deleteCoverFileIfUnused,
         dp = dp,
         white = white,
-        styleDialog = styleDialog
+        styleDialog = styleDialog,
+        translate = translate
     )
 
     val selectionController get() = feature.selectionController
