@@ -76,11 +76,11 @@ internal class GameLibraryRenderer(
                         val card = LinearLayout(activity).apply {
                             orientation = LinearLayout.VERTICAL
                             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                                if (isDarkMode()) intArrayOf(Color.rgb(20, 34, 57), Color.rgb(11, 20, 36)) else intArrayOf(Color.WHITE, Color.rgb(235, 241, 250))).apply {
+                                if (isDarkMode()) intArrayOf(Color.rgb(24, 48, 78), Color.rgb(10, 22, 39), Color.rgb(7, 15, 28)) else intArrayOf(Color.WHITE, Color.rgb(230, 243, 255), Color.rgb(241, 247, 255))).apply {
                                 cornerRadius = dp(18).toFloat()
-                                setStroke(dp(1), if (isDarkMode()) Color.rgb(37, 75, 119) else Color.rgb(215, 225, 239))
+                                setStroke(dp(1), if (isDarkMode()) Color.rgb(56, 119, 187) else Color.rgb(166, 205, 246))
                             }
-                            setPadding(dp(6), dp(6), dp(6), dp(8)); elevation = dp(2).toFloat(); isClickable = true; isFocusable = true
+                            setPadding(dp(6), dp(6), dp(6), dp(8)); elevation = dp(6).toFloat(); isClickable = true; isFocusable = true
                             setOnClickListener { showDetails(game) }
                         }
                         val imageFrame = FrameLayout(activity).apply { clipToOutline = true; background = rounded(bg, 12) }
@@ -89,7 +89,7 @@ internal class GameLibraryRenderer(
                         if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) loadCover(image, game.coverLocalPath, game.coverUrl)
                         else { image.setImageResource(android.R.drawable.ic_menu_gallery); image.scaleType = ImageView.ScaleType.CENTER_INSIDE }
                         imageFrame.background = rounded(if (isDarkMode()) Color.rgb(8, 16, 29) else Color.rgb(224, 232, 243), 13)
-                        card.addView(imageFrame, LinearLayout.LayoutParams(-1, dp(142)))
+                        card.addView(imageFrame, LinearLayout.LayoutParams(-1, dp(150)))
                         card.addView(makeText(game.name, 12.5f, white, true).apply {
                             maxLines = 2; minLines = 2; ellipsize = android.text.TextUtils.TruncateAt.END
                             gravity = Gravity.CENTER_VERTICAL; setPadding(dp(4), dp(7), dp(4), dp(2))
