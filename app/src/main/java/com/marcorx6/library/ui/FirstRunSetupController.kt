@@ -193,6 +193,8 @@ internal class FirstRunSetupController(
             }
             page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
             content.addView(page, FrameLayout.LayoutParams(-1, -1))
+            applyUnifiedSkin(page)
+            applyMotionPreferences(page)
             if (animate) viewFactory.animateIn(page)
             next.setOnClickListener {
                 if (step < steps.lastIndex) {
@@ -240,8 +242,8 @@ internal class FirstRunSetupController(
         }
         androidx.core.view.ViewCompat.requestApplyInsets(root)
         applyUnifiedSkin(root)
-        dialog.window?.decorView?.let(applyMotionPreferences)
         renderStep(0, true)
+        dialog.window?.decorView?.let(applyMotionPreferences)
     }
 
 }
