@@ -41,7 +41,7 @@ internal class MainLibraryFeature(
     showAdvancedFilters: () -> Unit,
     showGameDialog: () -> Unit,
     showProfile: () -> Unit,
-    showSideMenu: () -> Unit,
+    showDownloads: () -> Unit,
     applyTypography: (android.view.View) -> Unit,
     applyUnifiedSkin: (android.view.View) -> Unit,
     applyMotionPreferences: (android.view.View) -> Unit
