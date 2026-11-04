@@ -12,6 +12,7 @@ internal class AdvancedFiltersFeature(
     red: () -> Int,
     makeText: (String, Float, Int, Boolean) -> android.widget.TextView,
     styleDialog: (android.app.AlertDialog) -> Unit,
+    translate: (String) -> String,
     renderGames: () -> Unit
 ) {
     private val controller = AdvancedFiltersController(
@@ -20,6 +21,7 @@ internal class AdvancedFiltersFeature(
         red = red(),
         makeText = makeText,
         styleDialog = styleDialog,
+        translate = translate,
         onApply = { genre, year ->
             state.apply(genre, year)
             renderGames()
