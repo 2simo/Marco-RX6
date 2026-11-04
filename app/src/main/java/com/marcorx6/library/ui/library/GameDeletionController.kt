@@ -53,7 +53,19 @@ internal class GameDeletionController(
                     }
                 }
             }
-            .create().apply { setOnShowListener { styleAlertDialog(this) } }
+            .create().apply {
+                setOnShowListener {
+                    styleAlertDialog(this)
+                    getButton(AlertDialog.BUTTON_NEGATIVE).apply {
+                        minHeight = (activity.resources.displayMetrics.density * 48).toInt()
+                        contentDescription = translate("إلغاء حذف المقال")
+                    }
+                    getButton(AlertDialog.BUTTON_POSITIVE).apply {
+                        minHeight = (activity.resources.displayMetrics.density * 48).toInt()
+                        contentDescription = translate("تأكيد حذف المقال من Blogger")
+                    }
+                }
+            }
             .show()
     }
 }
