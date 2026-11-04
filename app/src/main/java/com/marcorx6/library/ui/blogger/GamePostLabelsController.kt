@@ -35,7 +35,7 @@ internal class GamePostLabelsController(
             button.text = if (selectedLabels.isEmpty()) {
                 translate("اختيار Labels من المدونة")
             } else {
-                "الأقسام (${selectedLabels.size}): " + selectedLabels.joinToString("، ")
+                translate("الأقسام") + " (${selectedLabels.size}): " + selectedLabels.joinToString("، ")
             }
         }
 
