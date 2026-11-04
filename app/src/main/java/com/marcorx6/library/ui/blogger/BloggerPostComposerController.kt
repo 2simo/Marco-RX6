@@ -206,13 +206,20 @@ internal class BloggerPostComposerController(
                     body = body.text.toString(),
                     coverUrl = coverUrl.text.toString(),
                     relatedLink = link.text.toString()
-                )
-                AlertDialog.Builder(activity)
+                ).apply {
+                    contentDescription = translate("معاينة كاملة لمقال Blogger قبل النشر")
+                }
+                val previewDialog = AlertDialog.Builder(activity)
                     .setTitle(translate("معاينة قبل النشر"))
                     .setView(web)
                     .setPositiveButton(translate("إغلاق"), null)
-                    .show()
-                    .also(styleAlertDialog)
+                    .create()
+                previewDialog.show()
+                styleAlertDialog(previewDialog)
+                previewDialog.getButton(AlertDialog.BUTTON_POSITIVE).apply {
+                    minHeight = dp(48)
+                    contentDescription = translate("إغلاق معاينة المقال")
+                }
                 }
             }
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).apply {
