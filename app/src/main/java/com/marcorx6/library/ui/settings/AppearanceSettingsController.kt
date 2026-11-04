@@ -75,7 +75,7 @@ internal class AppearanceSettingsController(
             setTextColor(muted)
             addGlassTouch(this)
             setOnClickListener { onBack() }
-        }, LinearLayout.LayoutParams(dp(44), dp(44)))
+        }, LinearLayout.LayoutParams(dp(48), dp(48)))
         root.addView(header)
         root.addView(TextView(activity).apply {
             text = translate("خصص تجربة MARCO RX6 بالطريقة التي تناسبك")
