@@ -100,7 +100,7 @@ internal class ProfileController(
             setText(prefs.getString("nickname", "Player") ?: "Player")
         }
         box.addView(makeText(tr("اسم العرض"), 11f, Color.rgb(75, 165, 255), true))
-        box.addView(input, LinearLayout.LayoutParams(-1, dp(50)).apply { topMargin = dp(6); bottomMargin = dp(14) })
+        box.addView(input, LinearLayout.LayoutParams(-1, dp(56)).apply { topMargin = dp(6); bottomMargin = dp(14) })
         val library = games()
         val favoriteCount = library.count { it.isFavorite }
         val stats = LinearLayout(activity).apply { orientation = LinearLayout.HORIZONTAL }
@@ -233,6 +233,13 @@ internal class ProfileController(
             contentDescription = tr("رجوع")
             minWidth = dp(48)
             minHeight = dp(48)
+            isClickable = true
+            isFocusable = true
+            if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
+                android.content.res.ColorStateList.valueOf(Color.argb(78, 82, 175, 255)),
+                null,
+                android.graphics.drawable.ColorDrawable(Color.WHITE)
+            )
             setOnClickListener { onBack() }
         }, LinearLayout.LayoutParams(dp(48), dp(48)))
         box.addView(header, 0)
