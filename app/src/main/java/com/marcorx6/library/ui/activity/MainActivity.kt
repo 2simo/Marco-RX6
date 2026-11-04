@@ -349,7 +349,7 @@ class MainActivity : ComponentActivity() {
             showAppearanceSettings = { appearanceRuntimeFeature.showAppearanceSettings() },
             showGameDialog = { bloggerRuntimeFeature.showComposer() },
             showProfile = { userExperienceRuntimeFeature.showProfile() },
-            showSideMenu = { appearanceRuntimeFeature.showSideMenu() },
+            showDownloads = activityServicesRuntimeFeature::showDownloadManager,
             applyTypography = ::applyTypography,
             applyUnifiedSkin = ::applyUnifiedSkin,
             applyMotionPreferences = ::applyMotionPreferences
