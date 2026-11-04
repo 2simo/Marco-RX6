@@ -51,7 +51,7 @@ internal class FirebaseAccountController(
     }
 
     /** Uses the Firebase web OAuth client, separate from the Blogger/Drive OAuth client. */
-    private fun googleSignInIntent(): Intent {
+    fun googleSignInIntent(): Intent {
         val webClientId = activity.getString(com.marcorx6.library.R.string.default_web_client_id)
         val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestEmail()
