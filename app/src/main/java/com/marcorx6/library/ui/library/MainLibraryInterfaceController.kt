@@ -225,7 +225,8 @@ internal class MainLibraryInterfaceController(
                 textSize = 11f
                 typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
                 gravity = Gravity.CENTER
-                minHeight = dp(44)
+                minHeight = dp(48)
+                contentDescription = text.toString()
                 setPadding(dp(16), dp(10), dp(16), dp(10))
                 background = GradientDrawable(
                     GradientDrawable.Orientation.LEFT_RIGHT,
