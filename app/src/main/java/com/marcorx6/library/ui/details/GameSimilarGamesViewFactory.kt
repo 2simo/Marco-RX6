@@ -61,6 +61,7 @@ internal class GameSimilarGamesViewFactory(
                     null,
                     android.graphics.drawable.ColorDrawable(Color.WHITE)
                 )
+                minHeight = dp(48)
                 setPadding(dp(10), dp(9), dp(10), dp(9))
                 setOnClickListener { onSelect(item) }
             }, LinearLayout.LayoutParams(dp(118), -2).apply { marginEnd = dp(7) })
