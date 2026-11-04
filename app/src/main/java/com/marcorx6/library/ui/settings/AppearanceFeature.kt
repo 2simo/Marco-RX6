@@ -23,6 +23,8 @@ internal class AppearanceFeature(
     private val styleDialog: (android.app.AlertDialog) -> Unit,
     private val recreateActivity: () -> Unit,
     private val recreateInterface: () -> Unit,
+    private val showLanguagePicker: () -> Unit,
+    private val showNotificationSettings: () -> Unit,
     private val setContentView: (View) -> Unit,
     private val onBack: () -> Unit
 ) {
@@ -45,6 +47,9 @@ internal class AppearanceFeature(
             preferences = appearancePreferences(),
             applyMotionPreferences = applyMotionPreferences,
             recreateActivity = recreateActivity,
+            showLanguagePicker = showLanguagePicker,
+            showNotificationSettings = showNotificationSettings,
+            showTypographySettings = ::showTypographySettings,
             setContentView = setContentView,
             onBack = onBack
         ).show()
