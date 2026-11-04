@@ -65,6 +65,7 @@ internal class MainLibraryInterfaceController(
     private var sortMode: String
         get() = getSortMode()
         set(value) = setSortMode(value)
+    private var activeDockTab: String = "HOME"
 
     private fun isDarkMode(): Boolean = darkMode()
 
@@ -333,7 +334,7 @@ internal class MainLibraryInterfaceController(
             elevation = dp(14).toFloat()
             setPadding(dp(7), dp(7), dp(7), dp(7))
         }
-        var activeDockTab = if (selected == "FAVORITES") "LIBRARY" else "HOME"
+        if (selected == "FAVORITES" && activeDockTab == "HOME") activeDockTab = "LIBRARY"
         val dockItems = linkedMapOf<String, LinearLayout>()
         fun renderDockSelection() {
             dockItems.forEach { (tab, item) ->
@@ -393,6 +394,7 @@ internal class MainLibraryInterfaceController(
                 .showSoftInput(search, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
         }
         dockItem("PROFILE", "♙", tr("حسابي")) { showProfile() }
+        dockItem("SETTINGS", "⚙", tr("الإعدادات")) { showAppearanceSettings() }
         renderDockSelection()
         val dockParams = FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply {
             leftMargin = dp(16); rightMargin = dp(16); bottomMargin = dp(12)
