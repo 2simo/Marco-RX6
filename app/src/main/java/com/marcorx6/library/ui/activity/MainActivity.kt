@@ -321,7 +321,9 @@ class MainActivity : ComponentActivity() {
             openLink = activityServicesRuntimeFeature::openGameLink,
             applyUnifiedSkin = ::applyUnifiedSkin,
             recreateActivity = ::recreate,
-            recreateInterface = ::createInterface
+            recreateInterface = ::createInterface,
+            setContentView = ::showRootScreen,
+            onBack = ::createInterface
         )
     }
 
