@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.marcorx6.library"
-        minSdk = 23
+        minSdk = 24
         targetSdk = 35
         versionCode = 31
         versionName = "8.14"
