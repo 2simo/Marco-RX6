@@ -33,6 +33,7 @@ internal class ProfileController(
     private val showLanguagePicker: () -> Unit,
     private val showNotificationSettings: () -> Unit,
     private val showAccount: () -> Unit,
+    private val saveCloudProfile: (String) -> Unit,
     private val chooseAvatar: () -> Unit,
     private val getActiveDialog: () -> AlertDialog?,
     private val setActiveDialog: (AlertDialog?) -> Unit,
@@ -140,7 +141,9 @@ internal class ProfileController(
         dialog.setOnDismissListener { if (getActiveDialog() === dialog) setActiveDialog(null) }
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                prefs.edit().putString("nickname", input.text.toString().trim().ifBlank { "Player" }).putBoolean("profile_created", true).apply()
+                val nickname = input.text.toString().trim().ifBlank { "Player" }
+                prefs.edit().putString("nickname", nickname).putBoolean("profile_created", true).apply()
+                saveCloudProfile(nickname)
                 Toast.makeText(activity, "تم حفظ الملف الشخصي", Toast.LENGTH_SHORT).show()
                 dialog.dismiss()
             }
