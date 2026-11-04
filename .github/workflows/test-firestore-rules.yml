@@ -1,0 +1,50 @@
+name: Test Firestore Security Rules
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "firestore.rules"
+      - "firebase.json"
+      - "tests/firestore.rules.test.mjs"
+      - ".github/workflows/test-firestore-rules.yml"
+  pull_request:
+    paths:
+      - "firestore.rules"
+      - "firebase.json"
+      - "tests/firestore.rules.test.mjs"
+      - ".github/workflows/test-firestore-rules.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firestore-rules-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Firestore rules emulator tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Set up Java for the Firestore emulator
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install test dependencies
+        run: npm install --no-save --no-package-lock "firebase@^12.0.0" "@firebase/rules-unit-testing@^4.0.1" "firebase-tools@^14.0.0"
+
+      - name: Run Firestore security rules tests
+        run: npx firebase emulators:exec --only firestore --project demo-marco-rx6 "node --test tests/firestore.rules.test.mjs"
