@@ -42,7 +42,7 @@ internal class AppearanceUiFactory(
 
     fun stylePrimaryButton(button: Button, primary: Boolean = false) {
         button.background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-            if (primary) intArrayOf(Color.rgb(36, 139, 255), Color.rgb(23, 194, 224))
+            if (primary) intArrayOf(Color.rgb(42, 145, 255), Color.rgb(24, 91, 205))
             else if (isDarkMode()) intArrayOf(Color.rgb(45, 51, 72), Color.rgb(29, 34, 51))
             else intArrayOf(Color.rgb(250, 251, 255), Color.rgb(232, 237, 247))).apply {
             cornerRadius = dp(14).toFloat()
@@ -102,10 +102,10 @@ internal class AppearanceUiFactory(
 
     fun styleAlertDialog(dialog: AlertDialog) {
         dialog.window?.setBackgroundDrawable(GradientDrawable(GradientDrawable.Orientation.TL_BR,
-            if (isDarkMode()) intArrayOf(Color.rgb(28, 31, 54), Color.rgb(14, 19, 34))
+            if (isDarkMode()) intArrayOf(Color.rgb(19, 43, 73), Color.rgb(9, 20, 37))
             else intArrayOf(Color.WHITE, Color.rgb(239, 243, 251))).apply {
             cornerRadius = dp(24).toFloat()
-            setStroke(dp(1), if (isDarkMode()) Color.rgb(57, 105, 158) else Color.rgb(211, 219, 234))
+            setStroke(dp(1), if (isDarkMode()) Color.rgb(47, 117, 188) else Color.rgb(211, 219, 234))
         })
         dialog.window?.let { window ->
             // Alert dialogs use their own window: keep system bars visible and let
