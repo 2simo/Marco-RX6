@@ -70,7 +70,8 @@ internal class AppearanceFeature(
             roundedBackground = roundedBackground,
             themedSpinner = themedSpinner,
             recreateInterface = recreateInterface,
-            styleDialog = styleDialog
+            styleDialog = styleDialog,
+            translate = translate
         ).show()
     }
 }
