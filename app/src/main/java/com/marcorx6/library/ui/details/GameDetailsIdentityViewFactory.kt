@@ -42,7 +42,8 @@ internal class GameDetailsIdentityViewFactory(
                 cornerRadius = dp(12).toFloat()
                 setStroke(dp(1), if (dark) Color.argb(150, 85, 158, 222) else Color.argb(155, 145, 193, 237))
             }
-            contentDescription = game.name
+            contentDescription = null
+            importantForAccessibility = android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO
         }
         if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) {
             loadCover(cover, game.coverLocalPath, game.coverUrl)
