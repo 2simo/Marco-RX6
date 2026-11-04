@@ -27,13 +27,13 @@ internal class GameDetailsIdentityViewFactory(
             setPadding(dp(13), dp(13), dp(13), dp(13))
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
-                if (dark) intArrayOf(Color.rgb(24, 67, 111), Color.rgb(13, 32, 55), Color.rgb(8, 20, 36))
-                else intArrayOf(Color.rgb(250, 253, 255), Color.rgb(226, 239, 253), Color.rgb(239, 235, 255))
+                if (dark) intArrayOf(Color.rgb(27, 75, 124), Color.rgb(15, 39, 68), Color.rgb(8, 20, 36))
+                else intArrayOf(Color.rgb(252, 254, 255), Color.rgb(226, 241, 255), Color.rgb(239, 247, 255))
             ).apply {
                 cornerRadius = dp(22).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(64, 124, 184) else Color.rgb(174, 204, 236))
+                setStroke(dp(1), if (dark) Color.rgb(76, 164, 245) else Color.rgb(133, 190, 244))
             }
-            elevation = dp(3).toFloat()
+            elevation = dp(7).toFloat()
         }
         val cover = ImageView(activity).apply {
             scaleType = ImageView.ScaleType.CENTER_CROP
