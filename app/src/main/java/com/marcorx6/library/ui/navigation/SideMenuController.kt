@@ -112,6 +112,12 @@ internal class SideMenuController(
         menuItem("Aa", "الخط وحجم النص", "تخصيص قراءة وواجهة التطبيق", showTypography)
         menuItem("▶", "قناة YouTube", "@marco_rx7") { openLink("https://youtube.com/@marco_rx7") }
         menuItem("➤", "قناة Telegram", "@MARCO_RX1") { openLink("https://t.me/MARCO_RX1") }
+        menuItem("ⓘ", "سياسة الخصوصية", "طريقة جمع واستخدام وحماية البيانات") {
+            openLink("https://2simo.github.io/Marco-RX6/privacy-policy.html")
+        }
+        menuItem("⌫", "طلب حذف الحساب والبيانات", "طلب الحذف حتى إلا ما قدرتش تدخل للتطبيق") {
+            openLink("https://2simo.github.io/Marco-RX6/delete-account.html")
+        }
         panel.addView(View(activity), LinearLayout.LayoutParams(1, dp(12)))
         panel.addView(makeText("MARCO RX6  •  PREMIUM", 9f, gray, true).apply { gravity = Gravity.CENTER; setPadding(0, dp(16), 0, dp(4)) })
         val menuScroll = ScrollView(activity).apply {
