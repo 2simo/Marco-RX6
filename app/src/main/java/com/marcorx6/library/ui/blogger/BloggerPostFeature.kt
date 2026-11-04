@@ -122,7 +122,8 @@ internal class BloggerPostFeature(
         renderGames = renderGames,
         executeIo = executeIo,
         postToUi = postToUi,
-        styleAlertDialog = styleAlertDialog
+        styleAlertDialog = styleAlertDialog,
+        translate = translate
     )
 
     fun showComposer(existing: Game? = null) = composer.show(existing)
