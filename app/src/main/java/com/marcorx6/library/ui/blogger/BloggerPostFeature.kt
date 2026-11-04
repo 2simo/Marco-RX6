@@ -41,7 +41,8 @@ internal class BloggerPostFeature(
     deleteCoverFileIfUnused: (String) -> Unit,
     resetCoverUploadFailed: () -> Unit,
     saveGames: () -> Unit,
-    renderGames: () -> Unit
+    renderGames: () -> Unit,
+    translate: (String) -> String
 ) {
     private val labelsController = GamePostLabelsController(
         activity = activity,
@@ -51,7 +52,8 @@ internal class BloggerPostFeature(
         fetchLabels = services.posts::fetchLabels,
         executeIo = executeIo,
         postToUi = postToUi,
-        styleAlertDialog = styleAlertDialog
+        styleAlertDialog = styleAlertDialog,
+        translate = translate
     )
 
     private val formFieldsFactory = BloggerPostFormFieldsFactory(
