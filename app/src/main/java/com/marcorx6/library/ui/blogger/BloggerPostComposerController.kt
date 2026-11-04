@@ -46,11 +46,12 @@ internal class BloggerPostComposerController(
     private val resetCoverUploadFailed: () -> Unit,
     private val saveGames: () -> Unit,
     private val renderGames: () -> Unit,
-    private val applyUnifiedSkin: (View) -> Unit
+    private val applyUnifiedSkin: (View) -> Unit,
+    private val translate: (String) -> String
 ) {
     fun show(existing: Game? = null) {
         if (!isAdminSession()) {
-            Toast.makeText(activity, "يجب تسجيل الدخول بصلاحية المسؤول للنشر.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(activity, translate("يجب تسجيل الدخول بصلاحية المسؤول للنشر."), Toast.LENGTH_SHORT).show()
             return
         }
         if (existing != null) setPendingCoverLocalPath(existing.coverLocalPath)
@@ -66,11 +67,11 @@ internal class BloggerPostComposerController(
             background = rounded(if (android.os.Build.VERSION.SDK_INT >= 23) android.graphics.Color.argb(205, 15, 43, 70) else panel(), 15)
         }
         intro.addView(makeText(
-            if (existing == null) "استوديو النشر • MARCO RX6" else "استوديو التحرير • MARCO RX6",
+            translate(if (existing == null) "استوديو النشر • MARCO RX6" else "استوديو التحرير • MARCO RX6"),
             17f, white(), true
         ))
         intro.addView(makeText(
-            "جهّز الغلاف والتفاصيل والمحتوى، ثم عاين المقال قبل إرساله إلى Blogger.",
+            translate("جهّز الغلاف والتفاصيل والمحتوى، ثم عاين المقال قبل إرساله إلى Blogger."),
             11f, gray(), false
         ).apply { setPadding(0, dp(5), 0, 0) })
         box.addView(intro, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
@@ -103,7 +104,7 @@ internal class BloggerPostComposerController(
             if (pendingCoverPublicUrl().isNotBlank()) coverUrl.setText(pendingCoverPublicUrl())
         }
 
-        box.addView(makeText("02 • صورة الغلاف", 12f, red(), true).apply {
+        box.addView(makeText("02 • " + translate("صورة الغلاف"), 12f, red(), true).apply {
             setPadding(0, dp(8), 0, dp(6))
         })
         box.addView(preview, LinearLayout.LayoutParams(-1, dp(165)).apply {
@@ -111,18 +112,18 @@ internal class BloggerPostComposerController(
         })
         loadCover(preview, pendingCoverLocalPath(), existing?.coverUrl ?: "")
         box.addView(Button(activity).apply {
-            text = "اختيار صورة الغلاف من الهاتف"
+            text = translate("اختيار صورة الغلاف من الهاتف")
             tag = "marco_primary_action"
             setTextColor(accentForeground())
             background = rounded(((red() and 0x00FFFFFF) or (222 shl 24)), 12)
             setOnClickListener { chooseCover() }
         }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
-        box.addView(makeText("أقسام المقال • Labels من المدونة", 10f, red(), true))
+        box.addView(makeText(translate("أقسام المقال • Labels من المدونة"), 10f, red(), true))
         box.addView(labelsUi.button)
         box.addView(genre)
         box.addView(releaseYear)
         box.addView(title)
-        box.addView(makeText("03 • محتوى المقال", 12f, red(), true).apply {
+        box.addView(makeText("03 • " + translate("محتوى المقال"), 12f, red(), true).apply {
             setPadding(0, dp(12), 0, dp(5))
         })
         box.addView(body, LinearLayout.LayoutParams(-1, dp(190)))
@@ -137,11 +138,11 @@ internal class BloggerPostComposerController(
             addView(box)
         }
         val dialog = AlertDialog.Builder(activity)
-            .setTitle(if (existing == null) "إنشاء مقال جديد" else "تعديل المقال")
+            .setTitle(translate(if (existing == null) "إنشاء مقال جديد" else "تعديل المقال"))
             .setView(scroll)
-            .setNegativeButton("إغلاق", null)
-            .setNeutralButton("معاينة", null)
-            .setPositiveButton(if (existing == null) "نشر المقال" else "حفظ التعديلات", null)
+            .setNegativeButton(translate("إغلاق"), null)
+            .setNeutralButton(translate("معاينة"), null)
+            .setPositiveButton(translate(if (existing == null) "نشر المقال" else "حفظ التعديلات"), null)
             .create()
 
         dialog.setOnShowListener {
@@ -156,9 +157,9 @@ internal class BloggerPostComposerController(
                     relatedLink = link.text.toString()
                 )
                 AlertDialog.Builder(activity)
-                    .setTitle("معاينة قبل النشر")
+                    .setTitle(translate("معاينة قبل النشر"))
                     .setView(web)
-                    .setPositiveButton("إغلاق", null)
+                    .setPositiveButton(translate("إغلاق"), null)
                     .show()
                     .also(styleAlertDialog)
             }
@@ -217,7 +218,7 @@ internal class BloggerPostComposerController(
                         saveGames()
                         renderGames()
                         dialog.dismiss()
-                        Toast.makeText(activity, "تم نشر المقال على Blogger", Toast.LENGTH_LONG).show()
+                        Toast.makeText(activity, translate("تم نشر المقال على Blogger"), Toast.LENGTH_LONG).show()
                     },
                     onError = { message ->
                         dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true
