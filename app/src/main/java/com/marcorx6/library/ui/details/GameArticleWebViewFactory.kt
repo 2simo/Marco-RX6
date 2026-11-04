@@ -51,10 +51,10 @@ internal class GameArticleWebViewFactory(
                 body h1,body h2,body h3,body h4{color:${if (darkMode) "#59b7ff" else "#238de8"} !important;line-height:1.4;margin:25px 0 12px}
                 p{margin:0 0 18px}
                 img{display:block;max-width:100%!important;height:auto!important;width:auto;margin:18px auto;border-radius:12px;object-fit:contain}
-                body a{color:${if (darkMode) "#e2c17c" else "#238de8"} !important;text-decoration:none;font-weight:700}
+                body a{color:${if (darkMode) "#72bdff" else "#1678d5"} !important;text-decoration:none;font-weight:700}
                 ul,ol{padding-left:25px;margin:10px 0 20px}
                 li{padding:4px 0}
-                body blockquote{border-right:3px solid ${if (darkMode) "#d3b170" else "#8b5cf6"};padding:8px 14px;margin:16px 0;background:${if (darkMode) "#1b1d3b" else "#eee9f8"} !important}
+                body blockquote{border-right:3px solid ${if (darkMode) "#398fdf" else "#398fdf"};padding:8px 14px;margin:16px 0;background:${if (darkMode) "#102a46" else "#e8f3ff"} !important}
                 table{display:block;max-width:100%;overflow-x:auto;border-collapse:collapse}
                 td,th{border:1px solid ${if (darkMode) "#596174" else "#cbd2df"};padding:8px}
                 iframe,video{max-width:100%!important}
