@@ -462,7 +462,7 @@ internal class FirebaseAccountController(
                 password.transformationMethod = method
                 confirmPassword?.transformationMethod = method
                 password.setSelection(password.text.length)
-                confirmPassword?.setSelection(confirmPassword.text.length)
+                confirmPassword?.let { it.setSelection(it.text.length) }
                 text = translate(if (passwordVisible) "إخفاء كلمة المرور" else "إظهار كلمة المرور")
             }
         }
