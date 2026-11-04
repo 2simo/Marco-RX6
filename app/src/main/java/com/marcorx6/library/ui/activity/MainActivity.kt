@@ -167,6 +167,7 @@ class MainActivity : ComponentActivity() {
             launchAvatarPicker = activityResultRuntimeFeature::launchProfileAvatar,
             styleAlertDialog = ::styleAlertDialog,
             applyUnifiedSkin = ::applyUnifiedSkin,
+            applyMotionPreferences = ::applyMotionPreferences,
             onAvatarSaved = {
                 Toast.makeText(this, "تم تحديث صورة الملف الشخصي", Toast.LENGTH_SHORT).show()
                 userExperienceRuntimeFeature.showProfile()
