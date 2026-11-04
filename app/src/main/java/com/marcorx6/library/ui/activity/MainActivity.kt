@@ -26,6 +26,21 @@ import android.widget.*
 
 class MainActivity : ComponentActivity() {
 
+    private var isSecondaryRootScreen = false
+
+    private fun showRootScreen(view: View) {
+        isSecondaryRootScreen = true
+        setContentView(view)
+    }
+
+    override fun onBackPressed() {
+        if (isSecondaryRootScreen) {
+            createInterface()
+        } else {
+            super.onBackPressed()
+        }
+    }
+
     private val firebaseSessionCoordinator: FirebaseSessionCoordinator by lazy {
         FirebaseSessionCoordinator()
     }
@@ -76,7 +91,7 @@ class MainActivity : ComponentActivity() {
     private fun showFirebaseAccount() = firebaseAccountController.show()
 
     private val activityServicesRuntimeFeature: ActivityServicesRuntimeFeature by lazy {
-        ActivityServicesRuntimeFeature(this, ::styleAlertDialog, ::isDarkMode, { view -> setContentView(view) }, ::createInterface)
+        ActivityServicesRuntimeFeature(this, ::styleAlertDialog, ::isDarkMode, ::showRootScreen, ::createInterface)
     }
 
     private val appearancePaletteFeature: AppearancePaletteRuntimeFeature by lazy { AppearancePaletteRuntimeFeature(this) }
@@ -163,7 +178,7 @@ class MainActivity : ComponentActivity() {
             recreateActivity = ::recreate,
             showFirstRunSetup = ::showFirstRunSetup,
             showProfileForStartup = { userExperienceRuntimeFeature.showProfile() },
-            setContentView = { view -> setContentView(view) },
+            setContentView = ::showRootScreen,
             onBack = ::createInterface
         )
     }
@@ -363,7 +378,10 @@ class MainActivity : ComponentActivity() {
     private fun showFirstRunSetup() = userExperienceRuntimeFeature.showFirstRunSetup()
     private fun showStartupExperience() = userExperienceRuntimeFeature.showStartupExperience()
 
-    private fun createInterface() = libraryRuntimeFeature.create()
+    private fun createInterface() {
+        isSecondaryRootScreen = false
+        libraryRuntimeFeature.create()
+    }
     private fun renderGames() = libraryRuntimeFeature.renderGames()
 
     private val gameExperienceFeature: GameExperienceRuntimeFeature by lazy {
