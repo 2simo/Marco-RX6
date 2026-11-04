@@ -167,6 +167,14 @@ internal class AppearanceSettingsController(
                 })
                 setOnClickListener { action() }
             }
+        root.addView(settingRow(
+            "المظهر",
+            if (dark) "الوضع الليلي مفعّل — اضغط للتبديل إلى الوضع النهاري"
+            else "الوضع النهاري مفعّل — اضغط للتبديل إلى الوضع الليلي"
+        ) {
+            preferences.edit().putBoolean("dark_mode", !dark).apply()
+            recreateActivity()
+        }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         root.addView(settingRow("اللغة", "العربية والإنجليزية والفرنسية والإسبانية", showLanguagePicker),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         root.addView(settingRow("الإشعارات", "التحكم في تنبيهات المقالات الجديدة", showNotificationSettings),
