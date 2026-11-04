@@ -23,12 +23,13 @@ internal class GameOfTheDayController(
     private val loadCover: (ImageView, String, String) -> Unit,
     private val showDetails: (Game) -> Unit,
     private val openGameLink: (String) -> Unit,
-    private val styleAlertDialog: (AlertDialog) -> Unit
+    private val styleAlertDialog: (AlertDialog) -> Unit,
+    private val translate: (String) -> String
 ) {
     fun show() {
         val library = games()
         if (library.isEmpty()) {
-            Toast.makeText(activity, "لا توجد ألعاب متاحة لاختيار لعبة اليوم", Toast.LENGTH_SHORT).show()
+            Toast.makeText(activity, translate("لا توجد ألعاب متاحة لاختيار لعبة اليوم"), Toast.LENGTH_SHORT).show()
             return
         }
         val game = GameOfDaySelector.select(library, Calendar.getInstance()) ?: return
@@ -54,7 +55,7 @@ internal class GameOfTheDayController(
         val platformLabel = game.platform + if (game.genre.isNotBlank()) " • ${game.genre}" else ""
         box.addView(makeText(platformLabel, 11f, red(), true))
         val summary = game.description.ifBlank {
-            "اكتشف تفاصيل هذه اللعبة وروابطها داخل مكتبة MARCO RX6."
+            translate("اكتشف تفاصيل هذه اللعبة وروابطها داخل مكتبة MARCO RX6.")
         }
         box.addView(makeText(summary, 12f, gray(), false).apply {
             setPadding(0, dp(8), 0, 0)
@@ -62,11 +63,11 @@ internal class GameOfTheDayController(
             ellipsize = android.text.TextUtils.TruncateAt.END
         })
         AlertDialog.Builder(activity)
-            .setTitle("✧ لعبة اليوم")
+            .setTitle("✧ " + translate("لعبة اليوم"))
             .setView(box)
-            .setPositiveButton("تفاصيل اللعبة") { _, _ -> showDetails(game) }
-            .setNeutralButton("فتح الرابط") { _, _ -> openGameLink(game.url) }
-            .setNegativeButton("إغلاق", null)
+            .setPositiveButton(translate("تفاصيل اللعبة")) { _, _ -> showDetails(game) }
+            .setNeutralButton(translate("فتح الرابط")) { _, _ -> openGameLink(game.url) }
+            .setNegativeButton(translate("إغلاق"), null)
             .create().apply { setOnShowListener { styleAlertDialog(this) } }
             .show()
     }
