@@ -41,6 +41,7 @@ internal class TypographySettingsController(
         })
         val scale = TypographyPreferences.scale(preferences)
         val size = SeekBar(activity).apply {
+            contentDescription = translate("حجم الخط")
             max = 8
             progress = ((scale - 0.85f) / 0.05f).toInt().coerceIn(0, 8)
         }
@@ -59,7 +60,9 @@ internal class TypographySettingsController(
                 "mono" -> 2
                 else -> 0
             }
-        )
+        ).apply {
+            contentDescription = translate("نوع الخط")
+        }
         box.addView(family)
         size.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
