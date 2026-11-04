@@ -13,6 +13,7 @@ import com.marcorx6.library.ui.library.MainLibraryRuntimeFeature
 import com.marcorx6.library.ui.GameImportMerger
 import com.marcorx6.library.ui.library.MainLibraryViewState
 import com.marcorx6.library.data.Game
+import com.marcorx6.library.data.auth.FirebaseSessionCoordinator
 import com.marcorx6.library.ui.auth.GoogleAccountRuntimeFeature
 import androidx.activity.ComponentActivity
 import android.app.AlertDialog
@@ -21,6 +22,10 @@ import android.view.View
 import android.widget.*
 
 class MainActivity : ComponentActivity() {
+
+    private val firebaseSessionCoordinator: FirebaseSessionCoordinator by lazy {
+        FirebaseSessionCoordinator()
+    }
 
     private val activityServicesRuntimeFeature: ActivityServicesRuntimeFeature by lazy {
         ActivityServicesRuntimeFeature(this, ::styleAlertDialog, ::isDarkMode)
@@ -206,16 +211,19 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        firebaseSessionCoordinator.start()
         lifecycleCoordinator.onCreate()
     }
 
     override fun onResume() {
         super.onResume()
+        firebaseSessionCoordinator.ensureGuestSession()
         lifecycleCoordinator.onResume()
     }
 
     override fun onDestroy() {
         lifecycleCoordinator.onDestroy()
+        firebaseSessionCoordinator.stop()
         super.onDestroy()
     }
 
