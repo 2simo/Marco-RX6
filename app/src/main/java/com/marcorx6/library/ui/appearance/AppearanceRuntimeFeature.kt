@@ -11,7 +11,7 @@ import android.widget.Spinner
 import androidx.activity.ComponentActivity
 
 /**
- * Owns appearance, typography, language, motion and side-menu feature composition.
+ * Owns appearance, typography, language and motion feature composition.
  * The Activity supplies application actions through callbacks; the feature owns UI services.
  */
 internal class AppearanceRuntimeFeature(
@@ -67,38 +67,6 @@ internal class AppearanceRuntimeFeature(
         MotionPreferencesApplier(appearancePreferences)
     }
 
-    private val sideMenuFeature by lazy {
-        SideMenuFeature(
-            activity = activity,
-            dp = ::dp,
-            makeText = ::makeText,
-            translate = ::translate,
-            isDark = isDarkMode,
-            language = ::currentLanguage,
-            gold = red(),
-            ink = bg(),
-            surface = panel(),
-            white = white(),
-            gray = gray(),
-            syncing = isSyncing,
-            isAdmin = isAdminSession,
-            sync = sync,
-            showDownloads = showDownloads,
-            showNotifications = showNotifications,
-            showProfile = showProfile,
-            signOut = signOut,
-            signIn = signIn,
-            showGameDialog = showGameDialog,
-            showGameOfDay = showGameOfDay,
-            showLanguage = ::showLanguagePicker,
-            showAppearance = ::showAppearanceSettings,
-            showTypography = ::showTypographySettings,
-            openLink = openLink,
-            applyMotion = ::applyMotionPreferences,
-            applySkin = applyUnifiedSkin
-        )
-    }
-
     private val appearanceFeature by lazy {
         AppearanceFeature(
             activity = activity,
@@ -135,7 +103,6 @@ internal class AppearanceRuntimeFeature(
     fun currentLanguage(): String = languageFeature.currentLanguage()
     fun translate(value: String): String = languageFeature.translate(value)
     fun showLanguagePicker() = languageFeature.showPicker()
-    fun showSideMenu() = sideMenuFeature.show()
     fun applyMotionPreferences(view: View) = motionPreferencesApplier.apply(view)
     fun applyTypography(view: View, scaledDensity: Float) =
         appearanceFeature.applyTypography(view, scaledDensity)
