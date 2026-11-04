@@ -116,7 +116,7 @@ internal class MainLibraryRuntimeFeature(
             showAdvancedFilters = ::showAdvancedFilters,
             showGameDialog = showGameDialog,
             showProfile = showProfile,
-            showSideMenu = showSideMenu,
+            showDownloads = showDownloads,
             applyTypography = applyTypography,
             applyUnifiedSkin = applyUnifiedSkin,
             applyMotionPreferences = applyMotionPreferences
