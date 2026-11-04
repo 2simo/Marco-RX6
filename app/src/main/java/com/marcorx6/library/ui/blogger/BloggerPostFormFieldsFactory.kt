@@ -21,11 +21,12 @@ internal class BloggerPostFormFieldsFactory(
     private val dp: (Int) -> Int,
     private val makeInput: (String) -> EditText,
     private val rounded: (Int, Int) -> Drawable,
-    private val panel: () -> Int
+    private val panel: () -> Int,
+    private val translate: (String) -> String
 ) {
     fun create(): BloggerPostFormFields {
-        val title = makeInput("عنوان المقال").apply { setSingleLine(true) }
-        val body = makeInput("وصف المقال — اكتب المعلومات فقط، وسيُنسّقها القالب تلقائياً").apply {
+        val title = makeInput(translate("عنوان المقال")).apply { setSingleLine(true) }
+        val body = makeInput(translate("وصف المقال — اكتب المعلومات فقط، وسيُنسّقها القالب تلقائياً")).apply {
             minLines = 8
             gravity = Gravity.TOP or Gravity.START
             inputType = android.text.InputType.TYPE_CLASS_TEXT or
@@ -33,10 +34,10 @@ internal class BloggerPostFormFieldsFactory(
                 android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
             setPadding(dp(13), dp(12), dp(13), dp(12))
         }
-        val coverUrl = makeInput("رابط صورة الغلاف (اختياري)").apply { setSingleLine(true) }
-        val relatedLink = makeInput("رابط التحميل أو رابط إضافي (اختياري)").apply { setSingleLine(true) }
-        val genre = makeInput("نوع اللعبة (مثال: أكشن، مغامرات)").apply { setSingleLine(true) }
-        val releaseYear = makeInput("سنة الإصدار (مثال: 2024)").apply {
+        val coverUrl = makeInput(translate("رابط صورة الغلاف (اختياري)")).apply { setSingleLine(true) }
+        val relatedLink = makeInput(translate("رابط التحميل أو رابط إضافي (اختياري)")).apply { setSingleLine(true) }
+        val genre = makeInput(translate("نوع اللعبة (مثال: أكشن، مغامرات)")).apply { setSingleLine(true) }
+        val releaseYear = makeInput(translate("سنة الإصدار (مثال: 2024)")).apply {
             setSingleLine(true)
             inputType = android.text.InputType.TYPE_CLASS_NUMBER
         }
