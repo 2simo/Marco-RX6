@@ -21,8 +21,9 @@ internal class MotionPreferencesApplier(
             view.layoutTransition = if (animationsEnabled) LayoutTransition().apply { setDuration(150) } else null
             for (i in 0 until view.childCount) apply(view.getChildAt(i))
         }
-        if (view.isClickable && view.tag != "marco_press_motion") {
-            view.tag = "marco_press_motion"
+        if (view.isClickable) {
+            // Do not overwrite semantic view tags such as marco_primary_action.
+            // Reapplying the same touch listener is safe and keeps styling idempotent.
             view.setOnTouchListener { target, event ->
                 if (!preferences().getBoolean("animations", true)) return@setOnTouchListener false
                 when (event.actionMasked) {
