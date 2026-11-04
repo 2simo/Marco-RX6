@@ -204,14 +204,13 @@ internal class MainLibraryInterfaceController(
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        listOf("ALL", "PS2", "PSP", "PS3", "PS4", "3DS", "GBA", "BLOG", "FAVORITES", "WANT_TO_PLAY", "PLAYING", "COMPLETED").forEach { category ->
+        listOf("ALL", "PS2", "PS3", "PS4", "3DS", "GBA", "BLOG", "FAVORITES", "WANT_TO_PLAY", "PLAYING", "COMPLETED").forEach { category ->
             val chip = TextView(context).apply {
                 text = when (category) {
                     "ALL" -> tr("الكل")
                     "PS4" -> "PS4"
                     "PS3" -> "PS3"
                     "PS2" -> "PS2"
-                    "PSP" -> "PSP"
                     "3DS" -> "3DS"
                     "GBA" -> "GBA"
                     "BLOG" -> tr("المدونة")
@@ -240,7 +239,7 @@ internal class MainLibraryInterfaceController(
                 isClickable = true
                 isFocusable = true
                 minHeight = dp(56)
-                contentDescription = label
+                contentDescription = text.toString()
                 if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
                     android.content.res.ColorStateList.valueOf(Color.argb(75, 82, 175, 255)),
                     null,
