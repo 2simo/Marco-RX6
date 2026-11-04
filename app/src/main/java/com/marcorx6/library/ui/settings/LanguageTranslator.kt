@@ -48,6 +48,7 @@ internal object LanguageTranslator {
             "كلمة المرور" to listOf("Password", "Mot de passe", "Contraseña"),
             "دخول" to listOf("Sign in", "Connexion", "Entrar"),
             "إنشاء الحساب" to listOf("Create account", "Créer le compte", "Crear cuenta"),
+            "جارٍ تجهيز عالم الألعاب..." to listOf("Preparing your game universe...", "Préparation de votre univers de jeux...", "Preparando tu universo de juegos..."),
             "منصة المكتبة" to listOf("Library platform", "Plateforme de la bibliothèque", "Plataforma de la biblioteca"),
             "لغة التطبيق" to listOf("App language", "Langue de l’application", "Idioma de la aplicación"),
             "لون الواجهة" to listOf("Interface color", "Couleur de l’interface", "Color de la interfaz"),
