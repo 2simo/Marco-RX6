@@ -310,7 +310,7 @@ internal class FirebaseAccountController(
         val dark = isDarkMode()
         val page = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            layoutDirection = if (activity.resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL) View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
+            layoutDirection = if (translate("حساب MARCO RX6") == "حساب MARCO RX6") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
             setPadding(dp(22), dp(20), dp(22), dp(28))
             setBackgroundColor(if (dark) Color.rgb(6, 16, 30) else Color.rgb(240, 247, 255))
         }
@@ -359,6 +359,11 @@ internal class FirebaseAccountController(
         setContentView(scroll)
         activity.window.statusBarColor = Color.TRANSPARENT
         activity.window.navigationBarColor = Color.TRANSPARENT
+        androidx.core.view.WindowInsetsControllerCompat(activity.window, activity.window.decorView).apply {
+            isAppearanceLightStatusBars = !dark
+            isAppearanceLightNavigationBars = !dark
+            show(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+        }
         androidx.core.view.ViewCompat.requestApplyInsets(scroll)
         applyUnifiedSkin(page)
     }
