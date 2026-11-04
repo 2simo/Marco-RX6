@@ -25,7 +25,8 @@ internal class StartupExperienceController(
     private val dp: (Int) -> Int,
     private val makeText: (String, Float, Int, Boolean) -> TextView,
     private val showFirstRunSetup: () -> Unit,
-    private val showProfile: () -> Unit
+    private val showProfile: () -> Unit,
+    private val translate: (String) -> String
 ) {
     private val handler = Handler(Looper.getMainLooper())
     private var animator: ValueAnimator? = null
@@ -75,7 +76,7 @@ internal class StartupExperienceController(
             letterSpacing = 0.28f
             setPadding(0, dp(9), 0, 0)
         })
-        val loading = makeText("جارٍ تجهيز عالم الألعاب...", 11f, Color.rgb(153, 174, 199), false).apply {
+        val loading = makeText(translate("جارٍ تجهيز عالم الألعاب..."), 11f, Color.rgb(153, 174, 199), false).apply {
             gravity = Gravity.CENTER
             setPadding(0, dp(34), 0, 0)
         }
