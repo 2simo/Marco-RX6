@@ -45,7 +45,7 @@ internal class GameDetailsIdentityViewFactory(
         } else {
             cover.setImageResource(android.R.drawable.ic_menu_gallery)
         }
-        identity.addView(cover, LinearLayout.LayoutParams(dp(112), dp(152)))
+        identity.addView(cover, LinearLayout.LayoutParams(dp(124), dp(168)))
 
         val info = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
@@ -74,6 +74,19 @@ internal class GameDetailsIdentityViewFactory(
                 .joinToString("  •  ")
             info.addView(makeText(metadata, 10f, gray(), true).apply {
                 setPadding(0, 0, 0, dp(7))
+            })
+        }
+        if (game.description.isNotBlank()) {
+            info.addView(makeText(
+                game.description.replace(Regex("\\s+"), " ").trim(),
+                10f,
+                gray(),
+                false
+            ).apply {
+                maxLines = 3
+                ellipsize = android.text.TextUtils.TruncateAt.END
+                setLineSpacing(dp(2).toFloat(), 1.05f)
+                setPadding(0, dp(3), 0, dp(2))
             })
         }
         val watchlistButton = watchlistViewFactory.create(game)
