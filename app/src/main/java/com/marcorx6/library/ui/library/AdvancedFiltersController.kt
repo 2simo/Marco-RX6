@@ -13,6 +13,7 @@ internal class AdvancedFiltersController(
     private val red: Int,
     private val makeText: (String, Float, Int, Boolean) -> android.widget.TextView,
     private val styleDialog: (AlertDialog) -> Unit,
+    private val translate: (String) -> String,
     private val onApply: (String, String) -> Unit,
     private val onClear: () -> Unit
 ) {
@@ -22,35 +23,35 @@ internal class AdvancedFiltersController(
         selectedGenre: String,
         selectedYear: String
     ) {
-        val genreValues = listOf("كل الأنواع") + genres
-        val yearValues = listOf("كل السنوات") + years
+        val genreValues = listOf(translate("كل الأنواع")) + genres
+        val yearValues = listOf(translate("كل السنوات")) + years
         val box = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(20), dp(8), dp(20), dp(4))
         }
-        box.addView(makeText("نوع اللعبة", 12f, red, true))
+        box.addView(makeText(translate("نوع اللعبة"), 12f, red, true))
         val genreSpinner = Spinner(activity).apply {
             adapter = ArrayAdapter(activity, android.R.layout.simple_spinner_dropdown_item, genreValues)
             setSelection(genreValues.indexOf(selectedGenre.takeIf { it.isNotBlank() } ?: "كل الأنواع").coerceAtLeast(0))
         }
         box.addView(genreSpinner)
-        box.addView(makeText("سنة الإصدار", 12f, red, true).apply { setPadding(0, dp(12), 0, 0) })
+        box.addView(makeText(translate("سنة الإصدار"), 12f, red, true).apply { setPadding(0, dp(12), 0, 0) })
         val yearSpinner = Spinner(activity).apply {
             adapter = ArrayAdapter(activity, android.R.layout.simple_spinner_dropdown_item, yearValues)
             setSelection(yearValues.indexOf(selectedYear.takeIf { it.isNotBlank() } ?: "كل السنوات").coerceAtLeast(0))
         }
         box.addView(yearSpinner)
         AlertDialog.Builder(activity)
-            .setTitle("الفلاتر المتقدمة")
+            .setTitle(translate("الفلاتر المتقدمة"))
             .setView(box)
-            .setPositiveButton("تطبيق") { _, _ ->
+            .setPositiveButton(translate("تطبيق")) { _, _ ->
                 onApply(
-                    genreSpinner.selectedItem?.toString()?.takeUnless { it == "كل الأنواع" }.orEmpty(),
-                    yearSpinner.selectedItem?.toString()?.takeUnless { it == "كل السنوات" }.orEmpty()
+                    genres.getOrNull(genreSpinner.selectedItemPosition - 1).orEmpty(),
+                    years.getOrNull(yearSpinner.selectedItemPosition - 1).orEmpty()
                 )
             }
-            .setNeutralButton("مسح الفلاتر") { _, _ -> onClear() }
-            .setNegativeButton("إغلاق", null)
+            .setNeutralButton(translate("مسح الفلاتر")) { _, _ -> onClear() }
+            .setNegativeButton(translate("إغلاق"), null)
             .show().also(styleDialog)
     }
 }
