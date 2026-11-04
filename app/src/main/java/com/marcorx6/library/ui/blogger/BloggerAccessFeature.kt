@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
+import android.app.AlertDialog
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import java.util.concurrent.Executor
 
@@ -40,8 +40,6 @@ internal class BloggerAccessFeature(
             val title = "تعذر التحقق من صلاحيات Blogger"
             val detailsView = TextView(context).apply {
                 text = message
-                textIsSelectable = true
-                setTextIsSelectable(true)
                 setPadding(40, 24, 40, 24)
                 layoutParams = ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
