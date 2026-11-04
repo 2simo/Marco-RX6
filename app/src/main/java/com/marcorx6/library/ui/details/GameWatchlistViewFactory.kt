@@ -15,16 +15,17 @@ internal class GameWatchlistViewFactory(
     private val panel: () -> Int,
     private val saveGames: () -> Unit,
     private val renderGames: () -> Unit,
-    private val styleAlertDialog: (AlertDialog) -> Unit
+    private val styleAlertDialog: (AlertDialog) -> Unit,
+    private val translate: (String) -> String
 ) {
     fun create(game: Game): TextView {
-        val watchlistNames = arrayOf("بدون حالة", "أريد لعبها", "ألعبها حالياً", "أنهيتها")
+        val watchlistNames = arrayOf(translate("بدون حالة"), translate("أريد لعبها"), translate("ألعبها حالياً"), translate("أنهيتها"))
         val watchlistKeys = arrayOf("", "WANT_TO_PLAY", "PLAYING", "COMPLETED")
         fun watchlistLabel(status: String) = when (status) {
-            "WANT_TO_PLAY" -> "أريد لعبها"
-            "PLAYING" -> "ألعبها حالياً"
-            "COMPLETED" -> "أنهيتها"
-            else -> "إضافة إلى قائمة المتابعة"
+            "WANT_TO_PLAY" -> translate("أريد لعبها")
+            "PLAYING" -> translate("ألعبها حالياً")
+            "COMPLETED" -> translate("أنهيتها")
+            else -> translate("إضافة إلى قائمة المتابعة")
         }
 
         return TextView(activity).apply {
@@ -37,7 +38,7 @@ internal class GameWatchlistViewFactory(
             setOnClickListener {
                 val current = watchlistKeys.indexOf(game.playStatus).coerceAtLeast(0)
                 AlertDialog.Builder(activity)
-                    .setTitle("قائمة متابعة الألعاب")
+                    .setTitle(translate("قائمة متابعة الألعاب"))
                     .setSingleChoiceItems(watchlistNames, current) { dialog, which ->
                         val index = games.indexOfFirst { it.name == game.name && it.url == game.url }
                         if (index >= 0) {
@@ -48,7 +49,7 @@ internal class GameWatchlistViewFactory(
                         }
                         dialog.dismiss()
                     }
-                    .setNegativeButton("إغلاق", null)
+                    .setNegativeButton(translate("إغلاق"), null)
                     .show().also(styleAlertDialog)
             }
         }
