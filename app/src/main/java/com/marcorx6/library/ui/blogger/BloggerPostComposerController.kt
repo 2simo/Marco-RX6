@@ -271,6 +271,14 @@ internal class BloggerPostComposerController(
         dialog.show()
         styleAlertDialog(dialog)
         applyUnifiedSkin(box)
+        box.alpha = 0f
+        box.translationY = dp(14).toFloat()
+        box.animate()
+            .alpha(1f)
+            .translationY(0f)
+            .setDuration(280L)
+            .setInterpolator(android.view.animation.DecelerateInterpolator())
+            .start()
         dialog.window?.setLayout(
             -1,
             (activity.resources.displayMetrics.heightPixels * 0.88f).toInt()
