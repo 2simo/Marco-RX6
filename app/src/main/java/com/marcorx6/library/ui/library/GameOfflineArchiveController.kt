@@ -9,8 +9,8 @@ import java.io.File
 internal class GameOfflineArchiveController(
     private val activity: Activity
 ) {
-    fun buttonLabel(archiveFile: File): String =
-        if (archiveFile.isFile) "قراءة دون إنترنت" else "حفظ دون إنترنت"
+    fun buttonLabel(archiveFile: File, translate: (String) -> String): String =
+        if (archiveFile.isFile) translate("قراءة دون إنترنت") else translate("حفظ دون إنترنت")
 
     fun openOrSave(
         webView: WebView,
