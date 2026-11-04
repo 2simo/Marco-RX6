@@ -291,7 +291,14 @@ internal object LanguageTranslator {
             "اختر المنصة" to listOf("Choose a platform", "Choisir une plateforme", "Elige una plataforma"),
             "الترتيب:" to listOf("Sort:", "Tri :", "Orden:"),
             "المضاف حديثاً" to listOf("Recently added", "Ajoutés récemment", "Añadidos recientemente"),
-            "ألعاب" to listOf("Games", "Jeux", "Juegos")
+            "ألعاب" to listOf("Games", "Jeux", "Juegos"),
+            "انتظر حتى يكتمل رفع صورة الغلاف" to listOf("Wait for the cover upload to finish", "Attendez la fin du téléversement de la couverture", "Espera a que termine la carga de la portada"),
+            "صورة الغلاف لم تكتمل عملية رفعها. أعد اختيار الصورة وانتظر رسالة نجاح الرفع." to listOf("The cover upload did not finish. Choose the image again and wait for the success message.", "Le téléversement de la couverture n’est pas terminé. Choisissez à nouveau l’image et attendez la confirmation.", "La portada no terminó de cargarse. Selecciona la imagen otra vez y espera el mensaje de éxito."),
+            "اختر Label واحداً على الأقل من المدونة" to listOf("Choose at least one blog label", "Choisissez au moins un libellé du blog", "Elige al menos una etiqueta del blog"),
+            "أدخل عنوان المقال" to listOf("Enter the article title", "Saisissez le titre de l’article", "Introduce el título del artículo"),
+            "أدخل رابط صورة يبدأ بـ HTTPS" to listOf("Enter an image URL that starts with HTTPS", "Saisissez une URL d’image commençant par HTTPS", "Introduce una URL de imagen que empiece por HTTPS"),
+            "أدخل رابطاً يبدأ بـ HTTPS" to listOf("Enter a link that starts with HTTPS", "Saisissez un lien commençant par HTTPS", "Introduce un enlace que empiece por HTTPS"),
+            "أدخل وصف المقال" to listOf("Enter the article description", "Saisissez la description de l’article", "Introduce la descripción del artículo")
         )
         val index = when (lang) { "en" -> 0; "fr" -> 1; "es" -> 2; else -> return ar }
         return translations[ar]?.get(index) ?: ar
