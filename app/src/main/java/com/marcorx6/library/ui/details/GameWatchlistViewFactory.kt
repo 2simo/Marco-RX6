@@ -30,10 +30,16 @@ internal class GameWatchlistViewFactory(
 
         return TextView(activity).apply {
             text = "＋  " + watchlistLabel(game.playStatus)
+            contentDescription = watchlistLabel(game.playStatus)
             textSize = 11f
             setTextColor(white())
             gravity = android.view.Gravity.CENTER
             background = rounded(panel(), 11)
+            if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
+                android.content.res.ColorStateList.valueOf(android.graphics.Color.argb(82, 83, 177, 255)),
+                null,
+                android.graphics.drawable.ColorDrawable(android.graphics.Color.WHITE)
+            )
             setPadding(dp(11), dp(9), dp(11), dp(9))
             setOnClickListener {
                 val current = watchlistKeys.indexOf(game.playStatus).coerceAtLeast(0)
@@ -45,6 +51,7 @@ internal class GameWatchlistViewFactory(
                             games[index] = games[index].copy(playStatus = watchlistKeys[which])
                             saveGames()
                             text = "＋  " + watchlistLabel(watchlistKeys[which])
+                            contentDescription = watchlistLabel(watchlistKeys[which])
                             renderGames()
                         }
                         dialog.dismiss()
