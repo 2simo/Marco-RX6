@@ -10,7 +10,8 @@ internal class BloggerAccessController(
     private val setAdmin: (Boolean) -> Unit,
     private val postToUi: (() -> Unit) -> Unit,
     private val refreshUi: () -> Unit,
-    private val onDenied: () -> Unit
+    private val onDenied: () -> Unit,
+    private val onError: (String) -> Unit = {}
 ) {
     // Prevent an older asynchronous access check from overriding a newer session/blog state.
     private var requestVersion = 0L
@@ -24,10 +25,10 @@ internal class BloggerAccessController(
 
         setAdmin(false)
         executor.execute {
-            val allowed = try {
-                checkAccess(blogId)
-            } catch (_: Exception) {
-                false
+            val result = try {
+                Result.success(checkAccess(blogId))
+            } catch (error: Exception) {
+                Result.failure(error)
             }
             postToUi {
                 if (
@@ -35,9 +36,14 @@ internal class BloggerAccessController(
                     currentAccountId() == accountId &&
                     currentBlogId() == blogId
                 ) {
+                    val allowed = result.getOrDefault(false)
                     setAdmin(allowed)
                     refreshUi()
-                    if (!allowed) onDenied()
+                    result.exceptionOrNull()?.let { error ->
+                        onError(error.message ?: error.javaClass.simpleName)
+                    } ?: if (!allowed) {
+                        onDenied()
+                    }
                 }
             }
         }
