@@ -13,30 +13,31 @@ internal class NotificationSettingsController(
     private val activity: Activity,
     private val scheduler: BlogNotificationScheduler,
     private val styleDialog: (AlertDialog) -> Unit,
+    private val translate: (String) -> String,
     private val requestPermission: () -> Unit
 ) {
     fun show() {
         val enabled = scheduler.isEnabled()
         AlertDialog.Builder(activity)
-            .setTitle("إشعارات المقالات الجديدة")
+            .setTitle(translate("إشعارات المقالات الجديدة"))
             .setMessage(
                 if (enabled)
-                    "الإشعارات مفعّلة. يتحقق تطبيق MARCO RX6 من مدونتك دورياً وينبهك عند نشر مقال جديد."
+                    translate("الإشعارات مفعّلة. يتحقق تطبيق MARCO RX6 من مدونتك دورياً وينبهك عند نشر مقال جديد.")
                 else
-                    "الإشعارات متوقفة. فعّلها ليصلك تنبيه عند نشر مقال جديد."
+                    translate("الإشعارات متوقفة. فعّلها ليصلك تنبيه عند نشر مقال جديد.")
             )
-            .setPositiveButton(if (enabled) "إبقاء مفعّلة" else "تفعيل") { _, _ ->
+            .setPositiveButton(translate(if (enabled) "إبقاء مفعّلة" else "تفعيل")) { _, _ ->
                 scheduler.setEnabled(true)
                 scheduler.schedule()
                 requestPermission()
-                Toast.makeText(activity, "تم تفعيل إشعارات المقالات الجديدة", Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity, translate("تم تفعيل إشعارات المقالات الجديدة"), Toast.LENGTH_SHORT).show()
             }
-            .setNegativeButton("إيقاف") { _, _ ->
+            .setNegativeButton(translate("إيقاف")) { _, _ ->
                 scheduler.setEnabled(false)
                 scheduler.cancel()
-                Toast.makeText(activity, "تم إيقاف الإشعارات", Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity, translate("تم إيقاف الإشعارات"), Toast.LENGTH_SHORT).show()
             }
-            .setNeutralButton("إغلاق", null)
+            .setNeutralButton(translate("إغلاق"), null)
             .show()
             .also(styleDialog)
     }
