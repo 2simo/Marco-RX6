@@ -43,7 +43,18 @@ internal class BloggerPostFormFieldsFactory(
         }
         val coverPreview = ImageView(activity).apply {
             scaleType = ImageView.ScaleType.CENTER_CROP
-            background = rounded(panel(), 13)
+            background = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
+                intArrayOf(
+                    android.graphics.Color.argb(220, 20, 57, 91),
+                    android.graphics.Color.argb(198, 7, 25, 45)
+                )
+            ).apply {
+                cornerRadius = dp(15).toFloat()
+                setStroke(dp(1), android.graphics.Color.argb(175, 76, 153, 222))
+            }
+            clipToOutline = true
+            elevation = dp(2).toFloat()
         }
         return BloggerPostFormFields(title, body, coverUrl, relatedLink, genre, releaseYear, coverPreview)
     }
