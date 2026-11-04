@@ -12,6 +12,7 @@ internal class ActivityServicesRuntimeFeature(
     activity: ComponentActivity,
     styleAlertDialog: (AlertDialog) -> Unit,
     private val isDarkMode: () -> Boolean,
+    private val translate: (String) -> String,
     setContentView: (android.view.View) -> Unit,
     showHome: () -> Unit
 ) {
@@ -20,7 +21,7 @@ internal class ActivityServicesRuntimeFeature(
     private val downloadFeature by lazy {
         DownloadFeature(activity, styleAlertDialog, isDarkMode, setContentView) { showHome() }
     }
-    private val notificationsFeature by lazy { NotificationsFeature(activity, styleAlertDialog) }
+    private val notificationsFeature by lazy { NotificationsFeature(activity, styleAlertDialog, translate) }
     private val systemBarAppearanceController by lazy {
         SystemBarAppearanceController(activity, isDarkMode)
     }
