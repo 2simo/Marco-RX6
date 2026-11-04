@@ -25,6 +25,7 @@ internal class FirebaseAccountController(
     private val launchGoogleSignIn: (Intent) -> Unit,
     private val launchAdminGoogleSignIn: (Intent) -> Unit,
     private val isAdminSession: () -> Boolean,
+    private val signOutAdmin: () -> Unit,
     private val styleDialog: (AlertDialog) -> Unit
 ) {
     fun show() {
@@ -247,8 +248,8 @@ internal class FirebaseAccountController(
                 }
             }
         }
-        actions += (if (isAdminSession()) "المسؤول: تم التحقق من الصلاحيات" else "تسجيل دخول المسؤول (Blogger و Drive)") to {
-            if (!isAdminSession()) launchAdminGoogleSignIn(googleSignInIntentForAdmin())
+        actions += (if (isAdminSession()) "تسجيل الخروج من وضع المسؤول" else "تسجيل دخول المسؤول (Blogger و Drive)") to {
+            if (isAdminSession()) signOutAdmin() else launchAdminGoogleSignIn(googleSignInIntentForAdmin())
         }
         actions += "إضافة حساب / تبديل الحساب" to {
             // Sign out Firebase and clear only the Firebase Google client's cached selection.
@@ -270,8 +271,7 @@ internal class FirebaseAccountController(
         actions += "إغلاق" to {}
 
         AlertDialog.Builder(activity)
-            .setTitle(if (isAdminSession()) "حساب MARCO RX6 • مسؤول موثّق" else "حساب MARCO RX6 • مستخدم")
-            .setMessage(user.email ?: "حساب مرتبط")
+            .setTitle((user.email ?: "حساب MARCO RX6") + if (isAdminSession()) " • مسؤول" else " • مستخدم")
             .setItems(actions.map { it.first }.toTypedArray()) { _, which ->
                 actions.getOrNull(which)?.second?.invoke()
             }
