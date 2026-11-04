@@ -26,7 +26,6 @@ internal class AppearanceSettingsController(
         fun dp(value: Int) = (value * activity.resources.displayMetrics.density).toInt()
         val dark = preferences.getBoolean("dark_mode", true)
         val bg = if (dark) Color.rgb(7, 17, 31) else Color.rgb(242, 247, 253)
-        val surface = if (dark) Color.rgb(15, 35, 58) else Color.WHITE
         val blue = Color.rgb(42, 145, 255)
         val ink = if (dark) Color.WHITE else Color.rgb(22, 43, 65)
         val muted = if (dark) Color.rgb(164, 184, 207) else Color.rgb(91, 112, 137)
@@ -187,8 +186,8 @@ internal class AppearanceSettingsController(
             }
         root.addView(settingRow(
             translate("المظهر"),
-            translate(if (dark) translate("الوضع الليلي مفعّل — اضغط للتبديل إلى الوضع النهاري")
-            else translate("الوضع النهاري مفعّل — اضغط للتبديل إلى الوضع الليلي"))
+            translate(if (dark) "الوضع الليلي مفعّل — اضغط للتبديل إلى الوضع النهاري"
+            else "الوضع النهاري مفعّل — اضغط للتبديل إلى الوضع الليلي")
         ) {
             preferences.edit().putBoolean("dark_mode", !dark).apply()
             recreateActivity()
