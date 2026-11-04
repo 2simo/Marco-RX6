@@ -6,10 +6,12 @@ import com.marcorx6.library.data.DownloadRepository
 /** Owns download persistence and its manager UI entry points. */
 internal class DownloadFeature(
     activity: ComponentActivity,
-    styleDialog: (android.app.AlertDialog) -> Unit
+    styleDialog: (android.app.AlertDialog) -> Unit,
+    setContentView: (android.view.View) -> Unit,
+    onBack: () -> Unit
 ) {
     private val repository = DownloadRepository(activity.applicationContext)
-    private val controller = DownloadUiController(activity, repository, styleDialog)
+    private val controller = DownloadUiController(activity, repository, styleDialog, setContentView, onBack)
 
     fun enqueueGameDownload(
         link: String,
