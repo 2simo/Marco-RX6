@@ -19,11 +19,12 @@ internal class GamePostLabelsController(
     private val fetchLabels: () -> List<String>,
     private val executeIo: (() -> Unit) -> Unit,
     private val postToUi: (() -> Unit) -> Unit,
-    private val styleAlertDialog: (AlertDialog) -> Unit
+    private val styleAlertDialog: (AlertDialog) -> Unit,
+    private val translate: (String) -> String
 ) {
     fun create(initialLabel: String?, isNewPost: Boolean): GamePostLabelsUi {
         val button = Button(activity).apply {
-            text = "تحميل تسميات المدونة..."
+            text = translate("تحميل تسميات المدونة...")
             setTextColor(white())
             background = rounded(panel(), 12)
         }
@@ -32,7 +33,7 @@ internal class GamePostLabelsController(
 
         fun refreshButton() {
             button.text = if (selectedLabels.isEmpty()) {
-                "اختيار Labels من المدونة"
+                translate("اختيار Labels من المدونة")
             } else {
                 "الأقسام (${selectedLabels.size}): " + selectedLabels.joinToString("، ")
             }
@@ -42,19 +43,19 @@ internal class GamePostLabelsController(
 
         button.setOnClickListener {
             if (availableLabels.isEmpty()) {
-                Toast.makeText(activity, "لم يتم تحميل تسميات المدونة بعد", Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity, translate("لم يتم تحميل تسميات المدونة بعد"), Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             val checked = BooleanArray(availableLabels.size) { availableLabels[it] in selectedLabels }
             AlertDialog.Builder(activity)
-                .setTitle("اختر أقسام المقال من المدونة")
+                .setTitle(translate("اختر أقسام المقال من المدونة"))
                 .setMultiChoiceItems(availableLabels.toTypedArray(), checked) { _, which, isChecked ->
                     if (isChecked) selectedLabels.add(availableLabels[which])
                     else selectedLabels.remove(availableLabels[which])
                     refreshButton()
                 }
-                .setPositiveButton("تم", null)
-                .setNeutralButton("تحديث التسميات") { _, _ ->
+                .setPositiveButton(translate("تم"), null)
+                .setNeutralButton(translate("تحديث التسميات")) { _, _ ->
                     executeIo {
                         try {
                             val latest = fetchLabels()
@@ -63,11 +64,11 @@ internal class GamePostLabelsController(
                                 availableLabels.addAll(latest)
                                 selectedLabels.retainAll(availableLabels.toSet())
                                 refreshButton()
-                                Toast.makeText(activity, "تم تحديث ${latest.size} تسمية من المدونة", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(activity, translate("تم تحديث التسميات من المدونة") + " (${latest.size})", Toast.LENGTH_SHORT).show()
                             }
                         } catch (e: Exception) {
                             postToUi {
-                                Toast.makeText(activity, e.message ?: "تعذر تحديث التسميات", Toast.LENGTH_LONG).show()
+                                Toast.makeText(activity, e.message ?: translate("تعذر تحديث التسميات"), Toast.LENGTH_LONG).show()
                             }
                         }
                     }
@@ -87,11 +88,11 @@ internal class GamePostLabelsController(
                     }
                     refreshButton()
                     button.isEnabled = labels.isNotEmpty()
-                    if (labels.isEmpty()) button.text = "لا توجد Labels في المقالات المنشورة"
+                    if (labels.isEmpty()) button.text = translate("لا توجد Labels في المقالات المنشورة")
                 }
             } catch (_: Exception) {
                 postToUi {
-                    button.text = "تعذر تحميل Labels • حاول التحديث"
+                    button.text = translate("تعذر تحميل Labels • حاول التحديث")
                     button.isEnabled = true
                 }
             }
