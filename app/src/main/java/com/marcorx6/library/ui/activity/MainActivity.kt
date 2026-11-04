@@ -167,7 +167,6 @@ class MainActivity : ComponentActivity() {
             saveCloudProfile = ::saveFirebaseProfile,
             launchAvatarPicker = activityResultRuntimeFeature::launchProfileAvatar,
             styleAlertDialog = ::styleAlertDialog,
-            translate = ::tr,
             applyUnifiedSkin = ::applyUnifiedSkin,
             applyMotionPreferences = ::applyMotionPreferences,
             onAvatarSaved = {
@@ -221,6 +220,7 @@ class MainActivity : ComponentActivity() {
             executeIo = { task -> activityServicesRuntimeFeature.ioExecutor.execute { task() } },
             styleAlertDialog = ::styleAlertDialog,
             applyUnifiedSkin = ::applyUnifiedSkin,
+            translate = ::tr,
             setCoverFields = { url, preview ->
                 coverFeature.state.urlField = url
                 coverFeature.state.preview = preview
