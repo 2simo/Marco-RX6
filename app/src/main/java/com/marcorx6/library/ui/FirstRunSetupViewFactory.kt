@@ -18,7 +18,7 @@ internal class FirstRunSetupViewFactory(
             setPadding(dp(18), dp(14), dp(18), dp(14))
             background = GradientDrawable().apply {
                 cornerRadius = dp(17).toFloat()
-                setColor(if (selected) android.graphics.Color.rgb(12, 48, 83) else android.graphics.Color.rgb(14, 29, 48))
+                setColor(if (selected) android.graphics.Color.argb(220, 12, 58, 99) else android.graphics.Color.argb(188, 12, 34, 58))
                 setStroke(
                     dp(if (selected) 2 else 1),
                     if (selected) android.graphics.Color.rgb(42, 145, 255) else android.graphics.Color.rgb(54, 76, 103)
@@ -37,6 +37,13 @@ internal class FirstRunSetupViewFactory(
             }
             isClickable = true
             isFocusable = true
+            if (android.os.Build.VERSION.SDK_INT >= 23) {
+                foreground = android.graphics.drawable.RippleDrawable(
+                    android.content.res.ColorStateList.valueOf(android.graphics.Color.argb(82, 76, 169, 255)),
+                    null,
+                    android.graphics.drawable.ColorDrawable(android.graphics.Color.WHITE)
+                )
+            }
         }
     }
 
