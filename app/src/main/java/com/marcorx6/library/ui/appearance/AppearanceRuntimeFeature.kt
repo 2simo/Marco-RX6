@@ -83,6 +83,8 @@ internal class AppearanceRuntimeFeature(
             styleDialog = ::styleAlertDialog,
             recreateActivity = recreateActivity,
             recreateInterface = recreateInterface,
+            showLanguagePicker = ::showLanguagePicker,
+            showNotificationSettings = showNotifications,
             setContentView = setContentView,
             onBack = onBack
         )
