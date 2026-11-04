@@ -36,7 +36,8 @@ internal class GameDetailsController(
     private val deleteGame: (Game) -> Unit,
     private val applyMotionPreferences: (android.view.View) -> Unit,
     private val applyUnifiedSkin: (android.view.View) -> Unit,
-    private val rounded: (Int, Int) -> android.graphics.drawable.GradientDrawable
+    private val rounded: (Int, Int) -> android.graphics.drawable.GradientDrawable,
+    private val translate: (String) -> String
 ) {
     fun show(game: Game) {
         val reader = android.app.Dialog(activity)
@@ -99,7 +100,7 @@ internal class GameDetailsController(
                     putExtra(Intent.EXTRA_SUBJECT, game.name)
                     putExtra(Intent.EXTRA_TEXT, game.name + "\n" + game.url)
                 }
-                activity.startActivity(Intent.createChooser(send, "مشاركة مقال من MARCO RX6"))
+                activity.startActivity(Intent.createChooser(send, translate("مشاركة مقال من MARCO RX6")))
             },
             onComments = { if (game.url.isNotBlank()) openGameLink(game.url) },
             onEdit = { reader.dismiss(); showGameDialog(game) },
