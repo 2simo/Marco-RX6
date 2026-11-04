@@ -46,7 +46,19 @@ internal class GameSimilarGamesViewFactory(
                 maxLines = 1
                 ellipsize = TextUtils.TruncateAt.END
                 setTextColor(if (dark) white() else Color.rgb(48, 57, 77))
-                background = rounded(if (dark) Color.rgb(20, 48, 79) else Color.rgb(222, 237, 255), 10)
+                background = GradientDrawable(
+                    GradientDrawable.Orientation.LEFT_RIGHT,
+                    if (dark) intArrayOf(Color.argb(215, 25, 76, 122), Color.argb(195, 10, 34, 58))
+                    else intArrayOf(Color.argb(225, 255, 255, 255), Color.argb(210, 219, 237, 255))
+                ).apply {
+                    cornerRadius = dp(12).toFloat()
+                    setStroke(dp(1), if (dark) Color.argb(140, 81, 153, 218) else Color.argb(150, 148, 194, 238))
+                }
+                if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
+                    android.content.res.ColorStateList.valueOf(Color.argb(82, 83, 177, 255)),
+                    null,
+                    android.graphics.drawable.ColorDrawable(Color.WHITE)
+                )
                 setPadding(dp(10), dp(9), dp(10), dp(9))
                 setOnClickListener { onSelect(item) }
             }, LinearLayout.LayoutParams(dp(118), -2).apply { marginEnd = dp(7) })
