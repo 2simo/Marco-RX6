@@ -123,7 +123,7 @@ internal class MainLibraryInterfaceController(
                 cornerRadius = dp(14).toFloat()
                 setStroke(dp(1), if (isDarkMode()) Color.rgb(48, 119, 190) else Color.rgb(173, 207, 239))
             }
-            minWidth = dp(43); minHeight = dp(43)
+            minWidth = dp(48); minHeight = dp(48)
             contentDescription = label
             isClickable = true
             isFocusable = true
@@ -135,9 +135,9 @@ internal class MainLibraryInterfaceController(
             setOnClickListener { action() }
         }
         header.addView(headerAction("♧", tr("الإشعارات")) { showNotificationSettings() },
-            LinearLayout.LayoutParams(dp(43), dp(43)).apply { marginEnd = dp(8) })
+            LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginEnd = dp(8) })
         header.addView(headerAction("⚙", tr("الإعدادات")) { showAppearanceSettings() },
-            LinearLayout.LayoutParams(dp(43), dp(43)).apply { marginEnd = dp(8) })
+            LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginEnd = dp(8) })
 
         root.addView(header)
 
