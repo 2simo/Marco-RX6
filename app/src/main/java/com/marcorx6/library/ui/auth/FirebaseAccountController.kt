@@ -378,12 +378,12 @@ internal class FirebaseAccountController(
             .addOnSuccessListener {
                 authRepository.deleteCurrentUser()
                     .addOnSuccessListener {
-                        GoogleSignIn.getClient(activity, firebaseGoogleOptions()).signOut()
-                            .addOnCompleteListener {
-                                authRepository.signOut()
-                                onAccountChanged()
-                                toast("تم حذف حساب MARCO RX6 وبياناته السحابية بنجاح")
-                            }
+                        // Do not sign out the shared GoogleSignIn account here: Blogger and
+                    // Drive use GoogleSignIn.getLastSignedInAccount() for their own OAuth session.
+                    // Deleting Firebase Authentication does not require clearing that Google session.
+                    authRepository.signOut()
+                    onAccountChanged()
+                    toast("تم حذف حساب MARCO RX6 وبياناته السحابية بنجاح")
                     }
                     .addOnFailureListener { error ->
                         toast(error.localizedMessage ?: "تم حذف بيانات الحساب، لكن تعذر حذف حساب الدخول. تواصل مع الدعم.")
