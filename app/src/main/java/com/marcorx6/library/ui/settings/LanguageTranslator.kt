@@ -284,13 +284,11 @@ internal object LanguageTranslator {
             "المفضلة:" to listOf("Favorites:", "Favoris :", "Favoritos:"),
             "شوهدت مؤخراً:" to listOf("Recently viewed:", "Vus récemment :", "Vistos recientemente:"),
             "لعبة" to listOf("game(s)", "jeu(x)", "juego(s)"),
-            "الإشعارات" to listOf("Notifications", "Notifications", "Notificaciones"),
             "الإعدادات" to listOf("Settings", "Paramètres", "Ajustes"),
             "YOUR NEXT GAME STARTS HERE" to listOf("YOUR NEXT GAME STARTS HERE", "VOTRE PROCHAIN JEU COMMENCE ICI", "TU PRÓXIMO JUEGO EMPIEZA AQUÍ"),
             "اكتشف عالم الألعاب" to listOf("Discover the world of games", "Découvrez l’univers des jeux", "Descubre el mundo de los juegos"),
             "تصفح مكتبتك واختر مغامرتك القادمة" to listOf("Browse your library and choose your next adventure", "Parcourez votre bibliothèque et choisissez votre prochaine aventure", "Explora tu biblioteca y elige tu próxima aventura"),
             "اختر المنصة" to listOf("Choose a platform", "Choisir une plateforme", "Elige una plataforma"),
-            "الفلاتر المتقدمة" to listOf("Advanced filters", "Filtres avancés", "Filtros avanzados"),
             "الترتيب:" to listOf("Sort:", "Tri :", "Orden:"),
             "المضاف حديثاً" to listOf("Recently added", "Ajoutés récemment", "Añadidos recientemente"),
             "ألعاب" to listOf("Games", "Jeux", "Juegos")
