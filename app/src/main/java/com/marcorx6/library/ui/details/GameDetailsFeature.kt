@@ -60,7 +60,8 @@ internal class GameDetailsFeature(
         panel = panel,
         saveGames = saveGames,
         renderGames = renderGames,
-        styleAlertDialog = styleAlertDialog
+        styleAlertDialog = styleAlertDialog,
+        translate = tr
     )
 
     private val topBarFactory = GameDetailsTopBarFactory(
@@ -103,7 +104,8 @@ internal class GameDetailsFeature(
         rounded = rounded,
         makeText = makeText,
         isDarkMode = isDarkMode,
-        white = white
+        white = white,
+        translate = tr
     )
 
     private val bottomBarFactory = GameDetailsBottomBarFactory(
