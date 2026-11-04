@@ -30,7 +30,7 @@ internal class GameWatchlistViewFactory(
 
         return TextView(activity).apply {
             text = "＋  " + watchlistLabel(game.playStatus)
-            contentDescription = watchlistLabel(game.playStatus)
+            contentDescription = game.name + ", " + watchlistLabel(game.playStatus)
             textSize = 11f
             setTextColor(white())
             gravity = android.view.Gravity.CENTER
@@ -52,7 +52,7 @@ internal class GameWatchlistViewFactory(
                             games[index] = games[index].copy(playStatus = watchlistKeys[which])
                             saveGames()
                             text = "＋  " + watchlistLabel(watchlistKeys[which])
-                            contentDescription = watchlistLabel(watchlistKeys[which])
+                            contentDescription = games[index].name + ", " + watchlistLabel(watchlistKeys[which])
                             renderGames()
                         }
                         dialog.dismiss()
