@@ -125,6 +125,13 @@ internal class MainLibraryInterfaceController(
             }
             minWidth = dp(43); minHeight = dp(43)
             contentDescription = label
+            isClickable = true
+            isFocusable = true
+            if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
+                android.content.res.ColorStateList.valueOf(Color.argb(92, 92, 181, 255)),
+                null,
+                GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(14).toFloat() }
+            )
             setOnClickListener { action() }
         }
         header.addView(headerAction("♧", tr("الإشعارات")) { showNotificationSettings() },
@@ -220,8 +227,22 @@ internal class MainLibraryInterfaceController(
                 gravity = Gravity.CENTER
                 minHeight = dp(44)
                 setPadding(dp(16), dp(10), dp(16), dp(10))
-                background = rounded(if (isDarkMode()) Color.argb(188, 17, 45, 73) else Color.argb(205, 255, 255, 255), 18)
+                background = GradientDrawable(
+                    GradientDrawable.Orientation.LEFT_RIGHT,
+                    if (isDarkMode()) intArrayOf(Color.argb(210, 21, 62, 101), Color.argb(192, 8, 27, 47))
+                    else intArrayOf(Color.argb(228, 255, 255, 255), Color.argb(211, 222, 239, 255))
+                ).apply {
+                    cornerRadius = dp(18).toFloat()
+                    setStroke(dp(1), if (isDarkMode()) Color.argb(145, 78, 151, 216) else Color.argb(155, 151, 195, 237))
+                }
                 setTextColor(muted)
+                isClickable = true
+                isFocusable = true
+                if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
+                    android.content.res.ColorStateList.valueOf(Color.argb(75, 82, 175, 255)),
+                    null,
+                    GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(18).toFloat() }
+                )
                 setOnClickListener { selected = category; renderGames() }
             }
             filters.addView(chip, LinearLayout.LayoutParams(-2, -2).apply { marginEnd = dp(7) })
@@ -247,7 +268,21 @@ internal class MainLibraryInterfaceController(
             textSize = 19f
             gravity = Gravity.CENTER
             setTextColor(silver)
-            background = rounded(if (isDarkMode()) Color.argb(190, 17, 45, 73) else Color.argb(210, 255, 255, 255), 13)
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                if (isDarkMode()) intArrayOf(Color.argb(210, 21, 62, 101), Color.argb(192, 8, 27, 47))
+                else intArrayOf(Color.argb(228, 255, 255, 255), Color.argb(211, 222, 239, 255))
+            ).apply {
+                cornerRadius = dp(13).toFloat()
+                setStroke(dp(1), if (isDarkMode()) Color.argb(145, 78, 151, 216) else Color.argb(155, 151, 195, 237))
+            }
+            isClickable = true
+            isFocusable = true
+            if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
+                android.content.res.ColorStateList.valueOf(Color.argb(78, 82, 175, 255)),
+                null,
+                GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(13).toFloat() }
+            )
             setPadding(dp(12), dp(7), dp(12), dp(7))
             minWidth = dp(48)
             minHeight = dp(48)
@@ -266,7 +301,21 @@ internal class MainLibraryInterfaceController(
             textSize = 17f
             gravity = Gravity.CENTER
             setTextColor(silver)
-            background = rounded(glass, 13)
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                if (isDarkMode()) intArrayOf(Color.argb(210, 21, 62, 101), Color.argb(192, 8, 27, 47))
+                else intArrayOf(Color.argb(228, 255, 255, 255), Color.argb(211, 222, 239, 255))
+            ).apply {
+                cornerRadius = dp(13).toFloat()
+                setStroke(dp(1), if (isDarkMode()) Color.argb(145, 78, 151, 216) else Color.argb(155, 151, 195, 237))
+            }
+            isClickable = true
+            isFocusable = true
+            if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
+                android.content.res.ColorStateList.valueOf(Color.argb(78, 82, 175, 255)),
+                null,
+                GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(13).toFloat() }
+            )
             setPadding(dp(12), dp(8), dp(12), dp(8))
             minWidth = dp(48)
             minHeight = dp(48)
@@ -300,8 +349,17 @@ internal class MainLibraryInterfaceController(
                 background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
                     intArrayOf(Color.rgb(46, 145, 255), Color.rgb(20, 91, 190))).apply {
                     cornerRadius = dp(15).toFloat()
+                    setStroke(dp(1), Color.argb(190, 135, 202, 255))
                 }
+                isClickable = true
+                isFocusable = true
+                if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
+                    android.content.res.ColorStateList.valueOf(Color.argb(100, 205, 235, 255)),
+                    null,
+                    GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(15).toFloat() }
+                )
                 setPadding(dp(18), dp(13), dp(18), dp(13))
+                elevation = dp(3).toFloat()
                 setOnClickListener { showGameDialog() }
             }
             root.addView(publish, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(9) })
@@ -342,13 +400,20 @@ internal class MainLibraryInterfaceController(
         fun renderDockSelection() {
             dockItems.forEach { (tab, item) ->
                 val active = tab == activeDockTab
-                item.background = rounded(
+                item.background = GradientDrawable(
+                    GradientDrawable.Orientation.TL_BR,
                     if (active) {
-                        if (isDarkMode()) Color.rgb(28, 105, 183) else Color.rgb(211, 233, 255)
+                        if (isDarkMode()) intArrayOf(Color.rgb(39, 139, 231), Color.rgb(19, 83, 157))
+                        else intArrayOf(Color.rgb(56, 150, 244), Color.rgb(31, 111, 205))
                     } else {
-                        if (isDarkMode()) Color.argb(190, 22, 62, 101) else Color.argb(205, 226, 240, 255)
-                    }, 15
-                )
+                        if (isDarkMode()) intArrayOf(Color.argb(208, 22, 65, 106), Color.argb(192, 8, 27, 47))
+                        else intArrayOf(Color.argb(228, 255, 255, 255), Color.argb(210, 220, 238, 255))
+                    }
+                ).apply {
+                    cornerRadius = dp(15).toFloat()
+                    setStroke(dp(1), if (active) Color.argb(185, 135, 204, 255)
+                    else if (isDarkMode()) Color.argb(130, 78, 151, 216) else Color.argb(145, 151, 195, 237))
+                }
                 for (index in 0 until item.childCount) {
                     (item.getChildAt(index) as? TextView)?.setTextColor(
                         if (active) Color.rgb(255, 255, 255)
@@ -364,6 +429,11 @@ internal class MainLibraryInterfaceController(
                 setPadding(dp(5), dp(5), dp(5), dp(5))
                 isClickable = true
                 isFocusable = true
+                if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
+                    android.content.res.ColorStateList.valueOf(Color.argb(88, 93, 184, 255)),
+                    null,
+                    GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(15).toFloat() }
+                )
                 setOnClickListener {
                     activeDockTab = key
                     renderDockSelection()
