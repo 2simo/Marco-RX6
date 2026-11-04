@@ -23,8 +23,8 @@ internal class GameDetailsTopBarFactory(
             setPadding(dp(16), dp(10), dp(12), dp(10))
             background = GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
-                if (isDarkMode()) intArrayOf(Color.rgb(19, 49, 83), Color.rgb(8, 20, 38))
-                else intArrayOf(Color.WHITE, Color.rgb(235, 242, 251))
+                if (isDarkMode()) intArrayOf(Color.argb(218, 19, 59, 98), Color.argb(190, 8, 24, 43))
+                else intArrayOf(Color.argb(220, 255, 255, 255), Color.argb(200, 225, 240, 255))
             )
         }
         val close = TextView(activity).apply {
