@@ -78,7 +78,7 @@ internal class MainLibraryInterfaceController(
     }
 
     fun create() {
-        // MARCO RX6 visual system: midnight surfaces with warm copper/orange accents.
+        // MARCO RX6 visual system: midnight-blue surfaces with electric-blue accents.
         val silver = if (isDarkMode()) Color.rgb(226, 232, 242) else Color.rgb(43, 52, 68)
         val muted = gray
         val violet = red
@@ -105,7 +105,7 @@ internal class MainLibraryInterfaceController(
             setPadding(dp(2), dp(3), dp(2), dp(17))
         }
         val brand = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
-        brand.addView(makeText("MARCO RX6  /  OFFICIAL GAME HUB", 9f, if (isDarkMode()) Color.rgb(239, 157, 74) else Color.rgb(184, 103, 39), true).apply { letterSpacing = 0.08f })
+        brand.addView(makeText("MARCO RX6  /  OFFICIAL GAME HUB", 9f, if (isDarkMode()) Color.rgb(92, 174, 255) else Color.rgb(35, 126, 224), true).apply { letterSpacing = 0.08f })
         brand.addView(makeText("مكتبة الألعاب", 21f, silver, true).apply {
             typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
             letterSpacing = 0.01f
@@ -115,12 +115,12 @@ internal class MainLibraryInterfaceController(
             text = icon
             textSize = 19f
             gravity = Gravity.CENTER
-            setTextColor(if (isDarkMode()) Color.rgb(255, 220, 184) else Color.rgb(170, 91, 42))
+            setTextColor(if (isDarkMode()) Color.rgb(190, 222, 255) else Color.rgb(35, 126, 224))
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                if (isDarkMode()) intArrayOf(Color.rgb(54, 35, 25), Color.rgb(24, 19, 17))
+                if (isDarkMode()) intArrayOf(Color.rgb(20, 48, 82), Color.rgb(9, 22, 42))
                 else intArrayOf(Color.WHITE, Color.rgb(230, 239, 250))).apply {
                 cornerRadius = dp(14).toFloat()
-                setStroke(dp(1), if (isDarkMode()) Color.rgb(145, 83, 43) else Color.rgb(191, 211, 235))
+                setStroke(dp(1), if (isDarkMode()) Color.rgb(48, 119, 190) else Color.rgb(191, 211, 235))
             }
             minWidth = dp(43); minHeight = dp(43)
             contentDescription = label
@@ -134,16 +134,36 @@ internal class MainLibraryInterfaceController(
             LinearLayout.LayoutParams(dp(43), dp(43)))
         root.addView(header)
 
-        // Compact game-first layout: the reference has no promotional hero banner.
+
+        val welcomePanel = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Color.rgb(35, 126, 224), Color.rgb(13, 61, 132))).apply {
+                cornerRadius = dp(22).toFloat()
+            }
+            setPadding(dp(18), dp(17), dp(18), dp(17))
+            elevation = dp(3).toFloat()
+        }
+        welcomePanel.addView(makeText("YOUR NEXT GAME STARTS HERE", 9f, Color.rgb(215, 235, 255), true).apply {
+            letterSpacing = 0.12f
+        })
+        welcomePanel.addView(makeText("اكتشف عالم الألعاب", 21f, Color.WHITE, true).apply {
+            setPadding(0, dp(5), 0, dp(3))
+        })
+        welcomePanel.addView(makeText("تصفح مكتبتك واختر مغامرتك القادمة", 11f, Color.rgb(224, 239, 255), false))
+        root.addView(welcomePanel, LinearLayout.LayoutParams(-1, -2).apply {
+            bottomMargin = dp(15)
+        })
+
 
         val searchWrap = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                if (isDarkMode()) intArrayOf(Color.rgb(39, 46, 63), Color.rgb(17, 21, 33))
+                if (isDarkMode()) intArrayOf(Color.rgb(23, 48, 79), Color.rgb(12, 25, 43))
                 else intArrayOf(Color.rgb(255, 255, 255), Color.rgb(232, 237, 247))).apply {
                 cornerRadius = dp(17).toFloat()
-                setStroke(dp(1), if (isDarkMode()) Color.rgb(75, 87, 112) else Color.rgb(184, 193, 211))
+                setStroke(dp(1), if (isDarkMode()) Color.rgb(58, 111, 169) else Color.rgb(174, 205, 239))
             }
             setPadding(dp(14), 0, dp(14), 0)
             elevation = if (isDarkMode()) 0f else dp(2).toFloat()
@@ -278,7 +298,7 @@ internal class MainLibraryInterfaceController(
                 typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
                 gravity = Gravity.CENTER
                 background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-                    intArrayOf(Color.rgb(118, 127, 151), Color.rgb(39, 126, 210))).apply {
+                    intArrayOf(Color.rgb(46, 145, 255), Color.rgb(20, 91, 190))).apply {
                     cornerRadius = dp(15).toFloat()
                 }
                 setPadding(dp(18), dp(13), dp(18), dp(13))
@@ -303,9 +323,9 @@ internal class MainLibraryInterfaceController(
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
             background = if (isDarkMode()) GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(49, 32, 24), Color.rgb(28, 21, 18), Color.rgb(16, 14, 13))).apply {
+                intArrayOf(Color.rgb(18, 49, 86), Color.rgb(10, 29, 53), Color.rgb(7, 17, 32))).apply {
                 cornerRadius = dp(23).toFloat()
-                setStroke(dp(1), Color.rgb(142, 83, 47))
+                setStroke(dp(1), Color.rgb(47, 117, 188))
             } else GradientDrawable(GradientDrawable.Orientation.TL_BR,
                 intArrayOf(Color.rgb(255, 255, 255), Color.rgb(241, 244, 250))).apply {
                 cornerRadius = dp(23).toFloat()
@@ -319,10 +339,10 @@ internal class MainLibraryInterfaceController(
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
                 setPadding(dp(5), dp(5), dp(5), dp(5))
-                background = rounded(if (isDarkMode()) Color.rgb(58, 37, 27) else Color.rgb(232, 237, 246), 15)
+                background = rounded(if (isDarkMode()) Color.rgb(22, 55, 91) else Color.rgb(232, 237, 246), 15)
                 setOnClickListener { action() }
             }
-            item.addView(makeText(icon, 15f, if (isDarkMode()) silver else Color.rgb(188, 105, 49), true).apply {
+            item.addView(makeText(icon, 15f, if (isDarkMode()) silver else Color.rgb(75, 158, 245), true).apply {
                 gravity = Gravity.CENTER
             })
             item.addView(makeText(label, 10f, if (isDarkMode()) silver else Color.rgb(43, 51, 68), true).apply {
