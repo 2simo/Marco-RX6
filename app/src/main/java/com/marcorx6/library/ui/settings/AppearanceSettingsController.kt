@@ -29,6 +29,17 @@ internal class AppearanceSettingsController(
         val blue = Color.rgb(42, 145, 255)
         val ink = if (dark) Color.WHITE else Color.rgb(22, 43, 65)
         val muted = if (dark) Color.rgb(164, 184, 207) else Color.rgb(91, 112, 137)
+        fun addGlassTouch(view: View) {
+            if (android.os.Build.VERSION.SDK_INT >= 23) {
+                view.foreground = android.graphics.drawable.RippleDrawable(
+                    android.content.res.ColorStateList.valueOf(
+                        if (dark) Color.argb(82, 76, 169, 255) else Color.argb(55, 35, 126, 224)
+                    ),
+                    null,
+                    android.graphics.drawable.ColorDrawable(Color.WHITE)
+                )
+            }
+        }
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(20), dp(20), dp(20), dp(20))
@@ -58,6 +69,7 @@ internal class AppearanceSettingsController(
             textSize = 30f
             gravity = Gravity.CENTER
             setTextColor(muted)
+            addGlassTouch(this)
             setOnClickListener { onBack() }
         }, LinearLayout.LayoutParams(dp(44), dp(44)))
         root.addView(header)
@@ -71,7 +83,7 @@ internal class AppearanceSettingsController(
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(16), dp(16), dp(16))
             background = GradientDrawable().apply {
-                setColor(surface); cornerRadius = dp(18).toFloat()
+                setColor(if (dark) Color.argb(218, 15, 43, 70) else Color.argb(224, 255, 255, 255)); cornerRadius = dp(18).toFloat()
                 setStroke(dp(1), if (dark) Color.rgb(42, 82, 126) else Color.rgb(198, 220, 244))
             }
         }
@@ -124,6 +136,7 @@ internal class AppearanceSettingsController(
                 cornerRadius = dp(14).toFloat()
                 if (!preferences.getBoolean("animations", true)) setStroke(dp(1), blue)
             }
+            addGlassTouch(this)
             setOnClickListener {
                 val enabled = !preferences.getBoolean("animations", true)
                 preferences.edit().putBoolean("animations", enabled).apply()
@@ -146,7 +159,7 @@ internal class AppearanceSettingsController(
                 orientation = LinearLayout.VERTICAL
                 setPadding(dp(16), dp(14), dp(16), dp(14))
                 background = GradientDrawable().apply {
-                    setColor(surface)
+                    setColor(if (dark) Color.argb(218, 15, 43, 70) else Color.argb(224, 255, 255, 255))
                     cornerRadius = dp(17).toFloat()
                     setStroke(dp(1), if (dark) Color.rgb(42, 82, 126) else Color.rgb(198, 220, 244))
                 }
@@ -164,6 +177,7 @@ internal class AppearanceSettingsController(
                     setTextColor(muted)
                     setPadding(0, dp(5), 0, 0)
                 })
+                addGlassTouch(this)
                 setOnClickListener { action() }
             }
         root.addView(settingRow(
