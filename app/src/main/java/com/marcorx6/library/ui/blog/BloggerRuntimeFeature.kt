@@ -98,6 +98,7 @@ internal class BloggerRuntimeFeature(
             isAdminSession = isAdminSession,
             bloggerBlogId = currentBlogId,
             dp = dp,
+            isDarkMode = isDarkMode,
             bg = bg,
             panel = panel,
             white = white,
