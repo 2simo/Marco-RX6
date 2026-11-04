@@ -6,14 +6,14 @@ plugins {
 
 android {
     namespace = "com.marcorx6.library"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.marcorx6.library"
         minSdk = 24
-        targetSdk = 35
-        versionCode = 31
-        versionName = "8.14"
+        targetSdk = 36
+        versionCode = 32
+        versionName = "8.15"
     }
 
     signingConfigs {
