@@ -40,7 +40,8 @@ internal class FirebaseAccountController(
     private val onBack: () -> Unit,
     private val dp: (Int) -> Int,
     private val isDarkMode: () -> Boolean,
-    private val applyUnifiedSkin: (View) -> Unit
+    private val applyUnifiedSkin: (View) -> Unit,
+    private val translate: (String) -> String
 ) {
     private val userDocuments = FirebaseUserDocumentRepository()
     private var pendingDeletionUid: String? = null
@@ -68,7 +69,7 @@ internal class FirebaseAccountController(
             gravity = Gravity.CENTER_VERTICAL
         }
         val heading = TextView(activity).apply {
-            text = "حساب MARCO RX6"
+            text = translate("حساب MARCO RX6")
             textSize = 23f
             setTextColor(if (dark) Color.WHITE else Color.rgb(18, 42, 68))
             setTypeface(null, android.graphics.Typeface.BOLD)
@@ -99,9 +100,9 @@ internal class FirebaseAccountController(
         }
         val stateTitle = TextView(activity).apply {
             text = when {
-                user != null && !user.isAnonymous -> "مرحباً بعودتك"
-                user?.isAnonymous == true -> "أنت تستعمل التطبيق كزائر"
-                else -> "اختَر طريقة الدخول"
+                user != null && !user.isAnonymous -> translate("مرحباً بعودتك")
+                user?.isAnonymous == true -> translate("أنت تستعمل التطبيق كزائر")
+                else -> translate("اختَر طريقة الدخول")
             }
             textSize = 19f
             gravity = Gravity.CENTER
@@ -111,9 +112,9 @@ internal class FirebaseAccountController(
         hero.addView(stateTitle)
         val stateDetail = TextView(activity).apply {
             text = when {
-                user != null && !user.isAnonymous -> user.email.orEmpty() + if (isAdminSession()) "  •  مسؤول نشط" else "  •  مستخدم"
-                user?.isAnonymous == true -> "يمكنك الاستمرار دون حساب أو ربط حسابك لاحقاً"
-                else -> "احفظ ملفك الشخصي واستعمل مزايا الحساب على أجهزتك"
+                user != null && !user.isAnonymous -> user.email.orEmpty() + if (isAdminSession()) "  •  " + translate("مسؤول نشط") else "  •  " + translate("مستخدم")
+                user?.isAnonymous == true -> translate("يمكنك الاستمرار دون حساب أو ربط حسابك لاحقاً")
+                else -> translate("احفظ ملفك الشخصي واستعمل مزايا الحساب على أجهزتك")
             }
             textSize = 12f
             gravity = Gravity.CENTER
@@ -159,39 +160,39 @@ internal class FirebaseAccountController(
         }
 
         if (user == null || user.isAnonymous) {
-            action("المتابعة كزائر", "استعمل المكتبة دون إنشاء حساب", run = onBack)
-            action("الدخول باستخدام Google", "ربط حساب Google بحساب MARCO RX6", primary = true, run = ::startFreshGoogleAccountSelection)
-            action("إنشاء حساب بالبريد الإلكتروني", "حساب جديد مع كلمة مرور", run = { showEmailForm(createAccount = true) })
-            action("الدخول بالبريد الإلكتروني", "لديك حساب بالفعل؟", run = { showEmailForm(createAccount = false) })
-            action("دخول المسؤول", "صلاحيات Blogger وGoogle Drive", run = ::startAdminGoogleAccountSelection)
-            action("نسيت كلمة المرور؟", "استرجاع الوصول إلى حسابك", run = ::showPasswordResetForm)
+            action(translate("المتابعة كزائر"), translate("استعمل المكتبة دون إنشاء حساب"), run = onBack)
+            action(translate("الدخول باستخدام Google"), translate("ربط حساب Google بحساب MARCO RX6"), primary = true, run = ::startFreshGoogleAccountSelection)
+            action(translate("إنشاء حساب بالبريد الإلكتروني"), translate("حساب جديد مع كلمة مرور"), run = { showEmailForm(createAccount = true) })
+            action(translate("الدخول بالبريد الإلكتروني"), translate("لديك حساب بالفعل؟"), run = { showEmailForm(createAccount = false) })
+            action(translate("دخول المسؤول"), translate("صلاحيات Blogger وGoogle Drive"), run = ::startAdminGoogleAccountSelection)
+            action(translate("نسيت كلمة المرور؟"), translate("استرجاع الوصول إلى حسابك"), run = ::showPasswordResetForm)
             if (user?.isAnonymous == true) {
-                action("حذف بيانات جلسة الزائر", "حذف ملف الزائر السحابي فقط", run = { confirmAccountDeletion(user) })
+                action(translate("حذف بيانات جلسة الزائر"), translate("حذف ملف الزائر السحابي فقط"), run = { confirmAccountDeletion(user) })
             }
         } else {
-            action("حالة الحساب", if (user.isEmailVerified) "البريد الإلكتروني مؤكد" else "البريد الإلكتروني غير مؤكد", run = {
+            action(translate("حالة الحساب"), if (user.isEmailVerified) translate("البريد الإلكتروني مؤكد") else translate("البريد الإلكتروني غير مؤكد"), run = {
                 if (!user.isEmailVerified) authRepository.sendEmailVerification()
                     ?.addOnSuccessListener { toast("تم إرسال رابط التأكيد إلى بريدك") }
                     ?.addOnFailureListener { toast("تعذر إرسال رابط التأكيد") }
             })
             if (user.providerData.any { it.providerId == "password" }) {
-                action("استرجاع كلمة المرور", "إرسال رابط تغيير كلمة المرور", run = {
+                action(translate("استرجاع كلمة المرور"), translate("إرسال رابط تغيير كلمة المرور"), run = {
                     user.email?.let { address -> authRepository.sendPasswordReset(address)
                         .addOnSuccessListener { toast("تم إرسال رابط استرجاع كلمة المرور") }
                         .addOnFailureListener { toast("تعذر إرسال رابط الاسترجاع") } }
                 })
             }
-            action(if (isAdminSession()) "إيقاف وضع المسؤول" else "دخول المسؤول", "إدارة Blogger وGoogle Drive", primary = true, run = {
+            action(if (isAdminSession()) translate("إيقاف وضع المسؤول") else translate("دخول المسؤول"), translate("إدارة Blogger وGoogle Drive"), primary = true, run = {
                 if (isAdminSession()) signOutAdmin() else startAdminGoogleAccountSelection()
             })
-            action("تسجيل الخروج", "الخروج من حساب MARCO RX6", run = {
+            action(translate("تسجيل الخروج"), translate("الخروج من حساب MARCO RX6"), run = {
                 GoogleSignIn.getClient(activity, firebaseGoogleOptions()).signOut().addOnCompleteListener {
                     authRepository.signOut()
                     onAccountChanged()
                     toast("تم تسجيل الخروج بنجاح")
                 }
             })
-            action("حذف الحساب", "حذف الحساب وبياناته السحابية نهائياً", run = { confirmAccountDeletion(user) })
+            action(translate("حذف الحساب"), translate("حذف الحساب وبياناته السحابية نهائياً"), run = { confirmAccountDeletion(user) })
         }
         val footer = TextView(activity).apply {
             text = "MARCO RX6  •  SECURE ACCOUNT"
@@ -373,15 +374,15 @@ internal class FirebaseAccountController(
 
     private fun showPasswordResetForm() {
         val page = createAccountFormPage(
-            "استرجاع كلمة المرور",
-            "دخل البريد الإلكتروني المرتبط بحسابك وسنرسل لك رابط إعادة التعيين."
+            translate("استرجاع كلمة المرور"),
+            translate("دخل البريد الإلكتروني المرتبط بحسابك وسنرسل لك رابط إعادة التعيين.")
         )
         val email = accountInput(
-            "البريد الإلكتروني",
+            translate("البريد الإلكتروني"),
             InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
         )
         page.addView(email, LinearLayout.LayoutParams(-1, dp(54)).apply { bottomMargin = dp(14) })
-        page.addView(accountSubmitButton("إرسال رابط الاسترجاع") { button ->
+        page.addView(accountSubmitButton(translate("إرسال رابط الاسترجاع")) { button ->
             val address = email.text.toString().trim()
             if (address.isBlank()) {
                 toast("دخل البريد الإلكتروني")
@@ -403,23 +404,23 @@ internal class FirebaseAccountController(
 
     private fun showEmailForm(createAccount: Boolean) {
         val page = createAccountFormPage(
-            if (createAccount) "إنشاء حساب جديد" else "تسجيل الدخول",
-            if (createAccount) "أنشئ حساب MARCO RX6 لحفظ ملفك ومزامنة بياناتك."
-            else "سجّل الدخول للعودة إلى حساب MARCO RX6."
+            if (createAccount) translate("إنشاء حساب جديد") else "تسجيل الدخول",
+            if (createAccount) translate("أنشئ حساب MARCO RX6 لحفظ ملفك ومزامنة بياناتك.")
+            else translate("سجّل الدخول للعودة إلى حساب MARCO RX6.")
         )
         val email = accountInput(
-            "البريد الإلكتروني",
+            translate("البريد الإلكتروني"),
             InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
         )
         val password = accountInput(
-            "كلمة المرور",
+            translate("كلمة المرور"),
             InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
         )
         page.addView(email, LinearLayout.LayoutParams(-1, dp(54)).apply { bottomMargin = dp(10) })
         page.addView(password, LinearLayout.LayoutParams(-1, dp(54)).apply { bottomMargin = dp(10) })
         val confirmPassword = if (createAccount) {
             accountInput(
-                "تأكيد كلمة المرور",
+                translate("تأكيد كلمة المرور"),
                 InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
             ).also { field ->
                 page.addView(field, LinearLayout.LayoutParams(-1, dp(54)).apply { bottomMargin = dp(14) })
@@ -427,7 +428,7 @@ internal class FirebaseAccountController(
         } else null
         if (!createAccount) {
             val forgot = TextView(activity).apply {
-                text = "نسيت كلمة المرور؟"
+                text = translate("نسيت كلمة المرور؟")
                 textSize = 12f
                 gravity = Gravity.END
                 setTextColor(Color.rgb(75, 165, 255))
@@ -436,7 +437,7 @@ internal class FirebaseAccountController(
             }
             page.addView(forgot)
         }
-        page.addView(accountSubmitButton(if (createAccount) "إنشاء الحساب" else "دخول") { button ->
+        page.addView(accountSubmitButton(if (createAccount) translate("إنشاء الحساب") else translate("دخول")) { button ->
             val address = email.text.toString().trim()
             val secret = password.text.toString()
             if (address.isBlank() || secret.isBlank()) {
@@ -452,7 +453,7 @@ internal class FirebaseAccountController(
                 return@accountSubmitButton
             }
             button.isEnabled = false
-            button.text = "جارٍ المعالجة..."
+            button.text = translate("جارٍ المعالجة...")
             val task = if (createAccount) {
                 authRepository.createEmailAccount(address, secret)
             } else {
@@ -469,7 +470,7 @@ internal class FirebaseAccountController(
                 onAccountChanged()
             }.addOnFailureListener { error ->
                 button.isEnabled = true
-                button.text = if (createAccount) "إنشاء الحساب" else "دخول"
+                button.text = if (createAccount) translate("إنشاء الحساب") else translate("دخول")
                 toast(authErrorMessage(error, "تعذر إكمال العملية"))
             }
         }, LinearLayout.LayoutParams(-1, dp(52)))
