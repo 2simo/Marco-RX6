@@ -5,6 +5,8 @@
 تطبيق أندرويد مبني بـ Kotlin لتنظيم وتصفح مكتبة ألعاب PS2 وPS3 وPS4، ومرتبط بمدونة MARCO RX6 على منصة Blogger.
 
 ## المميزات
+[سياسة الخصوصية](https://2simo.github.io/Marco-RX6/privacy-policy.html) · [حذف الحساب](https://2simo.github.io/Marco-RX6/delete-account.html)
+
 - مزامنة الألعاب من مدونة Blogger
 - بحث وفلترة وترتيب (المنصة، النوع، السنة، المفضلة، حالة اللعب)
 - نشر وتعديل المقالات (للمشرفين)
