@@ -30,7 +30,8 @@ internal class BloggerServices(
         setAdmin: (Boolean) -> Unit,
         postToUi: (() -> Unit) -> Unit,
         refreshUi: () -> Unit,
-        onDenied: () -> Unit
+        onDenied: () -> Unit,
+        onError: (String) -> Unit = {}
     ) = BloggerAccessController(
         executor = executor,
         checkAccess = apiClient::hasWriteAccess,
@@ -39,6 +40,7 @@ internal class BloggerServices(
         setAdmin = setAdmin,
         postToUi = postToUi,
         refreshUi = refreshUi,
-        onDenied = onDenied
+        onDenied = onDenied,
+        onError = onError
     )
 }
