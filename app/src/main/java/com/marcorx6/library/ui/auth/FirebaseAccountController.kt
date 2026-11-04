@@ -33,14 +33,51 @@ internal class FirebaseAccountController(
         AlertDialog.Builder(activity)
             .setTitle("حساب MARCO RX6")
             .setMessage("أنت تستعمل التطبيق كزائر. تقدر تنشئ حساباً أو تدخل لحسابك في أي وقت.")
-            .setItems(arrayOf("إنشاء حساب بالبريد الإلكتروني", "تسجيل الدخول بالبريد الإلكتروني", "إغلاق")) { _, which ->
+            .setItems(arrayOf("إنشاء حساب بالبريد الإلكتروني", "تسجيل الدخول بالبريد الإلكتروني", "نسيت كلمة المرور؟", "إغلاق")) { _, which ->
                 when (which) {
                     0 -> showEmailForm(createAccount = true)
                     1 -> showEmailForm(createAccount = false)
+                    2 -> showPasswordResetForm()
                 }
             }
             .show()
             .also(styleDialog)
+    }
+
+    private fun showPasswordResetForm() {
+        val email = EditText(activity).apply {
+            hint = "البريد الإلكتروني"
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+            setSingleLine(true)
+        }
+        val dialog = AlertDialog.Builder(activity)
+            .setTitle("استرجاع كلمة المرور")
+            .setMessage("غادي نصيفطو ليك رابط إعادة تعيين كلمة المرور.")
+            .setView(email)
+            .setPositiveButton("إرسال", null)
+            .setNegativeButton("إلغاء", null)
+            .create()
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val address = email.text.toString().trim()
+                if (address.isBlank()) {
+                    toast("دخل البريد الإلكتروني")
+                    return@setOnClickListener
+                }
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
+                authRepository.sendPasswordReset(address)
+                    .addOnSuccessListener {
+                        toast("إلا كان الحساب موجود، غادي توصلك رسالة استرجاع كلمة المرور")
+                        dialog.dismiss()
+                    }
+                    .addOnFailureListener { error ->
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true
+                        toast(error.localizedMessage ?: "تعذر إرسال رابط الاسترجاع")
+                    }
+            }
+        }
+        dialog.show()
+        styleDialog(dialog)
     }
 
     private fun showEmailForm(createAccount: Boolean) {
