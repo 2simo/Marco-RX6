@@ -192,10 +192,25 @@ internal class AppearanceSettingsController(
         val scroll = android.widget.ScrollView(activity).apply {
             isFillViewport = true
             isVerticalScrollBarEnabled = false
+            clipToPadding = false
             addView(root, android.widget.ScrollView.LayoutParams(-1, -2))
         }
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(scroll) { view, insets ->
+            val safe = insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.systemBars() or
+                    androidx.core.view.WindowInsetsCompat.Type.displayCutout()
+            )
+            view.setPadding(0, safe.top, 0, safe.bottom)
+            insets
+        }
         setContentView(scroll)
-        activity.window.statusBarColor = bg
-        activity.window.navigationBarColor = bg
+        activity.window.statusBarColor = Color.TRANSPARENT
+        activity.window.navigationBarColor = Color.TRANSPARENT
+        androidx.core.view.WindowInsetsControllerCompat(activity.window, activity.window.decorView).apply {
+            isAppearanceLightStatusBars = !dark
+            isAppearanceLightNavigationBars = !dark
+            show(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+        }
+        androidx.core.view.ViewCompat.requestApplyInsets(scroll)
     }
 }
