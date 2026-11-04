@@ -59,7 +59,7 @@ internal class FirebaseAccountController(
                     0 -> showEmailForm(createAccount = true)
                     1 -> showEmailForm(createAccount = false)
                     2 -> startFreshGoogleAccountSelection()
-                    3 -> launchAdminGoogleSignIn(googleSignInIntentForAdmin())
+                    3 -> startAdminGoogleAccountSelection()
                     4 -> showPasswordResetForm()
                     5 -> confirmAccountDeletion(authRepository.currentUser)
                 }
@@ -90,9 +90,16 @@ internal class FirebaseAccountController(
         return GoogleSignIn.getClient(activity, firebaseGoogleOptions()).signInIntent
     }
 
-    /** Existing admin OAuth requests Blogger/Drive scopes and remains separate from Firebase auth. */
-    private fun googleSignInIntentForAdmin(): Intent {
-        return com.marcorx6.library.ui.GoogleSignInFactory.create(activity).signInIntent
+    /**
+     * Clear only the Blogger/Drive OAuth client selection before opening the account picker.
+     * This client uses separate scopes/options from Firebase Google sign-in, so the Firebase
+     * account session remains untouched. Google signOut clears the app selection, not device accounts.
+     */
+    private fun startAdminGoogleAccountSelection() {
+        val adminClient = com.marcorx6.library.ui.GoogleSignInFactory.create(activity)
+        adminClient.signOut().addOnCompleteListener {
+            launchAdminGoogleSignIn(adminClient.signInIntent)
+        }
     }
 
     fun handleGoogleSignInResult(data: Intent?) {
@@ -268,7 +275,7 @@ internal class FirebaseAccountController(
         }
         actions += "حذف حساب MARCO RX6 وبياناته" to { confirmAccountDeletion(user) }
         actions += (if (isAdminSession()) "تسجيل الخروج من وضع المسؤول" else "تسجيل دخول المسؤول (Blogger و Drive)") to {
-            if (isAdminSession()) signOutAdmin() else launchAdminGoogleSignIn(googleSignInIntentForAdmin())
+            if (isAdminSession()) signOutAdmin() else startAdminGoogleAccountSelection()
         }
         // Keep one clear, prominent Firebase sign-out action in the signed-in account menu.
         actions.add(0, "تسجيل الخروج من حساب MARCO RX6" to {
