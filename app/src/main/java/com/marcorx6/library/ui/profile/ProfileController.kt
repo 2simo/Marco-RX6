@@ -38,7 +38,9 @@ internal class ProfileController(
     private val getActiveDialog: () -> AlertDialog?,
     private val setActiveDialog: (AlertDialog?) -> Unit,
     private val styleAlertDialog: (AlertDialog) -> Unit,
-    private val applyUnifiedSkin: (android.view.View) -> Unit
+    private val applyUnifiedSkin: (android.view.View) -> Unit,
+    private val setContentView: (android.view.View) -> Unit,
+    private val onBack: () -> Unit
 ) {
     fun show() {
         val prefs = preferences
@@ -83,10 +85,7 @@ internal class ProfileController(
         })
         identity.addView(makeText("MARCO RX6  •  GAMER", 9f, if (dark) Color.rgb(191, 211, 230) else Color.rgb(79, 105, 129), true))
         hero.addView(identity, LinearLayout.LayoutParams(0, -2, 1f))
-        hero.setOnClickListener {
-            getActiveDialog()?.dismiss()
-            chooseAvatar()
-        }
+        hero.setOnClickListener { chooseAvatar() }
         box.addView(hero, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
         box.addView(makeText("اضغط على البطاقة لتغيير الصورة الشخصية", 10f, gray(), false).apply {
             gravity = Gravity.CENTER
@@ -187,32 +186,39 @@ internal class ProfileController(
         box.addView(settingButton("♙", "الحساب", "إنشاء حساب أو تسجيل الدخول • الاستخدام كزائر متاح") { showAccount() }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
         box.addView(settingButton("文", "اللغة", "العربية • English • Français • Español") { showLanguagePicker() }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
         box.addView(settingButton("♧", "الإشعارات", "التحكم في تنبيهات المقالات الجديدة") { showNotificationSettings() })
-        val dialog = AlertDialog.Builder(activity)
-            .setTitle(if (prefs.getBoolean("profile_created", false)) tr("ملفي الشخصي") else "إنشاء ملف اللاعب")
-            .setView(ScrollView(activity).apply { isFillViewport = true; addView(box) })
-            .setPositiveButton(tr("حفظ"), null)
-            .setNegativeButton(tr("إغلاق"), null)
-            .create()
-        setActiveDialog(dialog)
-        dialog.setOnDismissListener { if (getActiveDialog() === dialog) setActiveDialog(null) }
-        dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+        val header = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, dp(4), 0, dp(14))
+        }
+        header.addView(makeText("الملف الشخصي", 23f, white(), true), LinearLayout.LayoutParams(0, -2, 1f))
+        header.addView(makeText("‹", 30f, Color.rgb(75, 165, 255), true).apply {
+            gravity = Gravity.CENTER
+            setOnClickListener { onBack() }
+        }, LinearLayout.LayoutParams(dp(44), dp(44)))
+        box.addView(header, 0)
+
+        val saveButton = TextView(activity).apply {
+            text = "حفظ التغييرات"
+            textSize = 14f
+            gravity = Gravity.CENTER
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(Color.WHITE)
+            background = rounded(Color.rgb(35, 132, 238), 16)
+            setPadding(dp(16), dp(15), dp(16), dp(15))
+            setOnClickListener {
                 val nickname = input.text.toString().trim().ifBlank { "Player" }
                 prefs.edit().putString("nickname", nickname).putBoolean("profile_created", true).apply()
                 saveCloudProfile(nickname)
                 Toast.makeText(activity, "تم حفظ الملف الشخصي", Toast.LENGTH_SHORT).show()
-                dialog.dismiss()
             }
         }
-        dialog.show()
-        styleAlertDialog(dialog)
-        dialog.window?.apply {
-            setBackgroundDrawableResource(android.R.color.transparent)
-            setLayout(
-                android.view.WindowManager.LayoutParams.MATCH_PARENT,
-                android.view.WindowManager.LayoutParams.MATCH_PARENT
-            )
-        }
+        box.addView(saveButton, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(14); bottomMargin = dp(8) })
+        setContentView(ScrollView(activity).apply {
+            isFillViewport = true
+            setBackgroundColor(if (dark) Color.rgb(7, 17, 31) else Color.rgb(242, 247, 253))
+            addView(box)
+        })
         applyUnifiedSkin(box)
     }
 }
