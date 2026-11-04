@@ -134,7 +134,7 @@ internal class AppearanceSettingsController(
             setTextColor(if (preferences.getBoolean("animations", true)) Color.WHITE else blue)
             setPadding(dp(14), dp(13), dp(14), dp(13))
             background = GradientDrawable().apply {
-                setColor(if (preferences.getBoolean("animations", true)) blue else surface)
+                setColor(if (preferences.getBoolean("animations", true)) Color.argb(218, 42, 145, 255) else Color.argb(190, 15, 35, 58))
                 cornerRadius = dp(14).toFloat()
                 if (!preferences.getBoolean("animations", true)) setStroke(dp(1), blue)
             }
@@ -146,7 +146,7 @@ internal class AppearanceSettingsController(
                 text = translate(if (enabled) "الحركات مفعّلة  ✓" else "الحركات متوقفة")
                 setTextColor(if (enabled) Color.WHITE else blue)
                 background = GradientDrawable().apply {
-                    setColor(if (enabled) blue else surface)
+                    setColor(if (enabled) Color.argb(218, 42, 145, 255) else Color.argb(190, 15, 35, 58))
                     cornerRadius = dp(14).toFloat()
                     if (!enabled) setStroke(dp(1), blue)
                 }
