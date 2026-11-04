@@ -243,7 +243,7 @@ internal class DownloadUiController(
             textSize = 12f
             gravity = Gravity.CENTER
             setTextColor(if (filled) Color.WHITE else primary)
-            background = GradientDrawable().apply {
+            this.background = GradientDrawable().apply {
                 setColor(if (filled) Color.argb(224, 42, 145, 255)
                     else if (dark) Color.argb(205, 15, 43, 70) else Color.argb(220, 255, 255, 255))
                 cornerRadius = dp(16).toFloat()
