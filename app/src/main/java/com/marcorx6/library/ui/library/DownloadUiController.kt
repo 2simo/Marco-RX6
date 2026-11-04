@@ -3,13 +3,10 @@ package com.marcorx6.library.ui
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.DownloadManager
-import android.app.Dialog
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
 import android.view.View
-import android.view.Window
-import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -27,7 +24,9 @@ import com.marcorx6.library.network.SecureUrlPolicy
 internal class DownloadUiController(
     private val activity: Activity,
     private val downloadRepository: DownloadRepository,
-    private val styleDialog: (AlertDialog) -> Unit
+    private val styleDialog: (AlertDialog) -> Unit,
+    private val setContentView: (View) -> Unit,
+    private val onBack: () -> Unit
 ) {
     fun enqueueGameDownload(
         link: String,
@@ -70,7 +69,6 @@ internal class DownloadUiController(
         val primary = Color.rgb(42, 145, 255)
         val heading = if (dark) Color.WHITE else Color.rgb(22, 43, 65)
         val muted = if (dark) Color.rgb(164, 184, 207) else Color.rgb(91, 112, 137)
-        val dialog = Dialog(activity)
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(background)
@@ -100,7 +98,7 @@ internal class DownloadUiController(
             textSize = 30f
             gravity = Gravity.CENTER
             setTextColor(muted)
-            setOnClickListener { dialog.dismiss() }
+            setOnClickListener { onBack() }
         }, LinearLayout.LayoutParams(dp(44), dp(44)))
         root.addView(header)
         root.addView(TextView(activity).apply {
@@ -233,12 +231,8 @@ internal class DownloadUiController(
             catch (_: Exception) { Toast.makeText(activity, "تعذر فتح مدير تنزيلات النظام", Toast.LENGTH_SHORT).show() }
         }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(7) })
         root.addView(actions)
-        dialog.setContentView(root)
-        dialog.show()
-        dialog.window?.apply {
-            setBackgroundDrawableResource(android.R.color.transparent)
-            setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT)
-            addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+        setContentView(root)
+        activity.window?.apply {
             statusBarColor = background
             navigationBarColor = background
             decorView.systemUiVisibility = if (dark) 0 else View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
