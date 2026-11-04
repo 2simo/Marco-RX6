@@ -40,6 +40,7 @@ internal class GameWatchlistViewFactory(
                 null,
                 android.graphics.drawable.ColorDrawable(android.graphics.Color.WHITE)
             )
+            minHeight = dp(48)
             setPadding(dp(11), dp(9), dp(11), dp(9))
             setOnClickListener {
                 val current = watchlistKeys.indexOf(game.playStatus).coerceAtLeast(0)
