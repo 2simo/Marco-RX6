@@ -42,7 +42,9 @@ internal class ProfileFeature(
     styleAlertDialog: (android.app.AlertDialog) -> Unit,
     applyUnifiedSkin: (android.view.View) -> Unit,
     onAvatarSaved: () -> Unit,
-    onAvatarError: (String) -> Unit
+    onAvatarError: (String) -> Unit,
+    setContentView: (android.view.View) -> Unit,
+    onBack: () -> Unit
 ) {
     private val avatarRepository = ProfileAvatarRepository(contentResolver, filesDir)
     private var activeDialog: android.app.AlertDialog? = null
@@ -78,7 +80,9 @@ internal class ProfileFeature(
         getActiveDialog = { activeDialog },
         setActiveDialog = { activeDialog = it },
         styleAlertDialog = styleAlertDialog,
-        applyUnifiedSkin = applyUnifiedSkin
+        applyUnifiedSkin = applyUnifiedSkin,
+        setContentView = setContentView,
+        onBack = onBack
     )
 
     fun show() = controller.show()
