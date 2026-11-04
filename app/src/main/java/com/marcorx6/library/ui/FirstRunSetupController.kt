@@ -144,12 +144,18 @@ internal class FirstRunSetupController(
             }
 
             when (step) {
-                0 -> listOf("PS2", "PS3", "PS4").forEach { platform ->
-                    addChoice(platform, when (platform) {
+                0 -> listOf("PS2", "PSP", "PS3", "PS4", "3DS", "GBA").forEach { platform ->
+                    val description = when (platform) {
                         "PS2" -> "PlayStation 2"
+                        "PSP" -> "PlayStation Portable"
                         "PS3" -> "PlayStation 3"
-                        else -> "PlayStation 4"
-                    }, preferredPlatform == platform) { preferredPlatform = platform }
+                        "PS4" -> "PlayStation 4"
+                        "3DS" -> "Nintendo 3DS"
+                        else -> "Game Boy Advance"
+                    }
+                    addChoice(platform, description, preferredPlatform == platform) {
+                        preferredPlatform = platform
+                    }
                 }
                 1 -> listOf("ar" to "العربية", "en" to "English", "fr" to "Français", "es" to "Español")
                     .forEach { (code, label) -> addChoice(label, "", languageCode == code) { languageCode = code } }
