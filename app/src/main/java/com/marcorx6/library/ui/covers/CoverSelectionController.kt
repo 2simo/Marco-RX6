@@ -74,7 +74,17 @@ internal class CoverSelectionController(
                     }
                     .setNegativeButton(translate("إغلاق"), null)
                     .show()
-                    .also(styleDialog)
+                    .also { dialog ->
+                        styleDialog(dialog)
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).apply {
+                            minHeight = dp(48)
+                            contentDescription = translate("نسخ تفاصيل خطأ رفع صورة الغلاف")
+                        }
+                        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).apply {
+                            minHeight = dp(48)
+                            contentDescription = translate("إغلاق رسالة خطأ رفع الغلاف")
+                        }
+                    }
             }
         )
     }
