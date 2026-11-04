@@ -38,7 +38,7 @@ internal class GameDetailsBottomBarFactory(
             gravity = android.view.Gravity.CENTER
             setTypeface(null, Typeface.BOLD)
             background = rounded(
-                if (isDarkMode()) Color.rgb(22, 55, 91) else Color.rgb(222, 237, 255),
+                if (isDarkMode()) Color.rgb(20, 68, 117) else Color.rgb(222, 237, 255),
                 11
             )
             setPadding(dp(12), dp(12), dp(12), dp(12))
