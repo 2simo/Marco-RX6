@@ -87,7 +87,8 @@ internal class GameExperienceRuntimeFeature(
             loadCover = loadCover,
             showDetails = showDetailsForDay,
             openGameLink = openGameLink,
-            styleAlertDialog = styleAlertDialog
+            styleAlertDialog = styleAlertDialog,
+            translate = translate
         )
     }
 
