@@ -16,7 +16,8 @@ internal class GameSimilarGamesViewFactory(
     private val rounded: (Int, Int) -> Drawable,
     private val makeText: (String, Float, Int, Boolean) -> TextView,
     private val isDarkMode: () -> Boolean,
-    private val white: () -> Int
+    private val white: () -> Int,
+    private val translate: (String) -> String
 ) {
     fun create(game: Game, games: List<Game>, onSelect: (Game) -> Unit): View? {
         val similar = games.filter {
@@ -31,7 +32,7 @@ internal class GameSimilarGamesViewFactory(
         }
         similarBox.addView(
             makeText(
-                "اكتشف المزيد  •  قد يعجبك أيضاً",
+                translate("اكتشف المزيد  •  قد يعجبك أيضاً"),
                 12f,
                 if (dark) Color.rgb(111, 194, 255) else Color.rgb(30, 139, 235),
                 true
