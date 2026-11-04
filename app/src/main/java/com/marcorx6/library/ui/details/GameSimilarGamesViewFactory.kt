@@ -42,6 +42,7 @@ internal class GameSimilarGamesViewFactory(
         similar.forEach { item ->
             similarRow.addView(TextView(activity).apply {
                 text = item.name
+                contentDescription = "فتح تفاصيل ${item.name}"
                 textSize = 10f
                 maxLines = 1
                 ellipsize = TextUtils.TruncateAt.END
