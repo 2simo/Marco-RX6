@@ -42,6 +42,18 @@ internal class ProfileController(
     private val setContentView: (android.view.View) -> Unit,
     private val onBack: () -> Unit
 ) {
+    private fun addTouchFeedback(view: android.view.View) {
+        view.isClickable = true
+        view.isFocusable = true
+        if (android.os.Build.VERSION.SDK_INT >= 23) {
+            view.foreground = android.graphics.drawable.RippleDrawable(
+                android.content.res.ColorStateList.valueOf(Color.argb(76, 75, 165, 255)),
+                null,
+                android.graphics.drawable.ColorDrawable(Color.WHITE)
+            )
+        }
+    }
+
     fun show() {
         val prefs = preferences
         val box = LinearLayout(activity).apply {
@@ -90,6 +102,7 @@ internal class ProfileController(
         hero.isClickable = true
         hero.isFocusable = true
         hero.setOnClickListener { chooseAvatar() }
+        addTouchFeedback(hero)
         box.addView(hero, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
         box.addView(makeText(tr("اضغط على البطاقة لتغيير الصورة الشخصية"), 10f, gray(), false).apply {
             gravity = Gravity.CENTER
@@ -189,6 +202,7 @@ internal class ProfileController(
                     .setNegativeButton(tr("إغلاق"), null)
                     .show().also(styleAlertDialog)
             }
+            addTouchFeedback(this)
         }
         box.addView(storageCard, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
         fun settingButton(icon: String, label: String, detail: String, action: () -> Unit) = LinearLayout(activity).apply {
@@ -218,6 +232,7 @@ internal class ProfileController(
             isClickable = true
             isFocusable = true
             setOnClickListener { action() }
+            addTouchFeedback(this)
         }
         box.addView(settingButton("♙", tr("الحساب"), tr("إنشاء حساب أو تسجيل الدخول • الاستخدام كزائر متاح")) { showAccount() }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
         box.addView(settingButton("文", tr("اللغة"), tr("العربية • English • Français • Español")) { showLanguagePicker() }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
@@ -260,6 +275,7 @@ internal class ProfileController(
                 saveCloudProfile(nickname)
                 Toast.makeText(activity, tr("تم حفظ الملف الشخصي"), Toast.LENGTH_SHORT).show()
             }
+            addTouchFeedback(this)
         }
         box.addView(saveButton, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(14); bottomMargin = dp(8) })
         val profileScroll = ScrollView(activity).apply {
