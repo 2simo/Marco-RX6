@@ -18,7 +18,6 @@ internal class ActivityResultRuntimeFeature(
 ) {
     companion object {
         private const val SIGN_IN_REQUEST_CODE = 1002
-        private const val FIREBASE_GOOGLE_SIGN_IN_REQUEST_CODE = 1003
         private const val COVER_REQUEST_CODE = 1001
         private const val AVATAR_REQUEST_CODE = 1005
     }
@@ -28,7 +27,6 @@ internal class ActivityResultRuntimeFeature(
         avatarRequestCode = AVATAR_REQUEST_CODE,
         coverRequestCode = COVER_REQUEST_CODE,
         onGoogleSignInResult = onGoogleSignInResult,
-        onFirebaseGoogleSignInResult = onFirebaseGoogleSignInResult,
         onAvatarSelected = onAvatarSelected,
         onCoverSelected = onCoverSelected
     )
