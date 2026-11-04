@@ -42,7 +42,7 @@ internal class AppearanceSettingsController(
         }
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            layoutDirection = if (translate("الإعدادات والمظهر") == "الإعدادات والمظهر") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
+            layoutDirection = if (translate("العربية") == "العربية") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
             setPadding(dp(20), dp(20), dp(20), dp(20))
             setBackgroundColor(bg)
         }
