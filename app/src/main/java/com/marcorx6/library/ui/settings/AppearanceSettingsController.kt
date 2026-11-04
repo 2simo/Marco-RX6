@@ -14,10 +14,11 @@ internal class AppearanceSettingsController(
     private val recreateActivity: () -> Unit
 ) {
     fun show() {
-        val choices = arrayOf("بنفسجي", "أزرق", "أخضر", "ذهبي", "وردي")
-        val keys = arrayOf("violet", "blue", "green", "gold", "rose")
+        val choices = arrayOf("أزرق")
+        val keys = arrayOf("blue")
         val selectedIndex = keys.indexOf(preferences.getString("accent", "blue")).coerceAtLeast(0)
-        AlertDialog.Builder(activity).setTitle("تخصيص المظهر")
+        AlertDialog.Builder(activity).setTitle("تخصيص الواجهة")
+            .setMessage("اللون الرئيسي المعتمد في MARCO RX6 هو الأزرق.")
             .setSingleChoiceItems(choices, selectedIndex) { dialog, which ->
                 preferences.edit().putString("accent", keys[which]).apply()
                 dialog.dismiss()
