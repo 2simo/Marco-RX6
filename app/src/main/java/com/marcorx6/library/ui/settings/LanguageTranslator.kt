@@ -5,6 +5,8 @@ internal object LanguageTranslator {
     fun translate(ar: String, lang: String): String {
         if (lang == "ar") return ar
         val translations = mapOf(
+            "الإعدادات والمظهر" to listOf("Settings & appearance", "Paramètres et apparence", "Ajustes y apariencia"),
+            "خصص تجربة MARCO RX6 بالطريقة التي تناسبك" to listOf("Customize your MARCO RX6 experience", "Personnalisez votre expérience MARCO RX6", "Personaliza tu experiencia MARCO RX6"),
             "رابط التنزيل غير آمن أو غير صالح؛ يجب استخدام HTTPS" to listOf("Invalid or unsafe download link; HTTPS is required", "Lien de téléchargement invalide ou non sécurisé ; HTTPS est requis", "Enlace de descarga no válido o inseguro; se requiere HTTPS"),
             "جارٍ التحقق من رابط الملف…" to listOf("Checking file link…", "Vérification du lien du fichier…", "Verificando el enlace del archivo…"),
             "تم التحقق من الملف وإضافته إلى مدير التنزيلات" to listOf("File verified and added to download manager", "Fichier vérifié et ajouté au gestionnaire de téléchargements", "Archivo verificado y añadido al gestor de descargas"),
