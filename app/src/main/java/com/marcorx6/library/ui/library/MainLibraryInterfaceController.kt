@@ -118,9 +118,9 @@ internal class MainLibraryInterfaceController(
             setTextColor(if (isDarkMode()) Color.rgb(190, 222, 255) else Color.rgb(35, 126, 224))
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
                 if (isDarkMode()) intArrayOf(Color.rgb(20, 48, 82), Color.rgb(9, 22, 42))
-                else intArrayOf(Color.WHITE, Color.rgb(230, 239, 250))).apply {
+                else intArrayOf(Color.WHITE, Color.rgb(226, 241, 255))).apply {
                 cornerRadius = dp(14).toFloat()
-                setStroke(dp(1), if (isDarkMode()) Color.rgb(48, 119, 190) else Color.rgb(191, 211, 235))
+                setStroke(dp(1), if (isDarkMode()) Color.rgb(48, 119, 190) else Color.rgb(173, 207, 239))
             }
             minWidth = dp(43); minHeight = dp(43)
             contentDescription = label
@@ -329,7 +329,7 @@ internal class MainLibraryInterfaceController(
             } else GradientDrawable(GradientDrawable.Orientation.TL_BR,
                 intArrayOf(Color.rgb(255, 255, 255), Color.rgb(241, 244, 250))).apply {
                 cornerRadius = dp(23).toFloat()
-                setStroke(dp(1), Color.rgb(190, 199, 214))
+                setStroke(dp(1), Color.rgb(173, 207, 239))
             }
             elevation = dp(14).toFloat()
             setPadding(dp(7), dp(7), dp(7), dp(7))
@@ -339,7 +339,7 @@ internal class MainLibraryInterfaceController(
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
                 setPadding(dp(5), dp(5), dp(5), dp(5))
-                background = rounded(if (isDarkMode()) Color.rgb(22, 55, 91) else Color.rgb(232, 237, 246), 15)
+                background = rounded(if (isDarkMode()) Color.rgb(22, 55, 91) else Color.rgb(226, 240, 255), 15)
                 setOnClickListener { action() }
             }
             item.addView(makeText(icon, 15f, if (isDarkMode()) silver else Color.rgb(75, 158, 245), true).apply {
