@@ -42,7 +42,7 @@ internal class GameDetailsTopBarFactory(
             maxLines = 1
             ellipsize = android.text.TextUtils.TruncateAt.END
         })
-        heading.addView(makeText(game.platform, 10f, red(), true))
+        heading.addView(makeText(game.platform, 10f, android.graphics.Color.rgb(91, 177, 255), true))
         topBar.addView(heading, LinearLayout.LayoutParams(0, -2, 1f))
         topBar.addView(favoriteToggleFactory.create(game))
         return topBar
