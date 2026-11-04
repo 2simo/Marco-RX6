@@ -106,10 +106,15 @@ internal class GameLibraryRenderer(
                             setOnClickListener { showDetails(game) }
                         }
                         val imageFrame = FrameLayout(activity).apply { clipToOutline = true; background = rounded(bg, 12) }
-                        val image = ImageView(activity).apply { scaleType = ImageView.ScaleType.CENTER_CROP; contentDescription = game.name }
+                        val image = ImageView(activity).apply {
+                            scaleType = ImageView.ScaleType.CENTER_CROP
+                            contentDescription = null
+                            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+                        }
                         imageFrame.addView(image, FrameLayout.LayoutParams(-1, -1))
                         val platformBadge = TextView(activity).apply {
                             text = game.platform
+                            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
                             textSize = 9f
                             setTextColor(Color.WHITE)
                             typeface = android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.BOLD)
@@ -127,6 +132,7 @@ internal class GameLibraryRenderer(
                         if (game.isFavorite) {
                             val favoriteBadge = TextView(activity).apply {
                                 text = "♥"
+                                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
                                 textSize = 13f
                                 gravity = Gravity.CENTER
                                 setTextColor(Color.WHITE)
