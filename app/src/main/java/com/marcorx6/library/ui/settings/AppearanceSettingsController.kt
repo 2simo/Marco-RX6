@@ -4,11 +4,9 @@ import android.app.Activity
 import android.content.SharedPreferences
 import android.view.View
 import android.widget.Toast
-import android.app.Dialog
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
-import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.TextView
 
@@ -16,7 +14,9 @@ internal class AppearanceSettingsController(
     private val activity: Activity,
     private val preferences: SharedPreferences,
     private val applyMotionPreferences: (View) -> Unit,
-    private val recreateActivity: () -> Unit
+    private val recreateActivity: () -> Unit,
+    private val setContentView: (View) -> Unit,
+    private val onBack: () -> Unit
 ) {
     fun show() {
         fun dp(value: Int) = (value * activity.resources.displayMetrics.density).toInt()
@@ -27,7 +27,6 @@ internal class AppearanceSettingsController(
         val blue = Color.rgb(42, 145, 255)
         val ink = if (dark) Color.WHITE else Color.rgb(22, 43, 65)
         val muted = if (dark) Color.rgb(164, 184, 207) else Color.rgb(91, 112, 137)
-        val dialog = Dialog(activity)
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(20), dp(20), dp(20), dp(20))
@@ -57,7 +56,7 @@ internal class AppearanceSettingsController(
             textSize = 30f
             gravity = Gravity.CENTER
             setTextColor(muted)
-            setOnClickListener { dialog.dismiss() }
+            setOnClickListener { onBack() }
         }, LinearLayout.LayoutParams(dp(44), dp(44)))
         root.addView(header)
         root.addView(TextView(activity).apply {
@@ -146,13 +145,8 @@ internal class AppearanceSettingsController(
             setTextColor(muted)
             setPadding(0, dp(24), 0, dp(10))
         })
-        dialog.setContentView(root)
-        dialog.show()
-        dialog.window?.apply {
-            setBackgroundDrawableResource(android.R.color.transparent)
-            setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT)
-            statusBarColor = bg
-            navigationBarColor = bg
-        }
+        setContentView(root)
+        activity.window.statusBarColor = bg
+        activity.window.navigationBarColor = bg
     }
 }
