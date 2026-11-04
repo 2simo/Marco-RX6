@@ -55,12 +55,13 @@ internal class FirebaseAccountController(
         }
     }
 
-    private fun showGuestActions() = showAccountScreen(null)
+    private fun showGuestActions() = showAccountScreen(authRepository.currentUser)
 
     private fun showAccountScreen(user: FirebaseUser?) {
         val dark = isDarkMode()
         val page = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
+            layoutDirection = if (activity.resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL) View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
             setPadding(dp(20), dp(18), dp(20), dp(24))
             setBackgroundColor(if (dark) Color.rgb(6, 16, 30) else Color.rgb(240, 247, 255))
         }
@@ -109,10 +110,28 @@ internal class FirebaseAccountController(
             setTextColor(if (dark) Color.WHITE else Color.rgb(17, 54, 89))
             setTypeface(null, android.graphics.Typeface.BOLD)
         }
+        val avatar = TextView(activity).apply {
+            val identity = user?.displayName?.trim()?.firstOrNull()
+                ?: user?.email?.trim()?.firstOrNull()
+                ?: 'M'
+            text = identity.uppercase()
+            textSize = 27f
+            gravity = Gravity.CENTER
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(Color.WHITE)
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Color.rgb(75, 175, 255), Color.rgb(23, 91, 183))
+            ).apply {
+                shape = GradientDrawable.OVAL
+                setStroke(dp(2), Color.argb(190, 190, 225, 255))
+            }
+        }
+        hero.addView(avatar, LinearLayout.LayoutParams(dp(68), dp(68)).apply { bottomMargin = dp(13) })
         hero.addView(stateTitle)
         val stateDetail = TextView(activity).apply {
             text = when {
-                user != null && !user.isAnonymous -> user.email.orEmpty() + if (isAdminSession()) "  •  " + translate("مسؤول نشط") else "  •  " + translate("مستخدم")
+                user != null && !user.isAnonymous -> listOfNotNull(user.displayName?.takeIf { it.isNotBlank() }, user.email).joinToString("  •  ") + if (isAdminSession()) "  •  " + translate("مسؤول نشط") else "  •  " + translate("مستخدم")
                 user?.isAnonymous == true -> translate("يمكنك الاستمرار دون حساب أو ربط حسابك لاحقاً")
                 else -> translate("احفظ ملفك الشخصي واستعمل مزايا الحساب على أجهزتك")
             }
@@ -281,6 +300,7 @@ internal class FirebaseAccountController(
         val dark = isDarkMode()
         val page = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
+            layoutDirection = if (activity.resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL) View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
             setPadding(dp(22), dp(20), dp(22), dp(28))
             setBackgroundColor(if (dark) Color.rgb(6, 16, 30) else Color.rgb(240, 247, 255))
         }
