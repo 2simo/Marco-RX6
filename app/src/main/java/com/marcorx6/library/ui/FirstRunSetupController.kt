@@ -59,7 +59,7 @@ internal class FirstRunSetupController(
             gravity = Gravity.CENTER_VERTICAL
         }
         val brand = makeText("MARCO RX6", 13f, Color.WHITE, true).apply { letterSpacing = 0.12f }
-        val stepCount = makeText("1 / 5", 11f, Color.rgb(126, 190, 245), true)
+        val stepCount = makeText("1 / ${steps.size}", 11f, Color.rgb(126, 190, 245), true)
         top.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
         top.addView(stepCount)
         root.addView(top)
