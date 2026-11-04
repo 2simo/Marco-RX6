@@ -5,6 +5,8 @@ internal object LanguageTranslator {
     fun translate(ar: String, lang: String): String {
         if (lang == "ar") return ar
         val translations = mapOf(
+            "تحميل" to listOf("Download", "Télécharger", "Descargar"),
+            "مشاركة مقال من MARCO RX6" to listOf("Share article from MARCO RX6", "Partager un article de MARCO RX6", "Compartir artículo de MARCO RX6"),
             "بدون حالة" to listOf("No status", "Aucun statut", "Sin estado"),
             "أريد لعبها" to listOf("Want to play", "À jouer", "Quiero jugar"),
             "ألعبها حالياً" to listOf("Playing now", "En cours", "Jugando"),
