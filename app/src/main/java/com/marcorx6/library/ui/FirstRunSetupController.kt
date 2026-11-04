@@ -64,9 +64,9 @@ internal class FirstRunSetupController(
         top.addView(stepCount)
         root.addView(top)
 
-        val progressTrack = LinearLayout(activity).apply {
-            orientation = LinearLayout.HORIZONTAL
+        val progressTrack = FrameLayout(activity).apply {
             background = rounded(Color.rgb(24, 43, 65), 8)
+            clipToOutline = true
         }
         val progressFill = View(activity).apply {
             background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
@@ -74,7 +74,7 @@ internal class FirstRunSetupController(
                 cornerRadius = dp(8).toFloat()
             }
         }
-        progressTrack.addView(progressFill, LinearLayout.LayoutParams(0, dp(5), 1f))
+        progressTrack.addView(progressFill, FrameLayout.LayoutParams(0, dp(5), Gravity.START))
         root.addView(progressTrack, LinearLayout.LayoutParams(-1, dp(5)).apply {
             topMargin = dp(18)
             bottomMargin = dp(28)
@@ -87,8 +87,8 @@ internal class FirstRunSetupController(
             gravity = Gravity.CENTER_VERTICAL
         }
         lateinit var renderStep: (Int, Boolean) -> Unit
-        val back = Button(activity).apply { text = "السابق"; setOnClickListener { renderStep(step - 1, true) } }
-        val next = Button(activity).apply { text = "التالي"; tag = "marco_primary_action" }
+        val back = Button(activity).apply { setOnClickListener { renderStep(step - 1, true) } }
+        val next = Button(activity).apply { tag = "marco_primary_action" }
         footer.addView(back, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(8) })
         footer.addView(next, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(8) })
         root.addView(footer, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(18) })
@@ -97,13 +97,18 @@ internal class FirstRunSetupController(
 
         renderStep = { target: Int, animate: Boolean ->
             step = target.coerceIn(0, steps.lastIndex)
+            val tr: (String) -> String = { value -> LanguageTranslator.translate(value, languageCode) }
+            root.layoutDirection = if (languageCode == "ar") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
             stepCount.text = "${step + 1} / ${steps.size}"
-            progressFill.layoutParams = LinearLayout.LayoutParams(0, dp(5), (step + 1).toFloat())
-            progressTrack.removeAllViews()
-            progressTrack.addView(progressFill)
+            progressTrack.post {
+                val params = progressFill.layoutParams as FrameLayout.LayoutParams
+                params.width = (progressTrack.width * ((step + 1f) / steps.size)).toInt().coerceAtLeast(dp(4))
+                progressFill.layoutParams = params
+            }
+            back.text = tr("السابق")
             back.isEnabled = step > 0
             back.alpha = if (step > 0) 1f else 0.35f
-            next.text = if (step == steps.lastIndex) "ابدأ الآن" else "التالي"
+            next.text = tr(if (step == steps.lastIndex) "ابدأ الآن" else "التالي")
             content.animate().cancel()
             content.removeAllViews()
             val page = LinearLayout(activity).apply {
@@ -111,8 +116,8 @@ internal class FirstRunSetupController(
                 gravity = Gravity.TOP
                 setPadding(0, dp(8), 0, dp(8))
             }
-            page.addView(makeText("خطوة ${step + 1}", 10f, Color.rgb(92, 180, 255), true))
-            page.addView(makeText(steps[step], 27f, Color.WHITE, true).apply {
+            page.addView(makeText(tr("خطوة ${step + 1}"), 10f, Color.rgb(92, 180, 255), true))
+            page.addView(makeText(tr(steps[step]), 27f, Color.WHITE, true).apply {
                 setPadding(0, dp(8), 0, dp(8))
             })
             val description = when (step) {
@@ -123,7 +128,7 @@ internal class FirstRunSetupController(
                 4 -> "هل ترغب في تلقي إشعار عند نشر مقالات جديدة في المدونة؟"
                 else -> "تم إعداد مكتبتك. اختياراتك محفوظة ويمكنك تغييرها لاحقاً من الإعدادات."
             }
-            page.addView(makeText(description, 13f, Color.rgb(164, 184, 207), false).apply {
+            page.addView(makeText(tr(description), 13f, Color.rgb(164, 184, 207), false).apply {
                 setPadding(0, 0, 0, dp(24))
             })
 
@@ -158,11 +163,11 @@ internal class FirstRunSetupController(
                     }
                 }
                 1 -> listOf("ar" to "العربية", "en" to "English", "fr" to "Français", "es" to "Español")
-                    .forEach { (code, label) -> addChoice(label, "", languageCode == code) { languageCode = code } }
+                    .forEach { (code, label) -> addChoice(tr(label), "", languageCode == code) { languageCode = code } }
                 2 -> listOf(true to "الوضع الليلي", false to "الوضع النهاري")
-                    .forEach { (dark, label) -> addChoice(label, "", darkMode == dark) { darkMode = dark } }
+                    .forEach { (dark, label) -> addChoice(tr(label), "", darkMode == dark) { darkMode = dark } }
                 3 -> {
-                    val card = viewFactory.optionCard("أزرق", true, "اللون الرسمي المعتمد في MARCO RX6")
+                    val card = viewFactory.optionCard(tr("أزرق"), true, tr("اللون الرسمي المعتمد في MARCO RX6"))
                     val dot = View(activity).apply {
                         background = rounded(Color.rgb(42, 145, 255), 20)
                     }
@@ -171,11 +176,11 @@ internal class FirstRunSetupController(
                     if (animate) viewFactory.animateIn(card)
                 }
                 4 -> {
-                    addChoice("تفعيل الإشعارات", "تنبيه عند وصول مقال جديد", notificationsEnabled) { notificationsEnabled = true }
-                    addChoice("إيقاف الإشعارات", "يمكنك تفعيلها لاحقاً من الإعدادات", !notificationsEnabled) { notificationsEnabled = false }
+                    addChoice(tr("تفعيل الإشعارات"), tr("تنبيه عند وصول مقال جديد"), notificationsEnabled) { notificationsEnabled = true }
+                    addChoice(tr("إيقاف الإشعارات"), tr("يمكنك تفعيلها لاحقاً من الإعدادات"), !notificationsEnabled) { notificationsEnabled = false }
                 }
                 5 -> {
-                    val readyCard = viewFactory.optionCard("مكتبتك جاهزة!", true, "تم حفظ المنصة واللغة والمظهر واللون والإشعارات.")
+                    val readyCard = viewFactory.optionCard(tr("مكتبتك جاهزة!"), true, tr("تم حفظ المنصة واللغة والمظهر واللون والإشعارات."))
                     choices.addView(readyCard, LinearLayout.LayoutParams(-1, -2))
                     if (animate) viewFactory.animateIn(readyCard)
                 }
