@@ -44,6 +44,7 @@ internal class UserExperienceRuntimeFeature(
     private val launchAvatarPicker: (Intent) -> Unit,
     styleAlertDialog: (android.app.AlertDialog) -> Unit,
     applyUnifiedSkin: (View) -> Unit,
+    applyMotionPreferences: (View) -> Unit,
     onAvatarSaved: () -> Unit,
     onAvatarError: (String) -> Unit,
     isNotificationsEnabled: () -> Boolean,
@@ -108,6 +109,7 @@ internal class UserExperienceRuntimeFeature(
             requestNotificationPermission = requestNotificationPermission,
             onPlatformSelected = onPlatformSelected,
             applyUnifiedSkin = applyUnifiedSkin,
+            applyMotionPreferences = applyMotionPreferences,
             recreateActivity = recreateActivity
         )
     }
