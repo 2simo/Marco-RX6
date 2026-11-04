@@ -14,6 +14,8 @@ import com.marcorx6.library.ui.GameImportMerger
 import com.marcorx6.library.ui.library.MainLibraryViewState
 import com.marcorx6.library.data.Game
 import com.marcorx6.library.data.auth.FirebaseSessionCoordinator
+import com.marcorx6.library.data.auth.FirebaseAuthRepository
+import com.marcorx6.library.ui.auth.FirebaseAccountController
 import com.marcorx6.library.ui.auth.GoogleAccountRuntimeFeature
 import androidx.activity.ComponentActivity
 import android.app.AlertDialog
@@ -26,6 +28,22 @@ class MainActivity : ComponentActivity() {
     private val firebaseSessionCoordinator: FirebaseSessionCoordinator by lazy {
         FirebaseSessionCoordinator()
     }
+    private val firebaseAuthRepository: FirebaseAuthRepository by lazy {
+        FirebaseAuthRepository()
+    }
+    private val firebaseAccountController: FirebaseAccountController by lazy {
+        FirebaseAccountController(
+            activity = this,
+            authRepository = firebaseAuthRepository,
+            onAccountChanged = {
+                firebaseSessionCoordinator.ensureGuestSession()
+                createInterface()
+            },
+            styleDialog = ::styleAlertDialog
+        )
+    }
+
+    private fun showFirebaseAccount() = firebaseAccountController.show()
 
     private val activityServicesRuntimeFeature: ActivityServicesRuntimeFeature by lazy {
         ActivityServicesRuntimeFeature(this, ::styleAlertDialog, ::isDarkMode)
@@ -94,6 +112,7 @@ class MainActivity : ComponentActivity() {
             gray = { gray },
             showLanguagePicker = appearanceRuntimeFeature::showLanguagePicker,
             showNotificationSettings = activityServicesRuntimeFeature::showNotificationSettings,
+            showAccount = ::showFirebaseAccount,
             launchAvatarPicker = activityResultRuntimeFeature::launchProfileAvatar,
             styleAlertDialog = ::styleAlertDialog,
             applyUnifiedSkin = ::applyUnifiedSkin,
