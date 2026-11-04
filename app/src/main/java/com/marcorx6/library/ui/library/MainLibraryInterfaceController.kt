@@ -354,9 +354,9 @@ internal class MainLibraryInterfaceController(
             })
         }
         dockItem("⌂", tr("الرئيسية")) { selected = "ALL"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
-        dockItem("♡", tr("المفضلة")) { selected = "FAVORITES"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
+        dockItem("▦", tr("المكتبة")) { selected = "ALL"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
         dockItem("⬇", "التنزيلات") { showDownloads() }
-        dockItem("⌕", "بحث") { search.requestFocus(); pageScroll.smoothScrollTo(0, 0); (context.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager).showSoftInput(search, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT) }
+        dockItem("⌕", "استكشف") { search.requestFocus(); pageScroll.smoothScrollTo(0, 0); (context.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager).showSoftInput(search, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT) }
         dockItem("♙", tr("حسابي")) { showProfile() }
         val dockParams = FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply {
             leftMargin = dp(16); rightMargin = dp(16); bottomMargin = dp(12)
