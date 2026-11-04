@@ -84,6 +84,9 @@ internal class FirebaseAccountController(
             textSize = 32f
             gravity = Gravity.CENTER
             setTextColor(Color.rgb(75, 165, 255))
+            contentDescription = translate("رجوع")
+            minWidth = dp(48)
+            minHeight = dp(48)
             setOnClickListener { onBack() }
         }
         header.addView(back, LinearLayout.LayoutParams(dp(48), dp(48)))
@@ -162,8 +165,17 @@ internal class FirebaseAccountController(
                     cornerRadius = dp(17).toFloat()
                     setStroke(dp(1), if (primary) Color.argb(210, 112, 184, 255) else if (dark) Color.argb(105, 104, 163, 218) else Color.argb(150, 155, 194, 231))
                 }
+                minHeight = dp(64)
+                contentDescription = "$label. $detail"
                 isClickable = true
                 isFocusable = true
+                if (android.os.Build.VERSION.SDK_INT >= 23) {
+                    foreground = android.graphics.drawable.RippleDrawable(
+                        android.content.res.ColorStateList.valueOf(Color.argb(78, 83, 177, 255)),
+                        null,
+                        android.graphics.drawable.ColorDrawable(Color.WHITE)
+                    )
+                }
                 setOnClickListener { run() }
             }
             val title = TextView(activity).apply {
@@ -330,6 +342,9 @@ internal class FirebaseAccountController(
             textSize = 32f
             gravity = Gravity.CENTER
             setTextColor(Color.rgb(75, 165, 255))
+            contentDescription = translate("رجوع")
+            minWidth = dp(48)
+            minHeight = dp(48)
             setOnClickListener { show() }
         }, LinearLayout.LayoutParams(dp(48), dp(48)))
         page.addView(header)
@@ -401,6 +416,8 @@ internal class FirebaseAccountController(
             gravity = Gravity.CENTER
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(Color.WHITE)
+            minHeight = dp(52)
+            contentDescription = label
             setPadding(dp(18), dp(15), dp(18), dp(15))
             background = GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
@@ -475,6 +492,8 @@ internal class FirebaseAccountController(
             textSize = 12f
             gravity = Gravity.END
             setTextColor(Color.rgb(75, 165, 255))
+            minHeight = dp(48)
+            contentDescription = translate("إظهار أو إخفاء كلمة المرور")
             setPadding(0, dp(3), 0, dp(12))
             setOnClickListener {
                 passwordVisible = !passwordVisible
@@ -494,6 +513,8 @@ internal class FirebaseAccountController(
                 textSize = 12f
                 gravity = Gravity.END
                 setTextColor(Color.rgb(75, 165, 255))
+                minHeight = dp(48)
+                contentDescription = translate("نسيت كلمة المرور؟")
                 setPadding(0, dp(4), 0, dp(18))
                 setOnClickListener { showPasswordResetForm() }
             }
