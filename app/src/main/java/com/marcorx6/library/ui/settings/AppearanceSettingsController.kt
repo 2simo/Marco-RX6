@@ -15,6 +15,9 @@ internal class AppearanceSettingsController(
     private val preferences: SharedPreferences,
     private val applyMotionPreferences: (View) -> Unit,
     private val recreateActivity: () -> Unit,
+    private val showLanguagePicker: () -> Unit,
+    private val showNotificationSettings: () -> Unit,
+    private val showTypographySettings: () -> Unit,
     private val setContentView: (View) -> Unit,
     private val onBack: () -> Unit
 ) {
@@ -138,6 +141,39 @@ internal class AppearanceSettingsController(
         }
         animations.addView(toggle, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
         root.addView(animations)
+
+        fun settingRow(title: String, description: String, action: () -> Unit) =
+            LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(16), dp(14), dp(16), dp(14))
+                background = GradientDrawable().apply {
+                    setColor(surface)
+                    cornerRadius = dp(17).toFloat()
+                    setStroke(dp(1), if (dark) Color.rgb(42, 82, 126) else Color.rgb(198, 220, 244))
+                }
+                isClickable = true
+                isFocusable = true
+                addView(TextView(activity).apply {
+                    text = title
+                    textSize = 15f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    setTextColor(ink)
+                })
+                addView(TextView(activity).apply {
+                    text = description
+                    textSize = 11f
+                    setTextColor(muted)
+                    setPadding(0, dp(5), 0, 0)
+                })
+                setOnClickListener { action() }
+            }
+        root.addView(settingRow("اللغة", "العربية والإنجليزية والفرنسية والإسبانية", showLanguagePicker),
+            LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
+        root.addView(settingRow("الإشعارات", "التحكم في تنبيهات المقالات الجديدة", showNotificationSettings),
+            LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
+        root.addView(settingRow("الخط وحجم النص", "تخصيص عائلة الخط وحجم القراءة", showTypographySettings),
+            LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
+
         root.addView(TextView(activity).apply {
             text = "MARCO RX6  •  BLUE EXPERIENCE"
             textSize = 9f
@@ -145,7 +181,12 @@ internal class AppearanceSettingsController(
             setTextColor(muted)
             setPadding(0, dp(24), 0, dp(10))
         })
-        setContentView(root)
+        val scroll = android.widget.ScrollView(activity).apply {
+            isFillViewport = true
+            isVerticalScrollBarEnabled = false
+            addView(root, android.widget.ScrollView.LayoutParams(-1, -2))
+        }
+        setContentView(scroll)
         activity.window.statusBarColor = bg
         activity.window.navigationBarColor = bg
     }
