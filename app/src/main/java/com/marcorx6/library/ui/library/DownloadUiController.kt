@@ -25,6 +25,7 @@ internal class DownloadUiController(
     private val activity: Activity,
     private val downloadRepository: DownloadRepository,
     private val styleDialog: (AlertDialog) -> Unit,
+    private val isDarkMode: () -> Boolean,
     private val setContentView: (View) -> Unit,
     private val onBack: () -> Unit
 ) {
@@ -62,8 +63,7 @@ internal class DownloadUiController(
 
     fun showDownloadManager() {
         fun dp(value: Int): Int = (value * activity.resources.displayMetrics.density).toInt()
-        val dark = (activity.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
-            android.content.res.Configuration.UI_MODE_NIGHT_YES
+        val dark = isDarkMode()
         val background = if (dark) Color.rgb(7, 17, 31) else Color.rgb(242, 247, 253)
         val surface = if (dark) Color.rgb(15, 35, 58) else Color.WHITE
         val primary = Color.rgb(42, 145, 255)
