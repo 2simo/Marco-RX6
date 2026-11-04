@@ -61,7 +61,7 @@ internal class SideMenuController(
         brand.addView(makeText("RX6", 27f, white, true))
         top.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
         top.addView(TextView(activity).apply {
-            text = "×"; textSize = 30f; setTextColor(if (isDark()) Color.LTGRAY else Color.rgb(67, 76, 94)); gravity = Gravity.CENTER
+            text = "×"; textSize = 30f; setTextColor(if (isDark()) Color.LTGRAY else Color.rgb(29, 58, 91)); gravity = Gravity.CENTER
             setPadding(dp(12), 0, dp(12), 0); setOnClickListener { drawer.dismiss() }
         })
         panel.addView(top)
@@ -82,7 +82,7 @@ internal class SideMenuController(
             }
             val iconView = TextView(activity).apply {
                 text = icon; textSize = 17f; gravity = Gravity.CENTER
-                setTextColor(if (isDark()) Color.WHITE else Color.rgb(68, 76, 96))
+                setTextColor(if (isDark()) Color.WHITE else Color.rgb(25, 91, 157))
                 background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
                     if (isDark()) intArrayOf(Color.rgb(38, 133, 230), Color.rgb(15, 70, 135)) else intArrayOf(Color.rgb(220, 239, 255), Color.rgb(195, 222, 250))).apply {
                     cornerRadius = dp(12).toFloat()
@@ -91,7 +91,7 @@ internal class SideMenuController(
                 setPadding(dp(11), dp(9), dp(11), dp(9)); minWidth = dp(42)
             }
             val labels = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
-            labels.addView(makeText(label, 14f, white, true))
+            labels.addView(makeText(label, 14f, if (isDark()) white else Color.rgb(27, 43, 63), true))
             if (detail.isNotBlank()) labels.addView(makeText(detail, 10f, gray, false).apply { setPadding(0, dp(4), 0, 0) })
             row.addView(iconView, LinearLayout.LayoutParams(-2, -2).apply { marginEnd = dp(12) })
             row.addView(labels, LinearLayout.LayoutParams(0, -2, 1f))
@@ -119,7 +119,7 @@ internal class SideMenuController(
             openLink("https://2simo.github.io/Marco-RX6/delete-account.html")
         }
         panel.addView(View(activity), LinearLayout.LayoutParams(1, dp(12)))
-        panel.addView(makeText("MARCO RX6  •  PREMIUM", 9f, gray, true).apply { gravity = Gravity.CENTER; setPadding(0, dp(16), 0, dp(4)) })
+        panel.addView(makeText("MARCO RX6  •  PREMIUM", 9f, if (isDark()) gray else Color.rgb(82, 108, 139), true).apply { gravity = Gravity.CENTER; setPadding(0, dp(16), 0, dp(4)) })
         val menuScroll = ScrollView(activity).apply {
             isFillViewport = true; isVerticalScrollBarEnabled = false
             addView(panel, ViewGroup.LayoutParams(-1, -2))
