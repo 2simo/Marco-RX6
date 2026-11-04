@@ -40,13 +40,39 @@ internal class AppearanceUiFactory(
     private val accentForeground: () -> Int
 ) {
 
+    private fun glassRipple(): android.graphics.drawable.Drawable =
+        android.graphics.drawable.RippleDrawable(
+            android.content.res.ColorStateList.valueOf(
+                if (isDarkMode()) Color.argb(78, 83, 177, 255) else Color.argb(58, 35, 126, 224)
+            ),
+            null,
+            android.graphics.drawable.ColorDrawable(Color.WHITE)
+        )
+
+    private fun installGlassInteraction(view: View) {
+        if (!view.isClickable && !view.isLongClickable) return
+        if (android.os.Build.VERSION.SDK_INT >= 23 && view.foreground == null) {
+            view.foreground = glassRipple()
+        } else if (view.background != null && view.background !is android.graphics.drawable.RippleDrawable) {
+            val base = view.background.constantState?.newDrawable()?.mutate() ?: view.background.mutate()
+            view.background = android.graphics.drawable.RippleDrawable(
+                android.content.res.ColorStateList.valueOf(
+                    if (isDarkMode()) Color.argb(78, 83, 177, 255) else Color.argb(58, 35, 126, 224)
+                ),
+                base,
+                android.graphics.drawable.ColorDrawable(Color.WHITE)
+            )
+        }
+    }
+
     fun stylePrimaryButton(button: Button, primary: Boolean = false) {
         button.background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
             if (primary) intArrayOf(Color.rgb(42, 145, 255), Color.rgb(24, 91, 205))
-            else if (isDarkMode()) intArrayOf(Color.rgb(24, 48, 76), Color.rgb(13, 29, 49))
-            else intArrayOf(Color.rgb(250, 251, 255), Color.rgb(232, 237, 247))).apply {
-            cornerRadius = dp(14).toFloat()
-            if (!primary) setStroke(dp(1), if (isDarkMode()) Color.rgb(55, 83, 113) else Color.rgb(211, 219, 232))
+            else if (isDarkMode()) intArrayOf(Color.argb(205, 24, 58, 91), Color.argb(190, 10, 29, 49))
+            else intArrayOf(Color.argb(218, 255, 255, 255), Color.argb(205, 225, 239, 253))).apply {
+            cornerRadius = dp(16).toFloat()
+            setStroke(dp(1), if (primary) Color.argb(170, 119, 194, 255)
+                else if (isDarkMode()) Color.argb(165, 84, 157, 220) else Color.argb(175, 154, 198, 239))
         }
         button.setTextColor(if (primary) accentForeground() else white())
         button.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
@@ -57,9 +83,11 @@ internal class AppearanceUiFactory(
         button.minWidth = dp(48)
         button.setPadding(dp(16), dp(10), dp(16), dp(10))
         button.stateListAnimator = null
+        installGlassInteraction(button)
     }
 
     fun applyUnifiedSkin(view: View) {
+        installGlassInteraction(view)
         when (view) {
             is EditText -> {
                 view.background = GradientDrawable().apply {
