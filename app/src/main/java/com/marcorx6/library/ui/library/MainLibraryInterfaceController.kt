@@ -82,7 +82,7 @@ internal class MainLibraryInterfaceController(
         // MARCO RX6 visual system: midnight-blue surfaces with electric-blue accents.
         val silver = if (isDarkMode()) Color.rgb(226, 232, 242) else Color.rgb(43, 52, 68)
         val muted = gray
-        val violet = red
+        val accentBlue = red
         val ink = bg
         val glass = panel
         val root = LinearLayout(context).apply {
@@ -127,9 +127,9 @@ internal class MainLibraryInterfaceController(
             contentDescription = label
             setOnClickListener { action() }
         }
-        header.addView(headerAction("♧", "الإشعارات") { showNotificationSettings() },
+        header.addView(headerAction("♧", tr("الإشعارات")) { showNotificationSettings() },
             LinearLayout.LayoutParams(dp(43), dp(43)).apply { marginEnd = dp(8) })
-        header.addView(headerAction("⚙", "الإعدادات") { showAppearanceSettings() },
+        header.addView(headerAction("⚙", tr("الإعدادات")) { showAppearanceSettings() },
             LinearLayout.LayoutParams(dp(43), dp(43)).apply { marginEnd = dp(8) })
 
         root.addView(header)
@@ -144,13 +144,13 @@ internal class MainLibraryInterfaceController(
             setPadding(dp(18), dp(17), dp(18), dp(17))
             elevation = dp(3).toFloat()
         }
-        welcomePanel.addView(makeText("YOUR NEXT GAME STARTS HERE", 9f, Color.rgb(215, 235, 255), true).apply {
+        welcomePanel.addView(makeText(tr("YOUR NEXT GAME STARTS HERE"), 9f, Color.rgb(215, 235, 255), true).apply {
             letterSpacing = 0.12f
         })
-        welcomePanel.addView(makeText("اكتشف عالم الألعاب", 21f, Color.WHITE, true).apply {
+        welcomePanel.addView(makeText(tr("اكتشف عالم الألعاب"), 21f, Color.WHITE, true).apply {
             setPadding(0, dp(5), 0, dp(3))
         })
-        welcomePanel.addView(makeText("تصفح مكتبتك واختر مغامرتك القادمة", 11f, Color.rgb(224, 239, 255), false))
+        welcomePanel.addView(makeText(tr("تصفح مكتبتك واختر مغامرتك القادمة"), 11f, Color.rgb(224, 239, 255), false))
         root.addView(welcomePanel, LinearLayout.LayoutParams(-1, -2).apply {
             bottomMargin = dp(15)
         })
@@ -209,9 +209,9 @@ internal class MainLibraryInterfaceController(
                     "GBA" -> "GBA"
                     "BLOG" -> tr("المدونة")
                     "FAVORITES" -> tr("المفضلة")
-                    "WANT_TO_PLAY" -> "أريد لعبها"
-                    "PLAYING" -> "ألعبها حالياً"
-                    "COMPLETED" -> "أنهيتها"
+                    "WANT_TO_PLAY" -> tr("أريد لعبها")
+                    "PLAYING" -> tr("ألعبها حالياً")
+                    "COMPLETED" -> tr("أنهيتها")
                     else -> category
                 }
                 tag = category
@@ -226,7 +226,7 @@ internal class MainLibraryInterfaceController(
             }
             filters.addView(chip, LinearLayout.LayoutParams(-2, -2).apply { marginEnd = dp(7) })
         }
-        root.addView(makeText("اختر المنصة", 11f, red, true).apply {
+        root.addView(makeText(tr("اختر المنصة"), 11f, red, true).apply {
             setPadding(dp(2), dp(2), dp(2), dp(7))
         })
         filterScroll.addView(filters)
@@ -237,10 +237,10 @@ internal class MainLibraryInterfaceController(
             gravity = Gravity.CENTER_VERTICAL
         }
         val titles = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
-        titles.addView(makeText("MARCO RX6  /  GAMES", 8f, violet, true).apply { letterSpacing = 0.14f })
+        titles.addView(makeText("MARCO RX6  /  GAMES", 8f, accentBlue, true).apply { letterSpacing = 0.14f })
         titles.addView(makeText(tr("اكتشف الألعاب"), 21f, silver, true))
         section.addView(titles, LinearLayout.LayoutParams(0, -2, 1f))
-        countText = makeText("0 " + tr("مقال"), 10f, muted, true)
+        countText = makeText("0 " + tr("لعبة"), 10f, muted, true)
         section.addView(countText)
         val sort = TextView(context).apply {
             text = "⇅"
@@ -255,9 +255,9 @@ internal class MainLibraryInterfaceController(
             setOnClickListener {
                 sortMode = when (sortMode) { "LATEST" -> "NEW"; "NEW" -> "A-Z"; "A-Z" -> "FAVORITES"; else -> "LATEST" }
                 renderGames()
-                Toast.makeText(context, "الترتيب: " + when (sortMode) {
+                Toast.makeText(context, tr("الترتيب:") + " " + tr(when (sortMode) {
                     "LATEST" -> "الأحدث"; "NEW" -> "المضاف حديثاً"; "A-Z" -> "أبجدياً"; else -> "المفضلة"
-                }, Toast.LENGTH_SHORT).show()
+                }), Toast.LENGTH_SHORT).show()
             }
         }
         section.addView(sort, LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(9) })
@@ -270,7 +270,7 @@ internal class MainLibraryInterfaceController(
             setPadding(dp(12), dp(8), dp(12), dp(8))
             minWidth = dp(48)
             minHeight = dp(48)
-            contentDescription = "الفلاتر المتقدمة"
+            contentDescription = tr("الفلاتر المتقدمة")
             setOnClickListener { showAdvancedFilters() }
         }
         section.addView(advancedFilter, LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(7) })
@@ -389,8 +389,8 @@ internal class MainLibraryInterfaceController(
         dockItem("LIBRARY", "♡", tr("المفضلة")) {
             selected = "FAVORITES"; renderGames(); pageScroll.smoothScrollTo(0, 0)
         }
-        dockItem("DOWNLOADS", "⬇", "التنزيلات") { showDownloads() }
-        dockItem("EXPLORE", "⌕", "استكشف") {
+        dockItem("DOWNLOADS", "⬇", tr("التنزيلات")) { showDownloads() }
+        dockItem("EXPLORE", "⌕", tr("استكشف")) {
             search.requestFocus()
             pageScroll.smoothScrollTo(0, 0)
             (context.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager)
