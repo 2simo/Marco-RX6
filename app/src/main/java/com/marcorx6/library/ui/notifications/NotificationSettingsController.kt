@@ -42,6 +42,16 @@ internal class NotificationSettingsController(
                 }
             }
             .show()
-            .also(styleDialog)
+            .also { dialog ->
+                styleDialog(dialog)
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.apply {
+                    minHeight = (48 * activity.resources.displayMetrics.density).toInt()
+                    contentDescription = text
+                }
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.apply {
+                    minHeight = (48 * activity.resources.displayMetrics.density).toInt()
+                    contentDescription = text
+                }
+            }
     }
 }
