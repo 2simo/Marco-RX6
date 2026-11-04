@@ -3,6 +3,16 @@ package com.marcorx6.library.ui
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.DownloadManager
+import android.app.Dialog
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
+import android.view.Gravity
+import android.view.View
+import android.view.Window
+import android.view.WindowManager
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TextView
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
@@ -52,9 +62,98 @@ internal class DownloadUiController(
     }
 
     fun showDownloadManager() {
-        val entries = try {
-            downloadRepository.getDownloads().map { item ->
-                val statusText = when (item.status) {
+        fun dp(value: Int): Int = (value * activity.resources.displayMetrics.density).toInt()
+        val dark = (activity.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
+            android.content.res.Configuration.UI_MODE_NIGHT_YES
+        val background = if (dark) Color.rgb(7, 17, 31) else Color.rgb(242, 247, 253)
+        val surface = if (dark) Color.rgb(15, 35, 58) else Color.WHITE
+        val primary = Color.rgb(42, 145, 255)
+        val heading = if (dark) Color.WHITE else Color.rgb(22, 43, 65)
+        val muted = if (dark) Color.rgb(164, 184, 207) else Color.rgb(91, 112, 137)
+        val dialog = Dialog(activity)
+        val root = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(background)
+            setPadding(dp(18), dp(18), dp(18), dp(12))
+        }
+        val header = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val titleBox = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
+        titleBox.addView(TextView(activity).apply {
+            text = "MARCO RX6  /  DOWNLOADS"
+            textSize = 9f
+            letterSpacing = 0.12f
+            setTextColor(primary)
+        })
+        titleBox.addView(TextView(activity).apply {
+            text = "التنزيلات"
+            textSize = 25f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(heading)
+            setPadding(0, dp(4), 0, 0)
+        })
+        header.addView(titleBox, LinearLayout.LayoutParams(0, -2, 1f))
+        header.addView(TextView(activity).apply {
+            text = "×"
+            textSize = 30f
+            gravity = Gravity.CENTER
+            setTextColor(muted)
+            setOnClickListener { dialog.dismiss() }
+        }, LinearLayout.LayoutParams(dp(44), dp(44)))
+        root.addView(header)
+        root.addView(TextView(activity).apply {
+            text = "تابع حالة ملفات الألعاب التي أضفتها إلى التنزيلات"
+            textSize = 12f
+            setTextColor(muted)
+            setPadding(0, dp(7), 0, dp(18))
+        })
+        val list = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
+        val scroll = ScrollView(activity).apply {
+            isFillViewport = true
+            isVerticalScrollBarEnabled = false
+            addView(list, ScrollView.LayoutParams(-1, -2))
+        }
+        fun render() {
+            list.removeAllViews()
+            val entries = try { downloadRepository.getDownloads() } catch (error: Exception) {
+                Toast.makeText(activity, "تعذر قراءة التنزيلات: ${error.message}", Toast.LENGTH_LONG).show()
+                emptyList()
+            }
+            if (entries.isEmpty()) {
+                val empty = LinearLayout(activity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    gravity = Gravity.CENTER
+                    setPadding(dp(24), dp(42), dp(24), dp(42))
+                    background = GradientDrawable().apply {
+                        setColor(surface); cornerRadius = dp(22).toFloat()
+                        setStroke(dp(1), if (dark) Color.rgb(42, 82, 126) else Color.rgb(198, 220, 244))
+                    }
+                }
+                empty.addView(TextView(activity).apply {
+                    text = "↓"
+                    textSize = 42f
+                    gravity = Gravity.CENTER
+                    setTextColor(primary)
+                })
+                empty.addView(TextView(activity).apply {
+                    text = "ما كايناش تنزيلات دابا"
+                    textSize = 17f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    setTextColor(heading)
+                    gravity = Gravity.CENTER
+                    setPadding(0, dp(10), 0, dp(6))
+                })
+                empty.addView(TextView(activity).apply {
+                    text = "اختار لعبة، ومن صفحة التفاصيل أضف رابط التحميل باش يبان هنا."
+                    textSize = 12f
+                    setTextColor(muted)
+                    gravity = Gravity.CENTER
+                })
+                list.addView(empty, LinearLayout.LayoutParams(-1, -2))
+            } else entries.forEach { item ->
+                val status = when (item.status) {
                     DownloadManager.STATUS_PENDING -> "في الانتظار"
                     DownloadManager.STATUS_RUNNING -> "قيد التنزيل"
                     DownloadManager.STATUS_PAUSED -> "متوقف مؤقتاً"
@@ -62,42 +161,74 @@ internal class DownloadUiController(
                     DownloadManager.STATUS_FAILED -> "فشل"
                     else -> "غير معروف"
                 }
-                val progress = if (item.totalBytes > 0L) " • ${(item.downloadedBytes * 100L / item.totalBytes).coerceIn(0L, 100L)}%" else ""
-                "${item.title}\\n$statusText$progress"
-            }
-        } catch (error: Exception) {
-            Toast.makeText(activity, "تعذر قراءة التنزيلات: ${error.message}", Toast.LENGTH_LONG).show()
-            return
-        }
-        val message = if (entries.isEmpty()) {
-            "لا توجد تنزيلات مسجلة حتى الآن. افتح تفاصيل لعبة واضغط على رابط التنزيل لإضافته هنا."
-        } else {
-            entries.joinToString("\n\n")
-        }
-        val dialog = AlertDialog.Builder(activity)
-            .setTitle("مدير التنزيلات • ${entries.size}")
-            .setMessage(message)
-            .setPositiveButton("تحديث", null)
-            .setNeutralButton("فتح التنزيلات", null)
-            .setNegativeButton("إغلاق", null)
-            .create().apply {
-                setOnShowListener {
-                    getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                        dismiss()
-                        showDownloadManager()
-                    }
-                    getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
-                        try {
-                            activity.startActivity(Intent(DownloadManager.ACTION_VIEW_DOWNLOADS))
-                        } catch (_: Exception) {
-                            Toast.makeText(activity, "تعذر فتح مدير تنزيلات النظام", Toast.LENGTH_SHORT).show()
-                        }
-                        dismiss()
+                val percent = if (item.totalBytes > 0L)
+                    (item.downloadedBytes * 100L / item.totalBytes).coerceIn(0L, 100L).toInt() else 0
+                val card = LinearLayout(activity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(dp(15), dp(14), dp(15), dp(14))
+                    background = GradientDrawable().apply {
+                        setColor(surface); cornerRadius = dp(17).toFloat()
+                        setStroke(dp(1), if (dark) Color.rgb(42, 82, 126) else Color.rgb(198, 220, 244))
                     }
                 }
+                card.addView(TextView(activity).apply {
+                    text = item.title
+                    textSize = 14f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    setTextColor(heading)
+                })
+                card.addView(TextView(activity).apply {
+                    text = if (item.totalBytes > 0L) "$status  •  $percent%" else status
+                    textSize = 11f
+                    setTextColor(primary)
+                    setPadding(0, dp(6), 0, 0)
+                })
+                if (item.totalBytes > 0L && item.status == DownloadManager.STATUS_RUNNING) {
+                    val progress = android.widget.ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
+                        max = 100; this.progress = percent
+                        progressTintList = android.content.res.ColorStateList.valueOf(primary)
+                    }
+                    card.addView(progress, LinearLayout.LayoutParams(-1, dp(6)).apply { topMargin = dp(10) })
+                }
+                list.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
             }
+        }
+        render()
+        root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
+        val actions = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, dp(12), 0, 0)
+        }
+        fun action(label: String, filled: Boolean, onClick: () -> Unit) = TextView(activity).apply {
+            text = label
+            textSize = 12f
+            gravity = Gravity.CENTER
+            setTextColor(if (filled) Color.WHITE else primary)
+            background = GradientDrawable().apply {
+                setColor(if (filled) primary else surface)
+                cornerRadius = dp(14).toFloat()
+                if (!filled) setStroke(dp(1), primary)
+            }
+            setPadding(dp(14), dp(13), dp(14), dp(13))
+            setOnClickListener { onClick() }
+        }
+        actions.addView(action("تحديث", false) { render() }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(7) })
+        actions.addView(action("تنزيلات النظام", true) {
+            try { activity.startActivity(Intent(DownloadManager.ACTION_VIEW_DOWNLOADS)) }
+            catch (_: Exception) { Toast.makeText(activity, "تعذر فتح مدير تنزيلات النظام", Toast.LENGTH_SHORT).show() }
+        }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(7) })
+        root.addView(actions)
+        dialog.setContentView(root)
         dialog.show()
-        styleDialog(dialog)
+        dialog.window?.apply {
+            setBackgroundDrawableResource(android.R.color.transparent)
+            setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT)
+            addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+            statusBarColor = background
+            navigationBarColor = background
+            decorView.systemUiVisibility = if (dark) 0 else View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+        }
     }
 
     fun openGameLink(link: String) {
