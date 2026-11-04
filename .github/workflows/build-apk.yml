@@ -84,10 +84,10 @@ jobs:
           test -n "$RELEASE_CERT"
           test "$DEBUG_CERT" = "$RELEASE_CERT"
 
-      - name: Upload signed Release APK for device testing
+      - name: Upload Release APK for device testing
         uses: actions/upload-artifact@v7
         with:
-          name: marco-rx6-signed-release-apk
+          name: marco-rx6-release-apk
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 3
