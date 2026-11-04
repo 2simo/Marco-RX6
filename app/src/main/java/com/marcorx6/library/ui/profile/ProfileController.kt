@@ -61,6 +61,7 @@ internal class ProfileController(
             }
         }
         val avatar = ImageView(activity).apply {
+            contentDescription = tr("الصورة الشخصية")
             scaleType = ImageView.ScaleType.CENTER_CROP
             background = rounded(if (dark) Color.rgb(36, 65, 91) else Color.WHITE, 48)
             clipToOutline = true
@@ -85,6 +86,7 @@ internal class ProfileController(
         })
         identity.addView(makeText("MARCO RX6  •  GAMER", 9f, if (dark) Color.rgb(191, 211, 230) else Color.rgb(79, 105, 129), true))
         hero.addView(identity, LinearLayout.LayoutParams(0, -2, 1f))
+        hero.contentDescription = tr("تغيير الصورة الشخصية")
         hero.isClickable = true
         hero.isFocusable = true
         hero.setOnClickListener { chooseAvatar() }
@@ -181,7 +183,7 @@ internal class ProfileController(
                         }
                     }
                     .setNegativeButton(tr("إغلاق"), null)
-                    .show()
+                    .show().also(styleAlertDialog)
             }
         }
         box.addView(storageCard, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
@@ -207,6 +209,8 @@ internal class ProfileController(
             }
             addView(copy, LinearLayout.LayoutParams(0, -2, 1f))
             addView(makeText("‹", 22f, gray(), true))
+            minHeight = dp(56)
+            contentDescription = "$label. $detail"
             isClickable = true
             isFocusable = true
             setOnClickListener { action() }
@@ -222,8 +226,11 @@ internal class ProfileController(
         header.addView(makeText(tr("الملف الشخصي"), 23f, white(), true), LinearLayout.LayoutParams(0, -2, 1f))
         header.addView(makeText("‹", 30f, Color.rgb(75, 165, 255), true).apply {
             gravity = Gravity.CENTER
+            contentDescription = tr("رجوع")
+            minWidth = dp(48)
+            minHeight = dp(48)
             setOnClickListener { onBack() }
-        }, LinearLayout.LayoutParams(dp(44), dp(44)))
+        }, LinearLayout.LayoutParams(dp(48), dp(48)))
         box.addView(header, 0)
 
         val saveButton = TextView(activity).apply {
@@ -233,6 +240,8 @@ internal class ProfileController(
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(Color.WHITE)
             background = rounded(Color.argb(224, 35, 132, 238), 16)
+            minHeight = dp(52)
+            contentDescription = tr("حفظ التغييرات")
             setPadding(dp(16), dp(15), dp(16), dp(15))
             setOnClickListener {
                 val nickname = input.text.toString().trim().ifBlank { "Player" }
