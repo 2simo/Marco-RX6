@@ -53,7 +53,7 @@ internal class AppearanceSettingsController(
         }
         val heading = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
         heading.addView(TextView(activity).apply {
-            text = translate(translate("MARCO RX6  /  PERSONALIZATION"))
+            text = "MARCO RX6  /  PERSONALIZATION"
             textSize = 9f
             letterSpacing = 0.12f
             setTextColor(blue)
@@ -76,7 +76,7 @@ internal class AppearanceSettingsController(
         }, LinearLayout.LayoutParams(dp(44), dp(44)))
         root.addView(header)
         root.addView(TextView(activity).apply {
-            text = translate(translate("خصص تجربة MARCO RX6 بالطريقة التي تناسبك"))
+            text = translate("خصص تجربة MARCO RX6 بالطريقة التي تناسبك")
             textSize = 12f
             setTextColor(muted)
             setPadding(0, dp(8), 0, dp(22))
@@ -85,24 +85,25 @@ internal class AppearanceSettingsController(
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(16), dp(16), dp(16))
             background = GradientDrawable().apply {
-                setColor(if (dark) Color.argb(190, 15, 43, 70) else Color.argb(198, 255, 255, 255)); cornerRadius = dp(18).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(42, 82, 126) else Color.rgb(198, 220, 244))
+                setColors(if (dark) intArrayOf(Color.argb(222, 23, 68, 110), Color.argb(208, 8, 27, 47)) else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(216, 224, 240, 255)))
+                cornerRadius = dp(20).toFloat()
+                setStroke(dp(1), if (dark) Color.argb(165, 80, 151, 215) else Color.argb(175, 153, 195, 236))
             }
         }
         colorCard.addView(TextView(activity).apply {
-            text = translate(translate("اللون الرئيسي"))
+            text = translate("اللون الرئيسي")
             textSize = 16f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(ink)
         })
         colorCard.addView(TextView(activity).apply {
-            text = translate(translate("أزرق كهربائي  •  اللون الرسمي للتطبيق"))
+            text = translate("أزرق كهربائي  •  اللون الرسمي للتطبيق")
             textSize = 12f
             setTextColor(muted)
             setPadding(0, dp(8), 0, dp(12))
         })
         colorCard.addView(TextView(activity).apply {
-            text = translate(translate("●   أزرق"))
+            text = translate("●   أزرق")
             textSize = 14f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(Color.WHITE)
@@ -117,18 +118,19 @@ internal class AppearanceSettingsController(
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(16), dp(16), dp(16))
             background = GradientDrawable().apply {
-                setColor(if (dark) Color.argb(190, 15, 35, 58) else Color.argb(198, 255, 255, 255)); cornerRadius = dp(18).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(42, 82, 126) else Color.rgb(198, 220, 244))
+                setColors(if (dark) intArrayOf(Color.argb(222, 23, 68, 110), Color.argb(208, 8, 27, 47)) else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(216, 224, 240, 255)))
+                cornerRadius = dp(20).toFloat()
+                setStroke(dp(1), if (dark) Color.argb(165, 80, 151, 215) else Color.argb(175, 153, 195, 236))
             }
         }
         animations.addView(TextView(activity).apply {
-            text = translate(translate("حركات وانتقالات الواجهة"))
+            text = translate("حركات وانتقالات الواجهة")
             textSize = 16f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(ink)
         })
         val toggle = TextView(activity).apply {
-            text = translate(if (preferences.getBoolean("animations", true)) translate("الحركات مفعّلة  ✓") else translate("الحركات متوقفة"))
+            text = translate(if (preferences.getBoolean("animations", true)) "الحركات مفعّلة  ✓" else "الحركات متوقفة")
             textSize = 13f
             gravity = Gravity.CENTER
             setTextColor(if (preferences.getBoolean("animations", true)) Color.WHITE else blue)
@@ -143,14 +145,14 @@ internal class AppearanceSettingsController(
                 val enabled = !preferences.getBoolean("animations", true)
                 preferences.edit().putBoolean("animations", enabled).apply()
                 applyMotionPreferences(activity.window.decorView)
-                text = translate(if (enabled) translate("الحركات مفعّلة  ✓") else translate("الحركات متوقفة"))
+                text = translate(if (enabled) "الحركات مفعّلة  ✓" else "الحركات متوقفة")
                 setTextColor(if (enabled) Color.WHITE else blue)
                 background = GradientDrawable().apply {
                     setColor(if (enabled) Color.argb(218, 42, 145, 255) else if (dark) Color.argb(190, 15, 35, 58) else Color.argb(210, 255, 255, 255))
                     cornerRadius = dp(14).toFloat()
                     if (!enabled) setStroke(dp(1), blue)
                 }
-                Toast.makeText(activity, translate(if (enabled) translate("تم تفعيل انتقالات الواجهة") else translate("تم إيقاف انتقالات الواجهة")), Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity, translate(if (enabled) "تم تفعيل انتقالات الواجهة" else "تم إيقاف انتقالات الواجهة"), Toast.LENGTH_SHORT).show()
             }
         }
         animations.addView(toggle, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
@@ -161,12 +163,13 @@ internal class AppearanceSettingsController(
                 orientation = LinearLayout.VERTICAL
                 setPadding(dp(16), dp(14), dp(16), dp(14))
                 background = GradientDrawable().apply {
-                    setColor(if (dark) Color.argb(190, 15, 43, 70) else Color.argb(198, 255, 255, 255))
-                    cornerRadius = dp(17).toFloat()
-                    setStroke(dp(1), if (dark) Color.rgb(42, 82, 126) else Color.rgb(198, 220, 244))
+                    setColors(if (dark) intArrayOf(Color.argb(220, 21, 63, 102), Color.argb(207, 8, 27, 47)) else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(216, 224, 240, 255)))
+                    cornerRadius = dp(18).toFloat()
+                    setStroke(dp(1), if (dark) Color.argb(165, 80, 151, 215) else Color.argb(175, 153, 195, 236))
                 }
                 isClickable = true
                 isFocusable = true
+                elevation = dp(2).toFloat()
                 addView(TextView(activity).apply {
                     text = title
                     textSize = 15f
@@ -183,27 +186,33 @@ internal class AppearanceSettingsController(
                 setOnClickListener { action() }
             }
         root.addView(settingRow(
-            translate(translate("المظهر")),
+            translate("المظهر"),
             translate(if (dark) translate("الوضع الليلي مفعّل — اضغط للتبديل إلى الوضع النهاري")
             else translate("الوضع النهاري مفعّل — اضغط للتبديل إلى الوضع الليلي"))
         ) {
             preferences.edit().putBoolean("dark_mode", !dark).apply()
             recreateActivity()
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
-        root.addView(settingRow(translate(translate("اللغة")), translate(translate("العربية والإنجليزية والفرنسية والإسبانية")), showLanguagePicker),
+        root.addView(settingRow(translate("اللغة"), translate("العربية والإنجليزية والفرنسية والإسبانية"), showLanguagePicker),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
-        root.addView(settingRow(translate(translate("الإشعارات")), translate(translate("التحكم في تنبيهات المقالات الجديدة")), showNotificationSettings),
+        root.addView(settingRow(translate("الإشعارات"), translate("التحكم في تنبيهات المقالات الجديدة"), showNotificationSettings),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
-        root.addView(settingRow(translate(translate("الخط وحجم النص")), translate(translate("تخصيص عائلة الخط وحجم القراءة")), showTypographySettings),
+        root.addView(settingRow(translate("الخط وحجم النص"), translate("تخصيص عائلة الخط وحجم القراءة"), showTypographySettings),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
 
         root.addView(TextView(activity).apply {
-            text = translate(translate("MARCO RX6  •  BLUE EXPERIENCE"))
+            text = "MARCO RX6  •  BLUE EXPERIENCE"
             textSize = 9f
             gravity = Gravity.CENTER
             setTextColor(muted)
             setPadding(0, dp(24), 0, dp(10))
         })
+        applyMotionPreferences(root)
+        if (preferences.getBoolean("animations", true)) {
+            root.alpha = 0f
+            root.translationY = dp(10).toFloat()
+            root.animate().alpha(1f).translationY(0f).setDuration(260L).start()
+        }
         val scroll = android.widget.ScrollView(activity).apply {
             isFillViewport = true
             isVerticalScrollBarEnabled = false
