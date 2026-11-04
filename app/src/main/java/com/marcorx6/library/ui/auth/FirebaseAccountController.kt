@@ -500,7 +500,15 @@ internal class FirebaseAccountController(
             gravity = Gravity.END
             setTextColor(Color.rgb(75, 165, 255))
             minHeight = dp(48)
-            contentDescription = translate("إظهار أو إخفاء كلمة المرور")
+            minWidth = dp(48)
+            contentDescription = translate("إظهار كلمة المرور")
+            isClickable = true
+            isFocusable = true
+            if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
+                android.content.res.ColorStateList.valueOf(Color.argb(72, 75, 165, 255)),
+                null,
+                android.graphics.drawable.ColorDrawable(Color.WHITE)
+            )
             setPadding(0, dp(3), 0, dp(12))
             setOnClickListener {
                 passwordVisible = !passwordVisible
@@ -511,6 +519,8 @@ internal class FirebaseAccountController(
                 password.setSelection(password.text.length)
                 confirmPassword?.let { it.setSelection(it.text.length) }
                 text = translate(if (passwordVisible) "إخفاء كلمة المرور" else "إظهار كلمة المرور")
+                contentDescription = text
+                sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent.TYPE_VIEW_SELECTED)
             }
         }
         page.addView(visibilityToggle)
@@ -521,7 +531,15 @@ internal class FirebaseAccountController(
                 gravity = Gravity.END
                 setTextColor(Color.rgb(75, 165, 255))
                 minHeight = dp(48)
+                minWidth = dp(48)
                 contentDescription = translate("نسيت كلمة المرور؟")
+                isClickable = true
+                isFocusable = true
+                if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
+                    android.content.res.ColorStateList.valueOf(Color.argb(72, 75, 165, 255)),
+                    null,
+                    android.graphics.drawable.ColorDrawable(Color.WHITE)
+                )
                 setPadding(0, dp(4), 0, dp(18))
                 setOnClickListener { showPasswordResetForm() }
             }
