@@ -31,13 +31,16 @@ internal class GameDetailsBottomBarFactory(
             setPadding(dp(12), dp(9), dp(12), dp(9))
             setBackgroundColor(panel())
         }
-        fun readerAction(label: String, action: () -> Unit) = TextView(activity).apply {
+        fun readerAction(label: String, action: () -> Unit, primary: Boolean = false) = TextView(activity).apply {
             text = label
             textSize = 12f
-            setTextColor(if (isDarkMode()) white() else Color.rgb(48, 57, 77))
+            setTextColor(if (primary || isDarkMode()) Color.WHITE else Color.rgb(48, 57, 77))
             gravity = android.view.Gravity.CENTER
             setTypeface(null, Typeface.BOLD)
-            background = rounded(
+            background = if (primary) android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(Color.rgb(42, 145, 255), Color.rgb(20, 91, 190))
+            ).apply { cornerRadius = dp(11).toFloat() } else rounded(
                 if (isDarkMode()) Color.rgb(20, 68, 117) else Color.rgb(222, 237, 255),
                 11
             )
@@ -46,7 +49,7 @@ internal class GameDetailsBottomBarFactory(
             setOnClickListener { action() }
         }
 
-        bottom.addView(readerAction(offlineLabel, onOffline), LinearLayout.LayoutParams(0, -2, 1.2f).apply {
+        bottom.addView(readerAction(offlineLabel, onOffline, primary = true), LinearLayout.LayoutParams(0, -2, 1.2f).apply {
             rightMargin = dp(6)
         })
         bottom.addView(readerAction(translate("مشاركة"), onShare), LinearLayout.LayoutParams(0, -2, 1f))
