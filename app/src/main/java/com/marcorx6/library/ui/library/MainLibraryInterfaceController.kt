@@ -238,6 +238,8 @@ internal class MainLibraryInterfaceController(
                 setTextColor(muted)
                 isClickable = true
                 isFocusable = true
+                minHeight = dp(56)
+                contentDescription = label
                 if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
                     android.content.res.ColorStateList.valueOf(Color.argb(75, 82, 175, 255)),
                     null,
@@ -397,9 +399,12 @@ internal class MainLibraryInterfaceController(
             activeDockTab = "LIBRARY"
         }
         val dockItems = linkedMapOf<String, LinearLayout>()
+        val dockLabels = linkedMapOf<String, String>()
         fun renderDockSelection() {
             dockItems.forEach { (tab, item) ->
                 val active = tab == activeDockTab
+                item.isSelected = active
+                item.contentDescription = dockLabels[tab] ?: tab
                 item.background = GradientDrawable(
                     GradientDrawable.Orientation.TL_BR,
                     if (active) {
@@ -449,6 +454,7 @@ internal class MainLibraryInterfaceController(
                 setPadding(dp(2), dp(3), dp(2), dp(2))
             })
             dockItems[key] = item
+            dockLabels[key] = label
             dock.addView(item, LinearLayout.LayoutParams(0, -2, 1f).apply {
                 marginStart = dp(3); marginEnd = dp(3)
             })
