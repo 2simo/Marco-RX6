@@ -131,6 +131,7 @@ class MainActivity : ComponentActivity() {
             dp = ::dp,
             white = { white },
             styleDialog = ::styleAlertDialog,
+            translate = ::tr,
             launchCoverPicker = activityResultRuntimeFeature::launchCoverPicker
         )
     }
@@ -166,6 +167,7 @@ class MainActivity : ComponentActivity() {
             saveCloudProfile = ::saveFirebaseProfile,
             launchAvatarPicker = activityResultRuntimeFeature::launchProfileAvatar,
             styleAlertDialog = ::styleAlertDialog,
+            translate = ::tr,
             applyUnifiedSkin = ::applyUnifiedSkin,
             applyMotionPreferences = ::applyMotionPreferences,
             onAvatarSaved = {
