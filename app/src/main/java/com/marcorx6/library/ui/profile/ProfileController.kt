@@ -150,6 +150,13 @@ internal class ProfileController(
         }
         dialog.show()
         styleAlertDialog(dialog)
+        dialog.window?.apply {
+            setBackgroundDrawableResource(android.R.color.transparent)
+            setLayout(
+                android.view.WindowManager.LayoutParams.MATCH_PARENT,
+                android.view.WindowManager.LayoutParams.MATCH_PARENT
+            )
+        }
         applyUnifiedSkin(box)
     }
 }
