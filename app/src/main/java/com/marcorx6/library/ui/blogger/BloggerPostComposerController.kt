@@ -58,13 +58,32 @@ internal class BloggerPostComposerController(
 
         val box = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(16), dp(10), dp(16), dp(16))
-            background = rounded(bg(), 18)
+            setPadding(dp(16), dp(12), dp(16), dp(18))
+            background = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
+                if (android.os.Build.VERSION.SDK_INT >= 23)
+                    intArrayOf(android.graphics.Color.argb(232, 13, 39, 65), android.graphics.Color.argb(224, 7, 22, 40))
+                else intArrayOf(bg(), panel())
+            ).apply {
+                cornerRadius = dp(22).toFloat()
+                setStroke(dp(1), android.graphics.Color.argb(115, 74, 153, 222))
+            }
+        }
+        fun addFormField(view: View) {
+            box.addView(view, LinearLayout.LayoutParams(-1, -2).apply {
+                bottomMargin = dp(9)
+            })
         }
         val intro = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(14), dp(13), dp(14), dp(13))
-            background = rounded(if (android.os.Build.VERSION.SDK_INT >= 23) android.graphics.Color.argb(205, 15, 43, 70) else panel(), 15)
+            background = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
+                intArrayOf(android.graphics.Color.argb(218, 25, 91, 151), android.graphics.Color.argb(195, 11, 39, 69))
+            ).apply {
+                cornerRadius = dp(17).toFloat()
+                setStroke(dp(1), android.graphics.Color.argb(130, 103, 177, 239))
+            }
         }
         intro.addView(makeText(
             translate(if (existing == null) "استوديو النشر • MARCO RX6" else "استوديو التحرير • MARCO RX6"),
@@ -108,7 +127,7 @@ internal class BloggerPostComposerController(
             setPadding(0, dp(8), 0, dp(6))
         })
         box.addView(preview, LinearLayout.LayoutParams(-1, dp(165)).apply {
-            bottomMargin = dp(8)
+            bottomMargin = dp(10)
         })
         loadCover(preview, pendingCoverLocalPath(), existing?.coverUrl ?: "")
         box.addView(Button(activity).apply {
@@ -119,16 +138,17 @@ internal class BloggerPostComposerController(
             setOnClickListener { chooseCover() }
         }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
         box.addView(makeText(translate("أقسام المقال • Labels من المدونة"), 10f, red(), true))
-        box.addView(labelsUi.button)
-        box.addView(genre)
-        box.addView(releaseYear)
-        box.addView(title)
+        labelsUi.button.textSize = 13f
+        addFormField(labelsUi.button)
+        addFormField(genre)
+        addFormField(releaseYear)
+        addFormField(title)
         box.addView(makeText("03 • " + translate("محتوى المقال"), 12f, red(), true).apply {
             setPadding(0, dp(12), 0, dp(5))
         })
-        box.addView(body, LinearLayout.LayoutParams(-1, dp(190)))
-        box.addView(coverUrl)
-        box.addView(link)
+        box.addView(body, LinearLayout.LayoutParams(-1, dp(190)).apply { bottomMargin = dp(9) })
+        addFormField(coverUrl)
+        addFormField(link)
 
         val scroll = ScrollView(activity).apply {
             isFillViewport = true
