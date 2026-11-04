@@ -26,18 +26,21 @@ internal class NotificationSettingsController(
                 else
                     translate("الإشعارات متوقفة. فعّلها ليصلك تنبيه عند نشر مقال جديد.")
             )
-            .setPositiveButton(translate(if (enabled) "إبقاء مفعّلة" else "تفعيل")) { _, _ ->
-                scheduler.setEnabled(true)
-                scheduler.schedule()
-                requestPermission()
-                Toast.makeText(activity, translate("تم تفعيل إشعارات المقالات الجديدة"), Toast.LENGTH_SHORT).show()
+            .setPositiveButton(translate(if (enabled) "حسناً" else "تفعيل")) { _, _ ->
+                if (!enabled) {
+                    scheduler.setEnabled(true)
+                    scheduler.schedule()
+                    requestPermission()
+                    Toast.makeText(activity, translate("تم تفعيل إشعارات المقالات الجديدة"), Toast.LENGTH_SHORT).show()
+                }
             }
-            .setNegativeButton(translate("إيقاف")) { _, _ ->
-                scheduler.setEnabled(false)
-                scheduler.cancel()
-                Toast.makeText(activity, translate("تم إيقاف الإشعارات"), Toast.LENGTH_SHORT).show()
+            .setNegativeButton(translate(if (enabled) "إيقاف" else "لاحقاً")) { _, _ ->
+                if (enabled) {
+                    scheduler.setEnabled(false)
+                    scheduler.cancel()
+                    Toast.makeText(activity, translate("تم إيقاف الإشعارات"), Toast.LENGTH_SHORT).show()
+                }
             }
-            .setNeutralButton(translate("إغلاق"), null)
             .show()
             .also(styleDialog)
     }
