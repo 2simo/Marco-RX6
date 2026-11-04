@@ -367,6 +367,11 @@ internal class FirebaseAccountController(
         }
         androidx.core.view.ViewCompat.requestApplyInsets(scroll)
         applyUnifiedSkin(page)
+        if (android.os.Build.VERSION.SDK_INT >= 16) {
+            page.alpha = 0f
+            page.translationY = dp(8).toFloat()
+            page.animate().alpha(1f).translationY(0f).setDuration(240L).start()
+        }
     }
 
     private fun accountInput(hintText: String, inputType: Int): EditText {
@@ -442,7 +447,7 @@ internal class FirebaseAccountController(
 
     private fun showEmailForm(createAccount: Boolean) {
         val page = createAccountFormPage(
-            if (createAccount) translate("إنشاء حساب جديد") else "تسجيل الدخول",
+            if (createAccount) translate("إنشاء حساب جديد") else translate("تسجيل الدخول"),
             if (createAccount) translate("أنشئ حساب MARCO RX6 لحفظ ملفك ومزامنة بياناتك.")
             else translate("سجّل الدخول للعودة إلى حساب MARCO RX6.")
         )
