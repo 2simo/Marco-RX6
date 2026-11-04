@@ -103,6 +103,7 @@ internal class FirebaseAccountController(
         }
         val stateTitle = TextView(activity).apply {
             text = when {
+                isAdminSession() -> translate("وضع المسؤول نشط")
                 user != null && !user.isAnonymous -> translate("مرحباً بعودتك")
                 user?.isAnonymous == true -> translate("أنت تستعمل التطبيق كزائر")
                 else -> translate("اختَر طريقة الدخول")
@@ -133,6 +134,7 @@ internal class FirebaseAccountController(
         hero.addView(stateTitle)
         val stateDetail = TextView(activity).apply {
             text = when {
+                isAdminSession() && user == null -> translate("جلسة Blogger وGoogle Drive مستقلة عن حساب التطبيق")
                 user != null && !user.isAnonymous -> listOfNotNull(user.displayName?.takeIf { it.isNotBlank() }, user.email).joinToString("  •  ") + if (isAdminSession()) "  •  " + translate("مسؤول نشط") else "  •  " + translate("مستخدم")
                 user?.isAnonymous == true -> translate("يمكنك الاستمرار دون حساب أو ربط حسابك لاحقاً")
                 else -> translate("احفظ ملفك الشخصي واستعمل مزايا الحساب على أجهزتك")
@@ -185,7 +187,12 @@ internal class FirebaseAccountController(
             action(translate("الدخول باستخدام Google"), translate("ربط حساب Google بحساب MARCO RX6"), primary = true, run = ::startFreshGoogleAccountSelection)
             action(translate("إنشاء حساب بالبريد الإلكتروني"), translate("حساب جديد مع كلمة مرور"), run = { showEmailForm(createAccount = true) })
             action(translate("الدخول بالبريد الإلكتروني"), translate("لديك حساب بالفعل؟"), run = { showEmailForm(createAccount = false) })
-            action(translate("دخول المسؤول"), translate("صلاحيات Blogger وGoogle Drive"), run = ::startAdminGoogleAccountSelection)
+            action(
+                translate(if (isAdminSession()) "إيقاف وضع المسؤول" else "دخول المسؤول"),
+                translate("صلاحيات Blogger وGoogle Drive"),
+                primary = isAdminSession(),
+                run = { if (isAdminSession()) signOutAdmin() else startAdminGoogleAccountSelection() }
+            )
             action(translate("نسيت كلمة المرور؟"), translate("استرجاع الوصول إلى حسابك"), run = ::showPasswordResetForm)
             if (user?.isAnonymous == true) {
                 action(translate("حذف بيانات جلسة الزائر"), translate("حذف ملف الزائر السحابي فقط"), run = { confirmAccountDeletion(user) })
