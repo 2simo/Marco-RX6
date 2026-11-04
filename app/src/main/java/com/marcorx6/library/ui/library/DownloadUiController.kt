@@ -27,6 +27,7 @@ internal class DownloadUiController(
     private val styleDialog: (AlertDialog) -> Unit,
     private val isDarkMode: () -> Boolean,
     private val setContentView: (View) -> Unit,
+    private val translate: (String) -> String,
     private val onBack: () -> Unit
 ) {
     fun enqueueGameDownload(
@@ -39,19 +40,19 @@ internal class DownloadUiController(
     ) {
         val secureLink = SecureUrlPolicy.toHttpsUrl(link)
         if (secureLink == null) {
-            Toast.makeText(activity, "رابط التنزيل غير آمن أو غير صالح؛ يجب استخدام HTTPS", Toast.LENGTH_LONG).show()
+            Toast.makeText(activity, translate("رابط التنزيل غير آمن أو غير صالح؛ يجب استخدام HTTPS"), Toast.LENGTH_LONG).show()
             return
         }
-        Toast.makeText(activity, "جارٍ التحقق من رابط الملف…", Toast.LENGTH_SHORT).show()
+        Toast.makeText(activity, translate("جارٍ التحقق من رابط الملف…"), Toast.LENGTH_SHORT).show()
         downloadRepository.enqueue(
             secureLink, title, userAgent, contentDisposition, hintedMimeType, referrer
         ) { result ->
             activity.runOnUiThread {
                 when (result) {
                     is DownloadStartResult.Enqueued ->
-                        Toast.makeText(activity, "تم التحقق من الملف وإضافته إلى مدير التنزيلات", Toast.LENGTH_LONG).show()
+                        Toast.makeText(activity, translate("تم التحقق من الملف وإضافته إلى مدير التنزيلات"), Toast.LENGTH_LONG).show()
                     is DownloadStartResult.OpenInBrowser -> {
-                        Toast.makeText(activity, "هذا رابط صفحة أو تعذّر التأكد أنه ملف مباشر؛ سيتم فتحه في المتصفح", Toast.LENGTH_LONG).show()
+                        Toast.makeText(activity, translate("هذا رابط صفحة أو تعذّر التأكد أنه ملف مباشر؛ سيتم فتحه في المتصفح"), Toast.LENGTH_LONG).show()
                         openGameLink(result.finalUrl)
                     }
                     is DownloadStartResult.Failed ->
@@ -97,7 +98,7 @@ internal class DownloadUiController(
             setTextColor(primary)
         })
         titleBox.addView(TextView(activity).apply {
-            text = "التنزيلات"
+            text = translate("التنزيلات")
             textSize = 25f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(heading)
@@ -114,7 +115,7 @@ internal class DownloadUiController(
         }, LinearLayout.LayoutParams(dp(44), dp(44)))
         root.addView(header)
         root.addView(TextView(activity).apply {
-            text = "تابع حالة ملفات الألعاب التي أضفتها إلى التنزيلات"
+            text = translate("تابع حالة ملفات الألعاب التي أضفتها إلى التنزيلات")
             textSize = 12f
             setTextColor(muted)
             setPadding(0, dp(7), 0, dp(18))
@@ -128,7 +129,7 @@ internal class DownloadUiController(
         fun render() {
             list.removeAllViews()
             val entries = try { downloadRepository.getDownloads() } catch (error: Exception) {
-                Toast.makeText(activity, "تعذر قراءة التنزيلات: ${error.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(activity, translate("تعذر قراءة التنزيلات: ${error.message}"), Toast.LENGTH_LONG).show()
                 emptyList()
             }
             if (entries.isEmpty()) {
@@ -148,7 +149,7 @@ internal class DownloadUiController(
                     setTextColor(primary)
                 })
                 empty.addView(TextView(activity).apply {
-                    text = "ما كايناش تنزيلات دابا"
+                    text = translate("ما كايناش تنزيلات دابا")
                     textSize = 17f
                     setTypeface(null, android.graphics.Typeface.BOLD)
                     setTextColor(heading)
@@ -156,7 +157,7 @@ internal class DownloadUiController(
                     setPadding(0, dp(10), 0, dp(6))
                 })
                 empty.addView(TextView(activity).apply {
-                    text = "اختار لعبة، ومن صفحة التفاصيل أضف رابط التحميل باش يبان هنا."
+                    text = translate("اختار لعبة، ومن صفحة التفاصيل أضف رابط التحميل باش يبان هنا.")
                     textSize = 12f
                     setTextColor(muted)
                     gravity = Gravity.CENTER
@@ -164,12 +165,12 @@ internal class DownloadUiController(
                 list.addView(empty, LinearLayout.LayoutParams(-1, -2))
             } else entries.forEach { item ->
                 val status = when (item.status) {
-                    DownloadManager.STATUS_PENDING -> "في الانتظار"
-                    DownloadManager.STATUS_RUNNING -> "قيد التنزيل"
-                    DownloadManager.STATUS_PAUSED -> "متوقف مؤقتاً"
-                    DownloadManager.STATUS_SUCCESSFUL -> "اكتمل"
-                    DownloadManager.STATUS_FAILED -> "فشل"
-                    else -> "غير معروف"
+                    DownloadManager.STATUS_PENDING -> translate("في الانتظار")
+                    DownloadManager.STATUS_RUNNING -> translate("قيد التنزيل")
+                    DownloadManager.STATUS_PAUSED -> translate("متوقف مؤقتاً")
+                    DownloadManager.STATUS_SUCCESSFUL -> translate("اكتمل")
+                    DownloadManager.STATUS_FAILED -> translate("فشل")
+                    else -> translate("غير معروف")
                 }
                 val percent = if (item.totalBytes > 0L)
                     (item.downloadedBytes * 100L / item.totalBytes).coerceIn(0L, 100L).toInt() else 0
@@ -239,10 +240,10 @@ internal class DownloadUiController(
             addGlassTouch(this)
             setOnClickListener { onClick() }
         }
-        actions.addView(action("تحديث", false) { render() }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(7) })
-        actions.addView(action("تنزيلات النظام", true) {
+        actions.addView(action(translate("تحديث"), false) { render() }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(7) })
+        actions.addView(action(translate("تنزيلات النظام"), true) {
             try { activity.startActivity(Intent(DownloadManager.ACTION_VIEW_DOWNLOADS)) }
-            catch (_: Exception) { Toast.makeText(activity, "تعذر فتح مدير تنزيلات النظام", Toast.LENGTH_SHORT).show() }
+            catch (_: Exception) { Toast.makeText(activity, translate("تعذر فتح مدير تنزيلات النظام"), Toast.LENGTH_SHORT).show() }
         }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(7) })
         root.addView(actions)
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
@@ -268,7 +269,7 @@ internal class DownloadUiController(
 
     fun openGameLink(link: String) {
         if (link.isBlank()) {
-            Toast.makeText(activity, "لا يوجد رابط متاح", Toast.LENGTH_SHORT).show()
+            Toast.makeText(activity, translate("لا يوجد رابط متاح"), Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -276,7 +277,7 @@ internal class DownloadUiController(
             val secureLink = SecureUrlPolicy.upgradeToHttps(link)
             activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(secureLink)))
         } catch (_: Exception) {
-            Toast.makeText(activity, "تعذر فتح هذا الرابط", Toast.LENGTH_SHORT).show()
+            Toast.makeText(activity, translate("تعذر فتح هذا الرابط"), Toast.LENGTH_SHORT).show()
         }
     }
 }
