@@ -21,6 +21,7 @@ internal class FirstRunSetupFeature(
     requestNotificationPermission: () -> Unit,
     onPlatformSelected: (String) -> Unit,
     applyUnifiedSkin: (android.view.View) -> Unit,
+    applyMotionPreferences: (android.view.View) -> Unit,
     recreateActivity: () -> Unit
 ) {
     private var setupDialog: Dialog? = null
@@ -53,6 +54,7 @@ internal class FirstRunSetupFeature(
         viewFactory = viewFactory,
         completionController = completionController,
         applyUnifiedSkin = applyUnifiedSkin,
+        applyMotionPreferences = applyMotionPreferences,
         getSetupDialog = { setupDialog },
         setSetupDialog = { setupDialog = it },
         recreateActivity = recreateActivity
