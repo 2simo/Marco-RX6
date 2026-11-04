@@ -29,7 +29,14 @@ internal class GameDetailsBottomBarFactory(
             orientation = LinearLayout.HORIZONTAL
             gravity = android.view.Gravity.CENTER_VERTICAL
             setPadding(dp(12), dp(9), dp(12), dp(9))
-            background = rounded(if (isDarkMode()) Color.argb(210, 9, 30, 51) else Color.argb(220, 255, 255, 255), 18)
+            background = GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                if (isDarkMode()) intArrayOf(Color.argb(225, 17, 55, 91), Color.argb(211, 7, 23, 41))
+                else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(216, 224, 239, 255))
+            ).apply {
+                cornerRadius = dp(18).toFloat()
+                setStroke(dp(1), if (isDarkMode()) Color.argb(155, 76, 151, 218) else Color.argb(165, 153, 197, 239))
+            }
         }
         fun readerAction(label: String, action: () -> Unit, primary: Boolean = false) = TextView(activity).apply {
             text = label
@@ -64,10 +71,10 @@ internal class GameDetailsBottomBarFactory(
             leftMargin = dp(6)
         })
         if (isAdmin) {
-            bottom.addView(readerAction("تعديل", onEdit), LinearLayout.LayoutParams(-2, -2).apply {
+            bottom.addView(readerAction(translate("تعديل"), onEdit), LinearLayout.LayoutParams(-2, -2).apply {
                 leftMargin = dp(8)
             })
-            bottom.addView(readerAction("حذف", onDelete), LinearLayout.LayoutParams(-2, -2).apply {
+            bottom.addView(readerAction(translate("حذف"), onDelete), LinearLayout.LayoutParams(-2, -2).apply {
                 leftMargin = dp(8)
             })
         }
