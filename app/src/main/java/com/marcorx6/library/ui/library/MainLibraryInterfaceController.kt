@@ -118,8 +118,8 @@ internal class MainLibraryInterfaceController(
             gravity = Gravity.CENTER
             setTextColor(if (isDarkMode()) Color.rgb(190, 222, 255) else Color.rgb(35, 126, 224))
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                if (isDarkMode()) intArrayOf(Color.rgb(20, 48, 82), Color.rgb(9, 22, 42))
-                else intArrayOf(Color.WHITE, Color.rgb(226, 241, 255))).apply {
+                if (isDarkMode()) intArrayOf(Color.argb(205, 20, 58, 96), Color.argb(180, 9, 28, 52))
+                else intArrayOf(Color.argb(220, 255, 255, 255), Color.argb(190, 218, 237, 255))).apply {
                 cornerRadius = dp(14).toFloat()
                 setStroke(dp(1), if (isDarkMode()) Color.rgb(48, 119, 190) else Color.rgb(173, 207, 239))
             }
@@ -160,8 +160,8 @@ internal class MainLibraryInterfaceController(
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                if (isDarkMode()) intArrayOf(Color.rgb(23, 48, 79), Color.rgb(12, 25, 43))
-                else intArrayOf(Color.rgb(255, 255, 255), Color.rgb(232, 237, 247))).apply {
+                if (isDarkMode()) intArrayOf(Color.argb(205, 23, 58, 91), Color.argb(185, 8, 24, 43))
+                else intArrayOf(Color.argb(225, 255, 255, 255), Color.argb(195, 224, 239, 255))).apply {
                 cornerRadius = dp(17).toFloat()
                 setStroke(dp(1), if (isDarkMode()) Color.rgb(58, 111, 169) else Color.rgb(174, 205, 239))
             }
@@ -220,7 +220,7 @@ internal class MainLibraryInterfaceController(
                 gravity = Gravity.CENTER
                 minHeight = dp(44)
                 setPadding(dp(16), dp(10), dp(16), dp(10))
-                background = rounded(glass, 18)
+                background = rounded(if (isDarkMode()) Color.argb(188, 17, 45, 73) else Color.argb(205, 255, 255, 255), 18)
                 setTextColor(muted)
                 setOnClickListener { selected = category; renderGames() }
             }
@@ -247,7 +247,7 @@ internal class MainLibraryInterfaceController(
             textSize = 19f
             gravity = Gravity.CENTER
             setTextColor(silver)
-            background = rounded(glass, 13)
+            background = rounded(if (isDarkMode()) Color.argb(190, 17, 45, 73) else Color.argb(210, 255, 255, 255), 13)
             setPadding(dp(12), dp(7), dp(12), dp(7))
             minWidth = dp(48)
             minHeight = dp(48)
@@ -322,11 +322,11 @@ internal class MainLibraryInterfaceController(
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
             background = if (isDarkMode()) GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(18, 49, 86), Color.rgb(10, 29, 53), Color.rgb(7, 17, 32))).apply {
+                intArrayOf(Color.argb(218, 18, 55, 94), Color.argb(205, 10, 34, 61), Color.argb(190, 7, 20, 38))).apply {
                 cornerRadius = dp(23).toFloat()
                 setStroke(dp(1), Color.rgb(47, 117, 188))
             } else GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(255, 255, 255), Color.rgb(241, 244, 250))).apply {
+                intArrayOf(Color.argb(225, 255, 255, 255), Color.argb(205, 226, 240, 255))).apply {
                 cornerRadius = dp(23).toFloat()
                 setStroke(dp(1), Color.rgb(173, 207, 239))
             }
@@ -346,7 +346,7 @@ internal class MainLibraryInterfaceController(
                     if (active) {
                         if (isDarkMode()) Color.rgb(28, 105, 183) else Color.rgb(211, 233, 255)
                     } else {
-                        if (isDarkMode()) Color.rgb(22, 55, 91) else Color.rgb(226, 240, 255)
+                        if (isDarkMode()) Color.argb(190, 22, 62, 101) else Color.argb(205, 226, 240, 255)
                     }, 15
                 )
                 for (index in 0 until item.childCount) {
