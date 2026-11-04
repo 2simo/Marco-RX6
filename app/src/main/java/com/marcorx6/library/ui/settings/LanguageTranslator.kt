@@ -5,6 +5,13 @@ internal object LanguageTranslator {
     fun translate(ar: String, lang: String): String {
         if (lang == "ar") return ar
         val translations = mapOf(
+            "بدون حالة" to listOf("No status", "Aucun statut", "Sin estado"),
+            "أريد لعبها" to listOf("Want to play", "À jouer", "Quiero jugar"),
+            "ألعبها حالياً" to listOf("Playing now", "En cours", "Jugando"),
+            "أنهيتها" to listOf("Completed", "Terminée", "Completada"),
+            "إضافة إلى قائمة المتابعة" to listOf("Add to watchlist", "Ajouter à la liste de suivi", "Añadir a la lista"),
+            "قائمة متابعة الألعاب" to listOf("Game watchlist", "Liste de suivi des jeux", "Lista de seguimiento"),
+            "اكتشف المزيد  •  قد يعجبك أيضاً" to listOf("Discover more  •  You may also like", "À découvrir  •  Vous aimerez peut-être", "Descubre más  •  También te puede gustar"),
             "اضغط على البطاقة لتغيير الصورة الشخصية" to listOf("Tap the card to change your profile picture", "Touchez la carte pour changer votre photo de profil", "Toca la tarjeta para cambiar tu foto de perfil"),
             "الألعاب" to listOf("Games", "Jeux", "Juegos"),
             "مساحة التخزين" to listOf("Storage", "Stockage", "Almacenamiento"),
