@@ -201,13 +201,7 @@ internal class FirebaseAccountController(
             setPadding(0, dp(12), 0, dp(8))
         }
         page.addView(footer)
-        val scroll = ScrollView(activity).apply {
-            isFillViewport = true
-            clipToPadding = false
-            addView(page)
-        }
-        setContentView(scroll)
-        applyUnifiedSkin(page)
+        showAccountPage(page)
     }
 
     /**
@@ -282,122 +276,205 @@ internal class FirebaseAccountController(
         }
     }
 
-    private fun showPasswordResetForm() {
-        val email = EditText(activity).apply {
-            hint = "البريد الإلكتروني"
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
-            setSingleLine(true)
+    private fun createAccountFormPage(title: String, detail: String): LinearLayout {
+        val dark = isDarkMode()
+        val page = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(22), dp(20), dp(22), dp(28))
+            setBackgroundColor(if (dark) Color.rgb(6, 16, 30) else Color.rgb(240, 247, 255))
         }
-        val dialog = AlertDialog.Builder(activity)
-            .setTitle("استرجاع كلمة المرور")
-            .setMessage("غادي نصيفطو ليك رابط إعادة تعيين كلمة المرور.")
-            .setView(email)
-            .setPositiveButton("إرسال", null)
-            .setNegativeButton("إلغاء", null)
-            .create()
-        dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val address = email.text.toString().trim()
-                if (address.isBlank()) {
-                    toast("دخل البريد الإلكتروني")
-                    return@setOnClickListener
-                }
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
-                authRepository.sendPasswordReset(address)
-                    .addOnSuccessListener {
-                        toast("إلا كان الحساب موجود، غادي توصلك رسالة استرجاع كلمة المرور")
-                        dialog.dismiss()
-                    }
-                    .addOnFailureListener { error ->
-                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true
-                        toast(error.localizedMessage ?: "تعذر إرسال رابط الاسترجاع")
-                    }
+        val header = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val heading = TextView(activity).apply {
+            text = title
+            textSize = 22f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(if (dark) Color.WHITE else Color.rgb(18, 42, 68))
+        }
+        header.addView(heading, LinearLayout.LayoutParams(0, dp(52), 1f))
+        header.addView(TextView(activity).apply {
+            text = "‹"
+            textSize = 32f
+            gravity = Gravity.CENTER
+            setTextColor(Color.rgb(75, 165, 255))
+            setOnClickListener { show() }
+        }, LinearLayout.LayoutParams(dp(48), dp(48)))
+        page.addView(header)
+        page.addView(TextView(activity).apply {
+            text = detail
+            textSize = 12f
+            setTextColor(if (dark) Color.rgb(183, 207, 231) else Color.rgb(75, 105, 136))
+            setPadding(0, dp(4), 0, dp(22))
+        })
+        return page
+    }
+
+    private fun showAccountPage(page: LinearLayout) {
+        val scroll = ScrollView(activity).apply {
+            isFillViewport = true
+            clipToPadding = false
+            addView(page)
+        }
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(scroll) { view, insets ->
+            val safe = insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.systemBars() or
+                    androidx.core.view.WindowInsetsCompat.Type.displayCutout()
+            )
+            view.setPadding(0, safe.top, 0, safe.bottom)
+            insets
+        }
+        setContentView(scroll)
+        activity.window.statusBarColor = Color.TRANSPARENT
+        activity.window.navigationBarColor = Color.TRANSPARENT
+        androidx.core.view.ViewCompat.requestApplyInsets(scroll)
+        applyUnifiedSkin(page)
+    }
+
+    private fun accountInput(hintText: String, inputType: Int): EditText {
+        val dark = isDarkMode()
+        return EditText(activity).apply {
+            hint = hintText
+            this.inputType = inputType
+            setSingleLine(true)
+            textSize = 14f
+            setTextColor(if (dark) Color.WHITE else Color.rgb(20, 45, 70))
+            setHintTextColor(if (dark) Color.rgb(133, 164, 195) else Color.rgb(112, 139, 166))
+            setPadding(dp(16), dp(12), dp(16), dp(12))
+            background = GradientDrawable().apply {
+                cornerRadius = dp(14).toFloat()
+                setColor(if (dark) Color.argb(155, 20, 45, 72) else Color.argb(220, 255, 255, 255))
+                setStroke(dp(1), if (dark) Color.argb(120, 103, 164, 222) else Color.argb(160, 151, 190, 226))
             }
         }
-        dialog.show()
-        styleDialog(dialog)
+    }
+
+    private fun accountSubmitButton(label: String, onClick: (TextView) -> Unit): TextView {
+        return TextView(activity).apply {
+            text = label
+            textSize = 14f
+            gravity = Gravity.CENTER
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(Color.WHITE)
+            setPadding(dp(18), dp(15), dp(18), dp(15))
+            background = GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(Color.rgb(43, 151, 255), Color.rgb(22, 94, 190))
+            ).apply {
+                cornerRadius = dp(15).toFloat()
+                setStroke(dp(1), Color.argb(190, 135, 202, 255))
+            }
+            isClickable = true
+            isFocusable = true
+            setOnClickListener { onClick(this) }
+        }
+    }
+
+    private fun showPasswordResetForm() {
+        val page = createAccountFormPage(
+            "استرجاع كلمة المرور",
+            "دخل البريد الإلكتروني المرتبط بحسابك وسنرسل لك رابط إعادة التعيين."
+        )
+        val email = accountInput(
+            "البريد الإلكتروني",
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+        )
+        page.addView(email, LinearLayout.LayoutParams(-1, dp(54)).apply { bottomMargin = dp(14) })
+        page.addView(accountSubmitButton("إرسال رابط الاسترجاع") { button ->
+            val address = email.text.toString().trim()
+            if (address.isBlank()) {
+                toast("دخل البريد الإلكتروني")
+                return@accountSubmitButton
+            }
+            button.isEnabled = false
+            authRepository.sendPasswordReset(address)
+                .addOnSuccessListener {
+                    toast("إلا كان الحساب موجود، غادي توصلك رسالة استرجاع كلمة المرور")
+                    show()
+                }
+                .addOnFailureListener { error ->
+                    button.isEnabled = true
+                    toast(error.localizedMessage ?: "تعذر إرسال رابط الاسترجاع")
+                }
+        }, LinearLayout.LayoutParams(-1, dp(52)))
+        showAccountPage(page)
     }
 
     private fun showEmailForm(createAccount: Boolean) {
-        val container = LinearLayout(activity).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(48, 12, 48, 0)
-        }
-        val email = EditText(activity).apply {
-            hint = "البريد الإلكتروني"
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
-            setSingleLine(true)
-        }
-        val password = EditText(activity).apply {
-            hint = "كلمة المرور"
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-            setSingleLine(true)
-        }
+        val page = createAccountFormPage(
+            if (createAccount) "إنشاء حساب جديد" else "تسجيل الدخول",
+            if (createAccount) "أنشئ حساب MARCO RX6 لحفظ ملفك ومزامنة بياناتك."
+            else "سجّل الدخول للعودة إلى حساب MARCO RX6."
+        )
+        val email = accountInput(
+            "البريد الإلكتروني",
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+        )
+        val password = accountInput(
+            "كلمة المرور",
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+        )
+        page.addView(email, LinearLayout.LayoutParams(-1, dp(54)).apply { bottomMargin = dp(10) })
+        page.addView(password, LinearLayout.LayoutParams(-1, dp(54)).apply { bottomMargin = dp(10) })
         val confirmPassword = if (createAccount) {
-            EditText(activity).apply {
-                hint = "تأكيد كلمة المرور"
-                inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-                setSingleLine(true)
+            accountInput(
+                "تأكيد كلمة المرور",
+                InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            ).also { field ->
+                page.addView(field, LinearLayout.LayoutParams(-1, dp(54)).apply { bottomMargin = dp(14) })
             }
         } else null
-
-        container.addView(email, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
-        container.addView(password, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
-        confirmPassword?.let {
-            container.addView(it, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
-        }
-
-        val dialog = AlertDialog.Builder(activity)
-            .setTitle(if (createAccount) "إنشاء حساب جديد" else "تسجيل الدخول")
-            .setView(container)
-            .setPositiveButton(if (createAccount) "إنشاء الحساب" else "دخول", null)
-            .setNegativeButton("إلغاء", null)
-            .create()
-
-        dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val address = email.text.toString().trim()
-                val secret = password.text.toString()
-                if (address.isBlank() || secret.isBlank()) {
-                    toast("دخل البريد الإلكتروني وكلمة المرور")
-                    return@setOnClickListener
-                }
-                if (createAccount && secret != confirmPassword?.text?.toString()) {
-                    toast("كلمتا المرور غير متطابقتين")
-                    return@setOnClickListener
-                }
-                if (createAccount && secret.length < 6) {
-                    toast("كلمة المرور خاصها تكون 6 أحرف على الأقل")
-                    return@setOnClickListener
-                }
-
-                val task = if (createAccount) {
-                    authRepository.createEmailAccount(address, secret)
-                } else {
-                    authRepository.signInWithEmail(address, secret)
-                }
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
-                task.addOnSuccessListener { result ->
-                    if (createAccount) {
-                        result.user?.sendEmailVerification()
-                            ?.addOnSuccessListener { toast("تم إنشاء الحساب. تفقد بريدك لتأكيده.") }
-                            ?.addOnFailureListener { toast("تم إنشاء الحساب، لكن تعذر إرسال رسالة التأكيد.") }
-                    } else {
-                        toast("تم تسجيل الدخول بنجاح")
-                    }
-                    onAccountChanged()
-                    dialog.dismiss()
-                }.addOnFailureListener { error ->
-                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true
-                    toast(error.localizedMessage ?: "تعذر إكمال العملية")
-                }
+        if (!createAccount) {
+            val forgot = TextView(activity).apply {
+                text = "نسيت كلمة المرور؟"
+                textSize = 12f
+                gravity = Gravity.END
+                setTextColor(Color.rgb(75, 165, 255))
+                setPadding(0, dp(4), 0, dp(18))
+                setOnClickListener { showPasswordResetForm() }
             }
+            page.addView(forgot)
         }
-        dialog.show()
-        styleDialog(dialog)
+        page.addView(accountSubmitButton(if (createAccount) "إنشاء الحساب" else "دخول") { button ->
+            val address = email.text.toString().trim()
+            val secret = password.text.toString()
+            if (address.isBlank() || secret.isBlank()) {
+                toast("دخل البريد الإلكتروني وكلمة المرور")
+                return@accountSubmitButton
+            }
+            if (createAccount && secret != confirmPassword?.text?.toString()) {
+                toast("كلمتا المرور غير متطابقتين")
+                return@accountSubmitButton
+            }
+            if (createAccount && secret.length < 6) {
+                toast("كلمة المرور خاصها تكون 6 أحرف على الأقل")
+                return@accountSubmitButton
+            }
+            button.isEnabled = false
+            button.text = "جارٍ المعالجة..."
+            val task = if (createAccount) {
+                authRepository.createEmailAccount(address, secret)
+            } else {
+                authRepository.signInWithEmail(address, secret)
+            }
+            task.addOnSuccessListener { result ->
+                if (createAccount) {
+                    result.user?.sendEmailVerification()
+                        ?.addOnSuccessListener { toast("تم إنشاء الحساب. تفقد بريدك لتأكيده.") }
+                        ?.addOnFailureListener { toast("تم إنشاء الحساب، لكن تعذر إرسال رسالة التأكيد.") }
+                } else {
+                    toast("تم تسجيل الدخول بنجاح")
+                }
+                onAccountChanged()
+            }.addOnFailureListener { error ->
+                button.isEnabled = true
+                button.text = if (createAccount) "إنشاء الحساب" else "دخول"
+                toast(error.localizedMessage ?: "تعذر إكمال العملية")
+            }
+        }, LinearLayout.LayoutParams(-1, dp(52)))
+        showAccountPage(page)
     }
-
-    private fun showSignedInActions(user: FirebaseUser) = showAccountScreen(user)
 
     private fun confirmAccountDeletion(user: FirebaseUser?) {
         if (user == null) {
