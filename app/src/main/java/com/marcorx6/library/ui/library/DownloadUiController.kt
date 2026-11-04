@@ -138,8 +138,11 @@ internal class DownloadUiController(
                     gravity = Gravity.CENTER
                     setPadding(dp(24), dp(42), dp(24), dp(42))
                     background = GradientDrawable().apply {
-                        setColor(if (dark) Color.argb(198, 15, 43, 70) else Color.argb(215, 255, 255, 255)); cornerRadius = dp(22).toFloat()
-                        setStroke(dp(1), if (dark) Color.rgb(42, 82, 126) else Color.rgb(198, 220, 244))
+                        colors = if (dark)
+                            intArrayOf(Color.argb(220, 23, 67, 108), Color.argb(208, 8, 27, 47))
+                        else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(218, 224, 240, 255))
+                        cornerRadius = dp(22).toFloat()
+                        setStroke(dp(1), if (dark) Color.argb(165, 80, 151, 215) else Color.argb(175, 153, 195, 236))
                     }
                 }
                 empty.addView(TextView(activity).apply {
@@ -178,10 +181,16 @@ internal class DownloadUiController(
                     orientation = LinearLayout.VERTICAL
                     setPadding(dp(15), dp(14), dp(15), dp(14))
                     background = GradientDrawable().apply {
-                        setColor(if (dark) Color.argb(198, 15, 43, 70) else Color.argb(215, 255, 255, 255)); cornerRadius = dp(17).toFloat()
-                        setStroke(dp(1), if (dark) Color.rgb(42, 82, 126) else Color.rgb(198, 220, 244))
+                        colors = if (dark)
+                            intArrayOf(Color.argb(221, 22, 65, 105), Color.argb(209, 8, 27, 47))
+                        else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(218, 224, 240, 255))
+                        cornerRadius = dp(17).toFloat()
+                        setStroke(dp(1), if (dark) Color.argb(165, 80, 151, 215) else Color.argb(175, 153, 195, 236))
                     }
                 }
+                addGlassTouch(card)
+                card.isClickable = true
+                card.isFocusable = true
                 card.addView(TextView(activity).apply {
                     text = item.title
                     textSize = 14f
