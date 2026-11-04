@@ -49,7 +49,7 @@ internal class TypographySettingsController(
         box.addView(size)
         val sizeLabel = makeText(translate("حجم النص") + ": " + (scale * 100).toInt() + "%", 11f, grayColor(), false)
         box.addView(sizeLabel)
-        box.addView(makeText(translate("نوع الخط"), 13f, redColor(), true).apply {
+        box.addView(makeText(translate("نوع الخط"), 13f, accentBlue, true).apply {
             setPadding(0, dp(16), 0, dp(5))
         })
         val family = themedSpinner(
