@@ -293,7 +293,6 @@ internal object LanguageTranslator {
             "المضاف حديثاً" to listOf("Recently added", "Ajoutés récemment", "Añadidos recientemente"),
             "ألعاب" to listOf("Games", "Jeux", "Juegos"),
             "الأقسام" to listOf("Sections", "Rubriques", "Secciones"),
-            "الأقسام (" to listOf("Sections (", "Rubriques (", "Secciones ("),
             "استوديو النشر • MARCO RX6" to listOf("PUBLISHING STUDIO • MARCO RX6", "STUDIO DE PUBLICATION • MARCO RX6", "ESTUDIO DE PUBLICACIÓN • MARCO RX6"),
             "استوديو التحرير • MARCO RX6" to listOf("EDITING STUDIO • MARCO RX6", "STUDIO DE MODIFICATION • MARCO RX6", "ESTUDIO DE EDICIÓN • MARCO RX6"),
             "جهّز الغلاف والتفاصيل والمحتوى، ثم عاين المقال قبل إرساله إلى Blogger." to listOf("Prepare the cover, details and content, then preview before sending to Blogger.", "Préparez la couverture, les détails et le contenu, puis prévisualisez avant l’envoi vers Blogger.", "Prepara la portada, los detalles y el contenido y previsualiza antes de enviarlo a Blogger."),
