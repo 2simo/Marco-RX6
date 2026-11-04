@@ -22,18 +22,19 @@ internal class TypographySettingsController(
     private val roundedBackground: (Int, Int) -> Drawable,
     private val themedSpinner: (List<String>, Int) -> Spinner,
     private val recreateInterface: () -> Unit,
-    private val styleDialog: (AlertDialog) -> Unit
+    private val styleDialog: (AlertDialog) -> Unit,
+    private val translate: (String) -> String
 ) {
     fun show() {
         val box = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(22), dp(12), dp(22), dp(8))
         }
-        val preview = makeText("MARCO RX6  •  معاينة شكل النص\nقراءة أوضح وتجربة مريحة", 17f, whiteColor(), true)
+        val preview = makeText(translate("MARCO RX6  •  معاينة شكل النص\nقراءة أوضح وتجربة مريحة"), 17f, whiteColor(), true)
         preview.setPadding(dp(14), dp(14), dp(14), dp(14))
         preview.background = roundedBackground(panelColor(), 13)
         box.addView(preview, LinearLayout.LayoutParams(-1, -2))
-        box.addView(makeText("حجم الخط", 13f, redColor(), true).apply {
+        box.addView(makeText(translate("حجم الخط"), 13f, redColor(), true).apply {
             setPadding(0, dp(18), 0, dp(5))
         })
         val scale = TypographyPreferences.scale(preferences)
@@ -42,13 +43,13 @@ internal class TypographySettingsController(
             progress = ((scale - 0.85f) / 0.05f).toInt().coerceIn(0, 8)
         }
         box.addView(size)
-        val sizeLabel = makeText("حجم النص: " + (scale * 100).toInt() + "%", 11f, grayColor(), false)
+        val sizeLabel = makeText(translate("حجم النص") + ": " + (scale * 100).toInt() + "%", 11f, grayColor(), false)
         box.addView(sizeLabel)
-        box.addView(makeText("نوع الخط", 13f, redColor(), true).apply {
+        box.addView(makeText(translate("نوع الخط"), 13f, redColor(), true).apply {
             setPadding(0, dp(16), 0, dp(5))
         })
         val family = themedSpinner(
-            listOf("واضح (افتراضي)", "كلاسيكي", "أحادي المسافة"),
+            listOf(translate("واضح (افتراضي)"), translate("كلاسيكي"), translate("أحادي المسافة")),
             when (preferences.getString("family", "sans")) {
                 "serif" -> 1
                 "mono" -> 2
@@ -59,15 +60,15 @@ internal class TypographySettingsController(
         size.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 val currentScale = 0.85f + progress * 0.05f
-                sizeLabel.text = "حجم النص: " + (currentScale * 100).toInt() + "%"
+                sizeLabel.text = translate("حجم النص") + ": " + (currentScale * 100).toInt() + "%"
                 preview.textSize = 17f * currentScale
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
-        AlertDialog.Builder(activity).setTitle("تخصيص الخط").setView(box)
-            .setNegativeButton("إلغاء", null)
-            .setPositiveButton("حفظ") { _, _ ->
+        AlertDialog.Builder(activity).setTitle(translate("تخصيص الخط")).setView(box)
+            .setNegativeButton(translate("إلغاء"), null)
+            .setPositiveButton(translate("حفظ")) { _, _ ->
                 val familyValue = when (family.selectedItemPosition) {
                     1 -> "serif"
                     2 -> "mono"
@@ -78,7 +79,7 @@ internal class TypographySettingsController(
                     .putString("family", familyValue)
                     .apply()
                 recreateInterface()
-                Toast.makeText(activity, "تم حفظ إعدادات الخط", Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity, translate("تم حفظ إعدادات الخط"), Toast.LENGTH_SHORT).show()
             }.show().also(styleDialog)
     }
 }
