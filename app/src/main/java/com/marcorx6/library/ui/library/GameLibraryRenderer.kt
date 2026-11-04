@@ -64,9 +64,9 @@ internal class GameLibraryRenderer(
                 heading.addView(makeText(title, 18f, white, true), LinearLayout.LayoutParams(0, -2, 1f))
                 heading.addView(makeText(sorted.size.toString() + " " + tr("لعبة"), 10f, red, true))
                 gameList.addView(heading, LinearLayout.LayoutParams(-1, -2).apply { setMargins(dp(2), dp(10), dp(2), dp(12)) })
-                for (index in sorted.indices step 3) {
+                for (index in sorted.indices step 2) {
                     val row = LinearLayout(activity).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.TOP }
-                    for (offset in 0..2) {
+                    for (offset in 0..1) {
                         val itemIndex = index + offset
                         if (itemIndex >= sorted.size) {
                             row.addView(View(activity), LinearLayout.LayoutParams(0, 1, 1f).apply { marginStart = dp(5); marginEnd = dp(5) })
@@ -76,9 +76,9 @@ internal class GameLibraryRenderer(
                         val card = LinearLayout(activity).apply {
                             orientation = LinearLayout.VERTICAL
                             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                                if (isDarkMode()) intArrayOf(Color.rgb(20, 34, 57), Color.rgb(11, 20, 36)) else intArrayOf(Color.WHITE, Color.rgb(235, 241, 250))).apply {
+                                if (isDarkMode()) intArrayOf(Color.rgb(43, 29, 23), Color.rgb(20, 17, 15)) else intArrayOf(Color.WHITE, Color.rgb(235, 241, 250))).apply {
                                 cornerRadius = dp(18).toFloat()
-                                setStroke(dp(1), if (isDarkMode()) Color.rgb(37, 75, 119) else Color.rgb(215, 225, 239))
+                                setStroke(dp(1), if (isDarkMode()) Color.rgb(132, 76, 42) else Color.rgb(215, 225, 239))
                             }
                             setPadding(dp(6), dp(6), dp(6), dp(8)); elevation = dp(2).toFloat(); isClickable = true; isFocusable = true
                             setOnClickListener { showDetails(game) }
@@ -89,7 +89,7 @@ internal class GameLibraryRenderer(
                         if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) loadCover(image, game.coverLocalPath, game.coverUrl)
                         else { image.setImageResource(android.R.drawable.ic_menu_gallery); image.scaleType = ImageView.ScaleType.CENTER_INSIDE }
                         imageFrame.background = rounded(if (isDarkMode()) Color.rgb(8, 16, 29) else Color.rgb(224, 232, 243), 13)
-                        card.addView(imageFrame, LinearLayout.LayoutParams(-1, dp(142)))
+                        card.addView(imageFrame, LinearLayout.LayoutParams(-1, dp(174)))
                         card.addView(makeText(game.name, 12.5f, white, true).apply {
                             maxLines = 2; minLines = 2; ellipsize = android.text.TextUtils.TruncateAt.END
                             gravity = Gravity.CENTER_VERTICAL; setPadding(dp(4), dp(7), dp(4), dp(2))
@@ -98,7 +98,7 @@ internal class GameLibraryRenderer(
                         card.addView(makeText(meta, 9f, red, true).apply {
                             maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END; setPadding(dp(4), 0, dp(4), dp(2))
                         })
-                        row.addView(card, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(3); marginEnd = dp(3); bottomMargin = dp(8) })
+                        row.addView(card, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(5); marginEnd = dp(5); bottomMargin = dp(12) })
                     }
                     gameList.addView(row, LinearLayout.LayoutParams(-1, -2))
                 }
