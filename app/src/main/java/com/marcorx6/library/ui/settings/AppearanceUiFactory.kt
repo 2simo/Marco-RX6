@@ -51,9 +51,18 @@ internal class AppearanceUiFactory(
 
     private fun installGlassInteraction(view: View) {
         if (!view.isClickable && !view.isLongClickable) return
+        // Keep each screen's existing shape and color, but soften clickable
+        // gradient surfaces so the whole app shares the translucent glass language.
+        if (view !is EditText && view.background is GradientDrawable) {
+            val base = view.background.constantState?.newDrawable()?.mutate() as? GradientDrawable
+                ?: (view.background.mutate() as? GradientDrawable)
+            base?.alpha = if (view.tag == "marco_primary_action") 224 else if (isDarkMode()) 198 else 210
+            if (base != null) view.background = base
+        }
         if (android.os.Build.VERSION.SDK_INT >= 23 && view.foreground == null) {
             view.foreground = glassRipple()
-        } else if (view.background != null && view.background !is android.graphics.drawable.RippleDrawable) {
+        } else if (view.background != null && view.background !is android.graphics.drawable.RippleDrawable &&
+            view.foreground == null) {
             val base = view.background.constantState?.newDrawable()?.mutate() ?: view.background.mutate()
             view.background = android.graphics.drawable.RippleDrawable(
                 android.content.res.ColorStateList.valueOf(
