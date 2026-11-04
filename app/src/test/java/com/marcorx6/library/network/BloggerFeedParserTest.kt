@@ -51,9 +51,25 @@ class BloggerFeedParserTest {
 
     @Test
     fun ignoresEntriesWithoutAUsableTitleOrHttpsPostLink() {
-        val blankTitle = JSONObject("""{"title":{"\$t":"   "}}""")
+        val blankTitle = JSONObject("""{"title":{"${'":"   "}}""")
         val insecureLink = JSONObject(
             """{"title":{"\$t":"Example"},"link":[{"rel":"alternate","href":"http://example.com/post"}]}"""
+        )
+
+        assertNull(BloggerFeedParser.parseBlogEntry(blankTitle))
+        assertNull(BloggerFeedParser.parseBlogEntry(insecureLink))
+    }
+}
+}t":"   "}}""")
+        val insecureLink = JSONObject(
+            """{"title":{"${'":"Example"},"link":[{"rel":"alternate","href":"http://example.com/post"}]}"""
+        )
+
+        assertNull(BloggerFeedParser.parseBlogEntry(blankTitle))
+        assertNull(BloggerFeedParser.parseBlogEntry(insecureLink))
+    }
+}
+}t":"Example"},"link":[{"rel":"alternate","href":"http://example.com/post"}]}"""
         )
 
         assertNull(BloggerFeedParser.parseBlogEntry(blankTitle))
