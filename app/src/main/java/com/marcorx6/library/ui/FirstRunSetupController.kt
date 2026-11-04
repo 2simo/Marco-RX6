@@ -26,6 +26,7 @@ internal class FirstRunSetupController(
     private val viewFactory: FirstRunSetupViewFactory,
     private val completionController: FirstRunSetupCompletionController,
     private val applyUnifiedSkin: (View) -> Unit,
+    private val applyMotionPreferences: (View) -> Unit,
     private val getSetupDialog: () -> Dialog?,
     private val setSetupDialog: (Dialog?) -> Unit,
     private val recreateActivity: () -> Unit
@@ -239,6 +240,7 @@ internal class FirstRunSetupController(
         }
         androidx.core.view.ViewCompat.requestApplyInsets(root)
         applyUnifiedSkin(root)
+        dialog.window?.decorView?.let(applyMotionPreferences)
         renderStep(0, true)
     }
 
