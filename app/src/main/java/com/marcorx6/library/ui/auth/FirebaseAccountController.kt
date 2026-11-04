@@ -343,6 +343,7 @@ internal class FirebaseAccountController(
     }
 
     private fun showAccountPage(page: LinearLayout) {
+        val dark = isDarkMode()
         val scroll = ScrollView(activity).apply {
             isFillViewport = true
             clipToPadding = false
