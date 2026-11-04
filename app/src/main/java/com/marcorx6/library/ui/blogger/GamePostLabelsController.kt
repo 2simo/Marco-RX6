@@ -27,6 +27,9 @@ internal class GamePostLabelsController(
             text = translate("تحميل تسميات المدونة...")
             setTextColor(white())
             background = rounded(panel(), 12)
+            minHeight = (activity.resources.displayMetrics.density * 52).toInt()
+            contentDescription = translate("اختيار أقسام المقال من المدونة")
+            isAllCaps = false
         }
         val selectedLabels = linkedSetOf<String>()
         val availableLabels = mutableListOf<String>()
@@ -36,6 +39,11 @@ internal class GamePostLabelsController(
                 translate("اختيار Labels من المدونة")
             } else {
                 translate("الأقسام") + " (${selectedLabels.size}): " + selectedLabels.joinToString("، ")
+            }
+            button.contentDescription = if (selectedLabels.isEmpty()) {
+                translate("اختيار أقسام المقال من المدونة")
+            } else {
+                translate("الأقسام المحددة") + ": " + selectedLabels.joinToString("، ")
             }
         }
 
@@ -88,11 +96,15 @@ internal class GamePostLabelsController(
                     }
                     refreshButton()
                     button.isEnabled = labels.isNotEmpty()
-                    if (labels.isEmpty()) button.text = translate("لا توجد Labels في المقالات المنشورة")
+                    if (labels.isEmpty()) {
+                        button.text = translate("لا توجد Labels في المقالات المنشورة")
+                        button.contentDescription = button.text
+                    }
                 }
             } catch (_: Exception) {
                 postToUi {
                     button.text = translate("تعذر تحميل Labels • حاول التحديث")
+                    button.contentDescription = button.text
                     button.isEnabled = true
                 }
             }
