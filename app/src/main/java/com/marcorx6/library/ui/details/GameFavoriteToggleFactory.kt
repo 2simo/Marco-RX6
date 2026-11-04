@@ -16,7 +16,7 @@ internal class GameFavoriteToggleFactory(
     fun create(game: Game): TextView {
         return TextView(activity).apply {
             text = if (game.isFavorite) "★" else "☆"
-            contentDescription = if (game.isFavorite) "إزالة من المفضلة" else "إضافة إلى المفضلة"
+            contentDescription = game.name + ", " + if (game.isFavorite) "إزالة من المفضلة" else "إضافة إلى المفضلة"
             textSize = 25f
             gravity = android.view.Gravity.CENTER
             setTextColor(if (game.isFavorite) android.graphics.Color.rgb(92, 183, 255) else white())
@@ -34,7 +34,7 @@ internal class GameFavoriteToggleFactory(
                     games[index] = games[index].copy(isFavorite = !games[index].isFavorite)
                     saveGames()
                     text = if (games[index].isFavorite) "★" else "☆"
-                    contentDescription = if (games[index].isFavorite) "إزالة من المفضلة" else "إضافة إلى المفضلة"
+                    contentDescription = games[index].name + ", " + if (games[index].isFavorite) "إزالة من المفضلة" else "إضافة إلى المفضلة"
                     setTextColor(if (games[index].isFavorite) android.graphics.Color.rgb(92, 183, 255) else white())
                     renderGames()
                 }
