@@ -114,7 +114,7 @@ internal class BloggerPostComposerController(
             text = "اختيار صورة الغلاف من الهاتف"
             tag = "marco_primary_action"
             setTextColor(accentForeground())
-            background = rounded(android.graphics.Color.argb(222, red()), 12)
+            background = rounded(((red() and 0x00FFFFFF) or (222 shl 24)), 12)
             setOnClickListener { chooseCover() }
         }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
         box.addView(makeText("أقسام المقال • Labels من المدونة", 10f, red(), true))
