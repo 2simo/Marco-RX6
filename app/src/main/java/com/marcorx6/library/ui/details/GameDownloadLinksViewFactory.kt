@@ -39,6 +39,7 @@ internal class GameDownloadLinksViewFactory(
             val label = item.optString("label").ifBlank { "${translate("تحميل")} ${index + 1}" }
             downloadRow.addView(TextView(activity).apply {
                 text = "⬇  $label"
+                contentDescription = label
                 textSize = 12f
                 setTextColor(white())
                 gravity = Gravity.CENTER
