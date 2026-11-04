@@ -49,6 +49,8 @@ internal object LanguageTranslator {
             "دخول" to listOf("Sign in", "Connexion", "Entrar"),
             "إنشاء الحساب" to listOf("Create account", "Créer le compte", "Crear cuenta"),
             "جارٍ المعالجة..." to listOf("Processing...", "Traitement...", "Procesando..."),
+            "وضع المسؤول نشط" to listOf("Admin mode is active", "Mode administrateur actif", "El modo administrador está activo"),
+            "جلسة Blogger وGoogle Drive مستقلة عن حساب التطبيق" to listOf("Blogger and Google Drive use a separate account session", "Blogger et Google Drive utilisent une session distincte", "Blogger y Google Drive usan una sesión independiente"),
             "إظهار كلمة المرور" to listOf("Show password", "Afficher le mot de passe", "Mostrar contraseña"),
             "إخفاء كلمة المرور" to listOf("Hide password", "Masquer le mot de passe", "Ocultar contraseña"),
             "تم إرسال رابط التأكيد إلى بريدك" to listOf("Verification link sent to your email", "Lien de vérification envoyé par e-mail", "Enlace de verificación enviado a tu correo"),
