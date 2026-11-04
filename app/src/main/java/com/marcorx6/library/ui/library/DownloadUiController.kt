@@ -110,9 +110,12 @@ internal class DownloadUiController(
             textSize = 30f
             gravity = Gravity.CENTER
             setTextColor(muted)
+            minWidth = dp(48)
+            minHeight = dp(48)
+            contentDescription = translate("إغلاق")
             addGlassTouch(this)
             setOnClickListener { onBack() }
-        }, LinearLayout.LayoutParams(dp(44), dp(44)))
+        }, LinearLayout.LayoutParams(dp(48), dp(48)))
         root.addView(header)
         root.addView(TextView(activity).apply {
             text = translate("تابع حالة ملفات الألعاب التي أضفتها إلى التنزيلات")
@@ -188,9 +191,8 @@ internal class DownloadUiController(
                         setStroke(dp(1), if (dark) Color.argb(165, 80, 151, 215) else Color.argb(175, 153, 195, 236))
                     }
                 }
-                addGlassTouch(card)
-                card.isClickable = true
-                card.isFocusable = true
+                // Download rows are informational; keep them non-clickable so they
+                // are not announced as interactive controls without an action.
                 card.addView(TextView(activity).apply {
                     text = item.title
                     textSize = 14f
@@ -245,6 +247,8 @@ internal class DownloadUiController(
                 cornerRadius = dp(16).toFloat()
                 setStroke(dp(1), if (filled) Color.argb(175, 119, 194, 255) else primary)
             }
+            minHeight = dp(48)
+            contentDescription = label
             setPadding(dp(14), dp(13), dp(14), dp(13))
             addGlassTouch(this)
             setOnClickListener { onClick() }
