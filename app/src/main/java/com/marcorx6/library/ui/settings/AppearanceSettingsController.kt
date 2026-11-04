@@ -19,7 +19,8 @@ internal class AppearanceSettingsController(
     private val showNotificationSettings: () -> Unit,
     private val showTypographySettings: () -> Unit,
     private val setContentView: (View) -> Unit,
-    private val onBack: () -> Unit
+    private val onBack: () -> Unit,
+    private val translate: (String) -> String
 ) {
     fun show() {
         fun dp(value: Int) = (value * activity.resources.displayMetrics.density).toInt()
@@ -42,6 +43,7 @@ internal class AppearanceSettingsController(
         }
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
+            layoutDirection = if (translate("الإعدادات والمظهر") == "الإعدادات والمظهر") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
             setPadding(dp(20), dp(20), dp(20), dp(20))
             setBackgroundColor(bg)
         }
@@ -51,13 +53,13 @@ internal class AppearanceSettingsController(
         }
         val heading = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
         heading.addView(TextView(activity).apply {
-            text = "MARCO RX6  /  PERSONALIZATION"
+            text = translate("MARCO RX6  /  PERSONALIZATION")
             textSize = 9f
             letterSpacing = 0.12f
             setTextColor(blue)
         })
         heading.addView(TextView(activity).apply {
-            text = "الإعدادات والمظهر"
+            text = translate("الإعدادات والمظهر")
             textSize = 25f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(ink)
@@ -74,7 +76,7 @@ internal class AppearanceSettingsController(
         }, LinearLayout.LayoutParams(dp(44), dp(44)))
         root.addView(header)
         root.addView(TextView(activity).apply {
-            text = "خصص تجربة MARCO RX6 بالطريقة التي تناسبك"
+            text = translate("خصص تجربة MARCO RX6 بالطريقة التي تناسبك")
             textSize = 12f
             setTextColor(muted)
             setPadding(0, dp(8), 0, dp(22))
@@ -83,24 +85,24 @@ internal class AppearanceSettingsController(
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(16), dp(16), dp(16))
             background = GradientDrawable().apply {
-                setColor(if (dark) Color.argb(218, 15, 43, 70) else Color.argb(224, 255, 255, 255)); cornerRadius = dp(18).toFloat()
+                setColor(if (dark) Color.argb(190, 15, 43, 70) else Color.argb(198, 255, 255, 255)); cornerRadius = dp(18).toFloat()
                 setStroke(dp(1), if (dark) Color.rgb(42, 82, 126) else Color.rgb(198, 220, 244))
             }
         }
         colorCard.addView(TextView(activity).apply {
-            text = "اللون الرئيسي"
+            text = translate("اللون الرئيسي")
             textSize = 16f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(ink)
         })
         colorCard.addView(TextView(activity).apply {
-            text = "أزرق كهربائي  •  اللون الرسمي للتطبيق"
+            text = translate("أزرق كهربائي  •  اللون الرسمي للتطبيق")
             textSize = 12f
             setTextColor(muted)
             setPadding(0, dp(8), 0, dp(12))
         })
         colorCard.addView(TextView(activity).apply {
-            text = "●   أزرق"
+            text = translate("●   أزرق")
             textSize = 14f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(Color.WHITE)
@@ -115,18 +117,18 @@ internal class AppearanceSettingsController(
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(16), dp(16), dp(16))
             background = GradientDrawable().apply {
-                setColor(surface); cornerRadius = dp(18).toFloat()
+                setColor(if (dark) Color.argb(190, 15, 35, 58) else Color.argb(198, 255, 255, 255)); cornerRadius = dp(18).toFloat()
                 setStroke(dp(1), if (dark) Color.rgb(42, 82, 126) else Color.rgb(198, 220, 244))
             }
         }
         animations.addView(TextView(activity).apply {
-            text = "حركات وانتقالات الواجهة"
+            text = translate("حركات وانتقالات الواجهة")
             textSize = 16f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(ink)
         })
         val toggle = TextView(activity).apply {
-            text = if (preferences.getBoolean("animations", true)) "الحركات مفعّلة  ✓" else "الحركات متوقفة"
+            text = translate(if (preferences.getBoolean("animations", true)) "الحركات مفعّلة  ✓" else "الحركات متوقفة")
             textSize = 13f
             gravity = Gravity.CENTER
             setTextColor(if (preferences.getBoolean("animations", true)) Color.WHITE else blue)
@@ -141,14 +143,14 @@ internal class AppearanceSettingsController(
                 val enabled = !preferences.getBoolean("animations", true)
                 preferences.edit().putBoolean("animations", enabled).apply()
                 applyMotionPreferences(activity.window.decorView)
-                text = if (enabled) "الحركات مفعّلة  ✓" else "الحركات متوقفة"
+                text = translate(if (enabled) "الحركات مفعّلة  ✓" else "الحركات متوقفة")
                 setTextColor(if (enabled) Color.WHITE else blue)
                 background = GradientDrawable().apply {
                     setColor(if (enabled) blue else surface)
                     cornerRadius = dp(14).toFloat()
                     if (!enabled) setStroke(dp(1), blue)
                 }
-                Toast.makeText(activity, if (enabled) "تم تفعيل انتقالات الواجهة" else "تم إيقاف انتقالات الواجهة", Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity, translate(if (enabled) "تم تفعيل انتقالات الواجهة" else "تم إيقاف انتقالات الواجهة"), Toast.LENGTH_SHORT).show()
             }
         }
         animations.addView(toggle, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
@@ -159,7 +161,7 @@ internal class AppearanceSettingsController(
                 orientation = LinearLayout.VERTICAL
                 setPadding(dp(16), dp(14), dp(16), dp(14))
                 background = GradientDrawable().apply {
-                    setColor(if (dark) Color.argb(218, 15, 43, 70) else Color.argb(224, 255, 255, 255))
+                    setColor(if (dark) Color.argb(190, 15, 43, 70) else Color.argb(198, 255, 255, 255))
                     cornerRadius = dp(17).toFloat()
                     setStroke(dp(1), if (dark) Color.rgb(42, 82, 126) else Color.rgb(198, 220, 244))
                 }
@@ -181,22 +183,22 @@ internal class AppearanceSettingsController(
                 setOnClickListener { action() }
             }
         root.addView(settingRow(
-            "المظهر",
-            if (dark) "الوضع الليلي مفعّل — اضغط للتبديل إلى الوضع النهاري"
-            else "الوضع النهاري مفعّل — اضغط للتبديل إلى الوضع الليلي"
+            translate("المظهر"),
+            translate(if (dark) "الوضع الليلي مفعّل — اضغط للتبديل إلى الوضع النهاري"
+            else "الوضع النهاري مفعّل — اضغط للتبديل إلى الوضع الليلي")
         ) {
             preferences.edit().putBoolean("dark_mode", !dark).apply()
             recreateActivity()
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
-        root.addView(settingRow("اللغة", "العربية والإنجليزية والفرنسية والإسبانية", showLanguagePicker),
+        root.addView(settingRow(translate("اللغة"), translate("العربية والإنجليزية والفرنسية والإسبانية"), showLanguagePicker),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
-        root.addView(settingRow("الإشعارات", "التحكم في تنبيهات المقالات الجديدة", showNotificationSettings),
+        root.addView(settingRow(translate("الإشعارات"), translate("التحكم في تنبيهات المقالات الجديدة"), showNotificationSettings),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
-        root.addView(settingRow("الخط وحجم النص", "تخصيص عائلة الخط وحجم القراءة", showTypographySettings),
+        root.addView(settingRow(translate("الخط وحجم النص"), translate("تخصيص عائلة الخط وحجم القراءة"), showTypographySettings),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
 
         root.addView(TextView(activity).apply {
-            text = "MARCO RX6  •  BLUE EXPERIENCE"
+            text = translate("MARCO RX6  •  BLUE EXPERIENCE")
             textSize = 9f
             gravity = Gravity.CENTER
             setTextColor(muted)
