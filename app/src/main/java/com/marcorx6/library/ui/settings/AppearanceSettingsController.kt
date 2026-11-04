@@ -23,8 +23,7 @@ internal class AppearanceSettingsController(
 ) {
     fun show() {
         fun dp(value: Int) = (value * activity.resources.displayMetrics.density).toInt()
-        val dark = (activity.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
-            android.content.res.Configuration.UI_MODE_NIGHT_YES
+        val dark = preferences.getBoolean("dark_mode", true)
         val bg = if (dark) Color.rgb(7, 17, 31) else Color.rgb(242, 247, 253)
         val surface = if (dark) Color.rgb(15, 35, 58) else Color.WHITE
         val blue = Color.rgb(42, 145, 255)
