@@ -114,7 +114,19 @@ internal class StartupExperienceController(
                 isAppearanceLightNavigationBars = false
                 show(WindowInsetsCompat.Type.systemBars())
             }
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                window.isStatusBarContrastEnforced = false
+                window.isNavigationBarContrastEnforced = false
+            }
         }
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(content) { view, insets ->
+            val safe = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            view.setPadding(0, safe.top, 0, safe.bottom)
+            insets
+        }
+        androidx.core.view.ViewCompat.requestApplyInsets(content)
         logo.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(700L)
             .setInterpolator(OvershootInterpolator(1.08f)).start()
         animator = ValueAnimator.ofInt(1, 100).apply {
