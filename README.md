@@ -17,9 +17,9 @@
 Kotlin · Android (minSdk 23) · WorkManager · Google Sign-In · Blogger API · Google Drive API
 
 ## البناء
-افتح المشروع في Android Studio ثم شغّل التطبيق، أو استعمل:
+افتح المشروع في Android Studio ثم شغّل التطبيق، أو ثبّت Gradle 9.8.2 واستعمل:
 
-    gradle assembleDebug
+    gradle --no-daemon assembleDebug
 
 للنسخة النهائية (release) تُقرأ بيانات التوقيع من متغيرات البيئة التالية:
 - KEYSTORE_FILE
@@ -48,9 +48,9 @@ An Android app built with Kotlin for browsing and organizing a PS2 / PS3 / PS4 g
 Kotlin · Android (minSdk 23) · WorkManager · Google Sign-In · Blogger API · Google Drive API
 
 ## Build
-Open the project in Android Studio and run it, or use:
+Open the project in Android Studio and run it, or install Gradle 9.8.2 and use:
 
-    gradle assembleDebug
+    gradle --no-daemon assembleDebug
 
 For release builds, signing details are read from these environment variables:
 - KEYSTORE_FILE
