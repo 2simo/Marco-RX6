@@ -61,7 +61,8 @@ internal class BloggerPostFeature(
         dp = dp,
         makeInput = makeInput,
         rounded = rounded,
-        panel = panel
+        panel = panel,
+        translate = translate
     )
 
     private val saveController = BloggerPostSaveController(
@@ -107,7 +108,8 @@ internal class BloggerPostFeature(
         resetCoverUploadFailed = resetCoverUploadFailed,
         saveGames = saveGames,
         renderGames = renderGames,
-        applyUnifiedSkin = applyUnifiedSkin
+        applyUnifiedSkin = applyUnifiedSkin,
+        translate = translate
     )
 
     private val deletion = GameDeletionController(
