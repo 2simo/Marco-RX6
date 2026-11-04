@@ -36,7 +36,7 @@ internal class FirstRunSetupController(
         val appearance = appearancePreferences()
         var step = 0
         var preferredPlatform = settings.getString("preferred_platform", "PS3")
-            ?.takeIf { it in listOf("PS2", "PSP", "PS3", "PS4", "3DS", "GBA") } ?: "PS3"
+            ?.takeIf { it in listOf("PS2", "PS3", "PS4", "3DS", "GBA") } ?: "PS3"
         var languageCode = currentLanguage()
         var darkMode = isDarkMode()
         var accentKey = appearance.getString("accent", "blue")
@@ -150,10 +150,9 @@ internal class FirstRunSetupController(
             }
 
             when (step) {
-                0 -> listOf("PS2", "PSP", "PS3", "PS4", "3DS", "GBA").forEach { platform ->
+                0 -> listOf("PS2", "PS3", "PS4", "3DS", "GBA").forEach { platform ->
                     val description = when (platform) {
                         "PS2" -> "PlayStation 2"
-                        "PSP" -> "PlayStation Portable"
                         "PS3" -> "PlayStation 3"
                         "PS4" -> "PlayStation 4"
                         "3DS" -> "Nintendo 3DS"
