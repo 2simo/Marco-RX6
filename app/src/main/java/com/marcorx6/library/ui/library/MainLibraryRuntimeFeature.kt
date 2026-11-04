@@ -36,7 +36,7 @@ internal class MainLibraryRuntimeFeature(
     private val showAppearanceSettings: () -> Unit,
     private val showGameDialog: () -> Unit,
     private val showProfile: () -> Unit,
-    private val showSideMenu: () -> Unit,
+    private val showDownloads: () -> Unit,
     private val applyTypography: (View) -> Unit,
     private val applyUnifiedSkin: (View) -> Unit,
     private val applyMotionPreferences: (View) -> Unit
