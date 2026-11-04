@@ -15,6 +15,7 @@ import com.marcorx6.library.ui.library.MainLibraryViewState
 import com.marcorx6.library.data.Game
 import com.marcorx6.library.data.auth.FirebaseSessionCoordinator
 import com.marcorx6.library.data.auth.FirebaseAuthRepository
+import com.marcorx6.library.data.auth.FirebaseUserDocumentRepository
 import com.marcorx6.library.ui.auth.FirebaseAccountController
 import com.marcorx6.library.ui.auth.GoogleAccountRuntimeFeature
 import androidx.activity.ComponentActivity
@@ -30,6 +31,21 @@ class MainActivity : ComponentActivity() {
     }
     private val firebaseAuthRepository: FirebaseAuthRepository by lazy {
         FirebaseAuthRepository()
+    }
+    private val firebaseUserDocumentRepository: FirebaseUserDocumentRepository by lazy {
+        FirebaseUserDocumentRepository()
+    }
+
+    private fun saveFirebaseProfile(nickname: String) {
+        val user = firebaseAuthRepository.currentUser ?: return
+        firebaseUserDocumentRepository.saveProfile(
+            uid = user.uid,
+            displayName = nickname,
+            bio = null,
+            photoUrl = user.photoUrl?.toString()
+        ).addOnFailureListener { error ->
+            android.util.Log.w("MarcoFirebaseProfile", "Cloud profile save failed; local profile was saved", error)
+        }
     }
     private val firebaseAccountController: FirebaseAccountController by lazy {
         FirebaseAccountController(
@@ -113,6 +129,7 @@ class MainActivity : ComponentActivity() {
             showLanguagePicker = appearanceRuntimeFeature::showLanguagePicker,
             showNotificationSettings = activityServicesRuntimeFeature::showNotificationSettings,
             showAccount = ::showFirebaseAccount,
+            saveCloudProfile = ::saveFirebaseProfile,
             launchAvatarPicker = activityResultRuntimeFeature::launchProfileAvatar,
             styleAlertDialog = ::styleAlertDialog,
             applyUnifiedSkin = ::applyUnifiedSkin,
