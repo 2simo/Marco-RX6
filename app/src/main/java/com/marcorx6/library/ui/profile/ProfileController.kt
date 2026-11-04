@@ -87,7 +87,7 @@ internal class ProfileController(
         hero.addView(identity, LinearLayout.LayoutParams(0, -2, 1f))
         hero.setOnClickListener { chooseAvatar() }
         box.addView(hero, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
-        box.addView(makeText("اضغط على البطاقة لتغيير الصورة الشخصية", 10f, gray(), false).apply {
+        box.addView(makeText(tr("اضغط على البطاقة لتغيير الصورة الشخصية"), 10f, gray(), false).apply {
             gravity = Gravity.CENTER
             setPadding(0, 0, 0, dp(12))
         })
@@ -108,7 +108,7 @@ internal class ProfileController(
             addView(makeText(value, 23f, Color.rgb(75, 165, 255), true))
             addView(makeText(label, 10f, gray(), false).apply { setPadding(0, dp(3), 0, 0) })
         }
-        stats.addView(statCard(library.size.toString(), "الألعاب"), LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
+        stats.addView(statCard(library.size.toString(), tr("الألعاب")), LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
         stats.addView(statCard(favoriteCount.toString(), "المفضلة"), LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(6) })
         box.addView(stats, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(14) })
 
@@ -136,8 +136,8 @@ internal class ProfileController(
             val copy = LinearLayout(activity).apply {
                 orientation = LinearLayout.VERTICAL
                 setPadding(dp(12), 0, 0, 0)
-                addView(makeText("مساحة التخزين", 13f, white(), true))
-                addView(makeText("ملفات التطبيق: ${readableSize(appFilesBytes)}  •  Cache: ${readableSize(cacheBytes)}", 10f, gray(), false).apply {
+                addView(makeText(tr("مساحة التخزين"), 13f, white(), true))
+                addView(makeText("${tr("ملفات التطبيق:")} ${readableSize(appFilesBytes)}  •  Cache: ${readableSize(cacheBytes)}", 10f, gray(), false).apply {
                     setPadding(0, dp(3), 0, 0)
                 })
             }
@@ -145,13 +145,13 @@ internal class ProfileController(
             addView(makeText("›", 22f, gray(), true))
             setOnClickListener {
                 AlertDialog.Builder(activity)
-                    .setTitle("مساحة التخزين")
+                    .setTitle(tr("مساحة التخزين"))
                     .setMessage(
-                        "ملفات التطبيق: ${readableSize(appFilesBytes)}\\n" +
-                        "الملفات المؤقتة (Cache): ${readableSize(cacheBytes)}\\n\\n" +
-                        "هذه أرقام الملفات المحلية التي يديرها التطبيق. لا يتم حذف أي ملف من هنا."
+                        "${tr("ملفات التطبيق:")} ${readableSize(appFilesBytes)}\\n" +
+                        "${tr("الملفات المؤقتة (Cache):")} ${readableSize(cacheBytes)}\\n\\n" +
+                        tr("هذه أرقام الملفات المحلية التي يديرها التطبيق. لا يتم حذف أي ملف من هنا.")
                     )
-                    .setPositiveButton("إعدادات التخزين") { _, _ ->
+                    .setPositiveButton(tr("إعدادات التخزين")) { _, _ ->
                         try {
                             val intent = android.content.Intent(
                                 android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
@@ -159,10 +159,10 @@ internal class ProfileController(
                             )
                             activity.startActivity(intent)
                         } catch (_: Exception) {
-                            Toast.makeText(activity, "تعذر فتح إعدادات التطبيق", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(activity, tr("تعذر فتح إعدادات التطبيق"), Toast.LENGTH_SHORT).show()
                         }
                     }
-                    .setNegativeButton("إغلاق", null)
+                    .setNegativeButton(tr("إغلاق"), null)
                     .show()
             }
         }
@@ -183,15 +183,15 @@ internal class ProfileController(
             addView(makeText("‹", 22f, gray(), true))
             setOnClickListener { action() }
         }
-        box.addView(settingButton("♙", "الحساب", "إنشاء حساب أو تسجيل الدخول • الاستخدام كزائر متاح") { showAccount() }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
-        box.addView(settingButton("文", "اللغة", "العربية • English • Français • Español") { showLanguagePicker() }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
-        box.addView(settingButton("♧", "الإشعارات", "التحكم في تنبيهات المقالات الجديدة") { showNotificationSettings() })
+        box.addView(settingButton("♙", tr("الحساب"), tr("إنشاء حساب أو تسجيل الدخول • الاستخدام كزائر متاح")) { showAccount() }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
+        box.addView(settingButton("文", tr("اللغة"), tr("العربية • English • Français • Español")) { showLanguagePicker() }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
+        box.addView(settingButton("♧", tr("الإشعارات"), tr("التحكم في تنبيهات المقالات الجديدة")) { showNotificationSettings() })
         val header = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             setPadding(0, dp(4), 0, dp(14))
         }
-        header.addView(makeText("الملف الشخصي", 23f, white(), true), LinearLayout.LayoutParams(0, -2, 1f))
+        header.addView(makeText(tr("الملف الشخصي"), 23f, white(), true), LinearLayout.LayoutParams(0, -2, 1f))
         header.addView(makeText("‹", 30f, Color.rgb(75, 165, 255), true).apply {
             gravity = Gravity.CENTER
             setOnClickListener { onBack() }
@@ -199,7 +199,7 @@ internal class ProfileController(
         box.addView(header, 0)
 
         val saveButton = TextView(activity).apply {
-            text = "حفظ التغييرات"
+            text = tr("حفظ التغييرات")
             textSize = 14f
             gravity = Gravity.CENTER
             setTypeface(null, android.graphics.Typeface.BOLD)
@@ -210,7 +210,7 @@ internal class ProfileController(
                 val nickname = input.text.toString().trim().ifBlank { "Player" }
                 prefs.edit().putString("nickname", nickname).putBoolean("profile_created", true).apply()
                 saveCloudProfile(nickname)
-                Toast.makeText(activity, "تم حفظ الملف الشخصي", Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity, tr("تم حفظ الملف الشخصي"), Toast.LENGTH_SHORT).show()
             }
         }
         box.addView(saveButton, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(14); bottomMargin = dp(8) })
