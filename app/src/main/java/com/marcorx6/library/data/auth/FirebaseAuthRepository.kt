@@ -60,6 +60,9 @@ internal class FirebaseAuthRepository(
     fun sendPasswordReset(email: String): Task<Void> =
         auth.sendPasswordResetEmail(email.trim())
 
+    fun deleteCurrentUser(): Task<Void> = auth.currentUser?.delete()
+        ?: Tasks.forException(IllegalStateException("لا يوجد حساب لحذفه"))
+
     fun signOut() = auth.signOut()
 
     fun addAuthStateListener(listener: FirebaseAuth.AuthStateListener) =
