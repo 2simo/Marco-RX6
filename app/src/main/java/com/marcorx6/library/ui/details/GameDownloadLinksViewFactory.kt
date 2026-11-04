@@ -42,7 +42,7 @@ internal class GameDownloadLinksViewFactory(
                 setTextColor(white())
                 gravity = Gravity.CENTER
                 setTypeface(null, Typeface.BOLD)
-                background = rounded(red(), 11)
+                background = rounded(android.graphics.Color.rgb(35, 132, 232), 11)
                 setPadding(dp(13), dp(12), dp(13), dp(12))
                 setOnClickListener { enqueueDownload(target, item.optString("label").ifBlank { gameName }) }
             }, LinearLayout.LayoutParams(-2, -2).apply { rightMargin = dp(8) })
