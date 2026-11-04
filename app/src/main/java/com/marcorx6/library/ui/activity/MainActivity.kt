@@ -162,7 +162,9 @@ class MainActivity : ComponentActivity() {
             onPlatformSelected = { libraryViewState.selected = it },
             recreateActivity = ::recreate,
             showFirstRunSetup = ::showFirstRunSetup,
-            showProfileForStartup = { userExperienceRuntimeFeature.showProfile() }
+            showProfileForStartup = { userExperienceRuntimeFeature.showProfile() },
+            setContentView = { view -> setContentView(view) },
+            onBack = ::createInterface
         )
     }
 
