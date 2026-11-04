@@ -14,6 +14,10 @@ class BloggerFeedParserTest {
         assertEquals("PS2", BloggerFeedParser.normalizePlatform("PS-2"))
         assertEquals("PS3", BloggerFeedParser.normalizePlatform("PlayStation3"))
         assertEquals("PS4", BloggerFeedParser.normalizePlatform("ps4"))
+        assertEquals("3DS", BloggerFeedParser.normalizePlatform("Nintendo 3DS"))
+        assertEquals("3DS", BloggerFeedParser.normalizePlatform("3DS"))
+        assertEquals("GBA", BloggerFeedParser.normalizePlatform("Game Boy Advance"))
+        assertEquals("GBA", BloggerFeedParser.normalizePlatform("gba"))
     }
 
     @Test
