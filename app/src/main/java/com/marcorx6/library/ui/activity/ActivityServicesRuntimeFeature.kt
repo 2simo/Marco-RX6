@@ -11,13 +11,15 @@ import androidx.activity.ComponentActivity
 internal class ActivityServicesRuntimeFeature(
     activity: ComponentActivity,
     styleAlertDialog: (AlertDialog) -> Unit,
-    isDarkMode: () -> Boolean,
+    private val isDarkMode: () -> Boolean,
     setContentView: (android.view.View) -> Unit,
     showHome: () -> Unit
 ) {
     val ioExecutor = java.util.concurrent.Executors.newCachedThreadPool()
 
-    private val downloadFeature by lazy { DownloadFeature(activity, styleAlertDialog, setContentView) { showHome() } }
+    private val downloadFeature by lazy {
+        DownloadFeature(activity, styleAlertDialog, isDarkMode, setContentView) { showHome() }
+    }
     private val notificationsFeature by lazy { NotificationsFeature(activity, styleAlertDialog) }
     private val systemBarAppearanceController by lazy {
         SystemBarAppearanceController(activity, isDarkMode)
