@@ -87,6 +87,13 @@ internal class FirebaseAccountController(
             contentDescription = translate("رجوع")
             minWidth = dp(48)
             minHeight = dp(48)
+            isClickable = true
+            isFocusable = true
+            if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
+                android.content.res.ColorStateList.valueOf(Color.argb(78, 82, 175, 255)),
+                null,
+                android.graphics.drawable.ColorDrawable(Color.WHITE)
+            )
             setOnClickListener { onBack() }
         }
         header.addView(back, LinearLayout.LayoutParams(dp(48), dp(48)))
