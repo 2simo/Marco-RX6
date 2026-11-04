@@ -32,12 +32,32 @@ internal class BloggerApiClient(
             val stream = if (code in 200..299) connection.inputStream else connection.errorStream
             val body = stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
             if (code !in 200..299) {
-                val message = try {
-                    JSONObject(body).optJSONObject("error")?.optString("message") ?: body
+                val details = try {
+                    val root = JSONObject(body)
+                    val error = root.optJSONObject("error")
+                    val parts = mutableListOf<String>()
+                    error?.optString("status")?.takeIf { it.isNotBlank() }?.let {
+                        parts += "status=$it"
+                    }
+                    error?.optString("message")?.takeIf { it.isNotBlank() }?.let {
+                        parts += "message=$it"
+                    }
+                    val errors = error?.optJSONArray("errors")
+                    if (errors != null) {
+                        for (index in 0 until errors.length()) {
+                            val item = errors.optJSONObject(index) ?: continue
+                            val reason = item.optString("reason")
+                            val domain = item.optString("domain")
+                            val message = item.optString("message")
+                            parts += "error[$index]: reason=$reason, domain=$domain, message=$message"
+                        }
+                    }
+                    parts += "response=$body"
+                    parts.joinToString("\\n")
                 } catch (_: Exception) {
-                    body
+                    body.ifBlank { "Google returned an empty error response." }
                 }
-                throw IllegalStateException("خطأ في Blogger API ($code): $message")
+                throw IllegalStateException("HTTP $code - Blogger API\\n$details".take(5000))
             }
             return if (body.isBlank()) JSONObject() else JSONObject(body)
         } finally {
