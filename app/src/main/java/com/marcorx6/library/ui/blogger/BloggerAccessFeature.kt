@@ -14,7 +14,8 @@ internal class BloggerAccessFeature(
     private val currentBlogId: () -> String,
     setAdmin: (Boolean) -> Unit,
     postToUi: (() -> Unit) -> Unit,
-    refreshUi: () -> Unit
+    refreshUi: () -> Unit,
+    private val translate: (String) -> String
 ) {
     private val controller = services.createAccessController(
         executor = executor,
@@ -26,14 +27,14 @@ internal class BloggerAccessFeature(
         onDenied = {
             Toast.makeText(
                 context,
-                "هذا الحساب لا يملك صلاحية النشر أو التعديل في مدونة Blogger",
+                translate("هذا الحساب لا يملك صلاحية النشر أو التعديل في مدونة Blogger"),
                 Toast.LENGTH_LONG
             ).show()
         },
         onError = { message ->
             Toast.makeText(
                 context,
-                "تعذر التحقق من صلاحيات Blogger: $message",
+                translate("تعذر التحقق من صلاحيات Blogger") + ": " + message,
                 Toast.LENGTH_LONG
             ).show()
         }
