@@ -29,6 +29,13 @@ internal class BloggerAccessFeature(
                 "هذا الحساب لا يملك صلاحية النشر أو التعديل في مدونة Blogger",
                 Toast.LENGTH_LONG
             ).show()
+        },
+        onError = { message ->
+            Toast.makeText(
+                context,
+                "تعذر التحقق من صلاحيات Blogger: $message",
+                Toast.LENGTH_LONG
+            ).show()
         }
     )
 
