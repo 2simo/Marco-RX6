@@ -85,6 +85,8 @@ internal class ProfileController(
         })
         identity.addView(makeText("MARCO RX6  •  GAMER", 9f, if (dark) Color.rgb(191, 211, 230) else Color.rgb(79, 105, 129), true))
         hero.addView(identity, LinearLayout.LayoutParams(0, -2, 1f))
+        hero.isClickable = true
+        hero.isFocusable = true
         hero.setOnClickListener { chooseAvatar() }
         box.addView(hero, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
         box.addView(makeText(tr("اضغط على البطاقة لتغيير الصورة الشخصية"), 10f, gray(), false).apply {
@@ -103,13 +105,21 @@ internal class ProfileController(
         fun statCard(value: String, label: String) = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            background = rounded(if (dark) Color.argb(198, 15, 43, 70) else Color.argb(215, 255, 255, 255), 16)
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                if (dark) intArrayOf(Color.argb(220, 23, 68, 110), Color.argb(205, 8, 27, 47))
+                else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(216, 224, 240, 255))
+            ).apply {
+                cornerRadius = dp(16).toFloat()
+                setStroke(dp(1), if (dark) Color.argb(155, 80, 151, 215) else Color.argb(165, 153, 195, 236))
+            }
+            elevation = dp(2).toFloat()
             setPadding(dp(10), dp(14), dp(10), dp(14))
             addView(makeText(value, 23f, Color.rgb(75, 165, 255), true))
             addView(makeText(label, 10f, gray(), false).apply { setPadding(0, dp(3), 0, 0) })
         }
         stats.addView(statCard(library.size.toString(), tr("الألعاب")), LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
-        stats.addView(statCard(favoriteCount.toString(), "المفضلة"), LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(6) })
+        stats.addView(statCard(favoriteCount.toString(), tr("المفضلة")), LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(6) })
         box.addView(stats, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(14) })
 
         fun directoryBytes(directory: File?): Long {
@@ -130,7 +140,15 @@ internal class ProfileController(
         val storageCard = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            background = rounded(panel(), 16)
+            background = GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                if (dark) intArrayOf(Color.argb(220, 21, 63, 102), Color.argb(207, 8, 27, 47))
+                else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(216, 224, 240, 255))
+            ).apply {
+                cornerRadius = dp(16).toFloat()
+                setStroke(dp(1), if (dark) Color.argb(155, 80, 151, 215) else Color.argb(165, 153, 195, 236))
+            }
+            elevation = dp(2).toFloat()
             setPadding(dp(14), dp(13), dp(14), dp(13))
             addView(makeText("▤", 22f, Color.rgb(75, 165, 255), true))
             val copy = LinearLayout(activity).apply {
@@ -170,7 +188,15 @@ internal class ProfileController(
         fun settingButton(icon: String, label: String, detail: String, action: () -> Unit) = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            background = rounded(if (dark) Color.argb(198, 15, 43, 70) else Color.argb(215, 255, 255, 255), 15)
+            background = GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                if (dark) intArrayOf(Color.argb(220, 21, 63, 102), Color.argb(207, 8, 27, 47))
+                else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(216, 224, 240, 255))
+            ).apply {
+                cornerRadius = dp(15).toFloat()
+                setStroke(dp(1), if (dark) Color.argb(155, 80, 151, 215) else Color.argb(165, 153, 195, 236))
+            }
+            elevation = dp(2).toFloat()
             setPadding(dp(14), dp(13), dp(14), dp(13))
             addView(makeText(icon, 20f, Color.rgb(75, 165, 255), true).apply { gravity = Gravity.CENTER })
             val copy = LinearLayout(activity).apply {
@@ -181,6 +207,8 @@ internal class ProfileController(
             }
             addView(copy, LinearLayout.LayoutParams(0, -2, 1f))
             addView(makeText("‹", 22f, gray(), true))
+            isClickable = true
+            isFocusable = true
             setOnClickListener { action() }
         }
         box.addView(settingButton("♙", tr("الحساب"), tr("إنشاء حساب أو تسجيل الدخول • الاستخدام كزائر متاح")) { showAccount() }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
