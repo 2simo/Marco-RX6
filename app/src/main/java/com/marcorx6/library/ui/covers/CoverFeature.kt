@@ -21,7 +21,8 @@ internal class CoverFeature(
     deleteCoverFileIfUnused: (String) -> Unit,
     dp: (Int) -> Int,
     white: () -> Int,
-    styleDialog: (android.app.AlertDialog) -> Unit
+    styleDialog: (android.app.AlertDialog) -> Unit,
+    translate: (String) -> String
 ) {
     private val driveServices = DriveServices(
         filesDir = filesDir,
@@ -43,6 +44,7 @@ internal class CoverFeature(
         deleteCoverFileIfUnused = deleteCoverFileIfUnused,
         dp = dp,
         white = white,
-        styleDialog = styleDialog
+        styleDialog = styleDialog,
+        translate = translate
     )
 }
