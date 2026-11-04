@@ -27,6 +27,10 @@ import android.widget.*
 
 class MainActivity : ComponentActivity() {
 
+    private companion object {
+        var startupExperienceShown = false
+    }
+
     private val secondaryScreenBackCallback = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() {
             createInterface()
@@ -270,7 +274,12 @@ class MainActivity : ComponentActivity() {
             loadGames = gameDataRuntimeFeature::loadGames,
             restoreAdminSession = { googleAccountRuntimeFeature.isAdminSession = false; bloggerRuntimeFeature.refreshAccess() },
             createInterface = ::createInterface,
-            showStartupExperience = ::showStartupExperience,
+            showStartupExperience = {
+                if (!startupExperienceShown) {
+                    startupExperienceShown = true
+                    showStartupExperience()
+                }
+            },
             setupCompleted = userExperienceRuntimeFeature::isSetupCompleted,
             notificationsEnabled = activityServicesRuntimeFeature::areNotificationsEnabled,
             scheduleNotifications = activityServicesRuntimeFeature::scheduleNotifications,
