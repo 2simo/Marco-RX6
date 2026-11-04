@@ -81,7 +81,12 @@ class MainActivity : ComponentActivity() {
                     createInterface()
                 }
             },
-            styleDialog = ::styleAlertDialog
+            styleDialog = ::styleAlertDialog,
+            setContentView = ::showRootScreen,
+            onBack = ::createInterface,
+            dp = ::dp,
+            isDarkMode = ::isDarkMode,
+            applyUnifiedSkin = ::applyUnifiedSkin
         )
     }
 
