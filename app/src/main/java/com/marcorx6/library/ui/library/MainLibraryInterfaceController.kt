@@ -334,7 +334,11 @@ internal class MainLibraryInterfaceController(
             elevation = dp(14).toFloat()
             setPadding(dp(7), dp(7), dp(7), dp(7))
         }
-        if (selected == "FAVORITES" && activeDockTab == "HOME") activeDockTab = "LIBRARY"
+        if (activeDockTab in setOf("DOWNLOADS", "PROFILE", "SETTINGS")) {
+            activeDockTab = if (selected == "FAVORITES") "LIBRARY" else "HOME"
+        } else if (selected == "FAVORITES" && activeDockTab == "HOME") {
+            activeDockTab = "LIBRARY"
+        }
         val dockItems = linkedMapOf<String, LinearLayout>()
         fun renderDockSelection() {
             dockItems.forEach { (tab, item) ->
