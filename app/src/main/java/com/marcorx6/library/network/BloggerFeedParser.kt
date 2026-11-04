@@ -98,6 +98,8 @@ internal object BloggerFeedParser {
             s == "ps2" || s.contains("playstation2") -> "PS2"
             s == "ps3" || s.contains("playstation3") -> "PS3"
             s == "ps4" || s.contains("playstation4") -> "PS4"
+            s == "3ds" || s == "nintendo3ds" || s.contains("nintendo3ds") -> "3DS"
+            s == "gba" || s == "gameboyadvance" || s.contains("gameboyadvance") -> "GBA"
             else -> null
         }
     }
