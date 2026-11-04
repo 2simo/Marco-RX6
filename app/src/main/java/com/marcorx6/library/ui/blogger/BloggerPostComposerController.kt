@@ -132,6 +132,9 @@ internal class BloggerPostComposerController(
         loadCover(preview, pendingCoverLocalPath(), existing?.coverUrl ?: "")
         box.addView(Button(activity).apply {
             text = translate("اختيار صورة الغلاف من الهاتف")
+            contentDescription = translate("اختيار صورة غلاف المقال من الهاتف")
+            minHeight = dp(52)
+            isAllCaps = false
             tag = "marco_primary_action"
             setTextColor(accentForeground())
             background = android.graphics.drawable.GradientDrawable(
@@ -187,7 +190,14 @@ internal class BloggerPostComposerController(
             .create()
 
         dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).apply {
+                minHeight = dp(48)
+                contentDescription = translate("إغلاق محرر المقال")
+            }
+            dialog.getButton(AlertDialog.BUTTON_NEUTRAL).apply {
+                minHeight = dp(48)
+                contentDescription = translate("معاينة المقال قبل النشر")
+                setOnClickListener {
                 val web = previewFactory.create(
                     title = title.text.toString(),
                     labels = selectedLabels.joinToString("، "),
@@ -203,8 +213,12 @@ internal class BloggerPostComposerController(
                     .setPositiveButton(translate("إغلاق"), null)
                     .show()
                     .also(styleAlertDialog)
+                }
             }
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).apply {
+                minHeight = dp(52)
+                contentDescription = translate(if (existing == null) "نشر المقال على Blogger" else "حفظ تعديلات المقال")
+                setOnClickListener {
                 val postTitle = title.text.toString().trim()
                 val coverLink = coverUrl.text.toString().trim()
                 val relatedLink = link.text.toString().trim()
@@ -266,6 +280,7 @@ internal class BloggerPostComposerController(
                         Toast.makeText(activity, translate(message), Toast.LENGTH_LONG).show()
                     }
                 )
+                }
             }
         }
         dialog.show()
