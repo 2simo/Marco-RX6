@@ -43,6 +43,8 @@ internal class BloggerAccessController(
                         onError(error.message ?: error.javaClass.simpleName)
                     } ?: if (!allowed) {
                         onDenied()
+                    } else {
+                        Unit
                     }
                 }
             }
