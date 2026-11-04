@@ -333,13 +333,38 @@ internal class MainLibraryInterfaceController(
             elevation = dp(14).toFloat()
             setPadding(dp(7), dp(7), dp(7), dp(7))
         }
-        fun dockItem(icon: String, label: String, action: () -> Unit) {
+        var activeDockTab = if (selected == "FAVORITES") "LIBRARY" else "HOME"
+        val dockItems = linkedMapOf<String, LinearLayout>()
+        fun renderDockSelection() {
+            dockItems.forEach { (tab, item) ->
+                val active = tab == activeDockTab
+                item.background = rounded(
+                    if (active) {
+                        if (isDarkMode()) Color.rgb(28, 105, 183) else Color.rgb(211, 233, 255)
+                    } else {
+                        if (isDarkMode()) Color.rgb(22, 55, 91) else Color.rgb(226, 240, 255)
+                    }, 15
+                )
+                for (index in 0 until item.childCount) {
+                    (item.getChildAt(index) as? TextView)?.setTextColor(
+                        if (active) Color.rgb(255, 255, 255)
+                        else if (isDarkMode()) silver else Color.rgb(43, 51, 68)
+                    )
+                }
+            }
+        }
+        fun dockItem(key: String, icon: String, label: String, action: () -> Unit) {
             val item = LinearLayout(context).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
                 setPadding(dp(5), dp(5), dp(5), dp(5))
-                background = rounded(if (isDarkMode()) Color.rgb(22, 55, 91) else Color.rgb(226, 240, 255), 15)
-                setOnClickListener { action() }
+                isClickable = true
+                isFocusable = true
+                setOnClickListener {
+                    activeDockTab = key
+                    renderDockSelection()
+                    action()
+                }
             }
             item.addView(makeText(icon, 15f, if (isDarkMode()) silver else Color.rgb(75, 158, 245), true).apply {
                 gravity = Gravity.CENTER
@@ -349,15 +374,26 @@ internal class MainLibraryInterfaceController(
                 maxLines = 1
                 setPadding(dp(2), dp(3), dp(2), dp(2))
             })
+            dockItems[key] = item
             dock.addView(item, LinearLayout.LayoutParams(0, -2, 1f).apply {
                 marginStart = dp(3); marginEnd = dp(3)
             })
         }
-        dockItem("⌂", tr("الرئيسية")) { selected = "ALL"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
-        dockItem("♡", tr("المفضلة")) { selected = "FAVORITES"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
-        dockItem("⬇", "التنزيلات") { showDownloads() }
-        dockItem("⌕", "استكشف") { search.requestFocus(); pageScroll.smoothScrollTo(0, 0); (context.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager).showSoftInput(search, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT) }
-        dockItem("♙", tr("حسابي")) { showProfile() }
+        dockItem("HOME", "⌂", tr("الرئيسية")) {
+            selected = "ALL"; renderGames(); pageScroll.smoothScrollTo(0, 0)
+        }
+        dockItem("LIBRARY", "♡", tr("المفضلة")) {
+            selected = "FAVORITES"; renderGames(); pageScroll.smoothScrollTo(0, 0)
+        }
+        dockItem("DOWNLOADS", "⬇", "التنزيلات") { showDownloads() }
+        dockItem("EXPLORE", "⌕", "استكشف") {
+            search.requestFocus()
+            pageScroll.smoothScrollTo(0, 0)
+            (context.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager)
+                .showSoftInput(search, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
+        }
+        dockItem("PROFILE", "♙", tr("حسابي")) { showProfile() }
+        renderDockSelection()
         val dockParams = FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply {
             leftMargin = dp(16); rightMargin = dp(16); bottomMargin = dp(12)
         }
