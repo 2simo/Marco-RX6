@@ -97,10 +97,9 @@ internal class FirebaseAccountController(
                 setStroke(dp(1), if (dark) Color.argb(170, 91, 170, 242) else Color.argb(190, 123, 180, 231))
             }
         }
-        val signedIn = user != null && !user.isAnonymous
         val stateTitle = TextView(activity).apply {
             text = when {
-                signedIn -> "مرحباً بعودتك"
+                user != null && !user.isAnonymous -> "مرحباً بعودتك"
                 user?.isAnonymous == true -> "أنت تستعمل التطبيق كزائر"
                 else -> "اختَر طريقة الدخول"
             }
@@ -112,7 +111,7 @@ internal class FirebaseAccountController(
         hero.addView(stateTitle)
         val stateDetail = TextView(activity).apply {
             text = when {
-                signedIn -> user.email.orEmpty()
+                user != null && !user.isAnonymous -> user.email.orEmpty()
                 user?.isAnonymous == true -> "يمكنك الاستمرار دون حساب أو ربط حسابك لاحقاً"
                 else -> "احفظ ملفك الشخصي واستعمل مزايا الحساب على أجهزتك"
             }
@@ -159,7 +158,7 @@ internal class FirebaseAccountController(
             page.addView(item, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
         }
 
-        if (!signedIn) {
+        if (user == null || user.isAnonymous) {
             action("المتابعة كزائر", "استعمل المكتبة دون إنشاء حساب", run = onBack)
             action("الدخول باستخدام Google", "ربط حساب Google بحساب MARCO RX6", primary = true, run = ::startFreshGoogleAccountSelection)
             action("إنشاء حساب بالبريد الإلكتروني", "حساب جديد مع كلمة مرور", run = { showEmailForm(createAccount = true) })
