@@ -22,7 +22,9 @@ internal class AppearanceFeature(
     private val applyMotionPreferences: (View) -> Unit,
     private val styleDialog: (android.app.AlertDialog) -> Unit,
     private val recreateActivity: () -> Unit,
-    private val recreateInterface: () -> Unit
+    private val recreateInterface: () -> Unit,
+    private val setContentView: (View) -> Unit,
+    private val onBack: () -> Unit
 ) {
     private fun typographyPreferences() = AppearancePreferencesStore.typography(activity)
     fun fontScale(): Float = TypographyPreferences.scale(typographyPreferences())
@@ -42,7 +44,9 @@ internal class AppearanceFeature(
             activity = activity,
             preferences = appearancePreferences(),
             applyMotionPreferences = applyMotionPreferences,
-            recreateActivity = recreateActivity
+            recreateActivity = recreateActivity,
+            setContentView = setContentView,
+            onBack = onBack
         ).show()
     }
 
