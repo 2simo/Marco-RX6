@@ -67,6 +67,9 @@ internal class AppearanceSettingsController(
         header.addView(heading, LinearLayout.LayoutParams(0, -2, 1f))
         header.addView(TextView(activity).apply {
             text = "×"
+            contentDescription = translate("إغلاق الإعدادات")
+            minWidth = dp(48)
+            minHeight = dp(48)
             textSize = 30f
             gravity = Gravity.CENTER
             setTextColor(muted)
@@ -129,6 +132,8 @@ internal class AppearanceSettingsController(
             setTextColor(ink)
         })
         val toggle = TextView(activity).apply {
+            contentDescription = translate("تبديل حركات وانتقالات الواجهة")
+            minHeight = dp(48)
             text = translate(if (preferences.getBoolean("animations", true)) "الحركات مفعّلة  ✓" else "الحركات متوقفة")
             textSize = 13f
             gravity = Gravity.CENTER
@@ -145,6 +150,7 @@ internal class AppearanceSettingsController(
                 preferences.edit().putBoolean("animations", enabled).apply()
                 applyMotionPreferences(activity.window.decorView)
                 text = translate(if (enabled) "الحركات مفعّلة  ✓" else "الحركات متوقفة")
+                contentDescription = translate(if (enabled) "إيقاف حركات وانتقالات الواجهة" else "تفعيل حركات وانتقالات الواجهة")
                 setTextColor(if (enabled) Color.WHITE else blue)
                 background = GradientDrawable().apply {
                     setColor(if (enabled) Color.argb(218, 42, 145, 255) else if (dark) Color.argb(190, 15, 35, 58) else Color.argb(210, 255, 255, 255))
@@ -168,6 +174,7 @@ internal class AppearanceSettingsController(
                 }
                 isClickable = true
                 isFocusable = true
+                contentDescription = "$title. $description"
                 elevation = dp(2).toFloat()
                 addView(TextView(activity).apply {
                     text = title
