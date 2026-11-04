@@ -95,7 +95,8 @@ internal class GameDetailsFeature(
         white = white,
         enqueueDownload = { url, label ->
             enqueueGameDownload(url, label, "", "", "", "")
-        }
+        },
+        translate = tr
     )
 
     private val similarGamesViewFactory = GameSimilarGamesViewFactory(
@@ -143,7 +144,8 @@ internal class GameDetailsFeature(
         deleteGame = deleteGame,
         applyMotionPreferences = applyMotionPreferences,
         applyUnifiedSkin = applyUnifiedSkin,
-        rounded = rounded
+        rounded = rounded,
+        translate = tr
     )
 
     fun show(game: Game) = controller.show(game)
