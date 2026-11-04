@@ -299,24 +299,26 @@ internal class MainLibraryInterfaceController(
         val dock = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
+            // Floating glass dock: translucent electric-blue edge and soft, elevated surface.
             background = if (isDarkMode()) GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(19, 39, 65), Color.rgb(10, 23, 41), Color.rgb(7, 15, 28))).apply {
-                cornerRadius = dp(23).toFloat()
-                setStroke(dp(1), Color.rgb(43, 105, 164))
+                intArrayOf(Color.argb(238, 20, 39, 63), Color.argb(226, 9, 21, 37), Color.argb(220, 7, 15, 28))).apply {
+                cornerRadius = dp(26).toFloat()
+                setStroke(dp(1), Color.argb(190, 67, 151, 232))
             } else GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(255, 255, 255), Color.rgb(241, 244, 250))).apply {
-                cornerRadius = dp(23).toFloat()
-                setStroke(dp(1), Color.rgb(190, 199, 214))
+                intArrayOf(Color.argb(246, 255, 255, 255), Color.argb(232, 236, 244, 253))).apply {
+                cornerRadius = dp(26).toFloat()
+                setStroke(dp(1), Color.rgb(151, 193, 235))
             }
-            elevation = dp(14).toFloat()
-            setPadding(dp(7), dp(7), dp(7), dp(7))
+            elevation = dp(18).toFloat()
+            setPadding(dp(8), dp(7), dp(8), dp(7))
         }
         fun dockItem(icon: String, label: String, action: () -> Unit) {
             val item = LinearLayout(context).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
                 setPadding(dp(5), dp(5), dp(5), dp(5))
-                background = rounded(if (isDarkMode()) Color.rgb(22, 43, 68) else Color.rgb(232, 237, 246), 15)
+                // Keep dock destinations visually light; the container supplies the glass surface.
+                background = rounded(if (isDarkMode()) Color.argb(90, 39, 91, 145) else Color.argb(110, 214, 230, 248), 16)
                 setOnClickListener { action() }
             }
             item.addView(makeText(icon, 15f, if (isDarkMode()) silver else Color.rgb(43, 123, 194), true).apply {
@@ -337,7 +339,7 @@ internal class MainLibraryInterfaceController(
         dockItem("⌕", "بحث") { search.requestFocus(); pageScroll.smoothScrollTo(0, 0); (context.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager).showSoftInput(search, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT) }
         dockItem("♙", tr("حسابي")) { showProfile() }
         val dockParams = FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply {
-            leftMargin = dp(16); rightMargin = dp(16); bottomMargin = dp(12)
+            leftMargin = dp(14); rightMargin = dp(14); bottomMargin = dp(12)
         }
         shell.addView(dock, dockParams)
         ViewCompat.setOnApplyWindowInsetsListener(shell) { _, insets ->
