@@ -433,6 +433,8 @@ internal class MainLibraryInterfaceController(
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
                 setPadding(dp(5), dp(5), dp(5), dp(5))
+                minWidth = dp(48)
+                minHeight = dp(56)
                 isClickable = true
                 isFocusable = true
                 if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
@@ -448,11 +450,13 @@ internal class MainLibraryInterfaceController(
             }
             item.addView(makeText(icon, 15f, if (isDarkMode()) silver else Color.rgb(75, 158, 245), true).apply {
                 gravity = Gravity.CENTER
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
             })
             item.addView(makeText(label, 10f, if (isDarkMode()) silver else Color.rgb(43, 51, 68), true).apply {
                 gravity = Gravity.CENTER
                 maxLines = 1
                 setPadding(dp(2), dp(3), dp(2), dp(2))
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
             })
             dockItems[key] = item
             dockLabels[key] = label
