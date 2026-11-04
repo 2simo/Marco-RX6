@@ -52,10 +52,10 @@ internal class ProfileController(
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(16), dp(16), dp(16), dp(16))
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                if (dark) intArrayOf(Color.rgb(19, 91, 158), Color.rgb(12, 39, 67), Color.rgb(8, 26, 43))
+                if (dark) intArrayOf(Color.rgb(25, 111, 205), Color.rgb(14, 53, 101), Color.rgb(8, 26, 48))
                 else intArrayOf(Color.rgb(226, 241, 255), Color.rgb(241, 247, 255))).apply {
                 cornerRadius = dp(20).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(65, 133, 194) else Color.rgb(173, 207, 237))
+                setStroke(dp(1), if (dark) Color.rgb(64, 145, 224) else Color.rgb(173, 207, 237))
             }
         }
         val avatar = ImageView(activity).apply {
