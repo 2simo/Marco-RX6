@@ -308,7 +308,6 @@ internal class MainLibraryInterfaceController(
         }
 
         applyTypography(root)
-        applyUnifiedSkin(root)
         val pageScroll = ScrollView(context).apply {
             isFillViewport = true
             isVerticalScrollBarEnabled = false
@@ -404,6 +403,9 @@ internal class MainLibraryInterfaceController(
             leftMargin = dp(16); rightMargin = dp(16); bottomMargin = dp(12)
         }
         shell.addView(dock, dockParams)
+        // Apply the shared glass/ripple interaction layer after every screen control,
+        // including the floating navigation dock, has been assembled.
+        applyUnifiedSkin(shell)
         ViewCompat.setOnApplyWindowInsetsListener(shell) { _, insets ->
             val safeAreas = insets.getInsets(
                 WindowInsetsCompat.Type.navigationBars() or WindowInsetsCompat.Type.displayCutout()
