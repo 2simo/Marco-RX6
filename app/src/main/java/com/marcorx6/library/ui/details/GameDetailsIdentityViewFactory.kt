@@ -28,7 +28,7 @@ internal class GameDetailsIdentityViewFactory(
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
                 if (dark) intArrayOf(Color.rgb(24, 67, 111), Color.rgb(13, 32, 55), Color.rgb(8, 20, 36))
-                else intArrayOf(Color.rgb(250, 253, 255), Color.rgb(226, 239, 253), Color.rgb(239, 235, 255))
+                else intArrayOf(Color.rgb(250, 253, 255), Color.rgb(226, 239, 253), Color.rgb(232, 243, 255))
             ).apply {
                 cornerRadius = dp(22).toFloat()
                 setStroke(dp(1), if (dark) Color.rgb(64, 124, 184) else Color.rgb(174, 204, 236))
@@ -37,7 +37,7 @@ internal class GameDetailsIdentityViewFactory(
         }
         val cover = ImageView(activity).apply {
             scaleType = ImageView.ScaleType.CENTER_CROP
-            background = rounded(if (dark) Color.rgb(48, 54, 72) else Color.rgb(235, 239, 247), 12)
+            background = rounded(if (dark) Color.rgb(29, 58, 91) else Color.rgb(235, 239, 247), 12)
             contentDescription = game.name
         }
         if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) {
