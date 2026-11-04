@@ -44,6 +44,9 @@ internal class GameLibraryRenderer(
                 for (i in 0 until filters.childCount) {
                     val chip = filters.getChildAt(i) as TextView
                     val active = chip.tag?.toString() == selected
+                    chip.isSelected = active
+                    chip.contentDescription = chip.text.toString() + ", " +
+                        tr(if (active) "محدد" else "غير محدد")
                     chip.background = rounded(if (active) red else panel, 13)
                     chip.setTextColor(if (active) accentForeground() else gray)
                 }
@@ -97,6 +100,9 @@ internal class GameLibraryRenderer(
                             stateListAnimator = null
                             isClickable = true
                             isFocusable = true
+                            minHeight = dp(48)
+                            contentDescription = listOf(game.name, game.platform, game.releaseYear)
+                                .filter { it.isNotBlank() }.joinToString(", ") + ", " + tr("عرض التفاصيل")
                             setOnClickListener { showDetails(game) }
                         }
                         val imageFrame = FrameLayout(activity).apply { clipToOutline = true; background = rounded(bg, 12) }
