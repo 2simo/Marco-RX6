@@ -4,6 +4,8 @@ import android.app.Activity
 import android.content.Intent
 import android.app.AlertDialog
 import android.text.InputType
+import android.text.method.HideReturnsTransformationMethod
+import android.text.method.PasswordTransformationMethod
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
@@ -446,6 +448,25 @@ internal class FirebaseAccountController(
                 page.addView(field, LinearLayout.LayoutParams(-1, dp(54)).apply { bottomMargin = dp(14) })
             }
         } else null
+        var passwordVisible = false
+        val visibilityToggle = TextView(activity).apply {
+            text = translate("إظهار كلمة المرور")
+            textSize = 12f
+            gravity = Gravity.END
+            setTextColor(Color.rgb(75, 165, 255))
+            setPadding(0, dp(3), 0, dp(12))
+            setOnClickListener {
+                passwordVisible = !passwordVisible
+                val method = if (passwordVisible) HideReturnsTransformationMethod.getInstance()
+                    else PasswordTransformationMethod.getInstance()
+                password.transformationMethod = method
+                confirmPassword?.transformationMethod = method
+                password.setSelection(password.text.length)
+                confirmPassword?.setSelection(confirmPassword.text.length)
+                text = translate(if (passwordVisible) "إخفاء كلمة المرور" else "إظهار كلمة المرور")
+            }
+        }
+        page.addView(visibilityToggle)
         if (!createAccount) {
             val forgot = TextView(activity).apply {
                 text = translate("نسيت كلمة المرور؟")
@@ -617,6 +638,6 @@ internal class FirebaseAccountController(
     }
 
     private fun toast(message: String) {
-        Toast.makeText(activity, message, Toast.LENGTH_LONG).show()
+        Toast.makeText(activity, translate(message), Toast.LENGTH_LONG).show()
     }
 }
