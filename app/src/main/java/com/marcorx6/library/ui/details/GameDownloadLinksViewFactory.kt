@@ -17,7 +17,8 @@ internal class GameDownloadLinksViewFactory(
     private val panel: () -> Int,
     private val red: () -> Int,
     private val white: () -> Int,
-    private val enqueueDownload: (url: String, label: String) -> Unit
+    private val enqueueDownload: (url: String, label: String) -> Unit,
+    private val translate: (String) -> String
 ) {
     fun create(downloadLinks: String, gameName: String): View? {
         val downloads = try { JSONArray(downloadLinks) } catch (_: Exception) { JSONArray() }
@@ -35,7 +36,7 @@ internal class GameDownloadLinksViewFactory(
             val item = downloads.optJSONObject(index) ?: continue
             val target = item.optString("url")
             if (!target.startsWith("https://")) continue
-            val label = item.optString("label").ifBlank { "تحميل ${index + 1}" }
+            val label = item.optString("label").ifBlank { "${translate("تحميل")} ${index + 1}" }
             downloadRow.addView(TextView(activity).apply {
                 text = "⬇  $label"
                 textSize = 12f
