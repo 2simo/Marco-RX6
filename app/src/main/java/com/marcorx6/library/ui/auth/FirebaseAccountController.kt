@@ -534,13 +534,12 @@ internal class FirebaseAccountController(
             return
         }
         AlertDialog.Builder(activity)
-            .setTitle("حذف حساب MARCO RX6؟")
+            .setTitle(translate("حذف حساب MARCO RX6؟"))
             .setMessage(
-                "هاد العملية نهائية: غادي نحذف ملف الحساب والإعدادات المحفوظة فـ Firebase، ومن بعد حساب Firebase نفسه. " +
-                    "مكتبة الألعاب والملفات المحلية فالتيليفون، وحساب Google المسؤول ومحتوى Blogger وDrive، ما غاديش نمسوهم."
+                translate("هاد العملية نهائية: غادي نحذف ملف الحساب والإعدادات المحفوظة فـ Firebase، ومن بعد حساب Firebase نفسه. مكتبة الألعاب والملفات المحلية فالتيليفون، وحساب Google المسؤول ومحتوى Blogger وDrive، ما غاديش نمسوهم.")
             )
-            .setNegativeButton("إلغاء", null)
-            .setPositiveButton("متابعة") { _, _ ->
+            .setNegativeButton(translate("إلغاء"), null)
+            .setPositiveButton(translate("متابعة")) { _, _ ->
                 when {
                     user.isAnonymous -> deleteAccountDataAndAuth(user)
                     user.providerData.any { it.providerId == "password" } -> showDeletePasswordPrompt(user)
@@ -554,16 +553,16 @@ internal class FirebaseAccountController(
 
     private fun showDeletePasswordPrompt(user: FirebaseUser) {
         val password = EditText(activity).apply {
-            hint = "كلمة المرور الحالية"
+            hint = translate("كلمة المرور الحالية")
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
             setSingleLine(true)
         }
         val dialog = AlertDialog.Builder(activity)
-            .setTitle("تأكيد هوية صاحب الحساب")
-            .setMessage("دخل كلمة المرور الحالية باش نتحققو من هويتك قبل الحذف.")
+            .setTitle(translate("تأكيد هوية صاحب الحساب"))
+            .setMessage(translate("دخل كلمة المرور الحالية باش نتحققو من هويتك قبل الحذف."))
             .setView(password)
             .setNegativeButton("إلغاء", null)
-            .setPositiveButton("تحقق وحذف", null)
+            .setPositiveButton(translate("تحقق وحذف"), null)
             .create()
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
