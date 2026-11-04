@@ -9,10 +9,11 @@ internal class DownloadFeature(
     styleDialog: (android.app.AlertDialog) -> Unit,
     isDarkMode: () -> Boolean,
     setContentView: (android.view.View) -> Unit,
+    translate: (String) -> String,
     onBack: () -> Unit
 ) {
     private val repository = DownloadRepository(activity.applicationContext)
-    private val controller = DownloadUiController(activity, repository, styleDialog, isDarkMode, setContentView, onBack)
+    private val controller = DownloadUiController(activity, repository, styleDialog, isDarkMode, setContentView, translate, onBack)
 
     fun enqueueGameDownload(
         link: String,
