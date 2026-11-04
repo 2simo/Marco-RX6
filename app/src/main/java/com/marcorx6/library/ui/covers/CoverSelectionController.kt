@@ -26,7 +26,8 @@ internal class CoverSelectionController(
     private val deleteCoverFileIfUnused: (String) -> Unit,
     private val dp: (Int) -> Int,
     private val white: () -> Int,
-    private val styleDialog: (AlertDialog) -> Unit
+    private val styleDialog: (AlertDialog) -> Unit,
+    private val translate: (String) -> String
 ) {
     fun handle(uri: Uri) {
         state.beginSelection()
@@ -40,17 +41,17 @@ internal class CoverSelectionController(
                 deleteCoverFileIfUnused(previousPendingPath)
                 coverUrlField()?.setText("")
                 coverPreview()?.let { loadCover(it, state.pendingLocalPath, "") }
-                Toast.makeText(context, "تم اختيار الصورة، جارٍ رفعها للموقع...", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, translate("تم اختيار الصورة، جارٍ رفعها للموقع..."), Toast.LENGTH_SHORT).show()
             },
             onSuccess = { uploadResult ->
                 state.uploadSucceeded(uploadResult.localFile.absolutePath, uploadResult.publicUrl)
                 coverUrlField()?.setText(uploadResult.publicUrl)
                 coverPreview()?.let { loadCover(it, state.pendingLocalPath, uploadResult.publicUrl) }
-                Toast.makeText(context, "تم رفع الغلاف بنجاح وأصبح جاهزاً للنشر", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, translate("تم رفع الغلاف بنجاح وأصبح جاهزاً للنشر"), Toast.LENGTH_LONG).show()
             },
             onFailure = { error ->
                 state.uploadFailed()
-                val details = (error.message ?: error.javaClass.simpleName).ifBlank { "خطأ غير معروف" }
+                val details = (error.message ?: error.javaClass.simpleName).ifBlank { translate("خطأ غير معروف") }
                 val detailsView = TextView(context).apply {
                     text = details
                     setTextIsSelectable(true)
@@ -63,15 +64,15 @@ internal class CoverSelectionController(
                     setPadding(dp(8), 0, dp(8), 0)
                 }
                 AlertDialog.Builder(context)
-                    .setTitle("فشل رفع الغلاف")
-                    .setMessage("التفاصيل الكاملة لخطأ Google Drive:")
+                    .setTitle(translate("فشل رفع الغلاف"))
+                    .setMessage(translate("التفاصيل الكاملة لخطأ Google Drive:"))
                     .setView(scroll)
-                    .setPositiveButton("نسخ التفاصيل") { _, _ ->
+                    .setPositiveButton(translate("نسخ التفاصيل")) { _, _ ->
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         clipboard.setPrimaryClip(ClipData.newPlainText("Google Drive error", details))
-                        Toast.makeText(context, "تم نسخ تفاصيل الخطأ", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, translate("تم نسخ تفاصيل الخطأ"), Toast.LENGTH_SHORT).show()
                     }
-                    .setNegativeButton("إغلاق", null)
+                    .setNegativeButton(translate("إغلاق"), null)
                     .show()
                     .also(styleDialog)
             }
