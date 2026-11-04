@@ -292,6 +292,8 @@ internal object LanguageTranslator {
             "الترتيب:" to listOf("Sort:", "Tri :", "Orden:"),
             "المضاف حديثاً" to listOf("Recently added", "Ajoutés récemment", "Añadidos recientemente"),
             "ألعاب" to listOf("Games", "Jeux", "Juegos"),
+            "تعديل" to listOf("Edit", "Modifier", "Editar"),
+            "حذف" to listOf("Delete", "Supprimer", "Eliminar"),
             "الأقسام" to listOf("Sections", "Rubriques", "Secciones"),
             "انتظر حتى يكتمل رفع صورة الغلاف" to listOf("Wait for the cover upload to finish", "Attendez la fin du téléversement de la couverture", "Espera a que termine la carga de la portada"),
             "صورة الغلاف لم تكتمل عملية رفعها. أعد اختيار الصورة وانتظر رسالة نجاح الرفع." to listOf("The cover upload did not finish. Choose the image again and wait for the success message.", "Le téléversement de la couverture n’est pas terminé. Choisissez à nouveau l’image et attendez la confirmation.", "La portada no terminó de cargarse. Selecciona la imagen otra vez y espera el mensaje de éxito."),
