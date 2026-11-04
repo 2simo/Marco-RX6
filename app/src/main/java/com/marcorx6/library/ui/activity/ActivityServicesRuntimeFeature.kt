@@ -19,7 +19,7 @@ internal class ActivityServicesRuntimeFeature(
     val ioExecutor = java.util.concurrent.Executors.newCachedThreadPool()
 
     private val downloadFeature by lazy {
-        DownloadFeature(activity, styleAlertDialog, isDarkMode, setContentView) { showHome() }
+        DownloadFeature(activity, styleAlertDialog, isDarkMode, setContentView, translate) { showHome() }
     }
     private val notificationsFeature by lazy { NotificationsFeature(activity, styleAlertDialog, translate) }
     private val systemBarAppearanceController by lazy {
