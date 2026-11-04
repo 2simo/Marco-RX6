@@ -61,6 +61,8 @@ class MainActivity : ComponentActivity() {
                 createInterface()
             },
             launchGoogleSignIn = { intent -> activityResultRuntimeFeature.launchFirebaseGoogleSignIn(intent) },
+            launchAdminGoogleSignIn = { intent -> activityResultRuntimeFeature.launchGoogleSignIn(intent) },
+            isAdminSession = { googleAccountRuntimeFeature.isAdminSession },
             styleDialog = ::styleAlertDialog
         )
     }
