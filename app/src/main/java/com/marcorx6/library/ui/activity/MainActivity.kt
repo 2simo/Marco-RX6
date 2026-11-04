@@ -19,6 +19,7 @@ import com.marcorx6.library.data.auth.FirebaseUserDocumentRepository
 import com.marcorx6.library.ui.auth.FirebaseAccountController
 import com.marcorx6.library.ui.auth.GoogleAccountRuntimeFeature
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import android.app.AlertDialog
 import android.os.Bundle
 import android.view.View
@@ -28,17 +29,22 @@ class MainActivity : ComponentActivity() {
 
     private var isSecondaryRootScreen = false
 
-    private fun showRootScreen(view: View) {
-        isSecondaryRootScreen = true
-        setContentView(view)
+    private val secondaryScreenBackCallback = object : OnBackPressedCallback(false) {
+        override fun handleOnBackPressed() {
+            if (isSecondaryRootScreen) {
+                createInterface()
+            } else {
+                isEnabled = false
+                onBackPressedDispatcher.onBackPressed()
+                isEnabled = true
+            }
+        }
     }
 
-    override fun onBackPressed() {
-        if (isSecondaryRootScreen) {
-            createInterface()
-        } else {
-            super.onBackPressed()
-        }
+    private fun showRootScreen(view: View) {
+        isSecondaryRootScreen = true
+        secondaryScreenBackCallback.isEnabled = true
+        setContentView(view)
     }
 
     private val firebaseSessionCoordinator: FirebaseSessionCoordinator by lazy {
@@ -279,6 +285,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        onBackPressedDispatcher.addCallback(this, secondaryScreenBackCallback)
         firebaseSessionCoordinator.start()
         lifecycleCoordinator.onCreate()
     }
@@ -382,6 +389,7 @@ class MainActivity : ComponentActivity() {
 
     private fun createInterface() {
         isSecondaryRootScreen = false
+        secondaryScreenBackCallback.isEnabled = false
         libraryRuntimeFeature.create()
     }
     private fun renderGames() = libraryRuntimeFeature.renderGames()
