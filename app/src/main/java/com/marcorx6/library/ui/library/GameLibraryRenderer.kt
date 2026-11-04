@@ -58,8 +58,8 @@ internal class GameLibraryRenderer(
                 val heading = LinearLayout(activity).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
                 val title = when (selected) {
                     "ALL" -> tr("اكتشف الألعاب"); "FAVORITES" -> tr("المفضلة"); "BLOG" -> tr("المدونة")
-                    "WANT_TO_PLAY" -> "أريد لعبها"; "PLAYING" -> "ألعبها حالياً"; "COMPLETED" -> "أنهيتها"
-                    else -> "ألعاب " + selected
+                    "WANT_TO_PLAY" -> tr("أريد لعبها"); "PLAYING" -> tr("ألعبها حالياً"); "COMPLETED" -> tr("أنهيتها")
+                    else -> tr("ألعاب") + " " + selected
                 }
                 heading.addView(makeText(title, 18f, white, true), LinearLayout.LayoutParams(0, -2, 1f))
                 heading.addView(makeText(sorted.size.toString() + " " + tr("لعبة"), 10f, red, true))
