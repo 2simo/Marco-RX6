@@ -27,8 +27,6 @@ import android.widget.*
 
 class MainActivity : ComponentActivity() {
 
-    private var isSecondaryRootScreen = false
-
     private val secondaryScreenBackCallback = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() {
             createInterface()
@@ -36,7 +34,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun showRootScreen(view: View) {
-        isSecondaryRootScreen = true
         secondaryScreenBackCallback.isEnabled = true
         setContentView(view)
     }
@@ -371,7 +368,6 @@ class MainActivity : ComponentActivity() {
     private fun showStartupExperience() = userExperienceRuntimeFeature.showStartupExperience()
 
     private fun createInterface() {
-        isSecondaryRootScreen = false
         secondaryScreenBackCallback.isEnabled = false
         libraryRuntimeFeature.create()
     }
