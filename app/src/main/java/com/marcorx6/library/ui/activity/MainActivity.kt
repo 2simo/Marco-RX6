@@ -96,7 +96,7 @@ class MainActivity : ComponentActivity() {
     private fun showFirebaseAccount() = firebaseAccountController.show()
 
     private val activityServicesRuntimeFeature: ActivityServicesRuntimeFeature by lazy {
-        ActivityServicesRuntimeFeature(this, ::styleAlertDialog, ::isDarkMode, ::showRootScreen, ::createInterface)
+        ActivityServicesRuntimeFeature(this, ::styleAlertDialog, ::isDarkMode, ::tr, ::showRootScreen, ::createInterface)
     }
 
     private val appearancePaletteFeature: AppearancePaletteRuntimeFeature by lazy { AppearancePaletteRuntimeFeature(this) }
