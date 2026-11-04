@@ -112,7 +112,9 @@ internal class DownloadUiController(
             setTextColor(muted)
             minWidth = dp(48)
             minHeight = dp(48)
-            contentDescription = translate("إغلاق")
+            contentDescription = translate("إغلاق صفحة التنزيلات")
+            isClickable = true
+            isFocusable = true
             addGlassTouch(this)
             setOnClickListener { onBack() }
         }, LinearLayout.LayoutParams(dp(48), dp(48)))
