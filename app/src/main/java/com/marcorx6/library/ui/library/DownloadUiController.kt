@@ -137,7 +137,7 @@ internal class DownloadUiController(
                     gravity = Gravity.CENTER
                     setPadding(dp(24), dp(42), dp(24), dp(42))
                     background = GradientDrawable().apply {
-                        setColor(surface); cornerRadius = dp(22).toFloat()
+                        setColor(if (dark) Color.argb(198, 15, 43, 70) else Color.argb(215, 255, 255, 255)); cornerRadius = dp(22).toFloat()
                         setStroke(dp(1), if (dark) Color.rgb(42, 82, 126) else Color.rgb(198, 220, 244))
                     }
                 }
@@ -177,7 +177,7 @@ internal class DownloadUiController(
                     orientation = LinearLayout.VERTICAL
                     setPadding(dp(15), dp(14), dp(15), dp(14))
                     background = GradientDrawable().apply {
-                        setColor(surface); cornerRadius = dp(17).toFloat()
+                        setColor(if (dark) Color.argb(198, 15, 43, 70) else Color.argb(215, 255, 255, 255)); cornerRadius = dp(17).toFloat()
                         setStroke(dp(1), if (dark) Color.rgb(42, 82, 126) else Color.rgb(198, 220, 244))
                     }
                 }
