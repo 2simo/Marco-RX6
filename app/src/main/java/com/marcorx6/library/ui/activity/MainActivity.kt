@@ -60,6 +60,7 @@ class MainActivity : ComponentActivity() {
                 }
                 createInterface()
             },
+            launchGoogleSignIn = { intent -> activityResultRuntimeFeature.launchFirebaseGoogleSignIn(intent) },
             styleDialog = ::styleAlertDialog
         )
     }
@@ -222,6 +223,7 @@ class MainActivity : ComponentActivity() {
                 }
             )
         },
+        onFirebaseGoogleSignInResult = { data -> firebaseAccountController.handleGoogleSignInResult(data) },
         onAvatarSelected = { uri -> userExperienceRuntimeFeature.avatarController.handle(uri) },
         onCoverSelected = { uri -> coverFeature.selectionController.handle(uri) }
     )
