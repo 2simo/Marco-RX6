@@ -53,6 +53,11 @@ class MainActivity : ComponentActivity() {
             authRepository = firebaseAuthRepository,
             onAccountChanged = {
                 firebaseSessionCoordinator.ensureGuestSession()
+                if (firebaseAuthRepository.currentUser != null) {
+                    val localNickname = getSharedPreferences("user_profile", MODE_PRIVATE)
+                        .getString("nickname", "Player") ?: "Player"
+                    saveFirebaseProfile(localNickname)
+                }
                 createInterface()
             },
             styleDialog = ::styleAlertDialog
