@@ -231,12 +231,25 @@ internal class DownloadUiController(
             catch (_: Exception) { Toast.makeText(activity, "تعذر فتح مدير تنزيلات النظام", Toast.LENGTH_SHORT).show() }
         }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(7) })
         root.addView(actions)
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
+            val safe = insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.systemBars() or
+                    androidx.core.view.WindowInsetsCompat.Type.displayCutout()
+            )
+            view.setPadding(dp(18), dp(18) + safe.top, dp(18), dp(12) + safe.bottom)
+            insets
+        }
         setContentView(root)
         activity.window?.apply {
-            statusBarColor = background
-            navigationBarColor = background
-            decorView.systemUiVisibility = if (dark) 0 else View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+            statusBarColor = Color.TRANSPARENT
+            navigationBarColor = Color.TRANSPARENT
+            androidx.core.view.WindowInsetsControllerCompat(this, decorView).apply {
+                isAppearanceLightStatusBars = !dark
+                isAppearanceLightNavigationBars = !dark
+                show(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+            }
         }
+        androidx.core.view.ViewCompat.requestApplyInsets(root)
     }
 
     fun openGameLink(link: String) {
