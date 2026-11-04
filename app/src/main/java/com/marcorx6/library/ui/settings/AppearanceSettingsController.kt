@@ -53,7 +53,7 @@ internal class AppearanceSettingsController(
         }
         val heading = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
         heading.addView(TextView(activity).apply {
-            text = translate("MARCO RX6  /  PERSONALIZATION")
+            text = translate(translate("MARCO RX6  /  PERSONALIZATION"))
             textSize = 9f
             letterSpacing = 0.12f
             setTextColor(blue)
@@ -76,7 +76,7 @@ internal class AppearanceSettingsController(
         }, LinearLayout.LayoutParams(dp(44), dp(44)))
         root.addView(header)
         root.addView(TextView(activity).apply {
-            text = translate("خصص تجربة MARCO RX6 بالطريقة التي تناسبك")
+            text = translate(translate("خصص تجربة MARCO RX6 بالطريقة التي تناسبك"))
             textSize = 12f
             setTextColor(muted)
             setPadding(0, dp(8), 0, dp(22))
@@ -90,19 +90,19 @@ internal class AppearanceSettingsController(
             }
         }
         colorCard.addView(TextView(activity).apply {
-            text = translate("اللون الرئيسي")
+            text = translate(translate("اللون الرئيسي"))
             textSize = 16f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(ink)
         })
         colorCard.addView(TextView(activity).apply {
-            text = translate("أزرق كهربائي  •  اللون الرسمي للتطبيق")
+            text = translate(translate("أزرق كهربائي  •  اللون الرسمي للتطبيق"))
             textSize = 12f
             setTextColor(muted)
             setPadding(0, dp(8), 0, dp(12))
         })
         colorCard.addView(TextView(activity).apply {
-            text = translate("●   أزرق")
+            text = translate(translate("●   أزرق"))
             textSize = 14f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(Color.WHITE)
@@ -122,13 +122,13 @@ internal class AppearanceSettingsController(
             }
         }
         animations.addView(TextView(activity).apply {
-            text = translate("حركات وانتقالات الواجهة")
+            text = translate(translate("حركات وانتقالات الواجهة"))
             textSize = 16f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(ink)
         })
         val toggle = TextView(activity).apply {
-            text = translate(if (preferences.getBoolean("animations", true)) "الحركات مفعّلة  ✓" else "الحركات متوقفة")
+            text = translate(if (preferences.getBoolean("animations", true)) translate("الحركات مفعّلة  ✓") else translate("الحركات متوقفة"))
             textSize = 13f
             gravity = Gravity.CENTER
             setTextColor(if (preferences.getBoolean("animations", true)) Color.WHITE else blue)
@@ -143,14 +143,14 @@ internal class AppearanceSettingsController(
                 val enabled = !preferences.getBoolean("animations", true)
                 preferences.edit().putBoolean("animations", enabled).apply()
                 applyMotionPreferences(activity.window.decorView)
-                text = translate(if (enabled) "الحركات مفعّلة  ✓" else "الحركات متوقفة")
+                text = translate(if (enabled) translate("الحركات مفعّلة  ✓") else translate("الحركات متوقفة"))
                 setTextColor(if (enabled) Color.WHITE else blue)
                 background = GradientDrawable().apply {
                     setColor(if (enabled) Color.argb(218, 42, 145, 255) else if (dark) Color.argb(190, 15, 35, 58) else Color.argb(210, 255, 255, 255))
                     cornerRadius = dp(14).toFloat()
                     if (!enabled) setStroke(dp(1), blue)
                 }
-                Toast.makeText(activity, translate(if (enabled) "تم تفعيل انتقالات الواجهة" else "تم إيقاف انتقالات الواجهة"), Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity, translate(if (enabled) translate("تم تفعيل انتقالات الواجهة") else translate("تم إيقاف انتقالات الواجهة")), Toast.LENGTH_SHORT).show()
             }
         }
         animations.addView(toggle, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
@@ -183,22 +183,22 @@ internal class AppearanceSettingsController(
                 setOnClickListener { action() }
             }
         root.addView(settingRow(
-            translate("المظهر"),
-            translate(if (dark) "الوضع الليلي مفعّل — اضغط للتبديل إلى الوضع النهاري"
-            else "الوضع النهاري مفعّل — اضغط للتبديل إلى الوضع الليلي")
+            translate(translate("المظهر")),
+            translate(if (dark) translate("الوضع الليلي مفعّل — اضغط للتبديل إلى الوضع النهاري")
+            else translate("الوضع النهاري مفعّل — اضغط للتبديل إلى الوضع الليلي"))
         ) {
             preferences.edit().putBoolean("dark_mode", !dark).apply()
             recreateActivity()
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
-        root.addView(settingRow(translate("اللغة"), translate("العربية والإنجليزية والفرنسية والإسبانية"), showLanguagePicker),
+        root.addView(settingRow(translate(translate("اللغة")), translate(translate("العربية والإنجليزية والفرنسية والإسبانية")), showLanguagePicker),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
-        root.addView(settingRow(translate("الإشعارات"), translate("التحكم في تنبيهات المقالات الجديدة"), showNotificationSettings),
+        root.addView(settingRow(translate(translate("الإشعارات")), translate(translate("التحكم في تنبيهات المقالات الجديدة")), showNotificationSettings),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
-        root.addView(settingRow(translate("الخط وحجم النص"), translate("تخصيص عائلة الخط وحجم القراءة"), showTypographySettings),
+        root.addView(settingRow(translate(translate("الخط وحجم النص")), translate(translate("تخصيص عائلة الخط وحجم القراءة")), showTypographySettings),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
 
         root.addView(TextView(activity).apply {
-            text = translate("MARCO RX6  •  BLUE EXPERIENCE")
+            text = translate(translate("MARCO RX6  •  BLUE EXPERIENCE"))
             textSize = 9f
             gravity = Gravity.CENTER
             setTextColor(muted)
