@@ -24,8 +24,11 @@ class BloggerFeedParserTest {
 
     @Test
     fun findsHttpsAlternatePostUrlAndRemovesQueryParameters() {
-        val entry = JSONObject(
-            """{"link":[{"rel":"self","href":"https://example.com/feed"},{"rel":"alternate","href":"https://example.com/post?id=42&source=feed"}]}"""
+        val entry = JSONObject().put(
+            "link",
+            org.json.JSONArray()
+                .put(JSONObject().put("rel", "self").put("href", "https://example.com/feed"))
+                .put(JSONObject().put("rel", "alternate").put("href", "https://example.com/post?id=42&source=feed"))
         )
 
         assertEquals("https://example.com/post", BloggerFeedParser.findPostUrl(entry))
@@ -33,8 +36,11 @@ class BloggerFeedParserTest {
 
     @Test
     fun rejectsNonHttpsAlternatePostUrls() {
-        val entry = JSONObject(
-            """{"link":[{"rel":"alternate","href":"http://example.com/post"}]}"""
+        val entry = JSONObject().put(
+            "link",
+            org.json.JSONArray().put(
+                JSONObject().put("rel", "alternate").put("href", "http://example.com/post")
+            )
         )
 
         assertEquals("", BloggerFeedParser.findPostUrl(entry))
@@ -42,8 +48,12 @@ class BloggerFeedParserTest {
 
     @Test
     fun selectsFirstRecognizedPlatformCategory() {
-        val entry = JSONObject(
-            """{"category":[{"term":"Action"},{"term":"PlayStation 2"},{"term":"PS4"}]}"""
+        val entry = JSONObject().put(
+            "category",
+            org.json.JSONArray()
+                .put(JSONObject().put("term", "Action"))
+                .put(JSONObject().put("term", "PlayStation 2"))
+                .put(JSONObject().put("term", "PS4"))
         )
 
         assertEquals("PS2", BloggerFeedParser.platformFromCategories(entry))
@@ -51,26 +61,15 @@ class BloggerFeedParserTest {
 
     @Test
     fun ignoresEntriesWithoutAUsableTitleOrHttpsPostLink() {
-        val blankTitle = JSONObject("""{"title":{"${'":"   "}}""")
-        val insecureLink = JSONObject(
-            """{"title":{"\$t":"Example"},"link":[{"rel":"alternate","href":"http://example.com/post"}]}"""
-        )
-
-        assertNull(BloggerFeedParser.parseBlogEntry(blankTitle))
-        assertNull(BloggerFeedParser.parseBlogEntry(insecureLink))
-    }
-}
-}t":"   "}}""")
-        val insecureLink = JSONObject(
-            """{"title":{"${'":"Example"},"link":[{"rel":"alternate","href":"http://example.com/post"}]}"""
-        )
-
-        assertNull(BloggerFeedParser.parseBlogEntry(blankTitle))
-        assertNull(BloggerFeedParser.parseBlogEntry(insecureLink))
-    }
-}
-}t":"Example"},"link":[{"rel":"alternate","href":"http://example.com/post"}]}"""
-        )
+        val blankTitle = JSONObject().put("title", JSONObject().put("$" + "t", "   "))
+        val insecureLink = JSONObject()
+            .put("title", JSONObject().put("$" + "t", "Example"))
+            .put(
+                "link",
+                org.json.JSONArray().put(
+                    JSONObject().put("rel", "alternate").put("href", "http://example.com/post")
+                )
+            )
 
         assertNull(BloggerFeedParser.parseBlogEntry(blankTitle))
         assertNull(BloggerFeedParser.parseBlogEntry(insecureLink))
