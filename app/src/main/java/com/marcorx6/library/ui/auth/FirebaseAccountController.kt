@@ -104,7 +104,7 @@ internal class FirebaseAccountController(
                 return@addOnSuccessListener
             }
             val current = authRepository.currentUser
-            if (pendingDeletionUid != null && current?.uid == pendingDeletionUid) {
+            if (pendingDeletionUid != null && current != null && current.uid == pendingDeletionUid) {
                 pendingDeletionUid = null
                 current.reauthenticate(GoogleAuthProvider.getCredential(token, null))
                     .addOnSuccessListener { deleteAccountDataAndAuth(current) }
