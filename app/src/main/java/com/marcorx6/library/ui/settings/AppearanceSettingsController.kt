@@ -223,7 +223,7 @@ internal class AppearanceSettingsController(
             isFillViewport = true
             isVerticalScrollBarEnabled = false
             clipToPadding = false
-            addView(root, android.widget.ScrollView.LayoutParams(-1, -2))
+            addView(root, LinearLayout.LayoutParams(-1, -2))
         }
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(scroll) { view, insets ->
             val safe = insets.getInsets(

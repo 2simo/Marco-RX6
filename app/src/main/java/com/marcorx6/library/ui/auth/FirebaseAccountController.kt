@@ -54,7 +54,7 @@ internal class FirebaseAccountController(
         if (user == null || user.isAnonymous) {
             showGuestActions()
         } else {
-            showSignedInActions(user)
+            showAccountScreen(user)
         }
     }
 
@@ -172,7 +172,7 @@ internal class FirebaseAccountController(
                     cornerRadius = dp(17).toFloat()
                     setStroke(dp(1), if (primary) Color.argb(210, 112, 184, 255) else if (dark) Color.argb(105, 104, 163, 218) else Color.argb(150, 155, 194, 231))
                 }
-                minHeight = dp(64)
+                minimumHeight = dp(64)
                 contentDescription = "$label. $detail"
                 isClickable = true
                 isFocusable = true

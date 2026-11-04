@@ -13,7 +13,7 @@ internal object LanguageTranslator {
             "هذا رابط صفحة أو تعذّر التأكد أنه ملف مباشر؛ سيتم فتحه في المتصفح" to listOf("This is a page link or not a confirmed direct file; opening in browser", "Il s’agit d’une page ou d’un fichier direct non confirmé ; ouverture dans le navigateur", "Es un enlace de página o no se confirmó como archivo directo; se abrirá en el navegador"),
             "التنزيلات" to listOf("Downloads", "Téléchargements", "Descargas"),
             "تابع حالة ملفات الألعاب التي أضفتها إلى التنزيلات" to listOf("Track the status of game files added to downloads", "Suivez l’état des fichiers de jeu ajoutés aux téléchargements", "Consulta el estado de los archivos de juego añadidos a las descargas"),
-            "تعذر قراءة التنزيلات: ${error.message}" to listOf("Could not read downloads: ${error.message}", "Impossible de lire les téléchargements : ${error.message}", "No se pudieron leer las descargas: ${error.message}"),
+            "تعذر قراءة التنزيلات" to listOf("Could not read downloads", "Impossible de lire les téléchargements", "No se pudieron leer las descargas"),
             "ما كايناش تنزيلات دابا" to listOf("No downloads yet", "Aucun téléchargement pour le moment", "Aún no hay descargas"),
             "اختار لعبة، ومن صفحة التفاصيل أضف رابط التحميل باش يبان هنا." to listOf("Choose a game and add its download link from the details page to see it here.", "Choisissez un jeu et ajoutez son lien depuis la page de détails pour le voir ici.", "Elige un juego y añade su enlace desde la página de detalles para verlo aquí."),
             "في الانتظار" to listOf("Pending", "En attente", "Pendiente"),

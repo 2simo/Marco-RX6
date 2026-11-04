@@ -86,8 +86,7 @@ internal class BloggerRuntimeFeature(
             merge = merge,
             setBlogId = setBlogId,
             refreshAccess = refreshAccess,
-            renderGames = renderGames,
-            translate = translate
+            renderGames = renderGames
         )
     }
 
@@ -100,7 +99,6 @@ internal class BloggerRuntimeFeature(
             bloggerBlogId = currentBlogId,
             dp = dp,
             bg = bg,
-            isDarkMode = isDarkMode,
             panel = panel,
             white = white,
             gray = gray,

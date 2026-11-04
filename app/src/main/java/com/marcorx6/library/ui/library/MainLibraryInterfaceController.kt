@@ -432,8 +432,8 @@ internal class MainLibraryInterfaceController(
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
                 setPadding(dp(5), dp(5), dp(5), dp(5))
-                minWidth = dp(48)
-                minHeight = dp(56)
+                minimumWidth = dp(48)
+                minimumHeight = dp(56)
                 isClickable = true
                 isFocusable = true
                 if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(

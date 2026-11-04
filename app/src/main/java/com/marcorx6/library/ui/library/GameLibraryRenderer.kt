@@ -100,7 +100,7 @@ internal class GameLibraryRenderer(
                             stateListAnimator = null
                             isClickable = true
                             isFocusable = true
-                            minHeight = dp(48)
+                            minimumHeight = dp(48)
                             contentDescription = listOf(game.name, game.platform, game.releaseYear)
                                 .filter { it.isNotBlank() }.joinToString(", ") + ", " + tr("عرض التفاصيل")
                             setOnClickListener { showDetails(game) }

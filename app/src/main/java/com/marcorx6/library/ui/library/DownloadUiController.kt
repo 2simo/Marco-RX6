@@ -129,12 +129,12 @@ internal class DownloadUiController(
         val scroll = ScrollView(activity).apply {
             isFillViewport = true
             isVerticalScrollBarEnabled = false
-            addView(list, ScrollView.LayoutParams(-1, -2))
+            addView(list, LinearLayout.LayoutParams(-1, -2))
         }
         fun render() {
             list.removeAllViews()
             val entries = try { downloadRepository.getDownloads() } catch (error: Exception) {
-                Toast.makeText(activity, translate("تعذر قراءة التنزيلات: ${error.message}"), Toast.LENGTH_LONG).show()
+                Toast.makeText(activity, translate("تعذر قراءة التنزيلات") + ": ${error.message}", Toast.LENGTH_LONG).show()
                 emptyList()
             }
             if (entries.isEmpty()) {
@@ -142,7 +142,7 @@ internal class DownloadUiController(
                     orientation = LinearLayout.VERTICAL
                     gravity = Gravity.CENTER
                     setPadding(dp(24), dp(42), dp(24), dp(42))
-                    background = GradientDrawable().apply {
+                    this.background = GradientDrawable().apply {
                         setColors(if (dark)
                             intArrayOf(Color.argb(220, 23, 67, 108), Color.argb(208, 8, 27, 47))
                         else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(218, 224, 240, 255)))
@@ -185,7 +185,7 @@ internal class DownloadUiController(
                 val card = LinearLayout(activity).apply {
                     orientation = LinearLayout.VERTICAL
                     setPadding(dp(15), dp(14), dp(15), dp(14))
-                    background = GradientDrawable().apply {
+                    this.background = GradientDrawable().apply {
                         setColors(if (dark)
                             intArrayOf(Color.argb(221, 22, 65, 105), Color.argb(209, 8, 27, 47))
                         else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(218, 224, 240, 255)))
