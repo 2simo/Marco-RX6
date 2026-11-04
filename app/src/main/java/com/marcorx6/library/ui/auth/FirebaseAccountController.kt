@@ -251,23 +251,15 @@ internal class FirebaseAccountController(
         actions += (if (isAdminSession()) "تسجيل الخروج من وضع المسؤول" else "تسجيل دخول المسؤول (Blogger و Drive)") to {
             if (isAdminSession()) signOutAdmin() else launchAdminGoogleSignIn(googleSignInIntentForAdmin())
         }
-        actions += "إضافة حساب / تبديل الحساب" to {
-            // Sign out Firebase and clear only the Firebase Google client's cached selection.
+        // Keep one clear, prominent Firebase sign-out action in the signed-in account menu.
+        actions.add(0, "تسجيل الخروج من حساب MARCO RX6" to {
             GoogleSignIn.getClient(activity, firebaseGoogleOptions()).signOut()
                 .addOnCompleteListener {
                     authRepository.signOut()
                     onAccountChanged()
-                    toast("تم تسجيل الخروج. يمكنك الآن اختيار حساب آخر أو إنشاء حساب جديد.")
+                    toast("تم تسجيل الخروج بنجاح")
                 }
-        }
-        actions += "تسجيل الخروج" to {
-            GoogleSignIn.getClient(activity, firebaseGoogleOptions()).signOut()
-                .addOnCompleteListener {
-                    authRepository.signOut()
-                    onAccountChanged()
-                    toast("تم تسجيل الخروج")
-                }
-        }
+        })
         actions += "إغلاق" to {}
 
         AlertDialog.Builder(activity)
