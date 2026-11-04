@@ -126,7 +126,7 @@ internal class MainLibraryRuntimeFeature(
     fun initializePreferredPlatform() {
         viewState.selected = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
             .getString("preferred_platform", "ALL")
-            ?.takeIf { it in listOf("PS2", "PS3", "PS4") } ?: "ALL"
+            ?.takeIf { it in listOf("PS2", "PSP", "PS3", "PS4", "3DS", "GBA") } ?: "ALL"
     }
 
     fun create() = mainLibraryFeature.create()
