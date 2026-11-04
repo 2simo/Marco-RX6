@@ -48,7 +48,7 @@ internal class MainLibraryInterfaceController(
     private val showAdvancedFilters: () -> Unit,
     private val showGameDialog: () -> Unit,
     private val showProfile: () -> Unit,
-    private val showSideMenu: () -> Unit,
+    private val showDownloads: () -> Unit,
     private val applyTypography: (View) -> Unit,
     private val applyUnifiedSkin: (View) -> Unit,
     private val applyMotionPreferences: (View) -> Unit
@@ -130,8 +130,7 @@ internal class MainLibraryInterfaceController(
             LinearLayout.LayoutParams(dp(43), dp(43)).apply { marginEnd = dp(8) })
         header.addView(headerAction("⚙", "الإعدادات") { showAppearanceSettings() },
             LinearLayout.LayoutParams(dp(43), dp(43)).apply { marginEnd = dp(8) })
-        header.addView(headerAction("♛", "دخول المسؤول / القائمة") { showSideMenu() },
-            LinearLayout.LayoutParams(dp(43), dp(43)))
+
         root.addView(header)
 
 
@@ -356,7 +355,7 @@ internal class MainLibraryInterfaceController(
         }
         dockItem("⌂", tr("الرئيسية")) { selected = "ALL"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
         dockItem("♡", tr("المفضلة")) { selected = "FAVORITES"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
-        dockItem("◷", "متابعتي") { selected = "WANT_TO_PLAY"; renderGames(); pageScroll.smoothScrollTo(0, 0) }
+        dockItem("⬇", "التنزيلات") { showDownloads() }
         dockItem("⌕", "بحث") { search.requestFocus(); pageScroll.smoothScrollTo(0, 0); (context.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager).showSoftInput(search, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT) }
         dockItem("♙", tr("حسابي")) { showProfile() }
         val dockParams = FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply {
