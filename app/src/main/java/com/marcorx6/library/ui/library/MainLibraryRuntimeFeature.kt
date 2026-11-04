@@ -81,6 +81,7 @@ internal class MainLibraryRuntimeFeature(
             red = { red },
             makeText = createText,
             styleDialog = styleDialog,
+            translate = translate,
             renderGames = ::renderGames
         )
     }
