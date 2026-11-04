@@ -76,9 +76,9 @@ internal class GameLibraryRenderer(
                         val card = LinearLayout(activity).apply {
                             orientation = LinearLayout.VERTICAL
                             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                                if (isDarkMode()) intArrayOf(Color.rgb(17, 39, 66), Color.rgb(9, 22, 40)) else intArrayOf(Color.WHITE, Color.rgb(235, 241, 250))).apply {
+                                if (isDarkMode()) intArrayOf(Color.rgb(17, 39, 66), Color.rgb(9, 22, 40)) else intArrayOf(Color.WHITE, Color.rgb(234, 244, 255))).apply {
                                 cornerRadius = dp(20).toFloat()
-                                setStroke(dp(1), if (isDarkMode()) Color.rgb(45, 112, 181) else Color.rgb(215, 225, 239))
+                                setStroke(dp(1), if (isDarkMode()) Color.rgb(45, 112, 181) else Color.rgb(195, 219, 244))
                             }
                             setPadding(dp(7), dp(7), dp(7), dp(10)); elevation = dp(4).toFloat(); isClickable = true; isFocusable = true
                             setOnClickListener { showDetails(game) }
@@ -88,7 +88,7 @@ internal class GameLibraryRenderer(
                         imageFrame.addView(image, FrameLayout.LayoutParams(-1, -1))
                         if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) loadCover(image, game.coverLocalPath, game.coverUrl)
                         else { image.setImageResource(android.R.drawable.ic_menu_gallery); image.scaleType = ImageView.ScaleType.CENTER_INSIDE }
-                        imageFrame.background = rounded(if (isDarkMode()) Color.rgb(7, 18, 34) else Color.rgb(224, 232, 243), 13)
+                        imageFrame.background = rounded(if (isDarkMode()) Color.rgb(7, 18, 34) else Color.rgb(225, 240, 255), 13)
                         card.addView(imageFrame, LinearLayout.LayoutParams(-1, dp(184)))
                         card.addView(makeText(game.name, 13f, white, true).apply {
                             maxLines = 2; minLines = 2; ellipsize = android.text.TextUtils.TruncateAt.END
