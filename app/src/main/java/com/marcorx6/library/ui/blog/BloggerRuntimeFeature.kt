@@ -70,7 +70,8 @@ internal class BloggerRuntimeFeature(
             currentBlogId = currentBlogId,
             setAdmin = setAdmin,
             postToUi = postToUi,
-            refreshUi = refreshUi
+            refreshUi = refreshUi,
+            translate = translate
         )
     }
 
@@ -123,7 +124,8 @@ internal class BloggerRuntimeFeature(
             deleteCoverFileIfUnused = deleteCoverFileIfUnused,
             resetCoverUploadFailed = resetCoverUploadFailed,
             saveGames = saveGames,
-            renderGames = renderGames
+            renderGames = renderGames,
+            translate = translate
         )
     }
 
