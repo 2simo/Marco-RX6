@@ -31,13 +31,7 @@ class MainActivity : ComponentActivity() {
 
     private val secondaryScreenBackCallback = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() {
-            if (isSecondaryRootScreen) {
-                createInterface()
-            } else {
-                isEnabled = false
-                onBackPressedDispatcher.onBackPressed()
-                isEnabled = true
-            }
+            createInterface()
         }
     }
 
