@@ -75,7 +75,8 @@ internal class AppearanceRuntimeFeature(
             showLanguagePicker = ::showLanguagePicker,
             showNotificationSettings = showNotifications,
             setContentView = setContentView,
-            onBack = onBack
+            onBack = onBack,
+            translate = ::translate
         )
     }
 
