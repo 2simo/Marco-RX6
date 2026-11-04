@@ -23,6 +23,8 @@ internal class FirebaseAccountController(
     private val authRepository: FirebaseAuthRepository,
     private val onAccountChanged: () -> Unit,
     private val launchGoogleSignIn: (Intent) -> Unit,
+    private val launchAdminGoogleSignIn: (Intent) -> Unit,
+    private val isAdminSession: () -> Boolean,
     private val styleDialog: (AlertDialog) -> Unit
 ) {
     fun show() {
@@ -36,28 +38,52 @@ internal class FirebaseAccountController(
 
     private fun showGuestActions() {
         AlertDialog.Builder(activity)
-            .setTitle("حساب MARCO RX6")
-            .setMessage("أنت تستعمل التطبيق كزائر. تقدر تدخل بحساب Google أو بالبريد الإلكتروني.")
-            .setItems(arrayOf("تسجيل الدخول باستخدام Google", "إنشاء حساب بالبريد الإلكتروني", "تسجيل الدخول بالبريد الإلكتروني", "نسيت كلمة المرور؟", "إغلاق")) { _, which ->
+            .setTitle("أنت الآن تستعمل MARCO RX6 كزائر")
+            .setItems(arrayOf(
+                "إنشاء حساب جديد بالبريد الإلكتروني",
+                "تسجيل الدخول بالبريد الإلكتروني",
+                "إنشاء / اختيار حساب Google",
+                "تسجيل دخول المسؤول (Blogger و Drive)",
+                "نسيت كلمة المرور؟",
+                "إغلاق"
+            )) { _, which ->
                 when (which) {
-                    0 -> launchGoogleSignIn(googleSignInIntent())
-                    1 -> showEmailForm(createAccount = true)
-                    2 -> showEmailForm(createAccount = false)
-                    3 -> showPasswordResetForm()
+                    0 -> showEmailForm(createAccount = true)
+                    1 -> showEmailForm(createAccount = false)
+                    2 -> startFreshGoogleAccountSelection()
+                    3 -> launchAdminGoogleSignIn(googleSignInIntentForAdmin())
+                    4 -> showPasswordResetForm()
                 }
             }
             .show()
             .also(styleDialog)
     }
 
+    /**
+     * Clear the Firebase Google client's cached account before opening account selection.
+     * This prevents a previous Google account from being silently reused after sign-out.
+     */
+    private fun startFreshGoogleAccountSelection() {
+        GoogleSignIn.getClient(activity, firebaseGoogleOptions()).signOut()
+            .addOnCompleteListener {
+                launchGoogleSignIn(googleSignInIntent())
+            }
+    }
+
+    private fun firebaseGoogleOptions() =
+        GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail()
+            .requestIdToken(activity.getString(com.marcorx6.library.R.string.default_web_client_id))
+            .build()
+
     /** Uses the Firebase web OAuth client, separate from the Blogger/Drive OAuth client. */
     fun googleSignInIntent(): Intent {
-        val webClientId = activity.getString(com.marcorx6.library.R.string.default_web_client_id)
-        val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestEmail()
-            .requestIdToken(webClientId)
-            .build()
-        return GoogleSignIn.getClient(activity, options).signInIntent
+        return GoogleSignIn.getClient(activity, firebaseGoogleOptions()).signInIntent
+    }
+
+    /** Existing admin OAuth requests Blogger/Drive scopes and remains separate from Firebase auth. */
+    private fun googleSignInIntentForAdmin(): Intent {
+        return com.marcorx6.library.ui.GoogleSignInFactory.create(activity).signInIntent
     }
 
     fun handleGoogleSignInResult(data: Intent?) {
@@ -221,15 +247,30 @@ internal class FirebaseAccountController(
                 }
             }
         }
+        actions += (if (isAdminSession()) "المسؤول: تم التحقق من الصلاحيات" else "تسجيل دخول المسؤول (Blogger و Drive)") to {
+            if (!isAdminSession()) launchAdminGoogleSignIn(googleSignInIntentForAdmin())
+        }
+        actions += "إضافة حساب / تبديل الحساب" to {
+            // Sign out Firebase and clear only the Firebase Google client's cached selection.
+            GoogleSignIn.getClient(activity, firebaseGoogleOptions()).signOut()
+                .addOnCompleteListener {
+                    authRepository.signOut()
+                    onAccountChanged()
+                    toast("تم تسجيل الخروج. يمكنك الآن اختيار حساب آخر أو إنشاء حساب جديد.")
+                }
+        }
         actions += "تسجيل الخروج" to {
-            authRepository.signOut()
-            onAccountChanged()
-            toast("تم تسجيل الخروج")
+            GoogleSignIn.getClient(activity, firebaseGoogleOptions()).signOut()
+                .addOnCompleteListener {
+                    authRepository.signOut()
+                    onAccountChanged()
+                    toast("تم تسجيل الخروج")
+                }
         }
         actions += "إغلاق" to {}
 
         AlertDialog.Builder(activity)
-            .setTitle("حساب MARCO RX6")
+            .setTitle(if (isAdminSession()) "حساب MARCO RX6 • مسؤول موثّق" else "حساب MARCO RX6 • مستخدم")
             .setMessage(user.email ?: "حساب مرتبط")
             .setItems(actions.map { it.first }.toTypedArray()) { _, which ->
                 actions.getOrNull(which)?.second?.invoke()
