@@ -171,8 +171,8 @@ internal class ProfileController(
                 AlertDialog.Builder(activity)
                     .setTitle(tr("مساحة التخزين"))
                     .setMessage(
-                        "${tr("ملفات التطبيق:")} ${readableSize(appFilesBytes)}\\n" +
-                        "${tr("الملفات المؤقتة (Cache):")} ${readableSize(cacheBytes)}\\n\\n" +
+                        "${tr("ملفات التطبيق:")} ${readableSize(appFilesBytes)}\n" +
+                        "${tr("الملفات المؤقتة (Cache):")} ${readableSize(cacheBytes)}\n\n" +
                         tr("هذه أرقام الملفات المحلية التي يديرها التطبيق. لا يتم حذف أي ملف من هنا.")
                     )
                     .setPositiveButton(tr("إعدادات التخزين")) { _, _ ->
