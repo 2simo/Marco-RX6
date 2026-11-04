@@ -63,7 +63,7 @@ internal class BloggerPostComposerController(
         val intro = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(14), dp(13), dp(14), dp(13))
-            background = rounded(panel(), 15)
+            background = rounded(if (android.os.Build.VERSION.SDK_INT >= 23) android.graphics.Color.argb(205, 15, 43, 70) else panel(), 15)
         }
         intro.addView(makeText(
             if (existing == null) "استوديو النشر • MARCO RX6" else "استوديو التحرير • MARCO RX6",
@@ -114,7 +114,7 @@ internal class BloggerPostComposerController(
             text = "اختيار صورة الغلاف من الهاتف"
             tag = "marco_primary_action"
             setTextColor(accentForeground())
-            background = rounded(red(), 12)
+            background = rounded(android.graphics.Color.argb(222, red()), 12)
             setOnClickListener { chooseCover() }
         }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
         box.addView(makeText("أقسام المقال • Labels من المدونة", 10f, red(), true))
