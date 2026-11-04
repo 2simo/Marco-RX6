@@ -86,6 +86,38 @@ internal class GameLibraryRenderer(
                         val imageFrame = FrameLayout(activity).apply { clipToOutline = true; background = rounded(bg, 12) }
                         val image = ImageView(activity).apply { scaleType = ImageView.ScaleType.CENTER_CROP; contentDescription = game.name }
                         imageFrame.addView(image, FrameLayout.LayoutParams(-1, -1))
+                        val platformBadge = TextView(activity).apply {
+                            text = game.platform
+                            textSize = 9f
+                            setTextColor(Color.WHITE)
+                            typeface = android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.BOLD)
+                            gravity = Gravity.CENTER
+                            setPadding(dp(9), dp(5), dp(9), dp(5))
+                            background = GradientDrawable().apply {
+                                setColor(Color.rgb(24, 105, 196))
+                                cornerRadius = dp(10).toFloat()
+                            }
+                        }
+                        imageFrame.addView(platformBadge, FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.START).apply {
+                            leftMargin = dp(8)
+                            topMargin = dp(8)
+                        })
+                        if (game.isFavorite) {
+                            val favoriteBadge = TextView(activity).apply {
+                                text = "♥"
+                                textSize = 13f
+                                gravity = Gravity.CENTER
+                                setTextColor(Color.WHITE)
+                                background = GradientDrawable().apply {
+                                    setColor(Color.rgb(24, 105, 196))
+                                    cornerRadius = dp(18).toFloat()
+                                }
+                            }
+                            imageFrame.addView(favoriteBadge, FrameLayout.LayoutParams(dp(30), dp(30), Gravity.TOP or Gravity.END).apply {
+                                rightMargin = dp(8)
+                                topMargin = dp(8)
+                            })
+                        }
                         if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) loadCover(image, game.coverLocalPath, game.coverUrl)
                         else { image.setImageResource(android.R.drawable.ic_menu_gallery); image.scaleType = ImageView.ScaleType.CENTER_INSIDE }
                         imageFrame.background = rounded(if (isDarkMode()) Color.rgb(7, 18, 34) else Color.rgb(225, 240, 255), 13)
