@@ -58,6 +58,19 @@ internal class FirebaseUserDocumentRepository(
         return userDocument(uid).set(data, SetOptions.merge())
     }
 
+    /** Deletes the known user-owned settings document before removing the parent profile. */
+    fun deleteUserData(uid: String): Task<Void> =
+        userDocument(uid)
+            .collection(SETTINGS_COLLECTION)
+            .document(PREFERENCES_DOCUMENT)
+            .delete()
+            .continueWithTask { task ->
+                if (!task.isSuccessful) {
+                    throw task.exception ?: IllegalStateException("تعذر حذف إعدادات الحساب")
+                }
+                userDocument(uid).delete()
+            }
+
     fun saveSettings(uid: String, values: Map<String, Any>): Task<Void> =
         userDocument(uid)
             .collection(SETTINGS_COLLECTION)
