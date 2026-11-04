@@ -3,6 +3,7 @@ package com.marcorx6.library.ui
 import android.app.Activity
 import android.app.AlertDialog
 import android.widget.Toast
+import androidx.core.app.NotificationManagerCompat
 import com.marcorx6.library.notification.BlogNotificationScheduler
 
 /**
@@ -18,10 +19,13 @@ internal class NotificationSettingsController(
 ) {
     fun show() {
         val enabled = scheduler.isEnabled()
+        val systemPermissionEnabled = NotificationManagerCompat.from(activity).areNotificationsEnabled()
         AlertDialog.Builder(activity)
             .setTitle(translate("إشعارات المقالات الجديدة"))
             .setMessage(
-                if (enabled)
+                if (enabled && !systemPermissionEnabled)
+                    translate("جدولة الإشعارات مفعّلة، لكن إشعارات التطبيق محظورة من إعدادات Android. اسمح بها من إعدادات التطبيق لتصلك التنبيهات.")
+                else if (enabled)
                     translate("الإشعارات مفعّلة. يتحقق تطبيق MARCO RX6 من مدونتك دورياً وينبهك عند نشر مقال جديد.")
                 else
                     translate("الإشعارات متوقفة. فعّلها ليصلك تنبيه عند نشر مقال جديد.")
