@@ -69,6 +69,17 @@ internal class DownloadUiController(
         val primary = Color.rgb(42, 145, 255)
         val heading = if (dark) Color.WHITE else Color.rgb(22, 43, 65)
         val muted = if (dark) Color.rgb(164, 184, 207) else Color.rgb(91, 112, 137)
+        fun addGlassTouch(view: View) {
+            if (android.os.Build.VERSION.SDK_INT >= 23) {
+                view.foreground = android.graphics.drawable.RippleDrawable(
+                    android.content.res.ColorStateList.valueOf(
+                        if (dark) Color.argb(82, 76, 169, 255) else Color.argb(55, 35, 126, 224)
+                    ),
+                    null,
+                    android.graphics.drawable.ColorDrawable(Color.WHITE)
+                )
+            }
+        }
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(background)
@@ -98,6 +109,7 @@ internal class DownloadUiController(
             textSize = 30f
             gravity = Gravity.CENTER
             setTextColor(muted)
+            addGlassTouch(this)
             setOnClickListener { onBack() }
         }, LinearLayout.LayoutParams(dp(44), dp(44)))
         root.addView(header)
@@ -218,11 +230,13 @@ internal class DownloadUiController(
             gravity = Gravity.CENTER
             setTextColor(if (filled) Color.WHITE else primary)
             background = GradientDrawable().apply {
-                setColor(if (filled) primary else surface)
-                cornerRadius = dp(14).toFloat()
-                if (!filled) setStroke(dp(1), primary)
+                setColor(if (filled) Color.argb(224, 42, 145, 255)
+                    else if (dark) Color.argb(205, 15, 43, 70) else Color.argb(220, 255, 255, 255))
+                cornerRadius = dp(16).toFloat()
+                setStroke(dp(1), if (filled) Color.argb(175, 119, 194, 255) else primary)
             }
             setPadding(dp(14), dp(13), dp(14), dp(13))
+            addGlassTouch(this)
             setOnClickListener { onClick() }
         }
         actions.addView(action("تحديث", false) { render() }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(7) })
