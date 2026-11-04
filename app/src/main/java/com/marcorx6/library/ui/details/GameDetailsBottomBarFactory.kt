@@ -29,7 +29,7 @@ internal class GameDetailsBottomBarFactory(
             orientation = LinearLayout.HORIZONTAL
             gravity = android.view.Gravity.CENTER_VERTICAL
             setPadding(dp(12), dp(9), dp(12), dp(9))
-            setBackgroundColor(panel())
+            background = rounded(if (isDarkMode()) Color.argb(210, 9, 30, 51) else Color.argb(220, 255, 255, 255), 18)
         }
         fun readerAction(label: String, action: () -> Unit, primary: Boolean = false) = TextView(activity).apply {
             text = label
@@ -39,13 +39,20 @@ internal class GameDetailsBottomBarFactory(
             setTypeface(null, Typeface.BOLD)
             background = if (primary) android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(Color.rgb(42, 145, 255), Color.rgb(20, 91, 190))
+                intArrayOf(Color.argb(232, 42, 145, 255), Color.argb(215, 20, 91, 190))
             ).apply { cornerRadius = dp(11).toFloat() } else rounded(
-                if (isDarkMode()) Color.rgb(20, 68, 117) else Color.rgb(222, 237, 255),
+                if (isDarkMode()) Color.argb(205, 20, 68, 117) else Color.argb(210, 222, 237, 255),
                 11
             )
             setPadding(dp(12), dp(12), dp(12), dp(12))
             minHeight = dp(48)
+            if (android.os.Build.VERSION.SDK_INT >= 23) {
+                foreground = android.graphics.drawable.RippleDrawable(
+                    android.content.res.ColorStateList.valueOf(Color.argb(78, 83, 177, 255)),
+                    null,
+                    android.graphics.drawable.ColorDrawable(Color.WHITE)
+                )
+            }
             setOnClickListener { action() }
         }
 
