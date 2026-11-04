@@ -225,6 +225,14 @@ internal class FirstRunSetupController(
                 show(WindowInsetsCompat.Type.systemBars())
             }
         }
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
+            val safe = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            view.setPadding(dp(22), dp(24) + safe.top, dp(22), dp(18) + safe.bottom)
+            insets
+        }
+        androidx.core.view.ViewCompat.requestApplyInsets(root)
         applyUnifiedSkin(root)
         renderStep(0, true)
     }
