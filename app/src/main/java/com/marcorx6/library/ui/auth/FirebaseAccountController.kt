@@ -10,6 +10,7 @@ import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
 import android.view.View
+import android.util.Patterns
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -368,6 +369,8 @@ internal class FirebaseAccountController(
             hint = hintText
             this.inputType = inputType
             setSingleLine(true)
+            textDirection = View.TEXT_DIRECTION_LTR
+            gravity = Gravity.CENTER_VERTICAL or Gravity.LEFT
             textSize = 14f
             setTextColor(if (dark) Color.WHITE else Color.rgb(20, 45, 70))
             setHintTextColor(if (dark) Color.rgb(133, 164, 195) else Color.rgb(112, 139, 166))
@@ -413,8 +416,8 @@ internal class FirebaseAccountController(
         page.addView(email, LinearLayout.LayoutParams(-1, dp(54)).apply { bottomMargin = dp(14) })
         page.addView(accountSubmitButton(translate("إرسال رابط الاسترجاع")) { button ->
             val address = email.text.toString().trim()
-            if (address.isBlank()) {
-                toast("دخل البريد الإلكتروني")
+            if (!Patterns.EMAIL_ADDRESS.matcher(address).matches()) {
+                toast("صيغة البريد الإلكتروني غير صحيحة")
                 return@accountSubmitButton
             }
             button.isEnabled = false
@@ -488,8 +491,8 @@ internal class FirebaseAccountController(
         page.addView(accountSubmitButton(if (createAccount) translate("إنشاء الحساب") else translate("دخول")) { button ->
             val address = email.text.toString().trim()
             val secret = password.text.toString()
-            if (address.isBlank() || secret.isBlank()) {
-                toast("دخل البريد الإلكتروني وكلمة المرور")
+            if (!Patterns.EMAIL_ADDRESS.matcher(address).matches() || secret.isBlank()) {
+                toast("دخل بريد إلكتروني صحيح وكلمة المرور")
                 return@accountSubmitButton
             }
             if (createAccount && secret != confirmPassword?.text?.toString()) {
