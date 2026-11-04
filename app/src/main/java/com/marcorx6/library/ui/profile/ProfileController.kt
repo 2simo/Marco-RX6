@@ -54,8 +54,8 @@ internal class ProfileController(
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(16), dp(16), dp(16), dp(16))
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                if (dark) intArrayOf(Color.rgb(25, 111, 205), Color.rgb(14, 53, 101), Color.rgb(8, 26, 48))
-                else intArrayOf(Color.rgb(226, 241, 255), Color.rgb(241, 247, 255))).apply {
+                if (dark) intArrayOf(Color.argb(222, 25, 111, 205), Color.argb(205, 14, 53, 101), Color.argb(190, 8, 26, 48))
+                else intArrayOf(Color.argb(220, 226, 241, 255), Color.argb(205, 241, 247, 255))).apply {
                 cornerRadius = dp(20).toFloat()
                 setStroke(dp(1), if (dark) Color.rgb(64, 145, 224) else Color.rgb(173, 207, 237))
             }
@@ -103,7 +103,7 @@ internal class ProfileController(
         fun statCard(value: String, label: String) = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            background = rounded(panel(), 16)
+            background = rounded(if (dark) Color.argb(198, 15, 43, 70) else Color.argb(215, 255, 255, 255), 16)
             setPadding(dp(10), dp(14), dp(10), dp(14))
             addView(makeText(value, 23f, Color.rgb(75, 165, 255), true))
             addView(makeText(label, 10f, gray(), false).apply { setPadding(0, dp(3), 0, 0) })
@@ -170,7 +170,7 @@ internal class ProfileController(
         fun settingButton(icon: String, label: String, detail: String, action: () -> Unit) = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            background = rounded(panel(), 15)
+            background = rounded(if (dark) Color.argb(198, 15, 43, 70) else Color.argb(215, 255, 255, 255), 15)
             setPadding(dp(14), dp(13), dp(14), dp(13))
             addView(makeText(icon, 20f, Color.rgb(75, 165, 255), true).apply { gravity = Gravity.CENTER })
             val copy = LinearLayout(activity).apply {
@@ -204,7 +204,7 @@ internal class ProfileController(
             gravity = Gravity.CENTER
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(Color.WHITE)
-            background = rounded(Color.rgb(35, 132, 238), 16)
+            background = rounded(Color.argb(224, 35, 132, 238), 16)
             setPadding(dp(16), dp(15), dp(16), dp(15))
             setOnClickListener {
                 val nickname = input.text.toString().trim().ifBlank { "Player" }
