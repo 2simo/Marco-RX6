@@ -26,7 +26,8 @@ internal class AppearanceFeature(
     private val showLanguagePicker: () -> Unit,
     private val showNotificationSettings: () -> Unit,
     private val setContentView: (View) -> Unit,
-    private val onBack: () -> Unit
+    private val onBack: () -> Unit,
+    private val translate: (String) -> String
 ) {
     private fun typographyPreferences() = AppearancePreferencesStore.typography(activity)
     fun fontScale(): Float = TypographyPreferences.scale(typographyPreferences())
@@ -51,7 +52,8 @@ internal class AppearanceFeature(
             showNotificationSettings = showNotificationSettings,
             showTypographySettings = ::showTypographySettings,
             setContentView = setContentView,
-            onBack = onBack
+            onBack = onBack,
+            translate = translate
         ).show()
     }
 
