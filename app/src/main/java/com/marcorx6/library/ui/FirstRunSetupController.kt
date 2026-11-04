@@ -39,7 +39,7 @@ internal class FirstRunSetupController(
         var languageCode = currentLanguage()
         var darkMode = isDarkMode()
         var accentKey = appearance.getString("accent", "blue")
-            ?.takeIf { it in listOf("violet", "blue", "green", "gold", "rose") } ?: "blue"
+            ?.takeIf { it == "blue" } ?: "blue"
         var notificationsEnabled = isNotificationsEnabled()
 
         val steps = listOf(
@@ -155,22 +155,13 @@ internal class FirstRunSetupController(
                     .forEach { (code, label) -> addChoice(label, "", languageCode == code) { languageCode = code } }
                 2 -> listOf(true to "الوضع الليلي", false to "الوضع النهاري")
                     .forEach { (dark, label) -> addChoice(label, "", darkMode == dark) { darkMode = dark } }
-                3 -> listOf(
-                    "violet" to "بنفسجي", "blue" to "أزرق", "green" to "أخضر",
-                    "gold" to "ذهبي", "rose" to "وردي"
-                ).forEach { (key, label) ->
-                    val swatchColor = when (key) {
-                        "violet" -> Color.rgb(145, 95, 235)
-                        "green" -> Color.rgb(35, 170, 125)
-                        "gold" -> Color.rgb(205, 157, 70)
-                        "rose" -> Color.rgb(215, 90, 135)
-                        else -> Color.rgb(42, 145, 255)
+                3 -> {
+                    val card = viewFactory.optionCard("أزرق", true, "اللون الرسمي المعتمد في MARCO RX6")
+                    val dot = View(activity).apply {
+                        background = rounded(Color.rgb(42, 145, 255), 20)
                     }
-                    val card = viewFactory.optionCard(label, accentKey == key)
-                    val dot = View(activity).apply { background = rounded(swatchColor, 20) }
                     card.addView(dot, LinearLayout.LayoutParams(dp(24), dp(24)).apply { topMargin = dp(9) })
                     choices.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(9) })
-                    card.setOnClickListener { accentKey = key; renderStep(step, false) }
                     if (animate) viewFactory.animateIn(card)
                 }
                 4 -> {
