@@ -8,7 +8,6 @@ import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
 import android.view.View
-import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -17,6 +16,7 @@ import android.widget.Toast
 import com.marcorx6.library.data.auth.FirebaseAuthRepository
 import com.marcorx6.library.data.auth.FirebaseUserDocumentRepository
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -111,7 +111,7 @@ internal class FirebaseAccountController(
         hero.addView(stateTitle)
         val stateDetail = TextView(activity).apply {
             text = when {
-                user != null && !user.isAnonymous -> user.email.orEmpty()
+                user != null && !user.isAnonymous -> user.email.orEmpty() + if (isAdminSession()) "  •  مسؤول نشط" else "  •  مستخدم"
                 user?.isAnonymous == true -> "يمكنك الاستمرار دون حساب أو ربط حسابك لاحقاً"
                 else -> "احفظ ملفك الشخصي واستعمل مزايا الحساب على أجهزتك"
             }
@@ -395,7 +395,7 @@ internal class FirebaseAccountController(
                 }
                 .addOnFailureListener { error ->
                     button.isEnabled = true
-                    toast(error.localizedMessage ?: "تعذر إرسال رابط الاسترجاع")
+                    toast(authErrorMessage(error, "تعذر إرسال رابط الاسترجاع"))
                 }
         }, LinearLayout.LayoutParams(-1, dp(52)))
         showAccountPage(page)
@@ -470,7 +470,7 @@ internal class FirebaseAccountController(
             }.addOnFailureListener { error ->
                 button.isEnabled = true
                 button.text = if (createAccount) "إنشاء الحساب" else "دخول"
-                toast(error.localizedMessage ?: "تعذر إكمال العملية")
+                toast(authErrorMessage(error, "تعذر إكمال العملية"))
             }
         }, LinearLayout.LayoutParams(-1, dp(52)))
         showAccountPage(page)
@@ -578,6 +578,21 @@ internal class FirebaseAccountController(
             .addOnFailureListener { error ->
                 toast(error.localizedMessage ?: "تعذر حذف بيانات الحساب؛ لم يتم حذف حساب الدخول")
             }
+    }
+
+    private fun authErrorMessage(error: Exception, fallback: String): String {
+        val code = (error as? FirebaseAuthException)?.errorCode.orEmpty()
+        return when (code) {
+            "ERROR_INVALID_EMAIL" -> "صيغة البريد الإلكتروني غير صحيحة"
+            "ERROR_WRONG_PASSWORD", "ERROR_INVALID_CREDENTIAL" -> "البريد الإلكتروني أو كلمة المرور غير صحيحة"
+            "ERROR_USER_NOT_FOUND" -> "لا يوجد حساب بهذا البريد الإلكتروني"
+            "ERROR_EMAIL_ALREADY_IN_USE" -> "هذا البريد مرتبط بحساب موجود. جرّب تسجيل الدخول"
+            "ERROR_WEAK_PASSWORD" -> "كلمة المرور ضعيفة؛ استعمل 6 أحرف على الأقل"
+            "ERROR_NETWORK_REQUEST_FAILED" -> "تحقق من اتصال الإنترنت وحاول مرة أخرى"
+            "ERROR_TOO_MANY_REQUESTS" -> "محاولات كثيرة؛ انتظر قليلاً ثم أعد المحاولة"
+            "ERROR_OPERATION_NOT_ALLOWED" -> "طريقة الدخول هذه غير مفعّلة حالياً"
+            else -> error.localizedMessage?.takeIf { it.isNotBlank() } ?: fallback
+        }
     }
 
     private fun toast(message: String) {
