@@ -43,10 +43,10 @@ internal class AppearanceUiFactory(
     fun stylePrimaryButton(button: Button, primary: Boolean = false) {
         button.background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
             if (primary) intArrayOf(Color.rgb(42, 145, 255), Color.rgb(24, 91, 205))
-            else if (isDarkMode()) intArrayOf(Color.rgb(45, 51, 72), Color.rgb(29, 34, 51))
+            else if (isDarkMode()) intArrayOf(Color.rgb(24, 48, 76), Color.rgb(13, 29, 49))
             else intArrayOf(Color.rgb(250, 251, 255), Color.rgb(232, 237, 247))).apply {
             cornerRadius = dp(14).toFloat()
-            if (!primary) setStroke(dp(1), if (isDarkMode()) Color.rgb(72, 81, 108) else Color.rgb(211, 219, 232))
+            if (!primary) setStroke(dp(1), if (isDarkMode()) Color.rgb(55, 83, 113) else Color.rgb(211, 219, 232))
         }
         button.setTextColor(if (primary) accentForeground() else white())
         button.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
@@ -65,7 +65,7 @@ internal class AppearanceUiFactory(
                 view.background = GradientDrawable().apply {
                     setColor(if (isDarkMode()) Color.rgb(25, 30, 47) else Color.rgb(248, 250, 254))
                     cornerRadius = dp(14).toFloat()
-                    setStroke(dp(1), if (isDarkMode()) Color.rgb(67, 76, 104) else Color.rgb(211, 219, 232))
+                    setStroke(dp(1), if (isDarkMode()) Color.rgb(55, 83, 113) else Color.rgb(211, 219, 232))
                 }
                 view.setPadding(dp(14), dp(12), dp(14), dp(12))
                 view.minHeight = dp(52)
@@ -102,7 +102,7 @@ internal class AppearanceUiFactory(
 
     fun styleAlertDialog(dialog: AlertDialog) {
         dialog.window?.setBackgroundDrawable(GradientDrawable(GradientDrawable.Orientation.TL_BR,
-            if (isDarkMode()) intArrayOf(Color.rgb(19, 43, 73), Color.rgb(9, 20, 37))
+            if (isDarkMode()) intArrayOf(Color.rgb(17, 48, 80), Color.rgb(7, 21, 38))
             else intArrayOf(Color.WHITE, Color.rgb(239, 243, 251))).apply {
             cornerRadius = dp(24).toFloat()
             setStroke(dp(1), if (isDarkMode()) Color.rgb(47, 117, 188) else Color.rgb(211, 219, 234))
@@ -138,8 +138,8 @@ internal class AppearanceUiFactory(
         dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.let { stylePrimaryButton(it) }
         dialog.getButton(AlertDialog.BUTTON_NEUTRAL)?.let { stylePrimaryButton(it) }
         dialog.listView?.let { list ->
-            list.setBackgroundColor(if (isDarkMode()) Color.rgb(16, 27, 45) else Color.WHITE)
-            list.divider = android.graphics.drawable.ColorDrawable(if (isDarkMode()) Color.rgb(48, 55, 78) else Color.rgb(226, 231, 241))
+            list.setBackgroundColor(if (isDarkMode()) Color.rgb(12, 31, 52) else Color.WHITE)
+            list.divider = android.graphics.drawable.ColorDrawable(if (isDarkMode()) Color.rgb(39, 68, 99) else Color.rgb(226, 231, 241))
             list.dividerHeight = dp(1)
             list.post {
                 for (index in 0 until list.childCount) {
