@@ -42,7 +42,6 @@ internal class AppearanceFeature(
             activity = activity,
             preferences = appearancePreferences(),
             applyMotionPreferences = applyMotionPreferences,
-            styleDialog = styleDialog,
             recreateActivity = recreateActivity
         ).show()
     }
