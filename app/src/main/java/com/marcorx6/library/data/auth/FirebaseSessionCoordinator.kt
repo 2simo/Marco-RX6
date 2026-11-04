@@ -12,6 +12,7 @@ internal class FirebaseSessionCoordinator(
     private val userDocuments: FirebaseUserDocumentRepository = FirebaseUserDocumentRepository()
 ) {
     private var authListener: FirebaseAuth.AuthStateListener? = null
+    private var guestSignInInProgress = false
 
     fun start() {
         if (authListener == null) {
@@ -25,11 +26,18 @@ internal class FirebaseSessionCoordinator(
         authRepository.currentUser?.let(::syncUserDocument)
     }
 
+    @Synchronized
     fun ensureGuestSession() {
-        authRepository.ensureGuestSession()
-            ?.addOnFailureListener { error ->
-                Log.w(TAG, "Firebase guest session unavailable; local/offline mode remains available", error)
+        if (authRepository.currentUser != null || guestSignInInProgress) return
+        val task = authRepository.ensureGuestSession() ?: return
+        guestSignInInProgress = true
+        task.addOnCompleteListener {
+            synchronized(this) {
+                guestSignInInProgress = false
             }
+        }.addOnFailureListener { error ->
+            Log.w(TAG, "Firebase guest session unavailable; local/offline mode remains available", error)
+        }
     }
 
     fun stop() {
