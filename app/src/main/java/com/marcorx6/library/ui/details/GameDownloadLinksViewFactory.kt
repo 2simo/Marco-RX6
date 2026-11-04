@@ -59,6 +59,8 @@ internal class GameDownloadLinksViewFactory(
                     GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(13).toFloat() }
                 )
                 elevation = dp(2).toFloat()
+                minHeight = dp(48)
+                contentDescription = gameName + ", " + label
                 setPadding(dp(13), dp(12), dp(13), dp(12))
                 setOnClickListener { enqueueDownload(target, item.optString("label").ifBlank { gameName }) }
             }, LinearLayout.LayoutParams(-2, -2).apply { rightMargin = dp(8) })
