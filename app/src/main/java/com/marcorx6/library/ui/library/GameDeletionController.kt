@@ -15,18 +15,19 @@ internal class GameDeletionController(
     private val renderGames: () -> Unit,
     private val executeIo: ((() -> Unit) -> Unit),
     private val postToUi: (() -> Unit) -> Unit,
-    private val styleAlertDialog: (AlertDialog) -> Unit
+    private val styleAlertDialog: (AlertDialog) -> Unit,
+    private val translate: (String) -> String
 ) {
     fun delete(game: Game) {
         AlertDialog.Builder(activity)
-            .setTitle("حذف المقال")
-            .setMessage("هل تريد حذف المقال ${game.name}؟")
-            .setNegativeButton("إلغاء", null)
-            .setPositiveButton("حذف") { _, _ ->
+            .setTitle(translate("حذف المقال"))
+            .setMessage(translate("هل تريد حذف المقال") + " " + game.name + "؟")
+            .setNegativeButton(translate("إلغاء"), null)
+            .setPositiveButton(translate("حذف")) { _, _ ->
                 if (!isAdminSession() || bloggerBlogId().isBlank() || game.bloggerPostId.isBlank()) {
                     Toast.makeText(
                         activity,
-                        "يلزم تسجيل دخول المسؤول ومعرّف المقال في Blogger",
+                        translate("يلزم تسجيل دخول المسؤول ومعرّف المقال في Blogger"),
                         Toast.LENGTH_LONG
                     ).show()
                     return@setPositiveButton
@@ -39,13 +40,13 @@ internal class GameDeletionController(
                                 deleteCoverFileIfUnused(game.coverLocalPath)
                             }
                             renderGames()
-                            Toast.makeText(activity, "تم الحذف من Blogger", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(activity, translate("تم الحذف من Blogger"), Toast.LENGTH_SHORT).show()
                         }
                     } catch (e: Exception) {
                         postToUi {
                             Toast.makeText(
                                 activity,
-                                e.message ?: "تعذر حذف المقال من Blogger",
+                                e.message ?: translate("تعذر حذف المقال من Blogger"),
                                 Toast.LENGTH_LONG
                             ).show()
                         }
