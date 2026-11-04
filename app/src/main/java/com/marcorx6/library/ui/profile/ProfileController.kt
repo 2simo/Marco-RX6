@@ -96,7 +96,7 @@ internal class ProfileController(
             setSingleLine(true)
             setText(prefs.getString("nickname", "Player") ?: "Player")
         }
-        box.addView(makeText(tr("اسم العرض"), 11f, red(), true))
+        box.addView(makeText(tr("اسم العرض"), 11f, Color.rgb(75, 165, 255), true))
         box.addView(input, LinearLayout.LayoutParams(-1, dp(50)).apply { topMargin = dp(6); bottomMargin = dp(14) })
         val library = games()
         val favoriteCount = library.count { it.isFavorite }
@@ -106,7 +106,7 @@ internal class ProfileController(
             gravity = Gravity.CENTER
             background = rounded(panel(), 16)
             setPadding(dp(10), dp(14), dp(10), dp(14))
-            addView(makeText(value, 23f, red(), true))
+            addView(makeText(value, 23f, Color.rgb(75, 165, 255), true))
             addView(makeText(label, 10f, gray(), false).apply { setPadding(0, dp(3), 0, 0) })
         }
         stats.addView(statCard(library.size.toString(), "الألعاب"), LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
@@ -117,7 +117,7 @@ internal class ProfileController(
             gravity = Gravity.CENTER_VERTICAL
             background = rounded(panel(), 15)
             setPadding(dp(14), dp(13), dp(14), dp(13))
-            addView(makeText(icon, 20f, red(), true).apply { gravity = Gravity.CENTER })
+            addView(makeText(icon, 20f, Color.rgb(75, 165, 255), true).apply { gravity = Gravity.CENTER })
             val copy = LinearLayout(activity).apply {
                 orientation = LinearLayout.VERTICAL
                 setPadding(dp(12), 0, 0, 0)
