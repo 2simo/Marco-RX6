@@ -32,6 +32,7 @@ internal class ProfileController(
     private val gray: () -> Int,
     private val showLanguagePicker: () -> Unit,
     private val showNotificationSettings: () -> Unit,
+    private val showAccount: () -> Unit,
     private val chooseAvatar: () -> Unit,
     private val getActiveDialog: () -> AlertDialog?,
     private val setActiveDialog: (AlertDialog?) -> Unit,
@@ -126,6 +127,7 @@ internal class ProfileController(
             addView(makeText("‹", 22f, gray(), true))
             setOnClickListener { action() }
         }
+        box.addView(settingButton("♙", "الحساب", "إنشاء حساب أو تسجيل الدخول • الاستخدام كزائر متاح") { showAccount() }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
         box.addView(settingButton("文", "اللغة", "العربية • English • Français • Español") { showLanguagePicker() }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
         box.addView(settingButton("♧", "الإشعارات", "التحكم في تنبيهات المقالات الجديدة") { showNotificationSettings() })
         val dialog = AlertDialog.Builder(activity)
