@@ -37,7 +37,9 @@ internal class AppearanceRuntimeFeature(
     private val openLink: (String) -> Unit,
     private val applyUnifiedSkin: (View) -> Unit,
     private val recreateActivity: () -> Unit,
-    private val recreateInterface: () -> Unit
+    private val recreateInterface: () -> Unit,
+    private val setContentView: (View) -> Unit,
+    private val onBack: () -> Unit
 ) {
     private val uiToolkitFeature by lazy {
         UiToolkitFeature(
@@ -112,7 +114,9 @@ internal class AppearanceRuntimeFeature(
             applyMotionPreferences = ::applyMotionPreferences,
             styleDialog = ::styleAlertDialog,
             recreateActivity = recreateActivity,
-            recreateInterface = recreateInterface
+            recreateInterface = recreateInterface,
+            setContentView = setContentView,
+            onBack = onBack
         )
     }
 
