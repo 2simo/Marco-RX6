@@ -18,7 +18,7 @@ internal class GameFavoriteToggleFactory(
             text = if (game.isFavorite) "★" else "☆"
             textSize = 25f
             gravity = android.view.Gravity.CENTER
-            setTextColor(if (game.isFavorite) red() else white())
+            setTextColor(if (game.isFavorite) android.graphics.Color.rgb(92, 183, 255) else white())
             setPadding(dp(8), dp(4), dp(8), dp(4))
             minWidth = dp(48)
             minHeight = dp(48)
@@ -28,7 +28,7 @@ internal class GameFavoriteToggleFactory(
                     games[index] = games[index].copy(isFavorite = !games[index].isFavorite)
                     saveGames()
                     text = if (games[index].isFavorite) "★" else "☆"
-                    setTextColor(if (games[index].isFavorite) red() else white())
+                    setTextColor(if (games[index].isFavorite) android.graphics.Color.rgb(92, 183, 255) else white())
                     renderGames()
                 }
             }
