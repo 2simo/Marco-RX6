@@ -180,13 +180,13 @@ internal class BloggerPostComposerController(
                 )
                 if (validationFailure != null) {
                     when (validationFailure.field) {
-                        BloggerPostInputValidator.Field.TITLE -> title.error = validationFailure.message
-                        BloggerPostInputValidator.Field.COVER_URL -> coverUrl.error = validationFailure.message
-                        BloggerPostInputValidator.Field.RELATED_LINK -> link.error = validationFailure.message
-                        BloggerPostInputValidator.Field.BODY -> body.error = validationFailure.message
+                        BloggerPostInputValidator.Field.TITLE -> title.error = translate(validationFailure.message)
+                        BloggerPostInputValidator.Field.COVER_URL -> coverUrl.error = translate(validationFailure.message)
+                        BloggerPostInputValidator.Field.RELATED_LINK -> link.error = translate(validationFailure.message)
+                        BloggerPostInputValidator.Field.BODY -> body.error = translate(validationFailure.message)
                         null -> Toast.makeText(
                             activity,
-                            validationFailure.message,
+                            translate(validationFailure.message),
                             if (validationFailure.longMessage) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
                         ).show()
                     }
@@ -222,7 +222,7 @@ internal class BloggerPostComposerController(
                     },
                     onError = { message ->
                         dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true
-                        Toast.makeText(activity, message, Toast.LENGTH_LONG).show()
+                        Toast.makeText(activity, translate(message), Toast.LENGTH_LONG).show()
                     }
                 )
             }
