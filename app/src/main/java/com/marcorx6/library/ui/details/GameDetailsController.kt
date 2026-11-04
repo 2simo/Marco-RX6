@@ -85,7 +85,7 @@ internal class GameDetailsController(
         val archiveFile = File(archiveFolder, stableCacheName(game.url.ifBlank { game.name }) + ".mht")
 
         val bottom = bottomBarFactory.create(
-            offlineLabel = offlineArchiveController.buttonLabel(archiveFile),
+            offlineLabel = offlineArchiveController.buttonLabel(archiveFile, translate),
             isAdmin = isAdmin(),
             onOffline = {
                 offlineArchiveController.openOrSave(
