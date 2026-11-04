@@ -227,7 +227,7 @@ internal class ProfileController(
             }
             addView(copy, LinearLayout.LayoutParams(0, -2, 1f))
             addView(makeText("‹", 22f, gray(), true))
-            minHeight = dp(56)
+            minimumHeight = dp(56)
             contentDescription = "$label. $detail"
             isClickable = true
             isFocusable = true
