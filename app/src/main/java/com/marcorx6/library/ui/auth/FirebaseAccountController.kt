@@ -1,6 +1,7 @@
 package com.marcorx6.library.ui.auth
 
 import android.app.Activity
+import android.content.Intent
 import android.app.AlertDialog
 import android.text.InputType
 import android.view.ViewGroup
@@ -9,6 +10,9 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import com.marcorx6.library.data.auth.FirebaseAuthRepository
 import com.google.firebase.auth.FirebaseUser
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 
 /**
  * Email account UI for the optional Firebase account.
@@ -18,6 +22,7 @@ internal class FirebaseAccountController(
     private val activity: Activity,
     private val authRepository: FirebaseAuthRepository,
     private val onAccountChanged: () -> Unit,
+    private val launchGoogleSignIn: (Intent) -> Unit,
     private val styleDialog: (AlertDialog) -> Unit
 ) {
     fun show() {
@@ -32,16 +37,55 @@ internal class FirebaseAccountController(
     private fun showGuestActions() {
         AlertDialog.Builder(activity)
             .setTitle("حساب MARCO RX6")
-            .setMessage("أنت تستعمل التطبيق كزائر. تقدر تنشئ حساباً أو تدخل لحسابك في أي وقت.")
-            .setItems(arrayOf("إنشاء حساب بالبريد الإلكتروني", "تسجيل الدخول بالبريد الإلكتروني", "نسيت كلمة المرور؟", "إغلاق")) { _, which ->
+            .setMessage("أنت تستعمل التطبيق كزائر. تقدر تدخل بحساب Google أو بالبريد الإلكتروني.")
+            .setItems(arrayOf("تسجيل الدخول باستخدام Google", "إنشاء حساب بالبريد الإلكتروني", "تسجيل الدخول بالبريد الإلكتروني", "نسيت كلمة المرور؟", "إغلاق")) { _, which ->
                 when (which) {
-                    0 -> showEmailForm(createAccount = true)
-                    1 -> showEmailForm(createAccount = false)
-                    2 -> showPasswordResetForm()
+                    0 -> launchGoogleSignIn(googleSignInIntent())
+                    1 -> showEmailForm(createAccount = true)
+                    2 -> showEmailForm(createAccount = false)
+                    3 -> showPasswordResetForm()
                 }
             }
             .show()
             .also(styleDialog)
+    }
+
+    /** Uses the Firebase web OAuth client, separate from the Blogger/Drive OAuth client. */
+    private fun googleSignInIntent(): Intent {
+        val webClientId = activity.getString(com.marcorx6.library.R.string.default_web_client_id)
+        val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail()
+            .requestIdToken(webClientId)
+            .build()
+        return GoogleSignIn.getClient(activity, options).signInIntent
+    }
+
+    fun handleGoogleSignInResult(data: Intent?) {
+        val accountTask = GoogleSignIn.getSignedInAccountFromIntent(data)
+        accountTask.addOnSuccessListener { account ->
+            val token = account.idToken
+            if (token.isNullOrBlank()) {
+                toast("تعذر الحصول على رمز Google. راجع إعداد OAuth في Firebase.")
+                return@addOnSuccessListener
+            }
+            val current = authRepository.currentUser
+            val authTask = if (current?.isAnonymous == true) {
+                authRepository.linkGoogleToCurrentUser(token)
+            } else {
+                authRepository.signInWithGoogle(token)
+            }
+            authTask.addOnSuccessListener {
+                toast("تم تسجيل الدخول بحساب Google بنجاح")
+                onAccountChanged()
+            }.addOnFailureListener { error ->
+                toast(error.localizedMessage ?: "تعذر ربط حساب Google")
+            }
+        }.addOnFailureListener { error ->
+            val apiError = error as? ApiException
+            if (apiError?.statusCode != 12501) {
+                toast(error.localizedMessage ?: "فشل تسجيل الدخول باستخدام Google")
+            }
+        }
     }
 
     private fun showPasswordResetForm() {
