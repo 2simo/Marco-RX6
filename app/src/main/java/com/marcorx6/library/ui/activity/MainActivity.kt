@@ -86,7 +86,8 @@ class MainActivity : ComponentActivity() {
             onBack = ::createInterface,
             dp = ::dp,
             isDarkMode = ::isDarkMode,
-            applyUnifiedSkin = ::applyUnifiedSkin
+            applyUnifiedSkin = ::applyUnifiedSkin,
+            translate = ::tr
         )
     }
 
