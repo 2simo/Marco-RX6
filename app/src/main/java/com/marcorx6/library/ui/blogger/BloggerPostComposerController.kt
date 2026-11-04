@@ -134,7 +134,28 @@ internal class BloggerPostComposerController(
             text = translate("اختيار صورة الغلاف من الهاتف")
             tag = "marco_primary_action"
             setTextColor(accentForeground())
-            background = rounded(((red() and 0x00FFFFFF) or (222 shl 24)), 12)
+            background = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(
+                    android.graphics.Color.argb(228, 37, 132, 222),
+                    android.graphics.Color.argb(215, 15, 73, 145)
+                )
+            ).apply {
+                cornerRadius = dp(12).toFloat()
+                setStroke(dp(1), android.graphics.Color.argb(190, 126, 197, 255))
+            }
+            isClickable = true
+            isFocusable = true
+            if (android.os.Build.VERSION.SDK_INT >= 23) foreground =
+                android.graphics.drawable.RippleDrawable(
+                    android.content.res.ColorStateList.valueOf(android.graphics.Color.argb(105, 205, 235, 255)),
+                    null,
+                    android.graphics.drawable.GradientDrawable().apply {
+                        setColor(android.graphics.Color.WHITE)
+                        cornerRadius = dp(12).toFloat()
+                    }
+                )
+            elevation = dp(2).toFloat()
             setOnClickListener { chooseCover() }
         }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
         box.addView(makeText(translate("أقسام المقال • Labels من المدونة"), 10f, red(), true))
