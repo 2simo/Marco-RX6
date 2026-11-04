@@ -40,6 +40,7 @@ internal class GameDetailsBottomBarFactory(
         }
         fun readerAction(label: String, action: () -> Unit, primary: Boolean = false) = TextView(activity).apply {
             text = label
+            contentDescription = label
             textSize = 12f
             setTextColor(if (primary || isDarkMode()) Color.WHITE else Color.rgb(48, 57, 77))
             gravity = android.view.Gravity.CENTER
