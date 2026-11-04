@@ -7,6 +7,7 @@ on:
     paths:
       - "docs/**"
       - ".github/workflows/publish-pages.yml"
+      - ".github/workflows/static.yml"
   workflow_dispatch:
 
 permissions:
