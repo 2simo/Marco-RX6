@@ -7,14 +7,16 @@ import com.marcorx6.library.notification.BlogNotificationScheduler
 /** Owns notification scheduling, runtime permission requests, and settings UI. */
 internal class NotificationsFeature(
     activity: ComponentActivity,
-    styleDialog: (AlertDialog) -> Unit
+    styleDialog: (AlertDialog) -> Unit,
+    translate: (String) -> String
 ) {
     private val scheduler = BlogNotificationScheduler(activity.applicationContext)
     private val permissionController = NotificationPermissionController(activity)
     private val settingsController = NotificationSettingsController(
         activity,
         scheduler,
-        styleDialog
+        styleDialog,
+        translate
     ) {
         requestPermissionIfNeeded()
     }
