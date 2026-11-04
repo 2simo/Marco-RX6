@@ -54,7 +54,8 @@ internal class BloggerRuntimeFeature(
     chooseCover: () -> Unit,
     deleteCoverFileIfUnused: (String) -> Unit,
     resetCoverUploadFailed: () -> Unit,
-    saveGames: () -> Unit
+    saveGames: () -> Unit,
+    translate: (String) -> String
 ) {
     private var syncing = false
 
@@ -84,7 +85,8 @@ internal class BloggerRuntimeFeature(
             merge = merge,
             setBlogId = setBlogId,
             refreshAccess = refreshAccess,
-            renderGames = renderGames
+            renderGames = renderGames,
+            translate = translate
         )
     }
 
