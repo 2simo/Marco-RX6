@@ -9,7 +9,10 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Toast
 import com.marcorx6.library.data.auth.FirebaseAuthRepository
+import com.marcorx6.library.data.auth.FirebaseUserDocumentRepository
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
@@ -28,6 +31,9 @@ internal class FirebaseAccountController(
     private val signOutAdmin: () -> Unit,
     private val styleDialog: (AlertDialog) -> Unit
 ) {
+    private val userDocuments = FirebaseUserDocumentRepository()
+    private var pendingDeletionUid: String? = null
+
     fun show() {
         val user = authRepository.currentUser
         if (user == null || user.isAnonymous) {
@@ -46,6 +52,7 @@ internal class FirebaseAccountController(
                 "إنشاء / اختيار حساب Google",
                 "تسجيل دخول المسؤول (Blogger و Drive)",
                 "نسيت كلمة المرور؟",
+                "حذف بيانات حساب الزائر",
                 "إغلاق"
             )) { _, which ->
                 when (which) {
@@ -54,6 +61,7 @@ internal class FirebaseAccountController(
                     2 -> startFreshGoogleAccountSelection()
                     3 -> launchAdminGoogleSignIn(googleSignInIntentForAdmin())
                     4 -> showPasswordResetForm()
+                    5 -> confirmAccountDeletion(authRepository.currentUser)
                 }
             }
             .show()
@@ -96,6 +104,13 @@ internal class FirebaseAccountController(
                 return@addOnSuccessListener
             }
             val current = authRepository.currentUser
+            if (pendingDeletionUid != null && current?.uid == pendingDeletionUid) {
+                pendingDeletionUid = null
+                current.reauthenticate(GoogleAuthProvider.getCredential(token, null))
+                    .addOnSuccessListener { deleteAccountDataAndAuth(current) }
+                    .addOnFailureListener { error -> toast(error.localizedMessage ?: "تعذرت إعادة التحقق من Google") }
+                return@addOnSuccessListener
+            }
             val authTask = if (current?.isAnonymous == true) {
                 authRepository.linkGoogleToCurrentUser(token)
             } else {
@@ -109,7 +124,10 @@ internal class FirebaseAccountController(
             }
         }.addOnFailureListener { error ->
             val apiError = error as? ApiException
-            if (apiError?.statusCode != 12501) {
+            if (apiError?.statusCode == 12501) {
+                pendingDeletionUid = null
+            } else {
+                pendingDeletionUid = null
                 toast(error.localizedMessage ?: "فشل تسجيل الدخول باستخدام Google")
             }
         }
@@ -248,6 +266,7 @@ internal class FirebaseAccountController(
                 }
             }
         }
+        actions += "حذف حساب MARCO RX6 وبياناته" to { confirmAccountDeletion(user) }
         actions += (if (isAdminSession()) "تسجيل الخروج من وضع المسؤول" else "تسجيل دخول المسؤول (Blogger و Drive)") to {
             if (isAdminSession()) signOutAdmin() else launchAdminGoogleSignIn(googleSignInIntentForAdmin())
         }
@@ -269,6 +288,110 @@ internal class FirebaseAccountController(
             }
             .show()
             .also(styleDialog)
+    }
+
+    private fun confirmAccountDeletion(user: FirebaseUser?) {
+        if (user == null) {
+            toast("ما كاين حتى حساب لحذفه دابا")
+            return
+        }
+        AlertDialog.Builder(activity)
+            .setTitle("حذف حساب MARCO RX6؟")
+            .setMessage(
+                "هاد العملية نهائية: غادي نحذف ملف الحساب والإعدادات المحفوظة فـ Firebase، ومن بعد حساب Firebase نفسه. " +
+                    "مكتبة الألعاب والملفات المحلية فالتيليفون، وحساب Google المسؤول ومحتوى Blogger وDrive، ما غاديش نمسوهم."
+            )
+            .setNegativeButton("إلغاء", null)
+            .setPositiveButton("متابعة") { _, _ ->
+                when {
+                    user.isAnonymous -> deleteAccountDataAndAuth(user)
+                    user.providerData.any { it.providerId == "password" } -> showDeletePasswordPrompt(user)
+                    user.providerData.any { it.providerId == "google.com" } -> reauthenticateGoogleForDeletion(user)
+                    else -> toast("طريقة التحقق من هاد الحساب غير مدعومة حالياً. تواصل مع الدعم.")
+                }
+            }
+            .show()
+            .also(styleDialog)
+    }
+
+    private fun showDeletePasswordPrompt(user: FirebaseUser) {
+        val password = EditText(activity).apply {
+            hint = "كلمة المرور الحالية"
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            setSingleLine(true)
+        }
+        val dialog = AlertDialog.Builder(activity)
+            .setTitle("تأكيد هوية صاحب الحساب")
+            .setMessage("دخل كلمة المرور الحالية باش نتحققو من هويتك قبل الحذف.")
+            .setView(password)
+            .setNegativeButton("إلغاء", null)
+            .setPositiveButton("تحقق وحذف", null)
+            .create()
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val secret = password.text.toString()
+                val email = user.email
+                if (secret.isBlank() || email.isNullOrBlank()) {
+                    toast("دخل كلمة المرور الحالية")
+                    return@setOnClickListener
+                }
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
+                user.reauthenticate(EmailAuthProvider.getCredential(email, secret))
+                    .addOnSuccessListener {
+                        dialog.dismiss()
+                        deleteAccountDataAndAuth(user)
+                    }
+                    .addOnFailureListener { error ->
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true
+                        toast(error.localizedMessage ?: "فشل التحقق من كلمة المرور")
+                    }
+            }
+        }
+        dialog.show()
+        styleDialog(dialog)
+    }
+
+    private fun reauthenticateGoogleForDeletion(user: FirebaseUser) {
+        GoogleSignIn.getClient(activity, firebaseGoogleOptions()).silentSignIn()
+            .addOnSuccessListener { account ->
+                val token = account.idToken
+                if (token.isNullOrBlank()) {
+                    pendingDeletionUid = user.uid
+                    launchGoogleSignIn(googleSignInIntent())
+                    return@addOnSuccessListener
+                }
+                user.reauthenticate(GoogleAuthProvider.getCredential(token, null))
+                    .addOnSuccessListener { deleteAccountDataAndAuth(user) }
+                    .addOnFailureListener {
+                        pendingDeletionUid = user.uid
+                        launchGoogleSignIn(googleSignInIntent())
+                    }
+            }
+            .addOnFailureListener {
+                pendingDeletionUid = user.uid
+                launchGoogleSignIn(googleSignInIntent())
+            }
+    }
+
+    private fun deleteAccountDataAndAuth(user: FirebaseUser) {
+        userDocuments.deleteUserData(user.uid)
+            .addOnSuccessListener {
+                authRepository.deleteCurrentUser()
+                    .addOnSuccessListener {
+                        GoogleSignIn.getClient(activity, firebaseGoogleOptions()).signOut()
+                            .addOnCompleteListener {
+                                authRepository.signOut()
+                                onAccountChanged()
+                                toast("تم حذف حساب MARCO RX6 وبياناته السحابية بنجاح")
+                            }
+                    }
+                    .addOnFailureListener { error ->
+                        toast(error.localizedMessage ?: "تم حذف بيانات الحساب، لكن تعذر حذف حساب الدخول. تواصل مع الدعم.")
+                    }
+            }
+            .addOnFailureListener { error ->
+                toast(error.localizedMessage ?: "تعذر حذف بيانات الحساب؛ لم يتم حذف حساب الدخول")
+            }
     }
 
     private fun toast(message: String) {
