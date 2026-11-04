@@ -247,7 +247,10 @@ internal class DownloadUiController(
                 cornerRadius = dp(16).toFloat()
                 setStroke(dp(1), if (filled) Color.argb(175, 119, 194, 255) else primary)
             }
+            minWidth = dp(48)
             minHeight = dp(48)
+            isClickable = true
+            isFocusable = true
             contentDescription = label
             setPadding(dp(14), dp(13), dp(14), dp(13))
             addGlassTouch(this)
