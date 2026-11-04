@@ -23,7 +23,7 @@ internal class GameDetailsTopBarFactory(
             setPadding(dp(16), dp(10), dp(12), dp(10))
             background = GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
-                if (isDarkMode()) intArrayOf(Color.rgb(17, 32, 54), Color.rgb(9, 17, 31))
+                if (isDarkMode()) intArrayOf(Color.rgb(19, 49, 83), Color.rgb(8, 20, 38))
                 else intArrayOf(Color.WHITE, Color.rgb(235, 242, 251))
             )
         }
