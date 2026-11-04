@@ -4,9 +4,15 @@ import android.app.Activity
 import android.content.Intent
 import android.app.AlertDialog
 import android.text.InputType
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
+import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TextView
 import android.widget.Toast
 import com.marcorx6.library.data.auth.FirebaseAuthRepository
 import com.marcorx6.library.data.auth.FirebaseUserDocumentRepository
@@ -29,7 +35,12 @@ internal class FirebaseAccountController(
     private val launchAdminGoogleSignIn: (Intent) -> Unit,
     private val isAdminSession: () -> Boolean,
     private val signOutAdmin: () -> Unit,
-    private val styleDialog: (AlertDialog) -> Unit
+    private val styleDialog: (AlertDialog) -> Unit,
+    private val setContentView: (View) -> Unit,
+    private val onBack: () -> Unit,
+    private val dp: (Int) -> Int,
+    private val isDarkMode: () -> Boolean,
+    private val applyUnifiedSkin: (View) -> Unit
 ) {
     private val userDocuments = FirebaseUserDocumentRepository()
     private var pendingDeletionUid: String? = null
@@ -43,29 +54,161 @@ internal class FirebaseAccountController(
         }
     }
 
-    private fun showGuestActions() {
-        AlertDialog.Builder(activity)
-            .setTitle("أنت الآن تستعمل MARCO RX6 كزائر")
-            .setItems(arrayOf(
-                "إنشاء حساب جديد بالبريد الإلكتروني",
-                "تسجيل الدخول بالبريد الإلكتروني",
-                "إنشاء / اختيار حساب Google",
-                "تسجيل دخول المسؤول (Blogger و Drive)",
-                "نسيت كلمة المرور؟",
-                "حذف بيانات حساب الزائر",
-                "إغلاق"
-            )) { _, which ->
-                when (which) {
-                    0 -> showEmailForm(createAccount = true)
-                    1 -> showEmailForm(createAccount = false)
-                    2 -> startFreshGoogleAccountSelection()
-                    3 -> startAdminGoogleAccountSelection()
-                    4 -> showPasswordResetForm()
-                    5 -> confirmAccountDeletion(authRepository.currentUser)
-                }
+    private fun showGuestActions() = showAccountScreen(null)
+
+    private fun showAccountScreen(user: FirebaseUser?) {
+        val dark = isDarkMode()
+        val page = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(20), dp(18), dp(20), dp(24))
+            setBackgroundColor(if (dark) Color.rgb(6, 16, 30) else Color.rgb(240, 247, 255))
+        }
+        val header = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val heading = TextView(activity).apply {
+            text = "حساب MARCO RX6"
+            textSize = 23f
+            setTextColor(if (dark) Color.WHITE else Color.rgb(18, 42, 68))
+            setTypeface(null, android.graphics.Typeface.BOLD)
+        }
+        header.addView(heading, LinearLayout.LayoutParams(0, dp(52), 1f))
+        val back = TextView(activity).apply {
+            text = "‹"
+            textSize = 32f
+            gravity = Gravity.CENTER
+            setTextColor(Color.rgb(75, 165, 255))
+            setOnClickListener { onBack() }
+        }
+        header.addView(back, LinearLayout.LayoutParams(dp(48), dp(48)))
+        page.addView(header)
+
+        val hero = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(dp(20), dp(24), dp(20), dp(24))
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                if (dark) intArrayOf(Color.argb(218, 23, 105, 190), Color.argb(190, 9, 39, 76))
+                else intArrayOf(Color.argb(225, 211, 235, 255), Color.argb(205, 239, 247, 255))
+            ).apply {
+                cornerRadius = dp(24).toFloat()
+                setStroke(dp(1), if (dark) Color.argb(170, 91, 170, 242) else Color.argb(190, 123, 180, 231))
             }
-            .show()
-            .also(styleDialog)
+        }
+        val signedIn = user != null && !user.isAnonymous
+        val stateTitle = TextView(activity).apply {
+            text = when {
+                signedIn -> "مرحباً بعودتك"
+                user?.isAnonymous == true -> "أنت تستعمل التطبيق كزائر"
+                else -> "اختَر طريقة الدخول"
+            }
+            textSize = 19f
+            gravity = Gravity.CENTER
+            setTextColor(if (dark) Color.WHITE else Color.rgb(17, 54, 89))
+            setTypeface(null, android.graphics.Typeface.BOLD)
+        }
+        hero.addView(stateTitle)
+        val stateDetail = TextView(activity).apply {
+            text = when {
+                signedIn -> user.email.orEmpty()
+                user?.isAnonymous == true -> "يمكنك الاستمرار دون حساب أو ربط حسابك لاحقاً"
+                else -> "احفظ ملفك الشخصي واستعمل مزايا الحساب على أجهزتك"
+            }
+            textSize = 12f
+            gravity = Gravity.CENTER
+            setPadding(0, dp(8), 0, 0)
+            setTextColor(if (dark) Color.rgb(214, 232, 250) else Color.rgb(54, 91, 126))
+        }
+        hero.addView(stateDetail)
+        page.addView(hero, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(20) })
+
+        fun action(label: String, detail: String, primary: Boolean = false, run: () -> Unit) {
+            val item = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(18), dp(14), dp(18), dp(14))
+                background = GradientDrawable(
+                    GradientDrawable.Orientation.TL_BR,
+                    if (primary) intArrayOf(Color.argb(220, 31, 132, 235), Color.argb(195, 16, 82, 164))
+                    else if (dark) intArrayOf(Color.argb(150, 21, 51, 81), Color.argb(125, 11, 32, 56))
+                    else intArrayOf(Color.argb(205, 255, 255, 255), Color.argb(185, 228, 241, 255))
+                ).apply {
+                    cornerRadius = dp(17).toFloat()
+                    setStroke(dp(1), if (primary) Color.argb(210, 112, 184, 255) else if (dark) Color.argb(105, 104, 163, 218) else Color.argb(150, 155, 194, 231))
+                }
+                isClickable = true
+                isFocusable = true
+                setOnClickListener { run() }
+            }
+            val title = TextView(activity).apply {
+                text = label
+                textSize = 15f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(if (primary || dark) Color.WHITE else Color.rgb(20, 48, 76))
+            }
+            val subtitle = TextView(activity).apply {
+                text = detail
+                textSize = 11f
+                setPadding(0, dp(4), 0, 0)
+                setTextColor(if (primary) Color.rgb(225, 240, 255) else if (dark) Color.rgb(183, 207, 231) else Color.rgb(83, 111, 139))
+            }
+            item.addView(title)
+            item.addView(subtitle)
+            page.addView(item, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
+        }
+
+        if (!signedIn) {
+            action("المتابعة كزائر", "استعمل المكتبة دون إنشاء حساب", run = onBack)
+            action("الدخول باستخدام Google", "ربط حساب Google بحساب MARCO RX6", primary = true, run = ::startFreshGoogleAccountSelection)
+            action("إنشاء حساب بالبريد الإلكتروني", "حساب جديد مع كلمة مرور", run = { showEmailForm(createAccount = true) })
+            action("الدخول بالبريد الإلكتروني", "لديك حساب بالفعل؟", run = { showEmailForm(createAccount = false) })
+            action("دخول المسؤول", "صلاحيات Blogger وGoogle Drive", run = ::startAdminGoogleAccountSelection)
+            action("نسيت كلمة المرور؟", "استرجاع الوصول إلى حسابك", run = ::showPasswordResetForm)
+            if (user?.isAnonymous == true) {
+                action("حذف بيانات جلسة الزائر", "حذف ملف الزائر السحابي فقط", run = { confirmAccountDeletion(user) })
+            }
+        } else {
+            action("حالة الحساب", if (user.isEmailVerified) "البريد الإلكتروني مؤكد" else "البريد الإلكتروني غير مؤكد", run = {
+                if (!user.isEmailVerified) authRepository.sendEmailVerification()
+                    ?.addOnSuccessListener { toast("تم إرسال رابط التأكيد إلى بريدك") }
+                    ?.addOnFailureListener { toast("تعذر إرسال رابط التأكيد") }
+            })
+            if (user.providerData.any { it.providerId == "password" }) {
+                action("استرجاع كلمة المرور", "إرسال رابط تغيير كلمة المرور", run = {
+                    user.email?.let { address -> authRepository.sendPasswordReset(address)
+                        .addOnSuccessListener { toast("تم إرسال رابط استرجاع كلمة المرور") }
+                        .addOnFailureListener { toast("تعذر إرسال رابط الاسترجاع") } }
+                })
+            }
+            action(if (isAdminSession()) "إيقاف وضع المسؤول" else "دخول المسؤول", "إدارة Blogger وGoogle Drive", primary = true, run = {
+                if (isAdminSession()) signOutAdmin() else startAdminGoogleAccountSelection()
+            })
+            action("تسجيل الخروج", "الخروج من حساب MARCO RX6", run = {
+                GoogleSignIn.getClient(activity, firebaseGoogleOptions()).signOut().addOnCompleteListener {
+                    authRepository.signOut()
+                    onAccountChanged()
+                    toast("تم تسجيل الخروج بنجاح")
+                }
+            })
+            action("حذف الحساب", "حذف الحساب وبياناته السحابية نهائياً", run = { confirmAccountDeletion(user) })
+        }
+        val footer = TextView(activity).apply {
+            text = "MARCO RX6  •  SECURE ACCOUNT"
+            textSize = 9f
+            gravity = Gravity.CENTER
+            setTextColor(if (dark) Color.rgb(119, 157, 194) else Color.rgb(103, 133, 163))
+            setPadding(0, dp(12), 0, dp(8))
+        }
+        page.addView(footer)
+        val scroll = ScrollView(activity).apply {
+            isFillViewport = true
+            clipToPadding = false
+            addView(page)
+        }
+        setContentView(scroll)
+        applyUnifiedSkin(page)
     }
 
     /**
@@ -255,47 +398,7 @@ internal class FirebaseAccountController(
         styleDialog(dialog)
     }
 
-    private fun showSignedInActions(user: FirebaseUser) {
-        val actions = mutableListOf<Pair<String, () -> Unit>>()
-        if (!user.isEmailVerified && !user.email.isNullOrBlank()) {
-            actions += "إرسال رابط تأكيد البريد" to {
-                authRepository.sendEmailVerification()
-                    ?.addOnSuccessListener { toast("تم إرسال رابط التأكيد إلى بريدك") }
-                    ?.addOnFailureListener { toast("تعذر إرسال رابط التأكيد") }
-            }
-        }
-        if (user.providerData.any { it.providerId == "password" }) {
-            actions += "استرجاع كلمة المرور" to {
-                user.email?.let { address ->
-                    authRepository.sendPasswordReset(address)
-                        .addOnSuccessListener { toast("تم إرسال رابط استرجاع كلمة المرور") }
-                        .addOnFailureListener { toast("تعذر إرسال رابط الاسترجاع") }
-                }
-            }
-        }
-        actions += "حذف حساب MARCO RX6 وبياناته" to { confirmAccountDeletion(user) }
-        actions += (if (isAdminSession()) "تسجيل الخروج من وضع المسؤول" else "تسجيل دخول المسؤول (Blogger و Drive)") to {
-            if (isAdminSession()) signOutAdmin() else startAdminGoogleAccountSelection()
-        }
-        // Keep one clear, prominent Firebase sign-out action in the signed-in account menu.
-        actions.add(0, "تسجيل الخروج من حساب MARCO RX6" to {
-            GoogleSignIn.getClient(activity, firebaseGoogleOptions()).signOut()
-                .addOnCompleteListener {
-                    authRepository.signOut()
-                    onAccountChanged()
-                    toast("تم تسجيل الخروج بنجاح")
-                }
-        })
-        actions += "إغلاق" to {}
-
-        AlertDialog.Builder(activity)
-            .setTitle((user.email ?: "حساب MARCO RX6") + if (isAdminSession()) " • مسؤول" else " • مستخدم")
-            .setItems(actions.map { it.first }.toTypedArray()) { _, which ->
-                actions.getOrNull(which)?.second?.invoke()
-            }
-            .show()
-            .also(styleDialog)
-    }
+    private fun showSignedInActions(user: FirebaseUser) = showAccountScreen(user)
 
     private fun confirmAccountDeletion(user: FirebaseUser?) {
         if (user == null) {
