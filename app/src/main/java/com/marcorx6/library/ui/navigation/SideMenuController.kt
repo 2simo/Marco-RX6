@@ -52,12 +52,12 @@ internal class SideMenuController(
             setBackground(GradientDrawable().apply {
                 setColor(ink)
                 cornerRadii = floatArrayOf(0f, 0f, dp(24).toFloat(), dp(24).toFloat(), dp(24).toFloat(), dp(24).toFloat(), 0f, 0f)
-                setStroke(dp(1), Color.rgb(57, 105, 158))
+                setStroke(dp(1), Color.rgb(47, 117, 188))
             })
         }
         val top = LinearLayout(activity).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         val brand = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
-        brand.addView(makeText("MARCO", 10f, gold, true))
+        brand.addView(makeText("MARCO", 10f, Color.rgb(92, 174, 255), true))
         brand.addView(makeText("RX6", 27f, white, true))
         top.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
         top.addView(TextView(activity).apply {
@@ -71,9 +71,9 @@ internal class SideMenuController(
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
                 background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                    if (isDark()) intArrayOf(Color.rgb(24, 39, 63), Color.rgb(12, 22, 39)) else intArrayOf(Color.WHITE, Color.rgb(237, 243, 252))).apply {
+                    if (isDark()) intArrayOf(Color.rgb(21, 48, 80), Color.rgb(10, 24, 43)) else intArrayOf(Color.WHITE, Color.rgb(237, 243, 252))).apply {
                     cornerRadius = dp(16).toFloat()
-                    setStroke(dp(1), if (isDark()) Color.rgb(43, 83, 128) else Color.rgb(207, 220, 239))
+                    setStroke(dp(1), if (isDark()) Color.rgb(48, 119, 190) else Color.rgb(207, 220, 239))
                 }
                 elevation = dp(1).toFloat()
                 setPadding(dp(14), dp(14), dp(14), dp(14))
@@ -84,9 +84,9 @@ internal class SideMenuController(
                 text = icon; textSize = 17f; gravity = Gravity.CENTER
                 setTextColor(if (isDark()) Color.WHITE else Color.rgb(68, 76, 96))
                 background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                    if (isDark()) intArrayOf(Color.rgb(29, 103, 169), Color.rgb(18, 55, 91)) else intArrayOf(Color.rgb(220, 239, 255), Color.rgb(195, 222, 250))).apply {
+                    if (isDark()) intArrayOf(Color.rgb(38, 133, 230), Color.rgb(15, 70, 135)) else intArrayOf(Color.rgb(220, 239, 255), Color.rgb(195, 222, 250))).apply {
                     cornerRadius = dp(12).toFloat()
-                    setStroke(dp(1), if (isDark()) Color.rgb(69, 139, 201) else Color.rgb(165, 204, 239))
+                    setStroke(dp(1), if (isDark()) Color.rgb(77, 157, 235) else Color.rgb(165, 204, 239))
                 }
                 setPadding(dp(11), dp(9), dp(11), dp(9)); minWidth = dp(42)
             }
