@@ -1,7 +1,13 @@
 package com.marcorx6.library.ui
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
+import android.view.ViewGroup
+import android.widget.ScrollView
+import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import java.util.concurrent.Executor
 
@@ -31,11 +37,30 @@ internal class BloggerAccessFeature(
             ).show()
         },
         onError = { message ->
-            Toast.makeText(
-                context,
-                "تعذر التحقق من صلاحيات Blogger: $message",
-                Toast.LENGTH_LONG
-            ).show()
+            val title = "تعذر التحقق من صلاحيات Blogger"
+            val detailsView = TextView(context).apply {
+                text = message
+                textIsSelectable = true
+                setTextIsSelectable(true)
+                setPadding(40, 24, 40, 24)
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+            }
+            val scrollView = ScrollView(context).apply {
+                addView(detailsView)
+            }
+            AlertDialog.Builder(context)
+                .setTitle(title)
+                .setView(scrollView)
+                .setPositiveButton("نسخ الخطأ") { _, _ ->
+                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    clipboard.setPrimaryClip(ClipData.newPlainText("Blogger API error", message))
+                    Toast.makeText(context, "تم نسخ تفاصيل الخطأ", Toast.LENGTH_SHORT).show()
+                }
+                .setNegativeButton("إغلاق", null)
+                .show()
         }
     )
 
