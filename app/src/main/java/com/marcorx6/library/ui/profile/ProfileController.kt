@@ -112,6 +112,62 @@ internal class ProfileController(
         stats.addView(statCard(library.size.toString(), "الألعاب"), LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
         stats.addView(statCard(favoriteCount.toString(), "المفضلة"), LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(6) })
         box.addView(stats, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(14) })
+
+        fun directoryBytes(directory: File?): Long {
+            if (directory == null || !directory.exists()) return 0L
+            return try {
+                directory.walkTopDown().filter { it.isFile }.sumOf { file ->
+                    try { file.length().coerceAtLeast(0L) } catch (_: Exception) { 0L }
+                }
+            } catch (_: Exception) { 0L }
+        }
+        fun readableSize(bytes: Long): String {
+            val mb = bytes.toDouble() / (1024.0 * 1024.0)
+            return if (mb >= 1024.0) String.format(java.util.Locale.ROOT, "%.2f GB", mb / 1024.0)
+            else String.format(java.util.Locale.ROOT, "%.1f MB", mb)
+        }
+        val cacheBytes = directoryBytes(activity.cacheDir)
+        val appFilesBytes = directoryBytes(activity.filesDir)
+        val storageCard = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            background = rounded(panel(), 16)
+            setPadding(dp(14), dp(13), dp(14), dp(13))
+            addView(makeText("▤", 22f, Color.rgb(75, 165, 255), true))
+            val copy = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(12), 0, 0, 0)
+                addView(makeText("مساحة التخزين", 13f, white(), true))
+                addView(makeText("ملفات التطبيق: ${readableSize(appFilesBytes)}  •  Cache: ${readableSize(cacheBytes)}", 10f, gray(), false).apply {
+                    setPadding(0, dp(3), 0, 0)
+                })
+            }
+            addView(copy, LinearLayout.LayoutParams(0, -2, 1f))
+            addView(makeText("›", 22f, gray(), true))
+            setOnClickListener {
+                AlertDialog.Builder(activity)
+                    .setTitle("مساحة التخزين")
+                    .setMessage(
+                        "ملفات التطبيق: ${readableSize(appFilesBytes)}\\n" +
+                        "الملفات المؤقتة (Cache): ${readableSize(cacheBytes)}\\n\\n" +
+                        "هذه أرقام الملفات المحلية التي يديرها التطبيق. لا يتم حذف أي ملف من هنا."
+                    )
+                    .setPositiveButton("إعدادات التخزين") { _, _ ->
+                        try {
+                            val intent = android.content.Intent(
+                                android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                android.net.Uri.parse("package:${activity.packageName}")
+                            )
+                            activity.startActivity(intent)
+                        } catch (_: Exception) {
+                            Toast.makeText(activity, "تعذر فتح إعدادات التطبيق", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    .setNegativeButton("إغلاق", null)
+                    .show()
+            }
+        }
+        box.addView(storageCard, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
         fun settingButton(icon: String, label: String, detail: String, action: () -> Unit) = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
