@@ -54,7 +54,9 @@ internal class UserExperienceRuntimeFeature(
     onPlatformSelected: (String) -> Unit,
     recreateActivity: () -> Unit,
     showFirstRunSetup: () -> Unit,
-    showProfileForStartup: () -> Unit
+    showProfileForStartup: () -> Unit,
+    setContentView: (View) -> Unit,
+    onBack: () -> Unit
 ) {
     private val profileFeature by lazy {
         ProfileFeature(
@@ -83,7 +85,9 @@ internal class UserExperienceRuntimeFeature(
             styleAlertDialog = styleAlertDialog,
             applyUnifiedSkin = applyUnifiedSkin,
             onAvatarSaved = onAvatarSaved,
-            onAvatarError = onAvatarError
+            onAvatarError = onAvatarError,
+            setContentView = setContentView,
+            onBack = onBack
         )
     }
 
