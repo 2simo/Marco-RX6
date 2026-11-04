@@ -180,9 +180,23 @@ internal class DownloadUiController(
                 card.addView(TextView(activity).apply {
                     text = if (item.totalBytes > 0L) "$status  •  $percent%" else status
                     textSize = 11f
-                    setTextColor(primary)
+                    setTextColor(when (item.status) {
+                        DownloadManager.STATUS_SUCCESSFUL -> Color.rgb(36, 170, 112)
+                        DownloadManager.STATUS_FAILED -> Color.rgb(230, 85, 96)
+                        else -> primary
+                    })
                     setPadding(0, dp(6), 0, 0)
                 })
+                if (item.totalBytes > 0L) {
+                    val downloadedMb = item.downloadedBytes.coerceAtLeast(0L) / (1024L * 1024L)
+                    val totalMb = item.totalBytes.coerceAtLeast(0L) / (1024L * 1024L)
+                    card.addView(TextView(activity).apply {
+                        text = "$downloadedMb MB / $totalMb MB"
+                        textSize = 10f
+                        setTextColor(muted)
+                        setPadding(0, dp(4), 0, 0)
+                    })
+                }
                 if (item.totalBytes > 0L && item.status == DownloadManager.STATUS_RUNNING) {
                     val progress = android.widget.ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
                         max = 100; this.progress = percent
