@@ -44,7 +44,7 @@ jobs:
           java-version: "17"
 
       - name: Install test dependencies
-        run: npm install --no-save --no-package-lock "firebase@^12.0.0" "@firebase/rules-unit-testing@^4.0.1" "firebase-tools@^14.0.0"
+        run: npm install --no-save --no-package-lock "firebase@^11.0.0" "@firebase/rules-unit-testing@^4.0.1" "firebase-tools@^14.0.0"
 
       - name: Run Firestore security rules tests
         run: npx firebase emulators:exec --only firestore --project demo-marco-rx6 "node --test tests/firestore.rules.test.mjs"
