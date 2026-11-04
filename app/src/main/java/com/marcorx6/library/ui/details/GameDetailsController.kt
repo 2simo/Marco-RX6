@@ -60,11 +60,6 @@ internal class GameDetailsController(
             setMargins(dp(14), dp(12), dp(14), dp(12))
         })
 
-        similarGamesViewFactory.create(game, games()) { item ->
-            reader.dismiss()
-            show(item)
-        }?.let(root::addView)
-
         val articleWebView = articleWebViewFactory.create(
             backgroundColor = bg(),
             gameUrl = game.url,
@@ -79,6 +74,11 @@ internal class GameDetailsController(
         )
         root.addView(articleWebView, LinearLayout.LayoutParams(-1, 0, 1f))
         downloadLinksViewFactory.create(game.downloadLinks, game.name)?.let(root::addView)
+
+        similarGamesViewFactory.create(game, games()) { item ->
+            reader.dismiss()
+            show(item)
+        }?.let(root::addView)
 
         val archiveFolder = File(filesDir, "reader_cache").apply { mkdirs() }
         val archiveFile = File(archiveFolder, stableCacheName(game.url.ifBlank { game.name }) + ".mht")
