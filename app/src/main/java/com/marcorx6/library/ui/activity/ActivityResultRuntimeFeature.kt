@@ -12,11 +12,13 @@ import android.net.Uri
 internal class ActivityResultRuntimeFeature(
     activity: ComponentActivity,
     onGoogleSignInResult: (Intent?) -> Unit,
+    onFirebaseGoogleSignInResult: (Intent?) -> Unit,
     onAvatarSelected: (Uri) -> Unit,
     onCoverSelected: (Uri) -> Unit
 ) {
     companion object {
         private const val SIGN_IN_REQUEST_CODE = 1002
+        private const val FIREBASE_GOOGLE_SIGN_IN_REQUEST_CODE = 1003
         private const val COVER_REQUEST_CODE = 1001
         private const val AVATAR_REQUEST_CODE = 1005
     }
@@ -26,6 +28,7 @@ internal class ActivityResultRuntimeFeature(
         avatarRequestCode = AVATAR_REQUEST_CODE,
         coverRequestCode = COVER_REQUEST_CODE,
         onGoogleSignInResult = onGoogleSignInResult,
+        onFirebaseGoogleSignInResult = onFirebaseGoogleSignInResult,
         onAvatarSelected = onAvatarSelected,
         onCoverSelected = onCoverSelected
     )
@@ -33,6 +36,11 @@ internal class ActivityResultRuntimeFeature(
     private val googleSignInLauncher =
         activity.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             controller.handle(SIGN_IN_REQUEST_CODE, result.resultCode, result.data)
+        }
+
+    private val firebaseGoogleSignInLauncher =
+        activity.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            onFirebaseGoogleSignInResult(result.data)
         }
 
     private val coverPickerLauncher =
@@ -46,6 +54,7 @@ internal class ActivityResultRuntimeFeature(
         }
 
     fun launchGoogleSignIn(intent: Intent) = googleSignInLauncher.launch(intent)
+    fun launchFirebaseGoogleSignIn(intent: Intent) = firebaseGoogleSignInLauncher.launch(intent)
     fun launchCoverPicker(intent: Intent) = coverPickerLauncher.launch(intent)
     fun launchProfileAvatar(intent: Intent) = profileAvatarLauncher.launch(intent)
 }
