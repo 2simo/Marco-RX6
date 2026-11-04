@@ -32,6 +32,7 @@ internal class GameDetailsTopBarFactory(
         }
         val close = TextView(activity).apply {
             text = "‹"
+            contentDescription = "إغلاق تفاصيل اللعبة"
             textSize = 30f
             setTextColor(white())
             gravity = android.view.Gravity.CENTER
@@ -55,6 +56,7 @@ internal class GameDetailsTopBarFactory(
             ellipsize = android.text.TextUtils.TruncateAt.END
         })
         heading.addView(makeText(game.platform, 10f, android.graphics.Color.rgb(91, 177, 255), true))
+        heading.contentDescription = "${game.name}, ${game.platform}"
         topBar.addView(heading, LinearLayout.LayoutParams(0, -2, 1f))
         topBar.addView(favoriteToggleFactory.create(game))
         return topBar
