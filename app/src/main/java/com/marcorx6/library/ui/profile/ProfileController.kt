@@ -214,11 +214,29 @@ internal class ProfileController(
             }
         }
         box.addView(saveButton, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(14); bottomMargin = dp(8) })
-        setContentView(ScrollView(activity).apply {
+        val profileScroll = ScrollView(activity).apply {
             isFillViewport = true
+            clipToPadding = false
             setBackgroundColor(if (dark) Color.rgb(7, 17, 31) else Color.rgb(242, 247, 253))
             addView(box)
-        })
+        }
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(profileScroll) { view, insets ->
+            val safe = insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.systemBars() or
+                    androidx.core.view.WindowInsetsCompat.Type.displayCutout()
+            )
+            view.setPadding(0, safe.top, 0, safe.bottom)
+            insets
+        }
+        setContentView(profileScroll)
+        activity.window.statusBarColor = Color.TRANSPARENT
+        activity.window.navigationBarColor = Color.TRANSPARENT
+        androidx.core.view.WindowInsetsControllerCompat(activity.window, activity.window.decorView).apply {
+            isAppearanceLightStatusBars = !dark
+            isAppearanceLightNavigationBars = !dark
+            show(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+        }
+        androidx.core.view.ViewCompat.requestApplyInsets(profileScroll)
         applyUnifiedSkin(box)
     }
 }
