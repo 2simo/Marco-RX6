@@ -23,7 +23,6 @@ internal class FirebaseSessionCoordinator(
             authRepository.addAuthStateListener(listener)
         }
         ensureGuestSession()
-        authRepository.currentUser?.let(::syncUserDocument)
     }
 
     @Synchronized
