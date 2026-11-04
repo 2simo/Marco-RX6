@@ -36,6 +36,8 @@ class MainActivity : ComponentActivity() {
     private fun showRootScreen(view: View) {
         secondaryScreenBackCallback.isEnabled = true
         setContentView(view)
+        applyMotionPreferences(view)
+        applyUnifiedSkin(view)
     }
 
     private val firebaseSessionCoordinator: FirebaseSessionCoordinator by lazy {
@@ -325,7 +327,10 @@ class MainActivity : ComponentActivity() {
     private fun makeText(value: String, size: Float, color: Int, bold: Boolean = false) =
         appearanceRuntimeFeature.makeText(value, size, color, bold)
     private fun applyUnifiedSkin(view: View) = appearanceRuntimeFeature.applyUnifiedSkin(view)
-    private fun styleAlertDialog(dialog: AlertDialog) = appearanceRuntimeFeature.styleAlertDialog(dialog)
+    private fun styleAlertDialog(dialog: AlertDialog) {
+        appearanceRuntimeFeature.styleAlertDialog(dialog)
+        dialog.window?.decorView?.let(::applyMotionPreferences)
+    }
     private fun makeInput(hintText: String): EditText = appearanceRuntimeFeature.makeInput(hintText)
 
     private fun tr(value: String): String = appearanceRuntimeFeature.translate(value)
