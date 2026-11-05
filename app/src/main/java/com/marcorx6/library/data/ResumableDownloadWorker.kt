@@ -86,7 +86,7 @@ internal class ResumableDownloadWorker(
                 offset = 0L
             }
             val responseLength = connection.getHeaderFieldLong("Content-Length", -1L)
-            val rangeTotal = Regex("""bytes \\d+-\\d+/(\\d+)""")
+            val rangeTotal = Regex("""bytes \d+-\d+/(\d+)""")
                 .find(connection.getHeaderField("Content-Range").orEmpty())
                 ?.groupValues?.getOrNull(1)?.toLongOrNull()
             val total = when {
