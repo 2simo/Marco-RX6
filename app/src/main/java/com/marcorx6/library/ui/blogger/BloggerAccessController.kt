@@ -23,9 +23,9 @@ internal class BloggerAccessController(
             postToUi {
                 if (version == requestVersion) {
                     refreshUi()
-                    if (hasAccount && accountId != null && blogId.isBlank()) {
-                        onError("معرّف مدونة Blogger غير متوفر حالياً. انتظر اكتمال المزامنة ثم أعد ربط حساب المشرف من الإعدادات.")
-                    }
+                    // The access check can run during app startup before the first Blogger
+                    // sync has resolved the blog ID. Treat that as a pending state, not an
+                    // authentication error; BlogSyncController refreshes access after sync.
                 }
             }
             return
