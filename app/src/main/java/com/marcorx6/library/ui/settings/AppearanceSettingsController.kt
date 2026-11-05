@@ -17,6 +17,8 @@ internal class AppearanceSettingsController(
     private val recreateActivity: () -> Unit,
     private val showLanguagePicker: () -> Unit,
     private val showNotificationSettings: () -> Unit,
+    private val adminSessionConnected: () -> Boolean,
+    private val onAdminSessionAction: () -> Unit,
     private val showTypographySettings: () -> Unit,
     private val setContentView: (View) -> Unit,
     private val onBack: () -> Unit,
