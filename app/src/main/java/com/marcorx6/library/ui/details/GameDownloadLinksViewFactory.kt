@@ -59,7 +59,9 @@ internal class GameDownloadLinksViewFactory(
             if (Regex("\\.(?:jpe?g|png|gif|webp|bmp|svg|avif|jfif)$").containsMatchIn(targetPath)) continue
             val label = item.optString("label").ifBlank { "${translate("تحميل")} ${index + 1}" }
             downloadRow.addView(TextView(activity).apply {
-                text = "⬇  $label"
+                text = "  $label"
+                setCompoundDrawablesRelativeWithIntrinsicBounds(com.marcorx6.library.R.drawable.ic_action_download, 0, 0, 0)
+                compoundDrawablePadding = dp(8)
                 contentDescription = label
                 textSize = 14f
                 setTextColor(Color.WHITE)
