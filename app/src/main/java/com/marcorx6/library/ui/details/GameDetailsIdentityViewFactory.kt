@@ -150,7 +150,7 @@ internal class GameDetailsIdentityViewFactory(
         return fields.mapNotNull { (label, aliases) ->
             val alternatives = aliases.joinToString("|") { Regex.escape(it) }
             val match = Regex(
-                "(?im)(?:^|[\\n\\r|•])\\s*(?:$alternatives)\\s*[:：-]\\s*([^\\n\\r|•]*)"
+                "(?im)(?:^|[\\n\\r|•])\\s*(?:$alternatives)[ \\t]*[:：-][ \\t]*([^\\n\\r|•]*)"
             ).find(plain) ?: return@mapNotNull null
             val value = match.groupValues[1].trim().trimEnd('.', ',', ';')
             if (value.isBlank()) null else label to value
