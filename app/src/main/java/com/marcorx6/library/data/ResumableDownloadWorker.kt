@@ -7,8 +7,6 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.ServiceInfo
 import android.os.Build
-import android.net.Uri
-import android.webkit.MimeTypeMap
 import android.provider.DocumentsContract
 import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
@@ -92,14 +90,12 @@ internal class ResumableDownloadWorker(
             val etag = connection.getHeaderField("ETag") ?: item.etag
             val modified = connection.getHeaderField("Last-Modified") ?: item.lastModified
             val mime = connection.contentType?.substringBefore(';')?.trim().orEmpty().ifBlank { item.mimeType }
-            val remoteName = Uri.parse(item.url).lastPathSegment.orEmpty()
-            val suggestedName = remoteName.takeIf { it.contains('.') && !it.startsWith('.') } ?: item.title
-            val cleanedName = suggestedName.replace(Regex("[^A-Za-z0-9._-]"), "_")
-                .trim('_').take(100).ifBlank { "download_${item.id}" }
-            val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mime)
-            val safeName = if (!cleanedName.contains('.') && !extension.isNullOrBlank()) {
-                "$cleanedName.$extension"
-            } else cleanedName
+            val responseName = DownloadFileNames.fromResponse(
+                connection.getHeaderField("Content-Disposition"),
+                connection.url.toString()
+            )
+            val safeName = DownloadFileNames.safeName(responseName ?: item.title, mime, item.id)
+            database.renameTitle(item.id, safeName)
             if (append) {
                 val rangeStart = Regex("^bytes (\\d+)-").find(connection.getHeaderField("Content-Range").orEmpty())
                     ?.groupValues?.getOrNull(1)?.toLongOrNull()
