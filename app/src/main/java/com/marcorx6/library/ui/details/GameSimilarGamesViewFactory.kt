@@ -7,6 +7,7 @@ import android.graphics.drawable.Drawable
 import android.text.TextUtils
 import android.view.View
 import android.widget.HorizontalScrollView
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.marcorx6.library.data.Game
@@ -18,11 +19,12 @@ internal class GameSimilarGamesViewFactory(
     private val makeText: (String, Float, Int, Boolean) -> TextView,
     private val isDarkMode: () -> Boolean,
     private val white: () -> Int,
-    private val translate: (String) -> String
+    private val translate: (String) -> String,
+    private val loadCover: (ImageView, String, String) -> Unit
 ) {
     fun create(game: Game, games: List<Game>, onSelect: (Game) -> Unit): View? {
         val similar = games.filter {
-            it.name != game.name && (it.platform == game.platform || it.blogImported == game.blogImported)
+            it.name != game.name && it.platform.equals(game.platform, ignoreCase = true)
         }.take(5)
         if (similar.isEmpty()) return null
 
@@ -41,30 +43,50 @@ internal class GameSimilarGamesViewFactory(
         )
         val similarRow = LinearLayout(activity).apply { orientation = LinearLayout.HORIZONTAL }
         similar.forEach { item ->
-            similarRow.addView(TextView(activity).apply {
-                text = item.name
-                contentDescription = "فتح تفاصيل ${item.name}"
-                textSize = 10f
-                maxLines = 1
-                ellipsize = TextUtils.TruncateAt.END
-                setTextColor(if (dark) white() else Color.rgb(48, 57, 77))
+            val card = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(7), dp(7), dp(7), dp(8))
                 background = GradientDrawable(
-                    GradientDrawable.Orientation.LEFT_RIGHT,
-                    if (dark) intArrayOf(Color.argb(215, 25, 76, 122), Color.argb(195, 10, 34, 58))
-                    else intArrayOf(Color.argb(225, 255, 255, 255), Color.argb(210, 219, 237, 255))
+                    GradientDrawable.Orientation.TOP_BOTTOM,
+                    if (dark) intArrayOf(Color.rgb(22, 43, 67), Color.rgb(12, 27, 45))
+                    else intArrayOf(Color.WHITE, Color.rgb(232, 243, 255))
                 ).apply {
-                    cornerRadius = dp(12).toFloat()
-                    setStroke(dp(1), if (dark) Color.argb(140, 81, 153, 218) else Color.argb(150, 148, 194, 238))
+                    cornerRadius = dp(14).toFloat()
+                    setStroke(dp(1), if (dark) Color.argb(145, 76, 145, 207) else Color.rgb(196, 220, 246))
                 }
-                if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                    android.content.res.ColorStateList.valueOf(Color.argb(82, 83, 177, 255)),
-                    null,
-                    android.graphics.drawable.ColorDrawable(Color.WHITE)
-                )
-                minHeight = dp(48)
-                setPadding(dp(10), dp(9), dp(10), dp(9))
+                isClickable = true
+                isFocusable = true
                 setOnClickListener { onSelect(item) }
-            }, LinearLayout.LayoutParams(dp(118), -2).apply { marginEnd = dp(7) })
+                contentDescription = "فتح تفاصيل ${item.name}"
+            }
+            val cover = ImageView(activity).apply {
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                background = GradientDrawable().apply {
+                    setColor(if (dark) Color.rgb(12, 31, 51) else Color.rgb(222, 237, 253))
+                    cornerRadius = dp(10).toFloat()
+                }
+                clipToOutline = true
+                contentDescription = "غلاف ${item.name}"
+            }
+            if (item.coverLocalPath.isNotBlank() || item.coverUrl.isNotBlank()) {
+                loadCover(cover, item.coverLocalPath, item.coverUrl)
+            } else {
+                cover.setImageResource(android.R.drawable.ic_menu_gallery)
+                cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
+            }
+            card.addView(cover, LinearLayout.LayoutParams(-1, dp(142)))
+            card.addView(TextView(activity).apply {
+                text = item.name
+                textSize = 11f
+                maxLines = 2
+                ellipsize = TextUtils.TruncateAt.END
+                gravity = android.view.Gravity.CENTER
+                setTextColor(if (dark) white() else Color.rgb(48, 57, 77))
+                setPadding(dp(3), dp(7), dp(3), dp(2))
+            }, LinearLayout.LayoutParams(-1, -2))
+            similarRow.addView(card, LinearLayout.LayoutParams(dp(126), -2).apply {
+                marginEnd = dp(9)
+            })
         }
         val scroll = HorizontalScrollView(activity).apply {
             isHorizontalScrollBarEnabled = false
