@@ -148,7 +148,7 @@ internal class DownloadUiController(
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             setPadding(dp(24), dp(42), dp(24), dp(42))
-            background = GradientDrawable().apply {
+            this.background = GradientDrawable().apply {
                 setColors(if (dark)
                     intArrayOf(Color.argb(220, 23, 67, 108), Color.argb(208, 8, 27, 47))
                 else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(218, 224, 240, 255)))
@@ -234,7 +234,7 @@ internal class DownloadUiController(
                 text = label; textSize = 11f; gravity = Gravity.CENTER
                 minHeight = dp(42); setPadding(dp(13), dp(9), dp(13), dp(9))
                 setTextColor(if (filled) Color.WHITE else primary)
-                background = GradientDrawable().apply {
+                this.background = GradientDrawable().apply {
                     setColor(if (filled) Color.argb(225, 42, 145, 255)
                         else if (dark) Color.argb(190, 15, 43, 70) else Color.WHITE)
                     cornerRadius = dp(12).toFloat(); setStroke(dp(1), primary)
@@ -277,7 +277,7 @@ internal class DownloadUiController(
             } else if (item.status == DownloadManager.STATUS_PAUSED) {
                 addAction(smallAction(translate("استكمال")) {
                     if (downloadRepository.resumeDownload(item.id)) {
-                        lastSpeedSample.remove(item.id); render()
+                        lastSpeedSample.remove(item.id); render.invoke()
                         Toast.makeText(activity, translate("تم استكمال التنزيل"), Toast.LENGTH_SHORT).show()
                     } else Toast.makeText(activity, translate("تعذر استكمال التنزيل"), Toast.LENGTH_SHORT).show()
                 })
@@ -286,7 +286,7 @@ internal class DownloadUiController(
                 item.status == DownloadManager.STATUS_PAUSED) {
                 addAction(smallAction(translate("إلغاء التنزيل")) {
                     if (downloadRepository.deleteDownload(item.id)) {
-                        lastSpeedSample.remove(item.id); render()
+                        lastSpeedSample.remove(item.id); render.invoke()
                         Toast.makeText(activity, translate("تم إلغاء التنزيل"), Toast.LENGTH_SHORT).show()
                     } else Toast.makeText(activity, translate("تعذر إلغاء التنزيل"), Toast.LENGTH_SHORT).show()
                 }, start = true)
@@ -298,7 +298,7 @@ internal class DownloadUiController(
                         .setNegativeButton(translate("إلغاء"), null)
                         .setPositiveButton(translate("حذف")) { _, _ ->
                             if (downloadRepository.deleteDownload(item.id)) {
-                                lastSpeedSample.remove(item.id); render()
+                                lastSpeedSample.remove(item.id); render.invoke()
                                 Toast.makeText(activity, translate("تم حذف التنزيل"), Toast.LENGTH_SHORT).show()
                             } else Toast.makeText(activity, translate("تعذر حذف التنزيل"), Toast.LENGTH_SHORT).show()
                         }.show()
@@ -310,7 +310,7 @@ internal class DownloadUiController(
             val card = LinearLayout(activity).apply {
                 orientation = LinearLayout.VERTICAL
                 setPadding(dp(15), dp(14), dp(15), dp(14))
-                background = GradientDrawable().apply {
+                this.background = GradientDrawable().apply {
                     setColors(if (dark)
                         intArrayOf(Color.argb(221, 22, 65, 105), Color.argb(209, 8, 27, 47))
                     else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(218, 224, 240, 255)))
