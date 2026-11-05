@@ -8,6 +8,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import com.marcorx6.library.data.Game
 import java.io.File
 
@@ -56,8 +57,22 @@ internal class GameDetailsController(
         val topBar = topBarFactory.create(game) { reader.dismiss() }
         root.addView(topBar)
 
+        // Keep the details content in a real vertical scroll container. The header
+        // and bottom actions remain fixed while long metadata and article content
+        // can be reached on shorter screens.
+        val contentScroll = ScrollView(activity).apply {
+            isFillViewport = true
+            isVerticalScrollBarEnabled = true
+            overScrollMode = android.view.View.OVER_SCROLL_IF_CONTENT_SCROLLS
+        }
+        val content = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+        contentScroll.addView(content, ScrollView.LayoutParams(-1, -2))
+        root.addView(contentScroll, LinearLayout.LayoutParams(-1, 0, 1f))
+
         val identity = identityViewFactory.create(game)
-        root.addView(identity, LinearLayout.LayoutParams(-1, -2).apply {
+        content.addView(identity, LinearLayout.LayoutParams(-1, -2).apply {
             setMargins(dp(14), dp(12), dp(14), dp(12))
         })
 
@@ -73,20 +88,26 @@ internal class GameDetailsController(
                 enqueueGameDownload(url, game.name, userAgent.orEmpty(), contentDisposition.orEmpty(), mimeType.orEmpty(), pageUrl)
             }
         )
-        root.addView(articleWebView, LinearLayout.LayoutParams(-1, 0, 1f))
         // Put valid Blogger download links directly beneath the game information card.
         // Ignore template placeholders such as href="#" and "ضع رابط تحميل هنا".
         val bloggerDownloadButtons = downloadLinksViewFactory.createFromHtml(game.bloggerHtml, game.name)
         val downloadButtons = bloggerDownloadButtons
             ?: downloadLinksViewFactory.create(game.downloadLinks, game.name)
         downloadButtons?.let { buttons ->
-            root.addView(buttons, root.indexOfChild(articleWebView), LinearLayout.LayoutParams(-1, -2))
+            content.addView(buttons, LinearLayout.LayoutParams(-1, -2))
         }
+
+        // Give the embedded article a bounded viewport so the surrounding page
+        // remains scrollable instead of allowing the WebView to consume the
+        // entire screen height during measurement.
+        content.addView(articleWebView, LinearLayout.LayoutParams(-1, dp(520)))
 
         similarGamesViewFactory.create(game, games()) { item ->
             reader.dismiss()
             show(item)
-        }?.let(root::addView)
+        }?.let { similar ->
+            content.addView(similar, LinearLayout.LayoutParams(-1, -2))
+        }
 
         val archiveFolder = File(filesDir, "reader_cache").apply { mkdirs() }
         val archiveFile = File(archiveFolder, stableCacheName(game.url.ifBlank { game.name }) + ".mht")
