@@ -23,7 +23,8 @@ internal class GameDetailsFeature(
     red: () -> Int,
     gray: () -> Int,
     panel: () -> Int,
-    tr: (String) -> String,\n    targetLanguage: () -> String,
+    tr: (String) -> String,
+    targetLanguage: () -> String,
     loadCover: (android.widget.ImageView, String, String) -> Unit,
     saveGames: () -> Unit,
     renderGames: () -> Unit,
@@ -84,7 +85,8 @@ internal class GameDetailsFeature(
         gray = gray,
         loadCover = loadCover,
         watchlistViewFactory = watchlistViewFactory,
-        translate = tr
+        translate = tr,
+        targetLanguage = targetLanguage
     )
 
     private val downloadLinksViewFactory = GameDownloadLinksViewFactory(
