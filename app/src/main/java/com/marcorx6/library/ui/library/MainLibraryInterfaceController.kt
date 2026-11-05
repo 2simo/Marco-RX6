@@ -405,29 +405,31 @@ internal class MainLibraryInterfaceController(
                         if (isDarkMode()) intArrayOf(Color.rgb(39, 139, 231), Color.rgb(19, 83, 157))
                         else intArrayOf(Color.rgb(56, 150, 244), Color.rgb(31, 111, 205))
                     } else {
-                        if (isDarkMode()) intArrayOf(Color.argb(208, 22, 65, 106), Color.argb(192, 8, 27, 47))
-                        else intArrayOf(Color.argb(228, 255, 255, 255), Color.argb(210, 220, 238, 255))
+                        if (isDarkMode()) intArrayOf(Color.argb(70, 22, 65, 106), Color.argb(45, 8, 27, 47))
+                        else intArrayOf(Color.argb(75, 255, 255, 255), Color.argb(45, 220, 238, 255))
                     }
                 ).apply {
-                    cornerRadius = dp(15).toFloat()
+                    cornerRadius = dp(16).toFloat()
                     setStroke(dp(1), if (active) Color.argb(185, 135, 204, 255)
-                    else if (isDarkMode()) Color.argb(130, 78, 151, 216) else Color.argb(145, 151, 195, 237))
+                    else Color.TRANSPARENT)
                 }
-                for (index in 0 until item.childCount) {
-                    (item.getChildAt(index) as? TextView)?.setTextColor(
-                        if (active) Color.rgb(255, 255, 255)
-                        else if (isDarkMode()) silver else Color.rgb(43, 51, 68)
+                (item.getChildAt(0) as? ImageView)?.imageTintList =
+                    android.content.res.ColorStateList.valueOf(
+                        if (active) Color.WHITE
+                        else if (isDarkMode()) Color.rgb(190, 211, 235) else Color.rgb(62, 91, 130)
                     )
-                }
+                item.animate().cancel()
+                item.scaleX = 1f
+                item.scaleY = 1f
             }
         }
-        fun dockItem(key: String, icon: String, label: String, action: () -> Unit) {
+        fun dockItem(key: String, iconRes: Int, label: String, action: () -> Unit) {
             val item = LinearLayout(context).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
                 setPadding(dp(5), dp(5), dp(5), dp(5))
                 minimumWidth = dp(48)
-                minimumHeight = dp(56)
+                minimumHeight = dp(48)
                 isClickable = true
                 isFocusable = true
                 if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
@@ -441,31 +443,31 @@ internal class MainLibraryInterfaceController(
                     action()
                 }
             }
-            item.addView(makeText(icon, 15f, if (isDarkMode()) silver else Color.rgb(75, 158, 245), true).apply {
-                gravity = Gravity.CENTER
+            item.addView(ImageView(context).apply {
+                setImageResource(iconRes)
+                imageTintList = android.content.res.ColorStateList.valueOf(
+                    if (isDarkMode()) silver else Color.rgb(62, 91, 130)
+                )
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                contentDescription = label
                 importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-            })
-            item.addView(makeText(label, 10f, if (isDarkMode()) silver else Color.rgb(43, 51, 68), true).apply {
-                gravity = Gravity.CENTER
-                maxLines = 1
-                setPadding(dp(2), dp(3), dp(2), dp(2))
-                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-            })
+            }, LinearLayout.LayoutParams(dp(25), dp(25)))
             dockItems[key] = item
             dockLabels[key] = label
-            dock.addView(item, LinearLayout.LayoutParams(0, -2, 1f).apply {
+            dock.addView(item, LinearLayout.LayoutParams(0, dp(48), 1f).apply {
                 marginStart = dp(3); marginEnd = dp(3)
             })
         }
-        dockItem("HOME", "⌂", tr("الرئيسية")) {
+        dockItem("HOME", R.drawable.ic_nav_home, tr("الرئيسية")) {
             selected = "ALL"; renderGames(); pageScroll.smoothScrollTo(0, 0)
         }
-        dockItem("FAVORITES", "♡", tr("المفضلة")) {
+        dockItem("FAVORITES", R.drawable.ic_nav_favorites, tr("المفضلة")) {
             selected = "FAVORITES"; renderGames(); pageScroll.smoothScrollTo(0, 0)
         }
-        dockItem("DOWNLOADS", "⬇", tr("التنزيلات")) { showDownloads() }
-        dockItem("PROFILE", "♙", tr("حسابي")) { showProfile() }
+        dockItem("DOWNLOADS", R.drawable.ic_nav_downloads, tr("التنزيلات")) { showDownloads() }
+        dockItem("PROFILE", R.drawable.ic_nav_profile, tr("حسابي")) { showProfile() }
         renderDockSelection()
+
         val dockParams = FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply {
             leftMargin = dp(16); rightMargin = dp(16); bottomMargin = dp(12)
         }
