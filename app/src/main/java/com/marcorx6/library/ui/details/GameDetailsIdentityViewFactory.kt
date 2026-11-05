@@ -8,7 +8,8 @@ import android.text.Html
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import com.marcorx6.library.data.Game\nimport com.marcorx6.library.ui.settings.LocalContentTranslator
+import com.marcorx6.library.data.Game
+import com.marcorx6.library.ui.settings.LocalContentTranslator
 
 internal class GameDetailsIdentityViewFactory(
     private val activity: Activity,
@@ -20,7 +21,8 @@ internal class GameDetailsIdentityViewFactory(
     private val gray: () -> Int,
     private val loadCover: (ImageView, String, String) -> Unit,
     private val watchlistViewFactory: GameWatchlistViewFactory,
-    private val translate: (String) -> String
+    private val translate: (String) -> String,
+    private val targetLanguage: () -> String
 ) {
     fun create(game: Game): LinearLayout {
         val dark = isDarkMode()
