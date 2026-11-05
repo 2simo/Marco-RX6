@@ -125,7 +125,7 @@ internal class MainLibraryInterfaceController(
                 cornerRadius = dp(14).toFloat()
                 setStroke(dp(1), if (isDarkMode()) Color.rgb(48, 119, 190) else Color.rgb(173, 207, 239))
             }
-            minWidth = dp(48); minHeight = dp(48)
+            minimumWidth = dp(48); minimumHeight = dp(48)
             contentDescription = label
             isClickable = true
             isFocusable = true
@@ -291,8 +291,8 @@ internal class MainLibraryInterfaceController(
                 GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(13).toFloat() }
             )
             setPadding(dp(12), dp(7), dp(12), dp(7))
-            minWidth = dp(48)
-            minHeight = dp(48)
+            minimumWidth = dp(48)
+            minimumHeight = dp(48)
             contentDescription = tr("ترتيب المقالات")
             setOnClickListener {
                 sortMode = when (sortMode) { "LATEST" -> "NEW"; "NEW" -> "A-Z"; "A-Z" -> "FAVORITES"; else -> "LATEST" }
