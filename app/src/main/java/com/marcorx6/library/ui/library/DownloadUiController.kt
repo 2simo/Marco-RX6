@@ -111,13 +111,13 @@ internal class DownloadUiController(
         })
         header.addView(titleBox, LinearLayout.LayoutParams(0, -2, 1f))
         header.addView(android.widget.ImageView(activity).apply {
-            setImageResource(com.marcorx6.library.R.drawable.ic_action_close)
-            imageTintList = android.content.res.ColorStateList.valueOf(muted)
+            setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
+            imageTintList = android.content.res.ColorStateList.valueOf(primary)
             scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
             setPadding(dp(13), dp(13), dp(13), dp(13))
             minimumWidth = dp(48)
             minimumHeight = dp(48)
-            contentDescription = translate("إغلاق صفحة التنزيلات")
+            contentDescription = translate("رجوع")
             isClickable = true
             isFocusable = true
             addGlassTouch(this)

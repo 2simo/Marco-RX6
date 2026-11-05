@@ -76,14 +76,13 @@ internal class StorageSettingsController(
             setTextColor(ink)
         })
         header.addView(heading, LinearLayout.LayoutParams(0, -2, 1f))
-        header.addView(TextView(activity).apply {
-            text = "×"
+        header.addView(android.widget.ImageView(activity).apply {
+            setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
+            imageTintList = android.content.res.ColorStateList.valueOf(blue)
+            scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
             contentDescription = translate("رجوع")
-            textSize = 30f
-            gravity = Gravity.CENTER
-            minWidth = dp(48)
-            minHeight = dp(48)
-            setTextColor(muted)
+            isClickable = true
+            isFocusable = true
             setOnClickListener { onBack() }
         }, LinearLayout.LayoutParams(dp(48), dp(48)))
         root.addView(header)

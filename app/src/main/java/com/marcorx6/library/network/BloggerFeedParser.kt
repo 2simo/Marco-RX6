@@ -181,6 +181,25 @@ internal object BloggerFeedParser {
         }
         return ""
     }
+
+    private fun decodeHtmlEntities(value: String): String {
+        val named = value
+            .replace("&amp;", "&", ignoreCase = true)
+            .replace("&quot;", "\"", ignoreCase = true)
+            .replace("&#39;", "'", ignoreCase = true)
+            .replace("&apos;", "'", ignoreCase = true)
+            .replace("&lt;", "<", ignoreCase = true)
+            .replace("&gt;", ">", ignoreCase = true)
+            .replace("&nbsp;", " ", ignoreCase = true)
+        return Regex("&#(x[0-9a-fA-F]+|[0-9]+);").replace(named) { match ->
+            val token = match.groupValues[1]
+            val point = if (token.startsWith("x", true)) token.substring(1).toIntOrNull(16)
+                else token.toIntOrNull()
+            if (point != null && Character.isValidCodePoint(point))
+                String(Character.toChars(point)) else match.value
+        }
+    }
+
     fun extractDownloadLinks(html: String): String {
 
         val result = JSONArray()
@@ -200,10 +219,10 @@ internal object BloggerFeedParser {
 
         while (matcher.find()) {
             val rawHref = matcher.group(1)?.trim().orEmpty()
-            val href = Html.fromHtml(rawHref, Html.FROM_HTML_MODE_LEGACY).toString().trim()
+            val href = decodeHtmlEntities(rawHref).trim()
             val labelHtml = matcher.group(2).orEmpty()
-            val label = Html.fromHtml(labelHtml, Html.FROM_HTML_MODE_LEGACY)
-                .toString().replace(Regex("\\s+"), " ").trim()
+            val label = decodeHtmlEntities(labelHtml.replace(Regex("(?is)<[^>]*>"), " "))
+                .replace(Regex("\\s+"), " ").trim()
             val normalizedLabel = label.lowercase(Locale.ROOT)
 
             // Blogger article bodies contain ordinary links as well as download links.

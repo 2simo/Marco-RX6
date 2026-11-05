@@ -72,10 +72,10 @@ internal class AppearanceSettingsController(
         })
         header.addView(heading, LinearLayout.LayoutParams(0, -2, 1f))
         header.addView(android.widget.ImageView(activity).apply {
-            setImageResource(com.marcorx6.library.R.drawable.ic_action_close)
-            imageTintList = android.content.res.ColorStateList.valueOf(muted)
+            setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
+            imageTintList = android.content.res.ColorStateList.valueOf(blue)
             scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
-            contentDescription = translate("إغلاق الإعدادات")
+            contentDescription = translate("رجوع")
             minimumWidth = dp(48)
             minimumHeight = dp(48)
             addGlassTouch(this)

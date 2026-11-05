@@ -66,14 +66,28 @@ internal class FirebaseAccountController(
             setBackgroundColor(if (dark) Color.rgb(6, 16, 30) else Color.rgb(240, 247, 255))
         }
         val user = authRepository.currentUser
-        page.addView(TextView(activity).apply {
+        val header = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        header.addView(ImageView(activity).apply {
+            setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
+            imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(42, 145, 255))
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
+            contentDescription = translate("رجوع")
+            isClickable = true
+            isFocusable = true
+            setOnClickListener { onBack() }
+        }, LinearLayout.LayoutParams(dp(48), dp(48)))
+        header.addView(TextView(activity).apply {
             text = if (user == null || user.isAnonymous) translate("حساب MARCO RX6")
                 else translate("حسابك في MARCO RX6")
             textSize = 25f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(if (dark) Color.WHITE else Color.rgb(18, 42, 68))
-            setPadding(0, 0, 0, dp(8))
-        })
+            setPadding(dp(8), 0, 0, dp(8))
+        }, LinearLayout.LayoutParams(0, -2, 1f))
+        page.addView(header)
         if (user == null || user.isAnonymous) {
             page.addView(TextView(activity).apply {
                 text = translate("استعمل التطبيق كزائر، أو سجّل الدخول لحفظ حسابك ومزامنة بياناتك.")
