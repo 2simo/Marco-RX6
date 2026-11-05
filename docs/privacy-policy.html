@@ -41,7 +41,7 @@
     </section>
     <section>
       <h2>Permissions and tracking</h2>
-      <p>The app requests internet access for its online features and notification permission on supported Android versions when you enable notifications. The current app build does not integrate Firebase Analytics or Crashlytics. The app does not use advertising SDKs in the current build.</p>
+      <p>The app requests internet access for its online features and notification permission on supported Android versions when you enable notifications. Firebase App Check is initialized to help Firebase services verify app requests: debug builds use the Firebase App Check debug provider (which requires a developer-registered debug token when App Check is enforced), while release builds use Google Play Integrity. These services may process app/device integrity signals and App Check tokens to assess whether requests come from an authorized app instance. App Check enforcement is a separate Firebase Console setting and is not enabled by this app code. The current app build does not integrate Firebase Analytics or Crashlytics. The app does not use advertising SDKs in the current build.</p>
     </section>
     <section>
       <h2>Retention and deletion</h2>
