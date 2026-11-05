@@ -3,6 +3,11 @@ package com.marcorx6.library.ui
 /** Centralized static translations for the app interface. */
 internal object LanguageTranslator {
     private val translations = mapOf(
+            "تحميل نموذج الترجمة" to listOf("Download translation model", "Télécharger le modèle de traduction", "Descargar el modelo de traducción"),
+            "العربية لا تحتاج إلى نموذج ترجمة" to listOf("Arabic does not need a translation model", "L’arabe n’a pas besoin d’un modèle de traduction", "El árabe no necesita un modelo de traducción"),
+            "جارٍ تحميل نموذج الترجمة" to listOf("Downloading translation model", "Téléchargement du modèle de traduction", "Descargando el modelo de traducción"),
+            "نموذج الترجمة جاهز" to listOf("Translation model is ready", "Le modèle de traduction est prêt", "El modelo de traducción está listo"),
+            "تعذر تحميل نموذج الترجمة" to listOf("Could not download translation model", "Impossible de télécharger le modèle de traduction", "No se pudo descargar el modelo de traducción"),
             "الإعدادات والمظهر" to listOf("Settings & appearance", "Paramètres et apparence", "Ajustes y apariencia"),
             "خصص تجربة MARCO RX6 بالطريقة التي تناسبك" to listOf("Customize your MARCO RX6 experience", "Personnalisez votre expérience MARCO RX6", "Personaliza tu experiencia MARCO RX6"),
             "رابط التنزيل غير آمن أو غير صالح؛ يجب استخدام HTTPS" to listOf("Invalid or unsafe download link; HTTPS is required", "Lien de téléchargement invalide ou non sécurisé ; HTTPS est requis", "Enlace de descarga no válido o inseguro; se requiere HTTPS"),
