@@ -5,7 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Color
 import android.util.Base64
 import android.app.AlertDialog
 import android.text.InputType
@@ -176,7 +175,7 @@ internal class FirebaseAccountController(
                         photoData = profilePhotoData
                     ).addOnSuccessListener {
                         toast("تم حفظ معلومات الملف الشخصي")
-                        onAccountChanged()
+                        show()
                     }.addOnFailureListener { error ->
                         button.isEnabled = true
                         toast(error.localizedMessage ?: "تعذر حفظ الملف الشخصي في السحابة")
