@@ -35,9 +35,16 @@ internal class ResumableDownloadWorker(
             download(item, database)
         } catch (error: Exception) {
             val latest = database.get(id)
-            if (isStopped || latest?.status == DownloadManager.STATUS_PAUSED) {
+            if (latest == null || latest.status == DownloadDatabase.STATUS_CANCELLED ||
+                latest.status == DownloadManager.STATUS_PAUSED) {
+                val directory = File(
+                    applicationContext.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS)
+                        ?: applicationContext.filesDir,
+                    "MARCO_RX6"
+                )
+                File(directory, "$id.part").delete()
                 Result.success()
-            } else if (error is IOException) {
+            } else if (isStopped || error is IOException) {
                 database.status(id, DownloadManager.STATUS_PENDING, error.message ?: "Network interrupted")
                 Result.retry()
             } else {
@@ -112,6 +119,10 @@ internal class ResumableDownloadWorker(
                     }
                     sink.fd.sync()
                 }
+            }
+            if (isStopped || database.get(item.id)?.status == DownloadDatabase.STATUS_CANCELLED ||
+                database.get(item.id)?.status == DownloadManager.STATUS_PAUSED) {
+                throw InterruptedException("Download stopped")
             }
             if (total > 0L && offset != total) {
                 throw IllegalStateException("Incomplete file: $offset / $total")
