@@ -2,7 +2,6 @@ package com.marcorx6.library.ui
 
 import android.app.Activity
 import android.graphics.Color
-import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.text.Html
 import android.widget.ImageView
@@ -13,11 +12,8 @@ import com.marcorx6.library.data.Game
 internal class GameDetailsIdentityViewFactory(
     private val activity: Activity,
     private val dp: (Int) -> Int,
-    private val rounded: (Int, Int) -> Drawable,
     private val makeText: (String, Float, Int, Boolean) -> TextView,
     private val isDarkMode: () -> Boolean,
-    private val white: () -> Int,
-    private val gray: () -> Int,
     private val loadCover: (ImageView, String, String) -> Unit,
     private val translate: (String) -> String
 ) {
