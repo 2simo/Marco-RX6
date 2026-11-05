@@ -132,10 +132,15 @@ internal class GameDetailsIdentityViewFactory(
 
     private fun extractGameDetails(html: String): List<Pair<String, String>> {
         if (html.isBlank()) return emptyList()
-        val plain = Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY).toString()
+        val normalizedHtml = html
+            .replace(Regex("(?i)<br\\s*/?>"), "\\n")
+            .replace(Regex("(?i)</(p|div|li|tr|h[1-6]|blockquote)\\s*>"), "\\n")
+            .replace(Regex("(?i)<li\\b[^>]*>"), "\\n")
+        val plain = Html.fromHtml(normalizedHtml, Html.FROM_HTML_MODE_LEGACY).toString()
             .replace('\u00a0', ' ')
+            .replace(Regex("[ \\t]+"), " ")
         val fields = listOf(
-            "الحجم" to listOf("الحجم", "size"),
+            "الحجم" to listOf("الحجم", "حجم", "size"),
             "النسخة" to listOf("النسخة", "version", "title id", "cusa"),
             "الصيغة" to listOf("الصيغة", "format"),
             "اللغة" to listOf("اللغة", "language", "languages"),
@@ -145,7 +150,7 @@ internal class GameDetailsIdentityViewFactory(
         return fields.mapNotNull { (label, aliases) ->
             val alternatives = aliases.joinToString("|") { Regex.escape(it) }
             val match = Regex(
-                "(?im)(?:^|[\\n\\r|•])\\s*(?:$alternatives)\\s*[:：-]\\s*([^\\n\\r|•]+)"
+                "(?im)(?:^|[\\n\\r|•])\\s*(?:$alternatives)\\s*[:：-]\\s*([^\\n\\r|•]*)"
             ).find(plain) ?: return@mapNotNull null
             val value = match.groupValues[1].trim().trimEnd('.', ',', ';')
             if (value.isBlank()) null else label to value
