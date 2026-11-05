@@ -1,5 +1,7 @@
 package com.marcorx6.library.ui.library
 
+import com.marcorx6.library.R
+
 import com.marcorx6.library.ui.*
 
 import android.content.Context
