@@ -34,6 +34,19 @@ internal class GameArticleWebViewFactory(
             settings.loadsImagesAutomatically = true
             settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW
             settings.mediaPlaybackRequiresUserGesture = true
+            webViewClient = object : WebViewClient() {
+                override fun shouldOverrideUrlLoading(view: WebView?, request: android.webkit.WebResourceRequest?): Boolean {
+                    val target = request?.url?.toString().orEmpty()
+                    if (target.startsWith("https://", ignoreCase = true)) onDownload(target, null, null, null, gameUrl)
+                    return true
+                }
+                @Suppress("DEPRECATION")
+                override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                    val target = url.orEmpty()
+                    if (target.startsWith("https://", ignoreCase = true)) onDownload(target, null, null, null, gameUrl)
+                    return true
+                }
+            }
             setDownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
                 onDownload(url, userAgent, contentDisposition, mimeType, gameUrl)
             }
@@ -46,7 +59,7 @@ internal class GameArticleWebViewFactory(
                 .replace(Regex("(?is)<script[^>]*>.*?</script>"), "")
                 .replace(Regex("(?is)<style[^>]*>.*?</style>"), "")
                 .replace(Regex("(?is)<(img|source|picture|svg|iframe|video|audio|object|embed)\\b[^>]*>(?:.*?</\\1\\s*>)?"), "")
-                .replace(Regex("(?is)<a\\b[^>]*>.*?</a\\s*>"), "")
+                .replace(Regex("(?is)<a\\b([^>]*)>"), "<a$1 class=\"marco-download-button\">")
                 .replace(Regex("(?is)</?(figure|figcaption)\\b[^>]*>"), "")
                 .replace(Regex("(?i)\\s(onload|onclick|onerror)\\s*=\\s*(['\"]).*?\\2"), "")
             val style = """
@@ -59,7 +72,7 @@ internal class GameArticleWebViewFactory(
                 body h1,body h2,body h3,body h4{color:${if (darkMode) "#59b7ff" else "#238de8"} !important;line-height:1.4;margin:25px 0 12px}
                 p{margin:0 0 18px}
                 img{display:block;max-width:100%!important;height:auto!important;width:auto;margin:18px auto;border-radius:12px;object-fit:contain}
-                body a{color:${if (darkMode) "#72bdff" else "#1678d5"} !important;text-decoration:none;font-weight:700}
+                body a{display:inline-block;color:#ffffff !important;text-decoration:none;font-weight:800;background:linear-gradient(135deg,#3199ff,#115bb8) !important;border:1px solid #81caff;border-radius:12px;padding:9px 16px;margin:7px 5px;box-shadow:0 3px 10px rgba(20,110,210,.22)}
                 ul,ol{padding-left:25px;margin:10px 0 20px}
                 li{padding:4px 0}
                 body blockquote{border-right:3px solid ${if (darkMode) "#398fdf" else "#398fdf"};padding:8px 14px;margin:16px 0;background:${if (darkMode) "#102a46" else "#e8f3ff"} !important}
