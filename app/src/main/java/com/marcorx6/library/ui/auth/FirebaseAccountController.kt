@@ -51,32 +51,101 @@ internal class FirebaseAccountController(
     private var pendingDeletionUid: String? = null
 
     fun show() {
-        val user = authRepository.currentUser
-        if (user == null || user.isAnonymous) {
-            action(translate("المتابعة كزائر"), translate("العودة إلى المكتبة دون إنشاء ملف شخصي"), run = onBack)
-            action(translate("إنشاء حساب باستخدام Google"), translate("إنشاء حساب جديد أو استخدام حساب Google موجود"), primary = true, run = ::startFreshGoogleAccountSelection)
-            action(translate("إنشاء حساب بالبريد الإلكتروني"), translate("استعمل بريدك الإلكتروني وكلمة مرور"), run = { showEmailForm(createAccount = true) })
-            action(translate("تسجيل الدخول بالبريد الإلكتروني"), translate("لديك حساب MARCO RX6 بالفعل؟"), run = { showEmailForm(createAccount = false) })
-            action(translate("نسيت كلمة المرور؟"), translate("استرجاع الوصول إلى حسابك"), run = ::showPasswordResetForm)
-        } else {
-            action(translate("تسجيل الخروج"), translate("الخروج من حساب MARCO RX6"), run = {
-                GoogleSignIn.getClient(activity, firebaseGoogleOptions()).signOut().addOnCompleteListener {
-                    authRepository.signOut()
-                    onAccountChanged()
-                    toast("تم تسجيل الخروج بنجاح")
-                }
-            })
-            action(translate("مسح الحساب"), translate("حذف حسابك وبياناته السحابية نهائياً"), run = { confirmAccountDeletion(user) })
+        val dark = isDarkMode()
+        val page = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            setPadding(dp(22), dp(24), dp(22), dp(28))
+            setBackgroundColor(if (dark) Color.rgb(6, 16, 30) else Color.rgb(240, 247, 255))
         }
-        val footer = TextView(activity).apply {
+        val user = authRepository.currentUser
+        page.addView(TextView(activity).apply {
+            text = if (user == null || user.isAnonymous) translate("حساب MARCO RX6")
+                else translate("حسابك في MARCO RX6")
+            textSize = 25f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(if (dark) Color.WHITE else Color.rgb(18, 42, 68))
+            setPadding(0, 0, 0, dp(8))
+        })
+        if (user == null || user.isAnonymous) {
+            page.addView(TextView(activity).apply {
+                text = translate("استعمل التطبيق كزائر، أو سجّل الدخول لحفظ حسابك ومزامنة بياناتك.")
+                textSize = 13f
+                setTextColor(if (dark) Color.rgb(183, 207, 231) else Color.rgb(75, 105, 136))
+                setPadding(0, 0, 0, dp(18))
+            })
+            action(page, translate("المتابعة كزائر"), translate("العودة إلى المكتبة دون إنشاء ملف شخصي"), dark, run = onBack)
+            action(page, translate("إنشاء حساب باستخدام Google"), translate("إنشاء حساب جديد أو استخدام حساب Google موجود"), dark, primary = true, run = ::startFreshGoogleAccountSelection)
+            action(page, translate("إنشاء حساب بالبريد الإلكتروني"), translate("استعمل بريدك الإلكتروني وكلمة مرور"), dark, run = { showEmailForm(createAccount = true) })
+            action(page, translate("تسجيل الدخول بالبريد الإلكتروني"), translate("لديك حساب MARCO RX6 بالفعل؟"), dark, run = { showEmailForm(createAccount = false) })
+            action(page, translate("نسيت كلمة المرور؟"), translate("استرجاع الوصول إلى حسابك"), dark, run = ::showPasswordResetForm)
+        } else {
+            val displayName = user.displayName?.takeIf { it.isNotBlank() } ?: user.email.orEmpty()
+            page.addView(TextView(activity).apply {
+                text = displayName
+                textSize = 18f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(if (dark) Color.WHITE else Color.rgb(18, 42, 68))
+                setPadding(0, dp(4), 0, dp(4))
+            })
+            user.email?.let { email ->
+                page.addView(TextView(activity).apply {
+                    text = email
+                    textSize = 13f
+                    setTextColor(if (dark) Color.rgb(160, 190, 218) else Color.rgb(75, 105, 136))
+                    setPadding(0, 0, 0, dp(20))
+                })
+            }
+            action(page, translate("تسجيل الخروج"), translate("الخروج من حساب MARCO RX6"), dark, run = {
+                authRepository.signOut()
+                onAccountChanged()
+                toast("تم تسجيل الخروج بنجاح")
+            })
+            action(page, translate("مسح الحساب"), translate("حذف حسابك وبياناته السحابية نهائياً"), dark, run = { confirmAccountDeletion(user) })
+        }
+        page.addView(TextView(activity).apply {
             text = "MARCO RX6  •  SECURE ACCOUNT"
             textSize = 9f
             gravity = Gravity.CENTER
             setTextColor(if (dark) Color.rgb(119, 157, 194) else Color.rgb(103, 133, 163))
-            setPadding(0, dp(12), 0, dp(8))
-        }
-        page.addView(footer)
+            setPadding(0, dp(18), 0, dp(8))
+        })
         showAccountPage(page)
+    }
+
+    private fun action(
+        page: LinearLayout,
+        title: String,
+        detail: String,
+        dark: Boolean,
+        primary: Boolean = false,
+        run: () -> Unit
+    ) {
+        val card = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            isClickable = true
+            isFocusable = true
+            setPadding(dp(17), dp(14), dp(17), dp(14))
+            background = GradientDrawable().apply {
+                cornerRadius = dp(16).toFloat()
+                setColor(if (primary) Color.rgb(24, 111, 205) else if (dark) Color.rgb(19, 39, 61) else Color.WHITE)
+                setStroke(dp(1), if (primary) Color.rgb(87, 174, 255) else if (dark) Color.rgb(49, 79, 109) else Color.rgb(205, 224, 243))
+            }
+            setOnClickListener { run() }
+        }
+        card.addView(TextView(activity).apply {
+            text = title
+            textSize = 15f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(if (primary || dark) Color.WHITE else Color.rgb(18, 42, 68))
+        })
+        card.addView(TextView(activity).apply {
+            text = detail
+            textSize = 11f
+            setTextColor(if (primary) Color.rgb(225, 240, 255) else if (dark) Color.rgb(160, 190, 218) else Color.rgb(87, 116, 145))
+            setPadding(0, dp(5), 0, 0)
+        })
+        page.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
     }
 
     /**
