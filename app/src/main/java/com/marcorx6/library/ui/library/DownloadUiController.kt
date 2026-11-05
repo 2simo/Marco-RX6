@@ -237,7 +237,7 @@ internal class DownloadUiController(
         fun smallAction(label: String, filled: Boolean = false, onClick: () -> Unit) =
             TextView(activity).apply {
                 text = label; textSize = 11f; gravity = Gravity.CENTER
-                minHeight = dp(42); setPadding(dp(13), dp(9), dp(13), dp(9))
+                minimumHeight = dp(42); setPadding(dp(13), dp(9), dp(13), dp(9))
                 setTextColor(if (filled) Color.WHITE else primary)
                 this.background = GradientDrawable().apply {
                     setColor(if (filled) Color.argb(225, 42, 145, 255)
