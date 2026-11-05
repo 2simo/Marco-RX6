@@ -26,6 +26,11 @@ internal class CoverRepository(context: Context) : AutoCloseable {
             (value.byteCount / 1024).coerceAtLeast(1)
     }
 
+    // Multiple visible rows can request the same cover at once. Share one decode/download
+    // operation and fan its result out to every waiting ImageView callback.
+    private val inFlightLock = Any()
+    private val inFlightCallbacks = mutableMapOf<String, MutableList<(Bitmap?) -> Unit>>()
+
     fun stableCacheName(value: String): String {
         val digest = MessageDigest.getInstance("SHA-256").digest(value.toByteArray(Charsets.UTF_8))
         return digest.joinToString("") { "%02x".format(it) }
@@ -52,6 +57,18 @@ internal class CoverRepository(context: Context) : AutoCloseable {
             return key
         }
 
+        val shouldStartLoad = synchronized(inFlightLock) {
+            val waiting = inFlightCallbacks[key]
+            if (waiting != null) {
+                waiting.add(onLoaded)
+                false
+            } else {
+                inFlightCallbacks[key] = mutableListOf(onLoaded)
+                true
+            }
+        }
+        if (!shouldStartLoad) return key
+
         worker.execute {
             val bitmap = try {
                 var decoded = localFile?.let { file ->
@@ -76,7 +93,12 @@ internal class CoverRepository(context: Context) : AutoCloseable {
             } catch (_: Exception) {
                 null
             }
-            mainHandler.post { onLoaded(bitmap) }
+            mainHandler.post {
+                val callbacks = synchronized(inFlightLock) {
+                    inFlightCallbacks.remove(key)?.toList().orEmpty()
+                }
+                callbacks.forEach { callback -> callback(bitmap) }
+            }
         }
         return key
     }
