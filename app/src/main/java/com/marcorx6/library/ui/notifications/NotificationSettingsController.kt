@@ -2,6 +2,8 @@ package com.marcorx6.library.ui
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.core.app.NotificationManagerCompat
 import com.marcorx6.library.notification.BlogNotificationScheduler
@@ -30,8 +32,25 @@ internal class NotificationSettingsController(
                 else
                     translate("الإشعارات متوقفة. فعّلها ليصلك تنبيه عند نشر مقال جديد.")
             )
-            .setPositiveButton(translate(if (enabled) "حسناً" else "تفعيل")) { _, _ ->
-                if (!enabled) {
+            .setPositiveButton(translate(when {
+                enabled && !systemPermissionEnabled -> "فتح إعدادات الإشعارات"
+                enabled -> "حسناً"
+                else -> "تفعيل"
+            })) { _, _ ->
+                if (enabled && !systemPermissionEnabled) {
+                    val appSettings = Intent("android.settings.APP_NOTIFICATION_SETTINGS").apply {
+                        putExtra("android.provider.extra.APP_PACKAGE", activity.packageName)
+                    }
+                    try {
+                        activity.startActivity(appSettings)
+                    } catch (_: Exception) {
+                        val details = Intent(
+                            android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                            Uri.parse("package:" + activity.packageName)
+                        )
+                        activity.startActivity(details)
+                    }
+                } else if (!enabled) {
                     scheduler.setEnabled(true)
                     scheduler.schedule()
                     requestPermission()
