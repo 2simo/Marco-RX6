@@ -117,10 +117,7 @@ internal class BloggerPostComposerController(
 
         val form = formFieldsFactory.create()
         val title = form.title
-        val body = form.body
         val coverUrl = form.coverUrl
-        val genre = form.genre
-        val releaseYear = form.releaseYear
         val size = form.packageSize
         val version = form.version
         val format = form.fileFormat
@@ -275,6 +272,10 @@ internal class BloggerPostComposerController(
                 setOnClickListener {
                     val linksJson = collectLinks() ?: return@setOnClickListener
                     val firstUrl = try { JSONArray(linksJson).optJSONObject(0)?.optString("url").orEmpty() } catch (_: Exception) { "" }
+                    if (firstUrl.isBlank()) {
+                        Toast.makeText(activity, translate("أضف رابط تحميل واحداً على الأقل قبل المعاينة"), Toast.LENGTH_LONG).show()
+                        return@setOnClickListener
+                    }
                     val web = previewFactory.create(
                         title = title.text.toString(),
                         labels = selectedLabels.joinToString("، "),
@@ -290,7 +291,10 @@ internal class BloggerPostComposerController(
                         password = password.text.toString(),
                         rights = rights.text.toString(),
                         downloadLinksJson = linksJson
-                    ).apply { contentDescription = translate("معاينة كاملة لمقال Blogger قبل النشر") }
+                    ).apply {
+                        contentDescription = translate("معاينة كاملة لمقال Blogger قبل النشر")
+                        layoutParams = LinearLayout.LayoutParams(-1, dp(520))
+                    }
                     val previewDialog = AlertDialog.Builder(activity)
                         .setTitle(translate("معاينة قبل النشر"))
                         .setView(web)
@@ -309,6 +313,10 @@ internal class BloggerPostComposerController(
                     val coverLink = coverUrl.text.toString().trim()
                     val linksJson = collectLinks() ?: return@setOnClickListener
                     val firstUrl = try { JSONArray(linksJson).optJSONObject(0)?.optString("url").orEmpty() } catch (_: Exception) { "" }
+                    if (firstUrl.isBlank()) {
+                        Toast.makeText(activity, translate("أضف رابط تحميل واحداً على الأقل قبل النشر"), Toast.LENGTH_LONG).show()
+                        return@setOnClickListener
+                    }
                     val pendingLocalPath = pendingCoverLocalPath()
                     val validationFailure = BloggerPostInputValidator.validate(
                         coverUploadInProgress = coverUploadInProgress(),
@@ -338,8 +346,8 @@ internal class BloggerPostComposerController(
                         description = "",
                         coverLink = coverLink,
                         relatedLink = firstUrl,
-                        genre = genre.text.toString(),
-                        releaseYear = releaseYear.text.toString(),
+                        genre = "",
+                        releaseYear = "",
                         pendingCoverLocalPath = pendingLocalPath,
                         pendingCoverPublicUrl = pendingCoverPublicUrl(),
                         packageSize = size.text.toString(),
