@@ -1,5 +1,7 @@
 package com.marcorx6.library.ui
 
+import android.app.AlertDialog
+
 import android.app.Activity
 import android.graphics.Color
 import android.graphics.Typeface
@@ -95,7 +97,22 @@ internal class GameDownloadLinksViewFactory(
                 elevation = dp(2).toFloat()
                 minHeight = dp(50)
                 setPadding(dp(14), dp(12), dp(14), dp(12))
-                setOnClickListener { enqueueDownload(target, item.optString("label").ifBlank { gameName }) }
+                setOnClickListener {
+                    val downloadTitle = item.optString("label").ifBlank { gameName }
+                    val host = android.net.Uri.parse(target).host.orEmpty()
+                    AlertDialog.Builder(activity)
+                        .setTitle(translate("تأكيد التنزيل"))
+                        .setMessage(
+                            translate("هل تريد بدء تنزيل هذا الملف؟") + "\\n\\n" +
+                                translate("الملف") + ": " + downloadTitle + "\\n" +
+                                translate("المصدر") + ": " + host
+                        )
+                        .setNegativeButton(translate("إلغاء"), null)
+                        .setPositiveButton(translate("بدء التنزيل")) { _, _ ->
+                            enqueueDownload(target, downloadTitle)
+                        }
+                        .show()
+                }
             }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(9) })
         }
         if (downloadRow.childCount == 0) return null
