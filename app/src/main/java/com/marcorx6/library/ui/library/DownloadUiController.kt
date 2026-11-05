@@ -115,8 +115,8 @@ internal class DownloadUiController(
             imageTintList = android.content.res.ColorStateList.valueOf(muted)
             scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
             setPadding(dp(13), dp(13), dp(13), dp(13))
-            minWidth = dp(48)
-            minHeight = dp(48)
+            minimumWidth = dp(48)
+            minimumHeight = dp(48)
             contentDescription = translate("إغلاق صفحة التنزيلات")
             isClickable = true
             isFocusable = true
