@@ -348,7 +348,11 @@ internal class MainLibraryInterfaceController(
 
         if (adminSession()) {
             val publish = TextView(context).apply {
-                text = tr("＋  نشر")
+                text = tr("نشر")
+                setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.ic_action_add, 0, 0, 0)
+                compoundDrawablePadding = dp(7)
+                if (android.os.Build.VERSION.SDK_INT >= 23) compoundDrawableTintList =
+                    android.content.res.ColorStateList.valueOf(Color.WHITE)
                 textSize = 11f
                 setTextColor(Color.WHITE)
                 typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
