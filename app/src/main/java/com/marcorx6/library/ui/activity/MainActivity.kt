@@ -76,10 +76,13 @@ class MainActivity : ComponentActivity() {
             activity = this,
             authRepository = firebaseAuthRepository,
             onAccountChanged = {
-                // Keep anonymous visitor sessions available, but never manufacture a
-                // local nickname or photo for a visitor or overwrite Firebase identity.
+                // Keep anonymous visitor sessions available after sign-out or deletion.
                 firebaseSessionCoordinator.ensureGuestSession()
                 createInterface()
+            },
+            onSignedIn = {
+                // After authentication, open the editable account profile directly.
+                showFirebaseAccount()
             },
             launchGoogleSignIn = { intent -> activityResultRuntimeFeature.launchFirebaseGoogleSignIn(intent) },
             launchAdminGoogleSignIn = { intent -> activityResultRuntimeFeature.launchGoogleSignIn(intent) },
