@@ -193,11 +193,9 @@ internal class DownloadUiController(
                 }
             }
             views.details.text = details.toString()
-            views.progress.visibility = if (item.status == DownloadManager.STATUS_RUNNING && item.totalBytes > 0L) {
-                View.VISIBLE
-            } else {
-                View.GONE
-            }
+            val isRunning = item.status == DownloadManager.STATUS_RUNNING
+            views.progress.isIndeterminate = isRunning && item.totalBytes <= 0L
+            views.progress.visibility = if (isRunning) View.VISIBLE else View.GONE
             views.progress.progress = percent
         }
 
