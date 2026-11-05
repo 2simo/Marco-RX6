@@ -185,7 +185,7 @@ internal class StorageSettingsController(
         val filesSize = directorySize(activity.filesDir)
         val cacheSize = directorySize(activity.cacheDir)
         val externalSize = directorySize(activity.getExternalFilesDir(null))
-        val totalSize = filesSize + cacheSize + externalSize
+        val totalSize = directorySize(File(activity.applicationInfo.dataDir)) + externalSize
         total.text = formatBytes(totalSize)
         details.text = translate("الملفات المحفوظة") + ": " + formatBytes(filesSize) +
             "\\n" + translate("الملفات الخارجية") + ": " + formatBytes(externalSize)
