@@ -305,6 +305,29 @@ internal class DownloadUiController(
                             }
                         }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
                     }
+                    if (item.status == DownloadManager.STATUS_RUNNING || item.status == DownloadManager.STATUS_PENDING) {
+                        row.addView(smallAction(translate("إيقاف مؤقت")) {
+                            if (downloadRepository.pauseDownload(item.id)) {
+                                lastProgress.remove(item.id)
+                                lastSpeedSample.remove(item.id)
+                                lastRenderedSnapshot = null
+                                render()
+                                Toast.makeText(activity, translate("تم إيقاف التنزيل مؤقتاً"), Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(activity, translate("تعذر إيقاف التنزيل مؤقتاً"), Toast.LENGTH_SHORT).show()
+                            }
+                        }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
+                    } else if (item.status == DownloadManager.STATUS_PAUSED) {
+                        row.addView(smallAction(translate("استكمال")) {
+                            if (downloadRepository.resumeDownload(item.id)) {
+                                lastRenderedSnapshot = null
+                                render()
+                                Toast.makeText(activity, translate("تم استكمال التنزيل"), Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(activity, translate("تعذر استكمال التنزيل"), Toast.LENGTH_SHORT).show()
+                            }
+                        }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
+                    }
                     if (item.status == DownloadManager.STATUS_RUNNING || item.status == DownloadManager.STATUS_PENDING || item.status == DownloadManager.STATUS_PAUSED) {
                         row.addView(smallAction(translate("إلغاء التنزيل")) {
                             if (downloadRepository.deleteDownload(item.id)) {
