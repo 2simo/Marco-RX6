@@ -4,6 +4,7 @@ import android.app.Activity
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
+import android.text.Html
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -22,84 +23,131 @@ internal class GameDetailsIdentityViewFactory(
 ) {
     fun create(game: Game): LinearLayout {
         val dark = isDarkMode()
-        val identity = LinearLayout(activity).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = android.view.Gravity.CENTER_VERTICAL
+        val blue = if (dark) Color.rgb(99, 185, 255) else Color.rgb(22, 125, 224)
+        val muted = if (dark) Color.rgb(170, 190, 214) else Color.rgb(91, 108, 130)
+        val root = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
             setPadding(dp(13), dp(13), dp(13), dp(13))
-            background = android.graphics.drawable.GradientDrawable(
-                android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
-                if (dark) intArrayOf(Color.argb(229, 29, 82, 132), Color.argb(216, 13, 36, 61), Color.argb(208, 7, 20, 36))
-                else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(218, 226, 241, 255), Color.argb(220, 235, 245, 255))
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                if (dark) intArrayOf(Color.rgb(16, 28, 45), Color.rgb(12, 21, 35))
+                else intArrayOf(Color.WHITE, Color.rgb(235, 244, 255))
             ).apply {
                 cornerRadius = dp(22).toFloat()
-                setStroke(dp(1), if (dark) Color.argb(180, 86, 164, 229) else Color.argb(185, 148, 195, 238))
+                setStroke(dp(1), if (dark) Color.argb(170, 72, 145, 211) else Color.rgb(190, 215, 243))
             }
-            elevation = dp(3).toFloat()
+            elevation = dp(4).toFloat()
         }
+
         val cover = ImageView(activity).apply {
             scaleType = ImageView.ScaleType.CENTER_CROP
             background = GradientDrawable().apply {
                 setColor(if (dark) Color.rgb(13, 34, 57) else Color.rgb(225, 240, 255))
-                cornerRadius = dp(12).toFloat()
-                setStroke(dp(1), if (dark) Color.argb(150, 85, 158, 222) else Color.argb(155, 145, 193, 237))
+                cornerRadius = dp(15).toFloat()
             }
-            contentDescription = null
-            importantForAccessibility = android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            clipToOutline = true
+            contentDescription = game.name
         }
         if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) {
             loadCover(cover, game.coverLocalPath, game.coverUrl)
         } else {
             cover.setImageResource(android.R.drawable.ic_menu_gallery)
         }
-        identity.addView(cover, LinearLayout.LayoutParams(dp(124), dp(168)))
+        root.addView(cover, LinearLayout.LayoutParams(-1, dp(184)))
 
-        val info = LinearLayout(activity).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(14), 0, 0, 0)
-        }
-        info.addView(makeText(
-            "GAME DETAILS  •  MARCO RX6",
-            8f,
-            if (dark) Color.rgb(142, 205, 255) else Color.rgb(37, 119, 190),
-            true
-        ).apply { letterSpacing = 0.08f })
-        info.addView(makeText(game.name, 19f, white(), true).apply {
-            maxLines = 3
+        root.addView(makeText(game.name, 21f, white(), true).apply {
+            maxLines = 2
             ellipsize = android.text.TextUtils.TruncateAt.END
-            setPadding(0, dp(5), 0, 0)
+            setPadding(dp(2), dp(13), dp(2), dp(5))
         })
-        info.addView(makeText(
-            game.platform + "  •  MARCO RX6",
-            10f,
-            if (dark) Color.rgb(111, 194, 255) else Color.rgb(30, 139, 235),
-            true
-        ).apply { setPadding(0, dp(7), 0, dp(5)) })
-        if (game.genre.isNotBlank() || game.releaseYear.isNotBlank()) {
-            val metadata = listOf(game.genre, game.releaseYear)
-                .filter { it.isNotBlank() }
-                .joinToString("  •  ")
-            info.addView(makeText(metadata, 10f, gray(), true).apply {
-                setPadding(0, 0, 0, dp(7))
+        val platformChip = TextView(activity).apply {
+            text = game.platform.uppercase()
+            textSize = 11f
+            setTextColor(blue)
+            setPadding(dp(11), dp(5), dp(11), dp(5))
+            background = GradientDrawable().apply {
+                setColor(if (dark) Color.rgb(24, 57, 88) else Color.rgb(222, 239, 255))
+                cornerRadius = dp(30).toFloat()
+                setStroke(dp(1), if (dark) Color.rgb(57, 126, 187) else Color.rgb(153, 202, 246))
+            }
+        }
+        root.addView(platformChip, LinearLayout.LayoutParams(-2, -2).apply {
+            bottomMargin = dp(13)
+        })
+
+        val details = extractGameDetails(game.bloggerHtml)
+        if (details.isNotEmpty()) {
+            val infoCard = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(13), dp(12), dp(13), dp(12))
+                background = GradientDrawable().apply {
+                    setColor(if (dark) Color.rgb(27, 43, 63) else Color.rgb(244, 248, 253))
+                    cornerRadius = dp(16).toFloat()
+                    setStroke(dp(1), if (dark) Color.rgb(57, 83, 112) else Color.rgb(213, 226, 241))
+                }
+            }
+            infoCard.addView(makeText("معلومات اللعبة", 16f, white(), true).apply {
+                setPadding(0, 0, 0, dp(10))
+            })
+            details.chunked(2).forEach { pair ->
+                val row = LinearLayout(activity).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                }
+                pair.forEach { item ->
+                    val cell = LinearLayout(activity).apply {
+                        orientation = LinearLayout.VERTICAL
+                        setPadding(dp(9), dp(8), dp(7), dp(8))
+                        background = GradientDrawable().apply {
+                            setColor(if (dark) Color.rgb(35, 54, 77) else Color.WHITE)
+                            cornerRadius = dp(11).toFloat()
+                        }
+                    }
+                    cell.addView(makeText(item.first, 10f, muted, false))
+                    cell.addView(makeText(item.second, 14f, white(), true).apply {
+                        maxLines = 2
+                        ellipsize = android.text.TextUtils.TruncateAt.END
+                        setPadding(0, dp(3), 0, 0)
+                    })
+                    row.addView(cell, LinearLayout.LayoutParams(0, -2, 1f).apply {
+                        if (row.childCount > 0) marginStart = dp(7)
+                    })
+                }
+                if (pair.size == 1) row.addView(LinearLayout(activity), LinearLayout.LayoutParams(0, 1, 1f))
+                infoCard.addView(row, LinearLayout.LayoutParams(-1, -2).apply {
+                    bottomMargin = dp(7)
+                })
+            }
+            root.addView(infoCard, LinearLayout.LayoutParams(-1, -2).apply {
+                bottomMargin = dp(12)
             })
         }
-        if (game.description.isNotBlank()) {
-            info.addView(makeText(
-                game.description.replace(Regex("\\s+"), " ").trim(),
-                10f,
-                gray(),
-                false
-            ).apply {
-                maxLines = 3
-                ellipsize = android.text.TextUtils.TruncateAt.END
-                setLineSpacing(dp(2).toFloat(), 1.05f)
-                setPadding(0, dp(3), 0, dp(2))
-            })
-        }
+
         val watchlistButton = watchlistViewFactory.create(game)
-        info.addView(watchlistButton, LinearLayout.LayoutParams(-1, -2).apply {
-            topMargin = dp(7)
+        root.addView(watchlistButton, LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(2)
         })
-        identity.addView(info, LinearLayout.LayoutParams(0, -2, 1f))
-        return identity
+        return root
+    }
+
+    private fun extractGameDetails(html: String): List<Pair<String, String>> {
+        if (html.isBlank()) return emptyList()
+        val plain = Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY).toString()
+            .replace('\u00a0', ' ')
+        val fields = listOf(
+            "الحجم" to listOf("الحجم", "size"),
+            "النسخة" to listOf("النسخة", "version", "title id", "cusa"),
+            "الصيغة" to listOf("الصيغة", "format"),
+            "اللغة" to listOf("اللغة", "language", "languages"),
+            "كلمة السر" to listOf("كلمة السر", "password", "pass"),
+            "الحقوق" to listOf("الحقوق", "credits", "rights")
+        )
+        return fields.mapNotNull { (label, aliases) ->
+            val alternatives = aliases.joinToString("|") { Regex.escape(it) }
+            val match = Regex(
+                "(?im)(?:^|[\\n\\r|•])\\s*(?:$alternatives)\\s*[:：-]\\s*([^\\n\\r|•]+)"
+            ).find(plain) ?: return@mapNotNull null
+            val value = match.groupValues[1].trim().trimEnd('.', ',', ';')
+            if (value.isBlank()) null else label to value
+        }
     }
 }
