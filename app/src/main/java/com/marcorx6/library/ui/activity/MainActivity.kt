@@ -53,7 +53,6 @@ class MainActivity : ComponentActivity() {
         view.scaleX = 1f
         view.scaleY = 1f
         if (view is android.view.ViewGroup) {
-            view.layoutTransition?.cancel()
             view.layoutTransition = null
             for (index in 0 until view.childCount) cancelScreenMotion(view.getChildAt(index))
         }
