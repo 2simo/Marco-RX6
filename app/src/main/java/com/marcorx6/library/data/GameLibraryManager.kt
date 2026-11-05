@@ -60,7 +60,7 @@ internal object GameLibraryManager {
                 "ALL" -> true
                 "FAVORITES" -> item.isFavorite
                 "BLOG" -> item.blogImported
-                else -> item.platform == category
+                else -> item.platform.trim().equals(category.trim(), ignoreCase = true)
             }
             val searchMatch = normalizedQuery.isBlank() ||
                 item.name.contains(normalizedQuery, ignoreCase = true) ||
