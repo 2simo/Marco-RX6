@@ -16,6 +16,8 @@ import com.marcorx6.library.data.Game
 import com.marcorx6.library.data.auth.FirebaseSessionCoordinator
 import com.marcorx6.library.data.auth.FirebaseAuthRepository
 import com.google.firebase.appcheck.FirebaseAppCheck
+import com.google.firebase.appcheck.AppCheckProviderFactory
+import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory
 import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory
 import com.marcorx6.library.data.auth.FirebaseUserDocumentRepository
 import com.marcorx6.library.ui.auth.FirebaseAccountController
