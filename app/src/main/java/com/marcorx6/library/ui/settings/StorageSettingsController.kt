@@ -44,7 +44,7 @@ internal class StorageSettingsController(
     }
 
     fun show() {
-        val dark = activity.getSharedPreferences("appearance", Activity.MODE_PRIVATE)
+        val dark = activity.getSharedPreferences("appearance_settings", Activity.MODE_PRIVATE)
             .getBoolean("dark_mode", true)
         val bg = if (dark) Color.rgb(7, 17, 31) else Color.rgb(242, 247, 253)
         val ink = if (dark) Color.WHITE else Color.rgb(22, 43, 65)
