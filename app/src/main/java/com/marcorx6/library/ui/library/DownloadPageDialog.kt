@@ -130,7 +130,7 @@ internal class DownloadPageDialog(
 
         val browserFrame = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            background = GradientDrawable().apply {
+            this.background = GradientDrawable().apply {
                 setColor(surface)
                 cornerRadius = dp(16).toFloat()
                 setStroke(dp(1), if (dark) Color.argb(120, 80, 151, 215) else Color.argb(150, 153, 195, 236))
@@ -166,7 +166,7 @@ internal class DownloadPageDialog(
                 setTextColor(Color.WHITE)
                 gravity = Gravity.CENTER_VERTICAL
                 setPadding(dp(12), dp(10), dp(12), dp(10))
-                background = GradientDrawable().apply {
+                this.background = GradientDrawable().apply {
                     setColor(if (dark) Color.rgb(24, 76, 126) else Color.rgb(35, 119, 207))
                     cornerRadius = dp(11).toFloat()
                 }
@@ -209,7 +209,7 @@ internal class DownloadPageDialog(
             if (android.os.Build.VERSION.SDK_INT >= 26) safeBrowsingEnabled = true
         }
         CookieManager.getInstance().setAcceptCookie(true)
-        CookieManager.setAcceptThirdPartyCookies(webView, false)
+        CookieManager.getInstance().setAcceptThirdPartyCookies(webView, false)
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 val scheme = request.url.scheme?.lowercase()
