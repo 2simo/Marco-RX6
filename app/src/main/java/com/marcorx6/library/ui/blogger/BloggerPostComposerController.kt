@@ -119,7 +119,6 @@ internal class BloggerPostComposerController(
         val title = form.title
         val body = form.body
         val coverUrl = form.coverUrl
-        val legacyLink = form.relatedLink
         val genre = form.genre
         val releaseYear = form.releaseYear
         val size = form.packageSize
@@ -187,13 +186,21 @@ internal class BloggerPostComposerController(
                 setPadding(dp(12), dp(10), dp(12), dp(10))
                 background = rounded(panel(), 14)
             }
-            val label = formFieldsFactory.create().title.apply {
+            val label = EditText(activity).apply {
                 hint = translate("اسم الرابط (مثال: Google Drive)")
+                setSingleLine(true)
+                minHeight = dp(52)
                 setText(initialLabel)
+                setPadding(dp(12), dp(10), dp(12), dp(10))
             }
-            val url = formFieldsFactory.create().relatedLink.apply {
+            val url = EditText(activity).apply {
                 hint = translate("رابط التحميل HTTPS")
+                setSingleLine(true)
+                minHeight = dp(52)
+                inputType = android.text.InputType.TYPE_CLASS_TEXT or
+                    android.text.InputType.TYPE_TEXT_VARIATION_URI
                 setText(initialUrl)
+                setPadding(dp(12), dp(10), dp(12), dp(10))
             }
             row.addView(makeText(translate("رابط تحميل"), 12f, white(), true))
             addField(row, label)
