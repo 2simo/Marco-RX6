@@ -41,7 +41,7 @@ internal class DownloadPageDialog(
     fun show(
         startUrl: String,
         gameTitle: String,
-        onDownload: (String, String, String, String, String) -> Unit
+        onDownload: (String, String, String, String, String, String) -> Unit
     ) {
         val safeStartUrl = SecureUrlPolicy.toHttpsUrl(startUrl)
         if (safeStartUrl == null) {
@@ -248,7 +248,7 @@ internal class DownloadPageDialog(
             if (safeUrl == null) {
                 Toast.makeText(activity, translate("رابط الملف غير آمن؛ تم إيقاف التنزيل"), Toast.LENGTH_LONG).show()
             } else {
-                onDownload(safeUrl, gameTitle, userAgent.orEmpty(), contentDisposition.orEmpty(), mimeType.orEmpty())
+                onDownload(safeUrl, gameTitle, userAgent.orEmpty(), contentDisposition.orEmpty(), mimeType.orEmpty(), webView.url.orEmpty())
             }
         })
 
