@@ -22,6 +22,31 @@ internal class GameDownloadLinksViewFactory(
     private val enqueueDownload: (url: String, label: String) -> Unit,
     private val translate: (String) -> String
 ) {
+    fun createFromHtml(bloggerHtml: String, gameName: String): View? {
+        if (bloggerHtml.isBlank()) return null
+        val parsed = JSONArray()
+        val anchorPattern = Regex("(?is)<a\\b([^>]*)>(.*?)</a\\s*>")
+        anchorPattern.findAll(bloggerHtml).forEachIndexed { index, match ->
+            val attributes = match.groupValues[1]
+            val href = Regex("(?i)\\bhref\\s*=\\s*(['\"])(.*?)\\1")
+                .find(attributes)?.groupValues?.get(2)?.trim().orEmpty()
+            val label = android.text.Html.fromHtml(
+                match.groupValues[2], android.text.Html.FROM_HTML_MODE_LEGACY
+            ).toString().replace(Regex("\\s+"), " ").trim()
+            val normalizedLabel = label.lowercase()
+            if (!href.startsWith("https://", ignoreCase = true) ||
+                href == "#" || label.isBlank() ||
+                normalizedLabel.contains("ضع رابط") ||
+                normalizedLabel.contains("ضع الرابط") ||
+                normalizedLabel.contains("paste link") ||
+                normalizedLabel.contains("insert link")) return@forEachIndexed
+            parsed.put(org.json.JSONObject().put("url", href).put(
+                "label", label.ifBlank { "${translate("تحميل")} ${index + 1}" }
+            ))
+        }
+        return create(parsed.toString(), gameName)
+    }
+
     fun create(downloadLinks: String, gameName: String): View? {
         val downloads = try { JSONArray(downloadLinks) } catch (_: Exception) { JSONArray() }
         if (downloads.length() == 0) return null
