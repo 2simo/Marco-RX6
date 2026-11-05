@@ -341,6 +341,19 @@ class MainActivity : ComponentActivity() {
             gray = { gray },
             accentForeground = ::accentForeground,
             showNotifications = activityServicesRuntimeFeature::showNotificationSettings,
+            adminSessionConnected = { googleAccountRuntimeFeature.isAdminSession },
+            onAdminSessionAction = {
+                if (googleAccountRuntimeFeature.isAdminSession) {
+                    googleAccountRuntimeFeature.signOut {
+                        googleAccountRuntimeFeature.isAdminSession = false
+                        createInterface()
+                    }
+                } else if (firebaseAuthRepository.currentUser?.email.isNullOrBlank()) {
+                    Toast.makeText(this, "سجّل الدخول إلى حساب MARCO RX6 أولاً", Toast.LENGTH_LONG).show()
+                } else {
+                    firebaseAccountController.connectAdminAccount()
+                }
+            },
             recreateActivity = ::recreate,
             recreateInterface = ::createInterface,
             setContentView = ::showRootScreen,
