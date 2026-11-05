@@ -138,7 +138,7 @@ internal class AppearanceSettingsController(
         })
         val toggle = TextView(activity).apply {
             contentDescription = translate("تبديل حركات وانتقالات الواجهة")
-            minHeight = dp(48)
+            minimumHeight = dp(48)
             text = translate(if (preferences.getBoolean("animations", true)) "الحركات مفعّلة  ✓" else "الحركات متوقفة")
             textSize = 13f
             gravity = Gravity.CENTER
