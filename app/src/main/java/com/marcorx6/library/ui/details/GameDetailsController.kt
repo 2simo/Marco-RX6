@@ -74,7 +74,11 @@ internal class GameDetailsController(
             }
         )
         root.addView(articleWebView, LinearLayout.LayoutParams(-1, 0, 1f))
-        downloadLinksViewFactory.create(game.downloadLinks, game.name)?.let(root::addView)
+        // Inline Blogger anchors are now the download buttons; avoid rendering a duplicate row.
+        val hasInlineArticleLinks = game.bloggerHtml.contains("<a", ignoreCase = true)
+        if (!hasInlineArticleLinks) {
+            downloadLinksViewFactory.create(game.downloadLinks, game.name)?.let(root::addView)
+        }
 
         similarGamesViewFactory.create(game, games()) { item ->
             reader.dismiss()
