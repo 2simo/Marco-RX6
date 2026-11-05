@@ -28,20 +28,24 @@ internal class GameDownloadLinksViewFactory(
         val anchorPattern = Regex("(?is)<a\\b([^>]*)>(.*?)</a\\s*>")
         anchorPattern.findAll(bloggerHtml).forEachIndexed { index, match ->
             val attributes = match.groupValues[1]
-            val href = Regex("(?i)\\bhref\\s*=\\s*(['\"])(.*?)\\1")
-                .find(attributes)?.groupValues?.get(2)?.trim().orEmpty()
+            val hrefMatch = Regex("(?is)\\bhref\\s*=\\s*(?:\"([^\"]*)\"|'([^']*)'|([^\\s>]+))")
+                .find(attributes)
+            val rawHref = hrefMatch?.groupValues?.drop(1)?.firstOrNull { it.isNotBlank() }
+                ?.trim().orEmpty()
+            val href = android.text.Html.fromHtml(rawHref, android.text.Html.FROM_HTML_MODE_LEGACY)
+                .toString().trim()
             val label = android.text.Html.fromHtml(
                 match.groupValues[2], android.text.Html.FROM_HTML_MODE_LEGACY
             ).toString().replace(Regex("\\s+"), " ").trim()
             val normalizedLabel = label.lowercase()
             if (!href.startsWith("https://", ignoreCase = true) ||
-                href == "#" || label.isBlank() ||
+                href == "#" || href.endsWith("/#") || label.isBlank() ||
                 normalizedLabel.contains("ضع رابط") ||
                 normalizedLabel.contains("ضع الرابط") ||
                 normalizedLabel.contains("paste link") ||
                 normalizedLabel.contains("insert link")) return@forEachIndexed
             parsed.put(org.json.JSONObject().put("url", href).put(
-                "label", label.ifBlank { "${translate("تحميل")} ${index + 1}" }
+                "label", label.ifBlank { "\${translate("تحميل")} \${index + 1}" }
             ))
         }
         return create(parsed.toString(), gameName)
@@ -51,29 +55,35 @@ internal class GameDownloadLinksViewFactory(
         val downloads = try { JSONArray(downloadLinks) } catch (_: Exception) { JSONArray() }
         if (downloads.length() == 0) return null
 
-        val downloadScroll = HorizontalScrollView(activity).apply {
-            isHorizontalScrollBarEnabled = false
-            setBackgroundColor(android.graphics.Color.TRANSPARENT)
+        val downloadSection = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(14), dp(8), dp(14), dp(8))
         }
+        downloadSection.addView(TextView(activity).apply {
+            text = "روابط التحميل"
+            textSize = 16f
+            setTextColor(Color.WHITE)
+            setTypeface(null, Typeface.BOLD)
+            setPadding(0, 0, 0, dp(8))
+        }, LinearLayout.LayoutParams(-1, -2))
         val downloadRow = LinearLayout(activity).apply {
-            orientation = LinearLayout.HORIZONTAL
-            setPadding(dp(12), dp(9), dp(12), dp(9))
+            orientation = LinearLayout.VERTICAL
         }
         for (index in 0 until downloads.length()) {
             val item = downloads.optJSONObject(index) ?: continue
-            val target = item.optString("url")
-            if (!target.startsWith("https://")) continue
-            val label = item.optString("label").ifBlank { "${translate("تحميل")} ${index + 1}" }
+            val target = item.optString("url").trim()
+            if (!target.startsWith("https://", ignoreCase = true)) continue
+            val label = item.optString("label").ifBlank { "\${translate("تحميل")} \${index + 1}" }
             downloadRow.addView(TextView(activity).apply {
                 text = "⬇  $label"
                 contentDescription = label
-                textSize = 12f
-                setTextColor(white())
+                textSize = 14f
+                setTextColor(Color.WHITE)
                 gravity = Gravity.CENTER
                 setTypeface(null, Typeface.BOLD)
                 background = GradientDrawable(
                     GradientDrawable.Orientation.TL_BR,
-                    intArrayOf(Color.argb(235, 49, 153, 255), Color.argb(215, 17, 91, 184))
+                    intArrayOf(Color.rgb(49, 153, 255), Color.rgb(17, 91, 184))
                 ).apply {
                     cornerRadius = dp(13).toFloat()
                     setStroke(dp(1), Color.argb(145, 129, 202, 255))
@@ -84,14 +94,13 @@ internal class GameDownloadLinksViewFactory(
                     GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(13).toFloat() }
                 )
                 elevation = dp(2).toFloat()
-                minHeight = dp(48)
-                contentDescription = gameName + ", " + label
-                setPadding(dp(13), dp(12), dp(13), dp(12))
+                minHeight = dp(50)
+                setPadding(dp(14), dp(12), dp(14), dp(12))
                 setOnClickListener { enqueueDownload(target, item.optString("label").ifBlank { gameName }) }
-            }, LinearLayout.LayoutParams(-2, -2).apply { rightMargin = dp(8) })
+            }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(9) })
         }
         if (downloadRow.childCount == 0) return null
-        downloadScroll.addView(downloadRow)
-        return downloadScroll
+        downloadSection.addView(downloadRow, LinearLayout.LayoutParams(-1, -2))
+        return downloadSection
     }
 }
