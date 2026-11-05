@@ -37,6 +37,7 @@ internal class FirebaseAccountController(
     private val onAccountChanged: () -> Unit,
     private val launchGoogleSignIn: (Intent) -> Unit,
     private val launchAdminGoogleSignIn: (Intent) -> Unit,
+    private val signOutAdmin: () -> Unit,
     private val styleDialog: (AlertDialog) -> Unit,
     private val setContentView: (View) -> Unit,
     private val onBack: () -> Unit,
@@ -96,6 +97,7 @@ internal class FirebaseAccountController(
             }
             action(page, translate("تسجيل الخروج"), translate("الخروج من حساب MARCO RX6"), dark, run = {
                 authRepository.signOut()
+                signOutAdmin()
                 onAccountChanged()
                 toast("تم تسجيل الخروج بنجاح")
             })
@@ -584,6 +586,7 @@ internal class FirebaseAccountController(
                         // Drive use GoogleSignIn.getLastSignedInAccount() for their own OAuth session.
                         // Deleting Firebase Authentication does not require clearing that Google session.
                         authRepository.signOut()
+                        signOutAdmin()
                         onAccountChanged()
                         toast("تم حذف حساب MARCO RX6 وبياناته السحابية بنجاح")
                     }
