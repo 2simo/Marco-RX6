@@ -1,30 +1,19 @@
 package com.marcorx6.library.ui
 
 import android.app.Activity
-import android.content.Intent
-import android.graphics.Color
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import com.marcorx6.library.data.Game
 
 internal class GameDetailsController(
     private val activity: Activity,
-    private val games: () -> List<Game>,
     private val bg: () -> Int,
     private val dp: (Int) -> Int,
-    private val isDarkMode: () -> Boolean,
-    private val fontFamilyName: () -> String,
-    private val fontScale: () -> Float,
-    private val enqueueGameDownload: (String, String, String, String, String, String) -> Unit,
     private val topBarFactory: GameDetailsTopBarFactory,
     private val identityViewFactory: GameDetailsIdentityViewFactory,
     private val downloadLinksViewFactory: GameDownloadLinksViewFactory,
     private val applyMotionPreferences: (android.view.View) -> Unit,
-    private val applyUnifiedSkin: (android.view.View) -> Unit,
-    private val translate: (String) -> String
+    private val applyUnifiedSkin: (android.view.View) -> Unit
 ) {
     fun show(game: Game) {
         val reader = android.app.Dialog(activity)
@@ -36,9 +25,8 @@ internal class GameDetailsController(
         val topBar = topBarFactory.create(game) { reader.dismiss() }
         root.addView(topBar)
 
-        // Keep the details content in a real vertical scroll container. The header
-        // and bottom actions remain fixed while long metadata and article content
-        // can be reached on shorter screens.
+        // Keep the cover, information card, and download buttons scrollable on
+        // shorter screens while the title bar remains visible.
         val contentScroll = ScrollView(activity).apply {
             isFillViewport = true
             isVerticalScrollBarEnabled = true
@@ -56,7 +44,8 @@ internal class GameDetailsController(
         })
 
         // The game page is intentionally limited to the cover + one information card
-        // + native download buttons. Blogger HTML remains available to the parser below.
+        // + native download buttons. Blogger HTML is used only to extract metadata
+        // and direct download links; the article body is not displayed here.
         val bloggerDownloadButtons = downloadLinksViewFactory.createFromHtml(game.bloggerHtml, game.name)
         val downloadButtons = bloggerDownloadButtons
             ?: downloadLinksViewFactory.create(game.downloadLinks, game.name)
