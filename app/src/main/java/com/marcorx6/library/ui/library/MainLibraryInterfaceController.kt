@@ -136,8 +136,6 @@ internal class MainLibraryInterfaceController(
         }
         header.addView(headerAction(if (isDarkMode()) "☀" else "☾", tr(if (isDarkMode()) "الوضع الفاتح" else "الوضع الداكن")) { toggleDarkMode() },
             LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginEnd = dp(8) })
-        header.addView(headerAction("⚙", tr("الإعدادات")) { showAppearanceSettings() },
-            LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginEnd = dp(8) })
 
         root.addView(header)
 
@@ -204,7 +202,7 @@ internal class MainLibraryInterfaceController(
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        listOf("ALL", "PS2", "PS3", "PS4", "BLOG", "WANT_TO_PLAY", "PLAYING", "COMPLETED").forEach { category ->
+        listOf("ALL", "PS2", "PS3", "PS4", "BLOG", "FAVORITES", "WANT_TO_PLAY", "PLAYING", "COMPLETED").forEach { category ->
             val chip = TextView(context).apply {
                 text = when (category) {
                     "ALL" -> tr("الكل")
@@ -391,7 +389,7 @@ internal class MainLibraryInterfaceController(
             elevation = dp(14).toFloat()
             setPadding(dp(7), dp(7), dp(7), dp(7))
         }
-        if (activeDockTab !in setOf("HOME", "EXPLORE", "SETTINGS")) activeDockTab = "HOME"
+        if (activeDockTab !in setOf("HOME", "FAVORITES", "DOWNLOADS", "PROFILE")) activeDockTab = "HOME"
         val dockItems = linkedMapOf<String, LinearLayout>()
         val dockLabels = linkedMapOf<String, String>()
         fun renderDockSelection() {
@@ -460,13 +458,11 @@ internal class MainLibraryInterfaceController(
         dockItem("HOME", "⌂", tr("الرئيسية")) {
             selected = "ALL"; renderGames(); pageScroll.smoothScrollTo(0, 0)
         }
-        dockItem("EXPLORE", "⌕", tr("استكشف")) {
-            search.requestFocus()
-            pageScroll.smoothScrollTo(0, 0)
-            (context.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager)
-                .showSoftInput(search, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
+        dockItem("FAVORITES", "♡", tr("المفضلة")) {
+            selected = "FAVORITES"; renderGames(); pageScroll.smoothScrollTo(0, 0)
         }
-        dockItem("SETTINGS", "⚙", tr("الإعدادات")) { showAppearanceSettings() }
+        dockItem("DOWNLOADS", "⬇", tr("التنزيلات")) { showDownloads() }
+        dockItem("PROFILE", "♙", tr("حسابي")) { showProfile() }
         renderDockSelection()
         val dockParams = FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply {
             leftMargin = dp(16); rightMargin = dp(16); bottomMargin = dp(12)
