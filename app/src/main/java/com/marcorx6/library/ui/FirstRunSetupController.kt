@@ -185,7 +185,7 @@ internal class FirstRunSetupController(
                     val folderCard = viewFactory.optionCard(
                         tr("اختيار مجلد التنزيلات"),
                         true,
-                        tr("المجلد الحالي:") + " " + downloadFolderName()
+                        tr("اختر مجلداً لحفظ التنزيلات فيه.")
                     )
                     folderCard.setOnClickListener { launchDownloadFolderPicker() }
                     choices.addView(folderCard, LinearLayout.LayoutParams(-1, -2).apply {
@@ -202,7 +202,7 @@ internal class FirstRunSetupController(
                     }, LinearLayout.LayoutParams(-1, -2))
                 }
                 6 -> {
-                    val readyCard = viewFactory.optionCard(tr("مكتبتك جاهزة!"), true, tr("تم حفظ المنصة واللغة والمظهر واللون والإشعارات ومكان التنزيلات."))
+                    val readyCard = viewFactory.optionCard(tr("مكتبتك جاهزة!"), true, tr("تم حفظ المنصة واللغة والمظهر واللون والإشعارات ومكان التنزيلات.") + "\n" + tr("المجلد الحالي:") + " " + downloadFolderName())
                     choices.addView(readyCard, LinearLayout.LayoutParams(-1, -2))
                     if (animate) viewFactory.animateIn(readyCard)
                 }
