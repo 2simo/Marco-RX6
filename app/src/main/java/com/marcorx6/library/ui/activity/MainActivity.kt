@@ -265,6 +265,8 @@ class MainActivity : ComponentActivity() {
             executeIo = { task -> activityServicesRuntimeFeature.ioExecutor.execute { task() } },
             styleAlertDialog = ::styleAlertDialog,
             applyUnifiedSkin = ::applyUnifiedSkin,
+            setContentView = ::showRootScreen,
+            onBack = ::createInterface,
             translate = ::tr,
             setCoverFields = { url, preview ->
                 coverFeature.state.urlField = url
