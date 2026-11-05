@@ -25,6 +25,7 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import com.marcorx6.library.network.SecureUrlPolicy
+import java.io.ByteArrayInputStream
 import org.json.JSONArray
 import org.json.JSONTokener
 
@@ -210,7 +211,31 @@ internal class DownloadPageDialog(
         }
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, false)
+        val adBlockerEnabled = activity.getSharedPreferences("app_settings", Activity.MODE_PRIVATE)
+            .getBoolean("download_page_ad_blocker", true)
+        val blockedAdHosts = setOf(
+            "doubleclick.net", "googlesyndication.com", "googleadservices.com",
+            "adservice.google.com", "taboola.com", "outbrain.com", "popads.net",
+            "popcash.net", "propellerads.com", "exoclick.com", "trafficjunky.com",
+            "onclickads.net", "juicyads.com", "adsterra.com"
+        )
+        fun isBlockedAdRequest(url: String): Boolean {
+            if (!adBlockerEnabled) return false
+            val host = try { Uri.parse(url).host?.lowercase() } catch (_: Exception) { null } ?: return false
+            return blockedAdHosts.any { host == it || host.endsWith(".$it") }
+        }
         webView.webViewClient = object : WebViewClient() {
+            override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): android.webkit.WebResourceResponse? {
+                if (!request.isForMainFrame && isBlockedAdRequest(request.url.toString())) {
+                    return android.webkit.WebResourceResponse(
+                        "text/plain",
+                        "utf-8",
+                        ByteArrayInputStream(ByteArray(0))
+                    )
+                }
+                return super.shouldInterceptRequest(view, request)
+            }
+
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 val scheme = request.url.scheme?.lowercase()
                 return scheme != "https"
