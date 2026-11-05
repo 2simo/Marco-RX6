@@ -57,7 +57,7 @@ internal class GameSimilarGamesViewFactory(
                 isClickable = true
                 isFocusable = true
                 setOnClickListener { onSelect(item) }
-                contentDescription = "فتح تفاصيل ${item.name}"
+                contentDescription = "${translate("فتح تفاصيل")} ${item.name}"
             }
             val cover = ImageView(activity).apply {
                 scaleType = ImageView.ScaleType.CENTER_CROP
@@ -66,7 +66,7 @@ internal class GameSimilarGamesViewFactory(
                     cornerRadius = dp(10).toFloat()
                 }
                 clipToOutline = true
-                contentDescription = "غلاف ${item.name}"
+                contentDescription = "${translate("غلاف")} ${item.name}"
             }
             if (item.coverLocalPath.isNotBlank() || item.coverUrl.isNotBlank()) {
                 loadCover(cover, item.coverLocalPath, item.coverUrl)
