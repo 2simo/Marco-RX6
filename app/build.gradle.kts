@@ -4,11 +4,18 @@ plugins {
     id("com.google.gms.google-services")
 }
 
+val playDistributionEnabled = providers.gradleProperty("marcoPlayDistribution").orNull == "true"
+
 android {
     namespace = "com.marcorx6.library"
     compileSdk = 36
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
+        buildConfigField("boolean", "PLAY_DISTRIBUTION", playDistributionEnabled.toString())
         applicationId = "com.marcorx6.library"
         minSdk = 24
         targetSdk = 36
