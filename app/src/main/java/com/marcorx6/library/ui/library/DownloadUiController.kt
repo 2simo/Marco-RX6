@@ -343,11 +343,11 @@ internal class DownloadUiController(
             return RowViews(card, titleView, statusView, detailsView, progressView, actions)
         }
 
-        render = {
-            if (activity.isFinishing || activity.isDestroyed) return@render
+        render = renderBlock@{
+            if (activity.isFinishing || activity.isDestroyed) return@renderBlock
             val entries = try { downloadRepository.getDownloads() } catch (error: Exception) {
                 Toast.makeText(activity, translate("تعذر قراءة التنزيلات") + ": ${error.message}", Toast.LENGTH_LONG).show()
-                return
+                return@renderBlock
             }
             val currentIds = entries.map { it.id }.toSet()
             val removedIds = rows.keys.filter { it !in currentIds }
