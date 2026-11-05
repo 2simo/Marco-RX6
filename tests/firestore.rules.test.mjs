@@ -64,18 +64,56 @@ describe("Firestore user isolation rules", () => {
     await assertSucceeds(deleteDoc(profile));
   });
 
-  it("allows a guest UID to keep only its minimal own profile", async () => {
-    // Firebase anonymous users are authenticated and are scoped by their UID.
-    const db = testEnv.authenticatedContext("anonymous-guest-uid").firestore();
+  it("treats a Firebase anonymous provider as a guest and denies cloud preference writes", async () => {
+    const db = testEnv.authenticatedContext("anonymous-guest-uid", {
+      firebase: { sign_in_provider: "anonymous" },
+    }).firestore();
 
     await assertSucceeds(
-      setDoc(doc(db, "users/anonymous-guest-uid"), { isAnonymous: true }),
+      setDoc(doc(db, "users/anonymous-guest-uid"), {
+        uid: "anonymous-guest-uid",
+        isAnonymous: true,
+        updatedAt: new Date(),
+      }),
     );
     await assertFails(
       setDoc(
         doc(db, "users/anonymous-guest-uid/settings/preferences"),
-        { values: { theme: "dark" } },
+        { values: { theme: "dark" }, updatedAt: new Date() },
       ),
+    );
+  });
+
+  it("allows a guest to delete its own preferences and profile during account deletion", async () => {
+    const uid = "anonymous-delete-uid";
+    const db = testEnv.authenticatedContext(uid, {
+      firebase: { sign_in_provider: "anonymous" },
+    }).firestore();
+
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const adminDb = context.firestore();
+      await setDoc(doc(adminDb, `users/${uid}`), {
+        uid,
+        isAnonymous: true,
+        updatedAt: new Date(),
+      });
+      await setDoc(doc(adminDb, `users/${uid}/settings/preferences`), {
+        values: { theme: "dark" },
+        updatedAt: new Date(),
+      });
+    });
+
+    await assertSucceeds(deleteDoc(doc(db, `users/${uid}/settings/preferences`)));
+    await assertSucceeds(deleteDoc(doc(db, `users/${uid}`)));
+  });
+
+  it("allows a registered account to create preferences only with the required fields", async () => {
+    const db = testEnv.authenticatedContext("registered-user").firestore();
+    await assertSucceeds(
+      setDoc(doc(db, "users/registered-user/settings/preferences"), {
+        values: { theme: "dark" },
+        updatedAt: new Date(),
+      }),
     );
   });
 
