@@ -37,13 +37,10 @@ internal class CoverRepository(context: Context) : AutoCloseable {
         val bundledAsset = if (imageUrl.isNotBlank()) {
             "offline_images/${stableCacheName(imageUrl)}.webp"
         } else ""
-        val hasBundledAsset = bundledAsset.isNotBlank() && try {
-            appContext.assets.open(bundledAsset).use { true }
-        } catch (_: Exception) { false }
-
+        // Avoid opening APK assets on the caller thread; asset lookup belongs to the worker.
         val key = when {
             localFile != null -> "file:${localFile.absolutePath}|url:$imageUrl"
-            hasBundledAsset -> "asset:$bundledAsset|url:$imageUrl"
+            bundledAsset.isNotBlank() -> "asset:$bundledAsset|url:$imageUrl"
             else -> "url:$imageUrl"
         }
         if (localFile == null && !hasBundledAsset && imageUrl.isBlank()) {
@@ -60,7 +57,7 @@ internal class CoverRepository(context: Context) : AutoCloseable {
                 var decoded = localFile?.let { file ->
                     try { decodeFile(file) } catch (_: Exception) { null }
                 }
-                if (decoded == null && hasBundledAsset) {
+                if (decoded == null && bundledAsset.isNotBlank()) {
                     decoded = try { decodeAsset(bundledAsset) } catch (_: Exception) { null }
                 }
                 if (decoded == null && imageUrl.isNotBlank()) {
