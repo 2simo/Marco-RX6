@@ -47,7 +47,8 @@ internal class FirebaseUserDocumentRepository(
         uid: String,
         displayName: String?,
         bio: String?,
-        photoUrl: String?
+        photoUrl: String?,
+        photoData: String? = null
     ): Task<Void> {
         val data = mutableMapOf<String, Any>(
             "updatedAt" to FieldValue.serverTimestamp()
@@ -55,6 +56,7 @@ internal class FirebaseUserDocumentRepository(
         displayName?.trim()?.takeIf(String::isNotBlank)?.let { data["displayName"] = it }
         bio?.trim()?.let { data["bio"] = it }
         photoUrl?.trim()?.takeIf(String::isNotBlank)?.let { data["photoUrl"] = it }
+        photoData?.takeIf(String::isNotBlank)?.let { data["photoData"] = it }
         return userDocument(uid).set(data, SetOptions.merge())
     }
 
