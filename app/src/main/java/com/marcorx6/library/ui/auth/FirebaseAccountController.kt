@@ -94,10 +94,6 @@ internal class FirebaseAccountController(
                     setPadding(0, 0, 0, dp(20))
                 })
             }
-            action(page, translate("ربط حساب المشرف (اختياري)"), translate("صلاحيات Blogger وGoogle Drive للنشر ورفع الأغلفة"), dark, run = ::startAdminGoogleAccountSelection)
-            if (isAdminSession()) {
-                action(page, translate("إلغاء ربط حساب المشرف"), translate("إيقاف جلسة النشر ورفع الأغلفة"), dark, run = signOutAdmin)
-            }
             action(page, translate("تسجيل الخروج"), translate("الخروج من حساب MARCO RX6"), dark, run = {
                 authRepository.signOut()
                 onAccountChanged()
