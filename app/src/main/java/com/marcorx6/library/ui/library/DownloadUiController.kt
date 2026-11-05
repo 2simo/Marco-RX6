@@ -234,7 +234,7 @@ internal class DownloadUiController(
                 }
             }
             if (item.status == DownloadManager.STATUS_FAILED) {
-                details.append("\\n").append(translate("تعذر إكمال التنزيل. يمكنك إعادة المحاولة أو تحديث رابط اللعبة."))
+                details.append("\n").append(translate("تعذر إكمال التنزيل. يمكنك إعادة المحاولة أو تحديث رابط اللعبة."))
             }
             views.details.text = details.toString()
             // Keep the progress indicator visible while pending or paused so resume never blanks the row.
