@@ -39,9 +39,9 @@ internal class BloggerGamePostFactory {
         val htmlContent = BloggerArticleBuilder.build(
             title = title,
             categories = labels.joinToString("، "),
-            genre = normalizedGenre,
-            releaseYear = normalizedYear,
-            description = description,
+            genre = "",
+            releaseYear = "",
+            description = "",
             coverUrl = publishedCoverLink,
             downloadUrl = primaryUrl.ifBlank { relatedLink },
             packageSize = packageSize.trim(),
@@ -55,7 +55,7 @@ internal class BloggerGamePostFactory {
         return Game(
             name = title,
             platform = labels.firstOrNull() ?: "",
-            description = description,
+            description = "",
             url = primaryUrl.ifBlank { relatedLink.ifBlank { existing?.url.orEmpty() } },
             coverUrl = publishedCoverLink,
             coverLocalPath = if (
@@ -69,8 +69,8 @@ internal class BloggerGamePostFactory {
             isFavorite = existing?.isFavorite ?: false,
             bloggerPostId = existing?.bloggerPostId ?: "",
             bloggerHtml = htmlContent,
-            genre = normalizedGenre,
-            releaseYear = normalizedYear,
+            genre = "",
+            releaseYear = "",
             packageSize = packageSize.trim(),
             version = version.trim(),
             fileFormat = fileFormat.trim(),
