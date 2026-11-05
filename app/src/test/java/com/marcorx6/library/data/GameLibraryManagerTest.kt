@@ -45,4 +45,19 @@ class GameLibraryManagerTest {
         assertEquals(listOf(alpha), GameLibraryManager.filterAndSort(
             listOf(beta, alpha), "ALL", "Alpha", "Action", "2020", "A-Z"))
     }
+
+    @Test fun searchFindsGamesByGenreAndReleaseYear() {
+        val action = game("Alpha", "PS2").copy(genre = "Action", releaseYear = "2020")
+        val rpg = game("Beta", "PS4").copy(genre = "RPG", releaseYear = "2022")
+        assertEquals(listOf(action), GameLibraryManager.filterAndSort(
+            listOf(rpg, action), "ALL", "action", "", "", "LATEST"))
+        assertEquals(listOf(rpg), GameLibraryManager.filterAndSort(
+            listOf(action, rpg), "ALL", "2022", "", "", "LATEST"))
+    }
+
+    @Test fun platformFilterIgnoresLetterCaseAndSurroundingSpaces() {
+        val ps2 = game("Alpha", "PS2")
+        assertEquals(listOf(ps2), GameLibraryManager.filterAndSort(
+            listOf(ps2), " ps2 ", "", "", "", "LATEST"))
+    }
 }
