@@ -174,7 +174,7 @@ internal class StorageSettingsController(
         val scroll = ScrollView(activity).apply {
             isFillViewport = true
             isVerticalScrollBarEnabled = false
-            addView(root, ScrollView.LayoutParams(-1, -2))
+            addView(root, android.view.ViewGroup.LayoutParams(-1, -2))
         }
         ViewCompat.setOnApplyWindowInsetsListener(scroll) { view, insets ->
             val safe = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
