@@ -125,7 +125,9 @@ internal class DownloadRepository(context: Context) {
             val finalUrl = connection.url.toString()
             if (code !in 200..299) throw IllegalStateException("الخادم رفض رابط التنزيل (HTTP $code)")
             if (mime == "text/html" || mime == "application/xhtml+xml") {
-                throw IllegalStateException("هذا الرابط يفتح صفحة HTML وليس ملفاً مباشراً. افتح صفحة التحميل وابحث عن رابط الملف نفسه.")
+                // Hand HTML interstitials to the in-app browser so the user can
+                // complete normal site steps and select a real file link.
+                return DownloadProbe(finalUrl, mime, false)
             }
             val path = Uri.parse(finalUrl).lastPathSegment.orEmpty().lowercase(Locale.ROOT)
             val hasFileExtension = Regex("""\.(apk|zip|7z|rar|iso|pkg|bin|cue|chd|img|pbp|cso|nsp|xci|pdf|mp4|mp3)$""").containsMatchIn(path)
