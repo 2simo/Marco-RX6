@@ -47,7 +47,6 @@ internal class BloggerGamePostFactory {
             isFavorite = existing?.isFavorite ?: false,
             bloggerPostId = existing?.bloggerPostId ?: "",
             bloggerHtml = htmlContent,
-            playStatus = existing?.playStatus ?: "",
             genre = normalizedGenre,
             releaseYear = normalizedYear
         )
