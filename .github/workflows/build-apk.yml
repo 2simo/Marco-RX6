@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - feature/publishing-studio-redesign
 
 permissions:
   contents: read
