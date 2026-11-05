@@ -3,7 +3,6 @@ package com.marcorx6.library.data
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import java.net.URLDecoder
-import java.util.Locale
 
 /** Extracts and sanitizes server-provided download filenames without losing Unicode characters. */
 internal object DownloadFileNames {
@@ -34,7 +33,7 @@ internal object DownloadFileNames {
     }
 
     fun safeName(value: String, mimeType: String, id: Long): String {
-        var name = clean(value).replace(Regex("[\\u0000-\\u001F\\u007F/\\\\:*?\\"<>|]"), "_")
+        var name = clean(value).replace(Regex("""[\u0000-\u001F\u007F/\\:*?"<>|]"""), "_")
             .trim(' ', '.', '_')
             .take(180)
         if (name.isBlank()) name = "download_$id"
@@ -46,9 +45,9 @@ internal object DownloadFileNames {
     }
 
     private fun clean(value: String): String = value
-        .replace("\\r", "")
-        .replace("\\n", "")
+        .replace("\r", "")
+        .replace("\n", "")
         .substringAfterLast('/')
-        .substringAfterLast('\\\\')
+        .substringAfterLast('\\')
         .trim()
 }
