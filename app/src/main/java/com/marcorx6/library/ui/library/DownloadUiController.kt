@@ -13,6 +13,9 @@ import android.widget.TextView
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
 import com.marcorx6.library.data.DownloadRepository
 import com.marcorx6.library.data.DownloadStartResult
 import com.marcorx6.library.network.SecureUrlPolicy
@@ -128,6 +131,9 @@ internal class DownloadUiController(
             setPadding(0, dp(7), 0, dp(18))
         })
         val list = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
+        val lastProgress = mutableMapOf<Long, Int>()
+        val lastSpeedSample = mutableMapOf<Long, Pair<Long, Long>>()
+        val handler = Handler(Looper.getMainLooper())
         val scroll = ScrollView(activity).apply {
             isFillViewport = true
             isVerticalScrollBarEnabled = false
@@ -184,6 +190,13 @@ internal class DownloadUiController(
                 }
                 val percent = if (item.totalBytes > 0L)
                     (item.downloadedBytes * 100L / item.totalBytes).coerceIn(0L, 100L).toInt() else 0
+                val now = SystemClock.elapsedRealtime()
+                val previousSample = lastSpeedSample[item.id]
+                val speedBytesPerSecond = if (previousSample != null && now > previousSample.second) {
+                    ((item.downloadedBytes - previousSample.first).coerceAtLeast(0L) * 1000L) /
+                        (now - previousSample.second).coerceAtLeast(1L)
+                } else 0L
+                lastSpeedSample[item.id] = item.downloadedBytes to now
                 val card = LinearLayout(activity).apply {
                     orientation = LinearLayout.VERTICAL
                     setPadding(dp(15), dp(14), dp(15), dp(14))
@@ -214,26 +227,113 @@ internal class DownloadUiController(
                     setPadding(0, dp(6), 0, 0)
                 })
                 if (item.totalBytes > 0L) {
-                    val downloadedMb = item.downloadedBytes.coerceAtLeast(0L) / (1024L * 1024L)
-                    val totalMb = item.totalBytes.coerceAtLeast(0L) / (1024L * 1024L)
+                    val downloadedLabel = android.text.format.Formatter.formatFileSize(activity, item.downloadedBytes.coerceAtLeast(0L))
+                    val totalLabel = android.text.format.Formatter.formatFileSize(activity, item.totalBytes.coerceAtLeast(0L))
+                    val speedLabel = if (item.status == DownloadManager.STATUS_RUNNING && speedBytesPerSecond > 0L)
+                        "  •  ${android.text.format.Formatter.formatFileSize(activity, speedBytesPerSecond)}/s" else ""
                     card.addView(TextView(activity).apply {
-                        text = "$downloadedMb MB / $totalMb MB"
+                        text = "$downloadedLabel / $totalLabel$speedLabel"
                         textSize = 10f
                         setTextColor(muted)
                         setPadding(0, dp(4), 0, 0)
                     })
                 }
                 if (item.totalBytes > 0L && item.status == DownloadManager.STATUS_RUNNING) {
+                    val oldPercent = lastProgress[item.id] ?: percent
                     val progress = android.widget.ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
-                        max = 100; this.progress = percent
+                        max = 100
+                        this.progress = oldPercent.coerceIn(0, 100)
                         progressTintList = android.content.res.ColorStateList.valueOf(primary)
+                        progressBackgroundTintList = android.content.res.ColorStateList.valueOf(
+                            if (dark) Color.argb(90, 110, 150, 190) else Color.argb(70, 70, 120, 180)
+                        )
                     }
-                    card.addView(progress, LinearLayout.LayoutParams(-1, dp(6)).apply { topMargin = dp(10) })
+                    card.addView(progress, LinearLayout.LayoutParams(-1, dp(7)).apply { topMargin = dp(10) })
+                    if (percent != oldPercent) {
+                        android.animation.ObjectAnimator.ofInt(progress, "progress", oldPercent, percent).apply {
+                            duration = 650L
+                            start()
+                        }
+                    }
+                    lastProgress[item.id] = percent
+                }
+                if (item.status == DownloadManager.STATUS_SUCCESSFUL || item.status == DownloadManager.STATUS_FAILED) {
+                    val row = LinearLayout(activity).apply {
+                        orientation = LinearLayout.HORIZONTAL
+                        gravity = Gravity.CENTER_VERTICAL
+                        setPadding(0, dp(10), 0, 0)
+                    }
+                    fun smallAction(label: String, filled: Boolean = false, onClick: () -> Unit) = TextView(activity).apply {
+                        text = label
+                        textSize = 11f
+                        gravity = Gravity.CENTER
+                        minHeight = dp(42)
+                        setPadding(dp(13), dp(9), dp(13), dp(9))
+                        setTextColor(if (filled) Color.WHITE else primary)
+                        background = GradientDrawable().apply {
+                            setColor(if (filled) Color.argb(225, 42, 145, 255)
+                                else if (dark) Color.argb(190, 15, 43, 70) else Color.WHITE)
+                            cornerRadius = dp(12).toFloat()
+                            setStroke(dp(1), primary)
+                        }
+                        isClickable = true
+                        isFocusable = true
+                        addGlassTouch(this)
+                        setOnClickListener { onClick() }
+                    }
+                    if (item.status == DownloadManager.STATUS_SUCCESSFUL) {
+                        row.addView(smallAction(translate("فتح الملف"), true) {
+                            try {
+                                val fileUri = downloadRepository.openDownloadedFile(item.id)
+                                    ?: throw IllegalStateException("File URI unavailable")
+                                val openIntent = Intent(Intent.ACTION_VIEW).apply {
+                                    setDataAndType(fileUri, item.mimeType?.takeIf { it.isNotBlank() } ?: "*/*")
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                                activity.startActivity(openIntent)
+                            } catch (_: Exception) {
+                                Toast.makeText(activity, translate("تعذر فتح الملف؛ تحقق من وجود تطبيق مناسب لفتحه"), Toast.LENGTH_LONG).show()
+                            }
+                        }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
+                    }
+                    row.addView(smallAction(translate("حذف")) {
+                        AlertDialog.Builder(activity)
+                            .setMessage(translate("هل تريد حذف هذا التنزيل؟"))
+                            .setNegativeButton(translate("إلغاء"), null)
+                            .setPositiveButton(translate("حذف")) { _, _ ->
+                                if (downloadRepository.deleteDownload(item.id)) {
+                                    lastProgress.remove(item.id)
+                                    lastSpeedSample.remove(item.id)
+                                    render()
+                                    Toast.makeText(activity, translate("تم حذف التنزيل"), Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(activity, translate("تعذر حذف التنزيل"), Toast.LENGTH_SHORT).show()
+                                }
+                            }.show()
+                    }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(6) })
+                    card.addView(row)
                 }
                 list.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
             }
         }
         render()
+        val refreshTask = object : Runnable {
+            override fun run() {
+                if (!activity.isFinishing && !activity.isDestroyed && root.isAttachedToWindow) {
+                    render()
+                    handler.postDelayed(this, 900L)
+                }
+            }
+        }
+        root.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(view: View) {
+                handler.removeCallbacks(refreshTask)
+                handler.post(refreshTask)
+            }
+            override fun onViewDetachedFromWindow(view: View) {
+                handler.removeCallbacks(refreshTask)
+            }
+        })
         root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
         val actions = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
