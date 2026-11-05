@@ -229,7 +229,7 @@ internal class MainLibraryInterfaceController(
                 textSize = 11f
                 typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
                 gravity = Gravity.CENTER
-                minHeight = dp(48)
+                minimumHeight = dp(48)
                 contentDescription = text.toString()
                 setPadding(dp(16), dp(10), dp(16), dp(10))
                 background = GradientDrawable(
@@ -243,7 +243,7 @@ internal class MainLibraryInterfaceController(
                 setTextColor(muted)
                 isClickable = true
                 isFocusable = true
-                minHeight = dp(56)
+                minimumHeight = dp(56)
                 contentDescription = text.toString()
                 if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
                     android.content.res.ColorStateList.valueOf(Color.argb(75, 82, 175, 255)),
@@ -324,8 +324,8 @@ internal class MainLibraryInterfaceController(
                 GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(13).toFloat() }
             )
             setPadding(dp(12), dp(8), dp(12), dp(8))
-            minWidth = dp(48)
-            minHeight = dp(48)
+            minimumWidth = dp(48)
+            minimumHeight = dp(48)
             contentDescription = tr("الفلاتر المتقدمة")
             setOnClickListener { showAdvancedFilters() }
         }
