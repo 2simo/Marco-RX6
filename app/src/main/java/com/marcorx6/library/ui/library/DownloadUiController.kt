@@ -133,6 +133,7 @@ internal class DownloadUiController(
         val list = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
         val lastProgress = mutableMapOf<Long, Int>()
         val lastSpeedSample = mutableMapOf<Long, Pair<Long, Long>>()
+        var lastRenderedSnapshot: String? = null
         val handler = Handler(Looper.getMainLooper())
         val scroll = ScrollView(activity).apply {
             isFillViewport = true
@@ -145,6 +146,13 @@ internal class DownloadUiController(
                 Toast.makeText(activity, translate("تعذر قراءة التنزيلات") + ": ${error.message}", Toast.LENGTH_LONG).show()
                 emptyList()
             }
+            val snapshot = entries.joinToString("|") { entry ->
+                val visiblePercent = if (entry.totalBytes > 0L)
+                    (entry.downloadedBytes * 100L / entry.totalBytes).coerceIn(0L, 100L) else -1L
+                "${entry.id}:${entry.status}:$visiblePercent"
+            }
+            if (snapshot == lastRenderedSnapshot) return
+            lastRenderedSnapshot = snapshot
             if (entries.isEmpty()) {
                 val empty = LinearLayout(activity).apply {
                     orientation = LinearLayout.VERTICAL
@@ -249,12 +257,9 @@ internal class DownloadUiController(
                         )
                     }
                     card.addView(progress, LinearLayout.LayoutParams(-1, dp(7)).apply { topMargin = dp(10) })
-                    if (percent != oldPercent) {
-                        android.animation.ObjectAnimator.ofInt(progress, "progress", oldPercent, percent).apply {
-                            duration = 650L
-                            start()
-                        }
-                    }
+                    // Update only when the visible percentage changes. Recreating and
+                    // animating every row on each polling tick caused a brief screen flash.
+                    progress.progress = percent
                     lastProgress[item.id] = percent
                 }
                 if (item.status == DownloadManager.STATUS_SUCCESSFUL || item.status == DownloadManager.STATUS_FAILED) {
