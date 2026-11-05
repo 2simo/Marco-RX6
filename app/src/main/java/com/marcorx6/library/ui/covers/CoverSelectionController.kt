@@ -36,9 +36,9 @@ internal class CoverSelectionController(
         uploadController.upload(
             uri = uri,
             onLocalFileSaved = { localFile ->
-                val previousPendingPath = state.pendingLocalPath
+                // Keep the previous cover intact while the editor is still unsaved.
+                // Cleanup is deferred until a successful post save confirms it is unused.
                 state.localFileSaved(localFile.absolutePath)
-                deleteCoverFileIfUnused(previousPendingPath)
                 coverUrlField()?.setText("")
                 coverPreview()?.let { loadCover(it, state.pendingLocalPath, "") }
                 Toast.makeText(context, translate("تم اختيار الصورة، جارٍ رفعها للموقع..."), Toast.LENGTH_SHORT).show()
