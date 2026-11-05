@@ -204,16 +204,14 @@ internal class FirebaseAccountController(
                 authRepository.signInWithGoogle(token)
             }
             authTask.addOnSuccessListener {
-                toast("تم تسجيل الدخول بحساب Google بنجاح")
-                onAccountChanged()
+                completeGoogleAccountSignIn("تم تسجيل الدخول بحساب Google بنجاح")
             }.addOnFailureListener { error ->
                 // If this Google identity already belongs to a Firebase account,
                 // sign into that existing account instead of leaving the visitor stuck.
                 if (current?.isAnonymous == true && error is FirebaseAuthUserCollisionException) {
                     authRepository.signInWithGoogle(token)
                         .addOnSuccessListener {
-                            toast("تم تسجيل الدخول إلى حساب Google الموجود")
-                            onAccountChanged()
+                            completeGoogleAccountSignIn("تم الدخول إلى حساب Google الموجود. جارٍ التحقق من صلاحيات Blogger…")
                         }
                         .addOnFailureListener { signInError ->
                             toast(authErrorMessage(signInError, "تعذر تسجيل الدخول إلى حساب Google الموجود"))
@@ -594,6 +592,17 @@ internal class FirebaseAccountController(
             .addOnFailureListener { error ->
                 toast(error.localizedMessage ?: "تعذر حذف بيانات الحساب؛ لم يتم حذف حساب الدخول")
             }
+    }
+
+    /**
+     * Firebase identity and Blogger OAuth use separate Google clients. After Firebase
+     * authentication succeeds, obtain the Blogger/Drive-scoped session too; Blogger
+     * access is still granted only after the API verifies the account's actual blog role.
+     */
+    private fun completeGoogleAccountSignIn(message: String) {
+        toast(message)
+        onAccountChanged()
+        startAdminGoogleAccountSelection()
     }
 
     private fun authErrorMessage(error: Exception, fallback: String): String {
