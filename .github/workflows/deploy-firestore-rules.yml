@@ -1,4 +1,4 @@
-name: Deploy Firestore Rules
+name: Test and Deploy Firestore Rules
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
       - "firestore.rules"
       - "firebase.json"
       - ".firebaserc"
+      - "tests/firestore.rules.test.mjs"
       - ".github/workflows/deploy-firestore-rules.yml"
   workflow_dispatch:
 
@@ -19,11 +20,31 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    name: Deploy Firestore security rules
+  test-and-deploy:
+    name: Test rules, then deploy only if tests pass
     runs-on: ubuntu-latest
     steps:
-      - name: Check whether Firebase credentials are configured
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Set up Java for the Firestore emulator
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Firebase CLI and rules test dependencies
+        run: npm install --no-save --no-package-lock "firebase@^11.0.0" "@firebase/rules-unit-testing@^4.0.1" "firebase-tools@^14.0.0"
+
+      - name: Run Firestore security rules tests
+        run: npx firebase emulators:exec --only firestore --project demo-marco-rx6 "node --test tests/firestore.rules.test.mjs"
+
+      - name: Check whether Firebase deployment credentials are configured
         id: credentials
         shell: bash
         env:
@@ -31,24 +52,10 @@ jobs:
         run: |
           if [ -z "${FIREBASE_SERVICE_ACCOUNT}" ]; then
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Deployment skipped. Add the FIREBASE_SERVICE_ACCOUNT repository secret to enable automatic deployment."
+            echo "::notice::Rules tests passed, but deployment was skipped. Add the FIREBASE_SERVICE_ACCOUNT repository secret to enable automatic deployment."
           else
             echo "configured=true" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: Check out repository
-        if: steps.credentials.outputs.configured == 'true'
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        if: steps.credentials.outputs.configured == 'true'
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
-      - name: Install Firebase CLI
-        if: steps.credentials.outputs.configured == 'true'
-        run: npm install --global firebase-tools
 
       - name: Prepare service-account credentials
         if: steps.credentials.outputs.configured == 'true'
@@ -65,7 +72,7 @@ jobs:
 
       - name: Deploy Firestore rules only
         if: steps.credentials.outputs.configured == 'true'
-        run: firebase deploy --only firestore:rules --project marco-rx6-v2 --non-interactive
+        run: npx firebase deploy --only firestore:rules --project marco-rx6-v2 --non-interactive
 
       - name: Remove temporary credentials
         if: always()
