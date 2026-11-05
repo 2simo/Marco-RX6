@@ -23,6 +23,8 @@ internal class FirstRunSetupController(
     private val currentLanguage: () -> String,
     private val isDarkMode: () -> Boolean,
     private val isNotificationsEnabled: () -> Boolean,
+    private val launchDownloadFolderPicker: () -> Unit,
+    private val downloadFolderName: () -> String,
     private val viewFactory: FirstRunSetupViewFactory,
     private val completionController: FirstRunSetupCompletionController,
     private val applyUnifiedSkin: (View) -> Unit,
@@ -44,7 +46,7 @@ internal class FirstRunSetupController(
         var notificationsEnabled = isNotificationsEnabled()
 
         val steps = listOf(
-            "منصة المكتبة", "لغة التطبيق", "المظهر", "لون الواجهة", "الإشعارات", "جاهز للانطلاق"
+            "منصة المكتبة", "لغة التطبيق", "المظهر", "لون الواجهة", "الإشعارات", "مكان التنزيلات", "جاهز للانطلاق"
         )
         val dialog = Dialog(activity, android.R.style.Theme_Material_NoActionBar)
         setSetupDialog(dialog)
@@ -127,6 +129,7 @@ internal class FirstRunSetupController(
                 2 -> "اختر المظهر الذي يريح عينيك أثناء التصفح."
                 3 -> "اختر اللون الذي سيظهر في الأزرار والعناصر التفاعلية."
                 4 -> "هل ترغب في تلقي إشعار عند نشر مقالات جديدة في المدونة؟"
+                5 -> "اختر المجلد الذي تريد حفظ الملفات التي تنزّلها فيه. هذه الخطوة اختيارية ويمكنك تخطيها."
                 else -> "تم إعداد مكتبتك. اختياراتك محفوظة ويمكنك تغييرها لاحقاً من الإعدادات."
             }
             page.addView(makeText(tr(description), 13f, Color.rgb(164, 184, 207), false).apply {
@@ -179,7 +182,27 @@ internal class FirstRunSetupController(
                     addChoice(tr("إيقاف الإشعارات"), tr("يمكنك تفعيلها لاحقاً من الإعدادات"), !notificationsEnabled) { notificationsEnabled = false }
                 }
                 5 -> {
-                    val readyCard = viewFactory.optionCard(tr("مكتبتك جاهزة!"), true, tr("تم حفظ المنصة واللغة والمظهر واللون والإشعارات."))
+                    val folderCard = viewFactory.optionCard(
+                        tr("اختيار مجلد التنزيلات"),
+                        true,
+                        tr("المجلد الحالي:") + " " + downloadFolderName()
+                    )
+                    folderCard.setOnClickListener { launchDownloadFolderPicker() }
+                    choices.addView(folderCard, LinearLayout.LayoutParams(-1, -2).apply {
+                        bottomMargin = dp(10)
+                    })
+                    if (animate) viewFactory.animateIn(folderCard)
+                    val skipCard = viewFactory.optionCard(
+                        tr("استخدام تخزين التطبيق"),
+                        downloadFolderName() == "تخزين التطبيق",
+                        tr("يمكنك اختيار مجلد آخر لاحقاً من إعدادات التخزين.")
+                    )
+                    skipCard.setOnClickListener { renderStep(step, false) }
+                    choices.addView(skipCard, LinearLayout.LayoutParams(-1, -2))
+                    if (animate) viewFactory.animateIn(skipCard)
+                }
+                6 -> {
+                    val readyCard = viewFactory.optionCard(tr("مكتبتك جاهزة!"), true, tr("تم حفظ المنصة واللغة والمظهر واللون والإشعارات ومكان التنزيلات."))
                     choices.addView(readyCard, LinearLayout.LayoutParams(-1, -2))
                     if (animate) viewFactory.animateIn(readyCard)
                 }
