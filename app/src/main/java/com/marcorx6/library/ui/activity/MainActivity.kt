@@ -44,9 +44,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun showRootScreen(view: View) {
-        secondaryScreenBackCallback.isEnabled = true
-        // Cancel stale property animations before a new screen is attached.
+    private fun cancelScreenMotion(view: View) {
         view.animate().cancel()
         view.clearAnimation()
         view.alpha = 1f
@@ -54,6 +52,19 @@ class MainActivity : ComponentActivity() {
         view.translationY = 0f
         view.scaleX = 1f
         view.scaleY = 1f
+        if (view is android.view.ViewGroup) {
+            view.layoutTransition?.cancel()
+            view.layoutTransition = null
+            for (index in 0 until view.childCount) cancelScreenMotion(view.getChildAt(index))
+        }
+    }
+
+    private fun showRootScreen(view: View) {
+        secondaryScreenBackCallback.isEnabled = true
+        // Finish outgoing transitions before replacing the screen, then normalize the incoming root.
+        val content = findViewById<android.view.ViewGroup>(android.R.id.content)
+        for (index in 0 until content.childCount) cancelScreenMotion(content.getChildAt(index))
+        cancelScreenMotion(view)
         setContentView(view)
         applyMotionPreferences(view)
         applyUnifiedSkin(view)
