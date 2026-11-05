@@ -23,7 +23,7 @@ internal class GameDetailsFeature(
     red: () -> Int,
     gray: () -> Int,
     panel: () -> Int,
-    tr: (String) -> String,
+    tr: (String) -> String,\n    targetLanguage: () -> String,
     loadCover: (android.widget.ImageView, String, String) -> Unit,
     saveGames: () -> Unit,
     renderGames: () -> Unit,
