@@ -27,7 +27,6 @@ internal object GameLibraryManager {
                     platform = if (old.platformManuallyCorrected) old.platform else incoming.platform,
                     platformManuallyCorrected = old.platformManuallyCorrected,
                     isFavorite = old.isFavorite,
-                    playStatus = old.playStatus,
                     genre = old.genre.ifBlank { incoming.genre },
                     releaseYear = old.releaseYear.ifBlank { incoming.releaseYear },
                     bloggerPostId = incoming.bloggerPostId,
