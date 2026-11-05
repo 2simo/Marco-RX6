@@ -23,17 +23,17 @@ internal object BloggerArticleBuilder {
         val safeCover = escape(BloggerFeedParser.normalizeBloggerImageUrl(coverUrl))
         val safeDownload = escape(downloadUrl)
         val categoryBlock = if (safeCategories.isNotBlank()) {
-            "<span style=\"display:inline-block;padding:6px 12px;border:1px solid #514078;border-radius:30px;background:#211936;color:#d8c6ff;font-size:12px;font-weight:700;\">$safeCategories</span>"
+            "<span style=\"display:inline-block;padding:6px 12px;border:1px solid #2865a5;border-radius:30px;background:#102b49;color:#c9e4ff;font-size:12px;font-weight:700;\">$safeCategories</span>"
         } else ""
         val metaItems = listOfNotNull(
-            safeGenre.takeIf { it.isNotBlank() }?.let { "<span style=\"display:inline-block;margin:5px 8px 5px 0;padding:7px 11px;background:#19243a;border:1px solid #293752;border-radius:9px;color:#cbd5e1;font-size:12px;\">🎮 $it</span>" },
-            safeYear.takeIf { it.isNotBlank() }?.let { "<span style=\"display:inline-block;margin:5px 8px 5px 0;padding:7px 11px;background:#19243a;border:1px solid #293752;border-radius:9px;color:#cbd5e1;font-size:12px;\">📅 $it</span>" }
+            safeGenre.takeIf { it.isNotBlank() }?.let { "<span style=\"display:inline-block;margin:5px 8px 5px 0;padding:7px 11px;background:#19243a;border:1px solid #293752;border-radius:9px;color:#cbd5e1;font-size:12px;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#60a5fa\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"vertical-align:middle;margin-left:6px;\" aria-hidden=\"true\"><path d=\"M6 12h4m-2-2v4m6-3h.01M17 13h.01\"/><path d=\"M7 7h10a4 4 0 0 1 3.8 2.8l1.1 3.7a2 2 0 0 1-3.1 2.2L16 14H8l-2.8 1.7a2 2 0 0 1-3.1-2.2l1.1-3.7A4 4 0 0 1 7 7Z\"/></svg>$it</span>" },
+            safeYear.takeIf { it.isNotBlank() }?.let { "<span style=\"display:inline-block;margin:5px 8px 5px 0;padding:7px 11px;background:#19243a;border:1px solid #293752;border-radius:9px;color:#cbd5e1;font-size:12px;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#60a5fa\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"vertical-align:middle;margin-left:6px;\" aria-hidden=\"true\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M16 3v4M8 3v4M3 10h18\"/></svg>$it</span>" }
         ).joinToString("")
         val coverBlock = if (safeCover.isNotBlank()) {
             "<div style=\"margin:22px 0 24px;padding:7px;background:#111b2d;border:1px solid #2a3650;border-radius:18px;\"><img src=\"$safeCover\" alt=\"$safeTitle\" style=\"display:block;width:100%;height:auto;max-height:520px;object-fit:cover;border-radius:13px;\"/></div>"
         } else ""
         val downloadBlock = if (safeDownload.isNotBlank()) {
-            "<div style=\"text-align:center;margin:30px 0 24px;\"><a href=\"$safeDownload\" style=\"display:inline-block;padding:14px 30px;border-radius:999px;background:#8b5cf6;color:#ffffff;text-decoration:none;font-size:15px;font-weight:800;letter-spacing:.2px;box-shadow:0 8px 24px rgba(139,92,246,.25);\">⬇ تحميل اللعبة الآن</a></div>"
+            "<div style=\"text-align:center;margin:30px 0 24px;\"><a href=\"$safeDownload\" style=\"display:inline-block;padding:14px 30px;border-radius:999px;background:#237fe5;color:#ffffff;text-decoration:none;font-size:15px;font-weight:800;letter-spacing:.2px;box-shadow:0 8px 24px rgba(35,127,229,.25);\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"vertical-align:middle;margin-left:8px;\" aria-hidden=\"true\"><path d=\"M12 3v12m-5-5 5 5 5-5\"/><path d=\"M5 17v3h14v-3\"/></svg>تحميل اللعبة الآن</a></div>"
         } else ""
         return """
             <article class="marcorx6-post" dir="rtl" style="box-sizing:border-box;max-width:900px;margin:18px auto;padding:clamp(16px,3vw,30px);overflow:hidden;border:1px solid #29334a;border-radius:22px;background:linear-gradient(145deg,#111a2c 0%,#0b1120 58%,#17112b 100%);color:#e8edf7;font-family:Arial,Tahoma,sans-serif;line-height:1.9;">
