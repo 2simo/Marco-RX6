@@ -59,7 +59,8 @@ internal class GameArticleWebViewFactory(
                 .replace(Regex("(?is)<script[^>]*>.*?</script>"), "")
                 .replace(Regex("(?is)<style[^>]*>.*?</style>"), "")
                 .replace(Regex("(?is)<(img|source|picture|svg|iframe|video|audio|object|embed)\\b[^>]*>(?:.*?</\\1\\s*>)?"), "")
-                .replace(Regex("(?is)<a\\b[^>]*>(.*?)</a\\s*>"), "$1")
+                .replace(Regex("(?is)<a\\b[^>]*>.*?</a\\s*>"), "")
+                .replace(Regex("(?is)<h[1-6][^>]*>\\s*(?:روابط التحميل المباشرة|روابط التحميل|download links)\\s*:?\\s*</h[1-6]>"), "")
                 .replace(Regex("(?is)</?(figure|figcaption)\\b[^>]*>"), "")
                 .replace(Regex("(?i)\\s(onload|onclick|onerror)\\s*=\\s*(['\"]).*?\\2"), "")
             val style = """
