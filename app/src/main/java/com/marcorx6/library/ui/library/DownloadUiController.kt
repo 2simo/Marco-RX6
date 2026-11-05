@@ -216,11 +216,13 @@ internal class DownloadUiController(
                     .append(android.text.format.Formatter.formatFileSize(activity, speed))
                     .append("/s")
                 if (speed > 0L && item.totalBytes > item.downloadedBytes) {
-                    val seconds = (item.totalBytes - item.downloadedBytes) / speed
+                    val remainingBytes = (item.totalBytes - item.downloadedBytes).coerceAtLeast(0L)
+                    val seconds = kotlin.math.ceil(remainingBytes.toDouble() / speed.toDouble())
+                        .toLong().coerceAtLeast(0L)
                     val eta = when {
-                        seconds < 60L -> seconds.toString() + "s"
-                        seconds < 3600L -> (seconds / 60L).toString() + "m " + (seconds % 60L) + "s"
-                        else -> (seconds / 3600L).toString() + "h " + ((seconds % 3600L) / 60L) + "m"
+                        seconds < 60L -> "${seconds}s"
+                        seconds < 3600L -> "${seconds / 60L}m ${seconds % 60L}s"
+                        else -> "${seconds / 3600L}h ${(seconds % 3600L) / 60L}m"
                     }
                     details.append("  •  ").append(translate("متبقي")).append(" ").append(eta)
                 }
