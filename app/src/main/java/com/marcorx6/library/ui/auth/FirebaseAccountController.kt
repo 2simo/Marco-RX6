@@ -598,15 +598,10 @@ internal class FirebaseAccountController(
             }
     }
 
-    /**
-     * Firebase identity and Blogger OAuth use separate Google clients. After Firebase
-     * authentication succeeds, obtain the Blogger/Drive-scoped session too; Blogger
-     * access is still granted only after the API verifies the account's actual blog role.
-     */
+    /** Complete the normal Firebase account flow without requesting Blogger or Drive scopes. */
     private fun completeGoogleAccountSignIn(message: String) {
         toast(message)
         onAccountChanged()
-        startAdminGoogleAccountSelection()
     }
 
     private fun authErrorMessage(error: Exception, fallback: String): String {
