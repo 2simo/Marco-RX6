@@ -31,6 +31,12 @@ internal class GameRepository(context: Context) {
                     .put("bloggerHtml", game.bloggerHtml)
                     .put("genre", game.genre)
                     .put("releaseYear", game.releaseYear)
+                    .put("packageSize", game.packageSize)
+                    .put("version", game.version)
+                    .put("fileFormat", game.fileFormat)
+                    .put("language", game.language)
+                    .put("password", game.password)
+                    .put("rights", game.rights)
             )
         }
         preferences.edit().putString("games", array.toString()).apply()
@@ -45,21 +51,27 @@ internal class GameRepository(context: Context) {
                 val item = array.optJSONObject(index) ?: continue
                 add(
                     Game(
-                        item.optString("name"),
-                        item.optString("platform"),
-                        item.optString("description"),
-                        item.optString("url"),
-                        item.optString("coverUrl", ""),
-                        item.optString("coverLocalPath", ""),
-                        item.optString("sourcePostUrl", ""),
-                        item.optString("downloadLinks", ""),
-                        item.optBoolean("blogImported", false),
-                        item.optBoolean("platformManuallyCorrected", false),
-                        item.optBoolean("isFavorite", false),
-                        item.optString("bloggerPostId", ""),
-                        item.optString("bloggerHtml", ""),
-                        item.optString("genre", ""),
-                        item.optString("releaseYear", "")
+                        name = item.optString("name"),
+                        platform = item.optString("platform"),
+                        description = item.optString("description"),
+                        url = item.optString("url"),
+                        coverUrl = item.optString("coverUrl", ""),
+                        coverLocalPath = item.optString("coverLocalPath", ""),
+                        sourcePostUrl = item.optString("sourcePostUrl", ""),
+                        downloadLinks = item.optString("downloadLinks", ""),
+                        blogImported = item.optBoolean("blogImported", false),
+                        platformManuallyCorrected = item.optBoolean("platformManuallyCorrected", false),
+                        isFavorite = item.optBoolean("isFavorite", false),
+                        bloggerPostId = item.optString("bloggerPostId", ""),
+                        bloggerHtml = item.optString("bloggerHtml", ""),
+                        genre = item.optString("genre", ""),
+                        releaseYear = item.optString("releaseYear", ""),
+                        packageSize = item.optString("packageSize", ""),
+                        version = item.optString("version", ""),
+                        fileFormat = item.optString("fileFormat", ""),
+                        language = item.optString("language", ""),
+                        password = item.optString("password", ""),
+                        rights = item.optString("rights", "")
                     )
                 )
             }
