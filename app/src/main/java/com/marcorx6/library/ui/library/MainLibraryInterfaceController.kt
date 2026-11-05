@@ -194,7 +194,9 @@ internal class MainLibraryInterfaceController(
             background = null
             setPadding(dp(10), 0, dp(6), 0)
             setAdapter(ArrayAdapter(context, android.R.layout.simple_dropdown_item_1line,
-                games().map { it.name }.distinct().take(80)))
+                games().flatMap { game ->
+                    listOf(game.name, game.platform, game.genre, game.releaseYear)
+                }.map { it.trim() }.filter { it.isNotBlank() }.distinct().take(100)))
             // Keep autocomplete suggestions aligned with the active glass theme instead
             // of Android's default opaque grey popup.
             setDropDownBackgroundDrawable(GradientDrawable().apply {
