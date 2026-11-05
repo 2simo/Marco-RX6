@@ -94,3 +94,5 @@ jobs:
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 3
+
+# Build trigger refresh: verify the current main branch changes.
