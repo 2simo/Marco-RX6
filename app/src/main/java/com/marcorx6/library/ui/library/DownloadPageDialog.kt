@@ -86,9 +86,13 @@ internal class DownloadPageDialog(
         })
         toolbar.addView(titleBox, LinearLayout.LayoutParams(0, -2, 1f))
 
-        fun toolbarAction(label: String, onClick: () -> Unit): TextView =
+        fun toolbarAction(label: String, onClick: () -> Unit, iconRes: Int = 0): TextView =
             TextView(activity).apply {
                 text = label
+                if (iconRes != 0) {
+                    setCompoundDrawablesRelativeWithIntrinsicBounds(iconRes, 0, 0, 0)
+                    compoundDrawablePadding = dp(5)
+                }
                 textSize = 12f
                 gravity = Gravity.CENTER
                 setTextColor(primary)
@@ -100,7 +104,7 @@ internal class DownloadPageDialog(
             }
 
         val webView = WebView(activity)
-        toolbar.addView(toolbarAction("↻") {
+        toolbar.addView(toolbarAction("", {
             val currentUrl = SecureUrlPolicy.toHttpsUrl(webView.url ?: safeStartUrl)
             if (currentUrl != null) {
                 webView.stopLoading()
@@ -108,8 +112,8 @@ internal class DownloadPageDialog(
             } else {
                 Toast.makeText(activity, translate("رابط الصفحة غير صالح"), Toast.LENGTH_SHORT).show()
             }
-        })
-        toolbar.addView(toolbarAction(translate("خارجي")) {
+        }, com.marcorx6.library.R.drawable.ic_action_refresh))
+        toolbar.addView(toolbarAction(translate("خارجي"), {
             try {
                 val currentUrl = SecureUrlPolicy.toHttpsUrl(webView.url ?: safeStartUrl)
                 if (currentUrl == null) throw IllegalArgumentException("Unsafe page URL")
@@ -117,8 +121,8 @@ internal class DownloadPageDialog(
             } catch (_: Exception) {
                 Toast.makeText(activity, translate("تعذر فتح المتصفح الخارجي"), Toast.LENGTH_SHORT).show()
             }
-        })
-        toolbar.addView(toolbarAction("×") { dialog.dismiss() })
+        }, com.marcorx6.library.R.drawable.ic_action_external))
+        toolbar.addView(toolbarAction("", { dialog.dismiss() }, com.marcorx6.library.R.drawable.ic_action_close))
         root.addView(toolbar, LinearLayout.LayoutParams(-1, -2))
 
         val progress = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
@@ -179,7 +183,9 @@ internal class DownloadPageDialog(
             val safeUrl = SecureUrlPolicy.toHttpsUrl(url) ?: return
             if (candidates.childCount >= 5) return
             candidates.addView(TextView(activity).apply {
-                text = "↗  " + label.take(70).ifBlank { translate("فتح رابط الملف المحتمل") }
+                text = "  " + label.take(70).ifBlank { translate("فتح رابط الملف المحتمل") }
+                setCompoundDrawablesRelativeWithIntrinsicBounds(com.marcorx6.library.R.drawable.ic_action_external, 0, 0, 0)
+                compoundDrawablePadding = dp(7)
                 textSize = 12f
                 setTextColor(Color.WHITE)
                 gravity = Gravity.CENTER_VERTICAL
