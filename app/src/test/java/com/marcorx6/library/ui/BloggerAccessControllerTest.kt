@@ -109,7 +109,7 @@ class BloggerAccessControllerTest {
     }
 
     @Test
-    fun refreshesUiAndExplainsWhenSignedInAccountHasNoBlogId() {
+    fun refreshesUiWithoutShowingTransientErrorWhenBlogIdHasNotLoadedYet() {
         var admin = true
         var refreshed = 0
         var errorMessage: String? = null
@@ -129,7 +129,7 @@ class BloggerAccessControllerTest {
 
         assertEquals(false, admin)
         assertEquals(1, refreshed)
-        assertEquals(true, errorMessage?.contains("معرّف مدونة Blogger") == true)
+        assertEquals(null, errorMessage)
     }
 
     @Test
