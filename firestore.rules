@@ -20,13 +20,6 @@ service cloud.firestore {
         && request.resource.data.isAnonymous == true;
     }
 
-    function validGuestPreferences() {
-      return request.resource.data.keys().hasOnly(['values', 'updatedAt'])
-        && request.resource.data.keys().hasAll(['values', 'updatedAt'])
-        && request.resource.data.values is map
-        && request.resource.data.values.keys().size() <= 20;
-    }
-
     // Anonymous sessions may keep only a minimal, self-owned profile and a
     // bounded preferences map. They cannot create arbitrary nested documents.
     match /users/{userId} {
@@ -43,9 +36,14 @@ service cloud.firestore {
         );
 
       match /settings/preferences {
-        allow read, delete: if signedInAs(userId);
+        // Preferences are cloud-synced only for non-anonymous accounts.
+        allow read, delete: if signedInAs(userId) && !isAnonymous();
         allow create, update: if signedInAs(userId)
-          && validGuestPreferences();
+          && !isAnonymous()
+          && request.resource.data.keys().hasOnly(['values', 'updatedAt'])
+          && request.resource.data.keys().hasAll(['values', 'updatedAt'])
+          && request.resource.data.values is map
+          && request.resource.data.values.keys().size() <= 20;
       }
 
       // No other nested collections/documents are writable.
