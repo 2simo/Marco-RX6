@@ -199,6 +199,7 @@ internal class FirebaseAccountController(
                             BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
                         }.getOrNull()?.let { bitmap ->
                             photoView.setImageBitmap(bitmap)
+                            photoView.imageTintList = null
                             photoView.clearColorFilter()
                         }
                     }
