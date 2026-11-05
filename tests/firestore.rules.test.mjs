@@ -103,7 +103,10 @@ describe("Firestore user isolation rules", () => {
       });
     });
 
-    await assertSucceeds(deleteDoc(doc(db, `users/${uid}/settings/preferences`)));
+    const preferences = doc(db, `users/${uid}/settings/preferences`);
+    await assertSucceeds(deleteDoc(preferences));
+    // Firestore evaluates delete rules even when the target document is already absent.
+    await assertSucceeds(deleteDoc(preferences));
     await assertSucceeds(deleteDoc(doc(db, `users/${uid}`)));
   });
 
