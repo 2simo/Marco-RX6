@@ -82,19 +82,13 @@ internal class GameDetailsFeature(
 
     private val controller = GameDetailsController(
         activity = activity,
-        games = { games },
         bg = bg,
         dp = dp,
-        isDarkMode = isDarkMode,
-        fontFamilyName = fontFamilyName,
-        fontScale = fontScale,
-        enqueueGameDownload = enqueueGameDownload,
         topBarFactory = topBarFactory,
         identityViewFactory = identityViewFactory,
         downloadLinksViewFactory = downloadLinksViewFactory,
         applyMotionPreferences = applyMotionPreferences,
         applyUnifiedSkin = applyUnifiedSkin,
-        translate = tr
     )
 
     fun show(game: Game) = controller.show(game)
