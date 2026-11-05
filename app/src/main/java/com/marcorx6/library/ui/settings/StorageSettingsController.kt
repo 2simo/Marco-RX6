@@ -220,18 +220,29 @@ internal class StorageSettingsController(
             insets
         }
 
-        val filesSize = directorySize(activity.filesDir)
-        val cacheSize = directorySize(activity.cacheDir)
-        val externalSize = directorySize(activity.getExternalFilesDir(null))
-        val totalSize = directorySize(File(activity.applicationInfo.dataDir)) + externalSize
-        total.text = formatBytes(totalSize)
-        details.text = translate("الملفات المحفوظة") + ": " + formatBytes(filesSize) +
-            "\\n" + translate("الملفات الخارجية") + ": " + formatBytes(externalSize)
-        cacheValue.text = formatBytes(cacheSize) + "  •  " +
-            translate("يمكن حذفها بأمان عند الحاجة")
+        total.text = translate("جارٍ الحساب...")
+        details.text = translate("جارٍ حساب مساحة الملفات...")
+        cacheValue.text = translate("جارٍ الحساب...")
 
         setContentView(scroll)
         ViewCompat.requestApplyInsets(scroll)
+
+        // Recursive directory-size scans can be slow on devices with many downloaded files.
+        // Keep filesystem traversal off the main thread so opening Settings stays responsive.
+        Thread({
+            val filesSize = directorySize(activity.filesDir)
+            val cacheSize = directorySize(activity.cacheDir)
+            val externalSize = directorySize(activity.getExternalFilesDir(null))
+            val totalSize = directorySize(File(activity.applicationInfo.dataDir)) + externalSize
+            activity.runOnUiThread {
+                if (activity.isFinishing || activity.isDestroyed) return@runOnUiThread
+                total.text = formatBytes(totalSize)
+                details.text = translate("الملفات المحفوظة") + ": " + formatBytes(filesSize) +
+                    "\\n" + translate("الملفات الخارجية") + ": " + formatBytes(externalSize)
+                cacheValue.text = formatBytes(cacheSize) + "  •  " +
+                    translate("يمكن حذفها بأمان عند الحاجة")
+            }
+        }, "marco-storage-usage").start()
     }
 }
 
