@@ -23,7 +23,7 @@ internal class CommunityChannelsController(
     private val makeText: (String, Float, Int, Boolean) -> TextView,
     private val translate: (String) -> String
 ) {
-    fun show() {
+    fun show(onContinue: () -> Unit = {}) {
         if (activity.isFinishing || activity.isDestroyed) return
         val dialog = Dialog(activity, android.R.style.Theme_Material_NoActionBar)
         val root = LinearLayout(activity).apply {
@@ -85,7 +85,7 @@ internal class CommunityChannelsController(
                 cornerRadius = dp(16).toFloat()
             }
             minHeight = dp(52)
-            setOnClickListener { dialog.dismiss() }
+            setOnClickListener { dialog.dismiss(); onContinue() }
         }
         root.addView(continueButton, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
         dialog.setContentView(root)
