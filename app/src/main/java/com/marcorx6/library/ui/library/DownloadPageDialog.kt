@@ -28,6 +28,7 @@ import com.marcorx6.library.network.SecureUrlPolicy
 import java.io.ByteArrayInputStream
 import org.json.JSONArray
 import org.json.JSONTokener
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * A small in-app browser for download pages that are not direct files.
@@ -128,6 +129,13 @@ internal class DownloadPageDialog(
             setPadding(dp(3), dp(3), dp(3), dp(7))
         }
         root.addView(status, LinearLayout.LayoutParams(-1, -2))
+        val blockedStats = TextView(activity).apply {
+            text = translate("الإعلانات المحجوبة: 0")
+            textSize = 10f
+            setTextColor(primary)
+            setPadding(dp(3), 0, dp(3), dp(6))
+        }
+        root.addView(blockedStats, LinearLayout.LayoutParams(-1, -2))
 
         val browserFrame = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
@@ -211,22 +219,60 @@ internal class DownloadPageDialog(
         }
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, false)
-        val adBlockerEnabled = activity.getSharedPreferences("app_settings", Activity.MODE_PRIVATE)
-            .getBoolean("download_page_ad_blocker", true)
+        val adPreferences = activity.getSharedPreferences("app_settings", Activity.MODE_PRIVATE)
+        val adBlockerEnabled = adPreferences.getBoolean("download_page_ad_blocker", true)
+        val allowedHosts = adPreferences.getString("download_page_ad_allowlist", "").orEmpty()
+            .split(',', ';').map { it.trim().lowercase() }.filter { it.isNotBlank() }.toSet()
+        val blockedRequests = AtomicInteger(0)
         val blockedAdHosts = setOf(
             "doubleclick.net", "googlesyndication.com", "googleadservices.com",
-            "adservice.google.com", "taboola.com", "outbrain.com", "popads.net",
-            "popcash.net", "propellerads.com", "exoclick.com", "trafficjunky.com",
-            "onclickads.net", "juicyads.com", "adsterra.com"
+            "adservice.google.com", "googletagservices.com", "googletagmanager.com",
+            "taboola.com", "outbrain.com", "popads.net", "popcash.net",
+            "propellerads.com", "exoclick.com", "trafficjunky.com", "onclickads.net",
+            "juicyads.com", "adsterra.com", "adform.net", "adnxs.com",
+            "adsrvr.org", "criteo.com", "casalemedia.com", "rubiconproject.com",
+            "openx.net", "pubmatic.com", "sharethrough.com", "lijit.com",
+            "media.net", "revcontent.com", "mgid.com", "zemanta.com",
+            "smartadserver.com", "yieldmo.com", "bidswitch.net",
+            "advertising.com", "3lift.com", "contextweb.com", "sovrn.com",
+            "inmobi.com", "unityads.unity3d.com", "applovin.com",
+            "vungle.com", "chartboost.com", "ironsrc.com", "appsflyer.com",
+            "adjust.com", "branch.io", "scorecardresearch.com"
         )
+        fun hostIsAllowed(host: String): Boolean =
+            allowedHosts.any { host == it || host.endsWith(".$it") }
         fun isBlockedAdRequest(url: String): Boolean {
             if (!adBlockerEnabled) return false
             val host = try { Uri.parse(url).host?.lowercase() } catch (_: Exception) { null } ?: return false
+            if (hostIsAllowed(host)) return false
             return blockedAdHosts.any { host == it || host.endsWith(".$it") }
+        }
+        fun recordBlocked() {
+            val count = blockedRequests.incrementAndGet()
+            activity.runOnUiThread {
+                if (blockedStats.isAttachedToWindow) {
+                    blockedStats.text = translate("الإعلانات والمتتبعات المحجوبة: $count")
+                }
+            }
+        }
+        fun applyCosmeticFiltering() {
+            if (!adBlockerEnabled) return
+            val script = """(function(){try{
+              var selectors=['iframe[src*="doubleclick"]','iframe[src*="googlesyndication"]',
+                '[id^="google_ads"]','[id*="ad-container"]','[class*="ad-container"]',
+                '[class*="advertisement"]','[class*="advert-banner"]','[data-ad]',
+                'ins.adsbygoogle','amp-ad','div[id*="taboola"]','div[class*="taboola"]',
+                'div[id*="outbrain"]','div[class*="outbrain"]'];
+              var n=0;selectors.forEach(function(s){document.querySelectorAll(s).forEach(function(e){
+                if(n<80){e.style.setProperty('display','none','important');n++;}
+              });});
+            }catch(e){}})();"""
+            webView.evaluateJavascript(script, null)
         }
         webView.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): android.webkit.WebResourceResponse? {
                 if (!request.isForMainFrame && isBlockedAdRequest(request.url.toString())) {
+                    recordBlocked()
                     return android.webkit.WebResourceResponse(
                         "text/plain",
                         "utf-8",
@@ -238,7 +284,12 @@ internal class DownloadPageDialog(
 
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 val scheme = request.url.scheme?.lowercase()
-                return scheme != "https"
+                if (scheme != "https") return true
+                if (adBlockerEnabled && isBlockedAdRequest(request.url.toString())) {
+                    recordBlocked()
+                    return true
+                }
+                return false
             }
 
             override fun onPageStarted(view: WebView, url: String, favicon: android.graphics.Bitmap?) {
@@ -253,6 +304,7 @@ internal class DownloadPageDialog(
             override fun onPageFinished(view: WebView, url: String) {
                 progress.visibility = View.GONE
                 status.text = translate("إذا ظهرت خطوة تحقق أو مؤقت، أكملها داخل هذه الصفحة. الروابط المحتملة تظهر أسفلها.")
+                applyCosmeticFiltering()
                 scanForFileLinks()
             }
 
@@ -266,6 +318,10 @@ internal class DownloadPageDialog(
             }
         }
         webView.webChromeClient = object : WebChromeClient() {
+            override fun onCreateWindow(view: WebView, isDialog: Boolean, isUserGesture: Boolean, resultMsg: android.os.Message): Boolean {
+                if (adBlockerEnabled) recordBlocked()
+                return false
+            }
             override fun onProgressChanged(view: WebView, newProgress: Int) {
                 progress.progress = newProgress
                 progress.visibility = if (newProgress >= 100) View.GONE else View.VISIBLE
