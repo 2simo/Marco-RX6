@@ -12,7 +12,6 @@ import android.view.KeyEvent
 import android.view.View
 import android.webkit.CookieManager
 import android.webkit.DownloadListener
-import android.webkit.SafeBrowsingResponse
 import android.webkit.SslErrorHandler
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
@@ -101,7 +100,9 @@ internal class DownloadPageDialog(
         val webView = WebView(activity)
         toolbar.addView(toolbarAction(translate("خارجي")) {
             try {
-                activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(webView.url ?: safeStartUrl)))
+                val currentUrl = SecureUrlPolicy.toHttpsUrl(webView.url ?: safeStartUrl)
+                if (currentUrl == null) throw IllegalArgumentException("Unsafe page URL")
+                activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(currentUrl)))
             } catch (_: Exception) {
                 Toast.makeText(activity, translate("تعذر فتح المتصفح الخارجي"), Toast.LENGTH_SHORT).show()
             }
@@ -160,7 +161,7 @@ internal class DownloadPageDialog(
             val safeUrl = SecureUrlPolicy.toHttpsUrl(url) ?: return
             if (candidates.childCount >= 5) return
             candidates.addView(TextView(activity).apply {
-                text = "↗  " + label.ifBlank { translate("فتح رابط الملف المحتمل") }
+                text = "↗  " + label.take(70).ifBlank { translate("فتح رابط الملف المحتمل") }
                 textSize = 12f
                 setTextColor(Color.WHITE)
                 gravity = Gravity.CENTER_VERTICAL
@@ -210,7 +211,7 @@ internal class DownloadPageDialog(
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 val scheme = request.url.scheme?.lowercase()
-                return scheme != "https" && scheme != "http"
+                return scheme != "https"
             }
 
             override fun onPageStarted(view: WebView, url: String, favicon: android.graphics.Bitmap?) {
