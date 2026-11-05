@@ -86,7 +86,15 @@ internal class ResumableDownloadWorker(
                 offset = 0L
             }
             val responseLength = connection.getHeaderFieldLong("Content-Length", -1L)
-            val total = if (append && responseLength >= 0L) offset + responseLength else responseLength
+            val rangeTotal = Regex("""bytes \\d+-\\d+/(\\d+)""")
+                .find(connection.getHeaderField("Content-Range").orEmpty())
+                ?.groupValues?.getOrNull(1)?.toLongOrNull()
+            val total = when {
+                append && responseLength >= 0L -> offset + responseLength
+                responseLength >= 0L -> responseLength
+                rangeTotal != null -> rangeTotal
+                else -> -1L
+            }
             val etag = connection.getHeaderField("ETag") ?: item.etag
             val modified = connection.getHeaderField("Last-Modified") ?: item.lastModified
             val mime = connection.contentType?.substringBefore(';')?.trim().orEmpty().ifBlank { item.mimeType }
@@ -128,6 +136,7 @@ internal class ResumableDownloadWorker(
                 database.get(item.id)?.status == DownloadManager.STATUS_PAUSED) {
                 throw InterruptedException("Download stopped")
             }
+            database.progress(item.id, offset, total, etag, modified)
             if (total > 0L && offset != total) {
                 throw IOException("Incomplete file: $offset / $total")
             }
