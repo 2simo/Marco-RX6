@@ -13,6 +13,7 @@ import com.marcorx6.library.ui.experience.UserExperienceRuntimeFeature
 import com.marcorx6.library.ui.game.GameExperienceRuntimeFeature
 import com.marcorx6.library.ui.library.MainLibraryRuntimeFeature
 import com.marcorx6.library.ui.GameImportMerger
+import com.marcorx6.library.ui.LanguageTranslator
 import com.marcorx6.library.ui.library.MainLibraryViewState
 import com.marcorx6.library.data.Game
 import com.marcorx6.library.data.DownloadStoragePreferences
