@@ -201,6 +201,16 @@ internal class AppearanceSettingsController(
             preferences.edit().putBoolean("dark_mode", !dark).apply()
             recreateActivity()
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
+        val adBlockerEnabled = preferences.getBoolean("download_page_ad_blocker", true)
+        root.addView(settingRow(
+            translate("حجب الإعلانات في صفحة التحميل"),
+            translate(if (adBlockerEnabled) "مفعّل — حجب الإعلانات المعروفة داخل صفحة التحميل الذكية" else "متوقف — السماح بمحتوى الإعلانات داخل صفحة التحميل")
+        ) {
+            val enabled = !preferences.getBoolean("download_page_ad_blocker", true)
+            preferences.edit().putBoolean("download_page_ad_blocker", enabled).apply()
+            Toast.makeText(activity, translate(if (enabled) "تم تفعيل حجب الإعلانات" else "تم إيقاف حجب الإعلانات"), Toast.LENGTH_SHORT).show()
+            show()
+        }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         root.addView(settingRow(translate("اللغة"), translate("العربية والإنجليزية والفرنسية والإسبانية"), showLanguagePicker),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         root.addView(settingRow(translate("الإشعارات"), translate("التحكم في تنبيهات المقالات الجديدة"), showNotificationSettings),
