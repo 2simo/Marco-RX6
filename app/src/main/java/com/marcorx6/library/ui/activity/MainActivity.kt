@@ -46,6 +46,14 @@ class MainActivity : ComponentActivity() {
 
     private fun showRootScreen(view: View) {
         secondaryScreenBackCallback.isEnabled = true
+        // Cancel stale property animations before a new screen is attached.
+        view.animate().cancel()
+        view.clearAnimation()
+        view.alpha = 1f
+        view.translationX = 0f
+        view.translationY = 0f
+        view.scaleX = 1f
+        view.scaleY = 1f
         setContentView(view)
         applyMotionPreferences(view)
         applyUnifiedSkin(view)
