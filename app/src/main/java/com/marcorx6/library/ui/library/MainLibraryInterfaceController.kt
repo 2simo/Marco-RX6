@@ -307,7 +307,9 @@ internal class MainLibraryInterfaceController(
                 renderGames()
                 Toast.makeText(context, tr("الترتيب:") + " " + tr(when (sortMode) {
                     "LATEST" -> "الأحدث"; "NEW" -> "المضاف حديثاً"; "A-Z" -> "أبجدياً"; else -> "المفضلة"
-                }), Toast.LENGTH_SHORT).show()
+                }), Toast.LENGTH_SHORT).apply {
+                    setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL, 0, dp(72))
+                }.show()
             }
         }
         section.addView(sort, LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(9) })
