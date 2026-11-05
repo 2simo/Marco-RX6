@@ -39,7 +39,7 @@ internal class GameDetailsFeature(
     applyUnifiedSkin: (View) -> Unit
 ) {
     private val articleWebViewFactory = GameArticleWebViewFactory(activity)
-    private val offlineArchiveController = GameOfflineArchiveController(activity)
+    private val offlineArchiveController = GameOfflineArchiveController(activity, tr)
 
     private val favoriteToggleFactory = GameFavoriteToggleFactory(
         activity = activity,
