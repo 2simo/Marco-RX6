@@ -233,6 +233,9 @@ internal class DownloadUiController(
                     details.append("  •  ").append(translate("متبقي")).append(" ").append(eta)
                 }
             }
+            if (item.status == DownloadManager.STATUS_FAILED) {
+                details.append("\\n").append(translate("تعذر إكمال التنزيل. يمكنك إعادة المحاولة أو تحديث رابط اللعبة."))
+            }
             views.details.text = details.toString()
             // Keep the progress indicator visible while pending or paused so resume never blanks the row.
             val hasProgress = item.status == DownloadManager.STATUS_RUNNING ||
@@ -293,6 +296,13 @@ internal class DownloadUiController(
                         lastSpeedSample.remove(item.id); render?.invoke()
                         Toast.makeText(activity, translate("تم استكمال التنزيل"), Toast.LENGTH_SHORT).show()
                     } else Toast.makeText(activity, translate("تعذر استكمال التنزيل"), Toast.LENGTH_SHORT).show()
+                })
+            } else if (item.status == DownloadManager.STATUS_FAILED) {
+                addAction(smallAction(translate("إعادة المحاولة"), true) {
+                    if (downloadRepository.resumeDownload(item.id)) {
+                        lastSpeedSample.remove(item.id); render?.invoke()
+                        Toast.makeText(activity, translate("بدأت إعادة محاولة التنزيل"), Toast.LENGTH_SHORT).show()
+                    } else Toast.makeText(activity, translate("تعذرت إعادة محاولة التنزيل"), Toast.LENGTH_SHORT).show()
                 })
             }
             if (item.status == DownloadManager.STATUS_RUNNING || item.status == DownloadManager.STATUS_PENDING ||
