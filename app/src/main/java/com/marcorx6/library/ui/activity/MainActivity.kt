@@ -65,6 +65,7 @@ class MainActivity : ComponentActivity() {
         for (index in 0 until content.childCount) cancelScreenMotion(content.getChildAt(index))
         cancelScreenMotion(view)
         setContentView(view)
+        LanguageTranslator.translateViewTree(view, appearanceRuntimeFeature.currentLanguage())
         applyMotionPreferences(view)
         applyUnifiedSkin(view)
     }
