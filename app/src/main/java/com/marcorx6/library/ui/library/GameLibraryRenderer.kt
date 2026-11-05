@@ -130,12 +130,12 @@ internal class GameLibraryRenderer(
                             topMargin = dp(8)
                         })
                         if (game.isFavorite) {
-                            val favoriteBadge = TextView(activity).apply {
-                                text = "♥"
+                            val favoriteBadge = ImageView(activity).apply {
+                                setImageResource(com.marcorx6.library.R.drawable.ic_nav_favorites)
+                                imageTintList = android.content.res.ColorStateList.valueOf(Color.WHITE)
+                                scaleType = ImageView.ScaleType.CENTER_INSIDE
                                 importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-                                textSize = 13f
-                                gravity = Gravity.CENTER
-                                setTextColor(Color.WHITE)
+                                setPadding(dp(7), dp(7), dp(7), dp(7))
                                 background = GradientDrawable().apply {
                                     setColor(Color.rgb(24, 105, 196))
                                     cornerRadius = dp(18).toFloat()
