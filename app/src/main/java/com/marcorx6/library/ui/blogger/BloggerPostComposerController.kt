@@ -332,7 +332,6 @@ internal class BloggerPostComposerController(
                     styleAlertDialog(previewDialog)
                     previewDialog.getButton(AlertDialog.BUTTON_POSITIVE).minHeight = dp(48)
                 }
-        }
         publishButton.setOnClickListener {
                     val postTitle = title.text.toString().trim()
                     val coverLink = coverUrl.text.toString().trim()
