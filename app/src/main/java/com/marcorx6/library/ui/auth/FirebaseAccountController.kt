@@ -479,6 +479,16 @@ internal class FirebaseAccountController(
             view.setPadding(0, safe.top, 0, safe.bottom)
             insets
         }
+        // Do not start a second page animator after MainActivity has already
+        // applied the screen motion policy; competing animators caused a visible flash.
+        page.animate().cancel()
+        page.clearAnimation()
+        page.alpha = 1f
+        page.translationY = 0f
+        scroll.animate().cancel()
+        scroll.clearAnimation()
+        scroll.alpha = 1f
+        scroll.translationY = 0f
         setContentView(scroll)
         activity.window.statusBarColor = Color.TRANSPARENT
         activity.window.navigationBarColor = Color.TRANSPARENT
@@ -489,11 +499,11 @@ internal class FirebaseAccountController(
         }
         androidx.core.view.ViewCompat.requestApplyInsets(scroll)
         applyUnifiedSkin(page)
-        if (android.os.Build.VERSION.SDK_INT >= 16) {
-            page.alpha = 0f
-            page.translationY = dp(8).toFloat()
-            page.animate().alpha(1f).translationY(0f).setDuration(240L).start()
-        }
+        // The screen is installed by the activity's shared navigation path.
+        // Keep it at its final state instead of restarting an overlapping fade.
+        page.animate().cancel()
+        page.alpha = 1f
+        page.translationY = 0f
     }
 
     private fun accountInput(hintText: String, inputType: Int): EditText {
