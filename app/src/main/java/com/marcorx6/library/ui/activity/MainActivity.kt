@@ -98,10 +98,10 @@ class MainActivity : ComponentActivity() {
             launchGoogleSignIn = { intent -> activityResultRuntimeFeature.launchFirebaseGoogleSignIn(intent) },
             launchAdminGoogleSignIn = { intent -> activityResultRuntimeFeature.launchGoogleSignIn(intent) },
             signOutAdmin = {
-                googleAccountRuntimeFeature.signOut {
-                    googleAccountRuntimeFeature.isAdminSession = false
-                    createInterface()
-                }
+                // Clear the admin UI state immediately. FirebaseAccountController invokes
+                // onAccountChanged once after this, so avoid a second competing screen rebuild.
+                googleAccountRuntimeFeature.isAdminSession = false
+                googleAccountRuntimeFeature.signOut { }
             },
             styleDialog = ::styleAlertDialog,
             setContentView = ::showRootScreen,
