@@ -239,6 +239,12 @@ internal class AppearanceSettingsController(
             }
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         root.addView(settingRow(
+            translate("التحقق من تحديث التطبيق"),
+            translate("تحقق من وجود إصدار أحدث من MARCO RX6 على GitHub")
+        ) {
+            AppUpdateChecker(activity, translate).check()
+        }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
+        root.addView(settingRow(
             translate("استثناء مواقع من حجب الإعلانات"),
             translate("أضف النطاقات المسموح بها مفصولة بفاصلة، مثلاً example.com"),
         ) {
