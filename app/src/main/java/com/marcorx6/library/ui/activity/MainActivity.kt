@@ -135,9 +135,10 @@ class MainActivity : ComponentActivity() {
 
     private val activityServicesRuntimeFeature: ActivityServicesRuntimeFeature by lazy {
         ActivityServicesRuntimeFeature(this, ::styleAlertDialog, ::isDarkMode, ::tr, ::showRootScreen, ::createInterface) { source ->
-            val target = games.firstOrNull { it.sourcePostUrl == source || it.url == source }
-            if (target != null) gameExperienceFeature.showDetails(target)
-            else Toast.makeText(this, tr("تعذر العثور على معلومات اللعبة داخل المكتبة؛ حدّث المكتبة أولاً"), Toast.LENGTH_LONG).show()
+            bloggerRuntimeFeature.refreshGame(source) { refreshed ->
+                if (refreshed != null) gameExperienceFeature.showDetails(refreshed)
+                else Toast.makeText(this, tr("تعذر تحديث معلومات اللعبة من المصدر؛ تحقق من الاتصال بالإنترنت"), Toast.LENGTH_LONG).show()
+            }
         }
     }
 

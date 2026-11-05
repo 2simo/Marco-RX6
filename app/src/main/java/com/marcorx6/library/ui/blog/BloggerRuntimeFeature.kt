@@ -129,6 +129,27 @@ internal class BloggerRuntimeFeature(
         )
     }
 
+    /**
+     * Refreshes the public feed in the background and returns the newest cached game
+     * record for an in-app recovery flow. The Blogger page itself is never displayed.
+     */
+    fun refreshGame(sourcePostUrl: String, onComplete: (Game?) -> Unit) {
+        executor.execute {
+            val refreshed = runCatching {
+                BloggerFeedClient(feedUrl).fetch().games.firstOrNull { game ->
+                    game.sourcePostUrl == sourcePostUrl || game.url == sourcePostUrl
+                }
+            }.getOrNull()
+            postToUi {
+                if (refreshed != null) {
+                    merge(listOf(refreshed))
+                    renderGames()
+                }
+                onComplete(refreshed)
+            }
+        }
+    }
+
     fun refreshAccess() = bloggerAccessFeature.refresh()
     fun sync(showResult: Boolean) = blogSyncFeature.sync(showResult)
     fun showComposer(existing: Game? = null) = bloggerPostFeature.showComposer(existing)
