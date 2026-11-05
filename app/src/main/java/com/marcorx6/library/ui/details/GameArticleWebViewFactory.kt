@@ -108,20 +108,24 @@ internal class GameArticleWebViewFactory(
                     "أهلاً بمستخدمي تطبيق MARCO RX6 الكرام، إليكم لعبة جديدة من إضافاتنا الحصرية بروابط مباشرة وسريعة.",
                     ""
                 )
-            val withoutGameMetadata = articleWithoutIntro
+            val metadataAliases = "(?:الحجم|حجم|size|النسخة|version|title\\s*id|cusa|الصيغة|format|اللغة|languages?|كلمة\\s*السر|كلمه\\s*السر|password|pass|الحقوق|credits|rights)"
+            // Blogger posts do not all use the same markup. Remove individual metadata
+            // rows from paragraph/table/list markup as well as plain leaf DIV rows.
+            // Keep the surrounding article and download sections intact.
+            val articleWithoutMetadataRows = articleWithoutIntro
+                .replace(
+                    Regex("(?is)<(p|li|tr|dd|dt)\\b[^>]*>\\s*(?:<[^>]+>\\s*)*${'${'}metadataAliases}\\s*[:：-].*?</\\1\\s*>"),
+                    ""
+                )
+                .replace(
+                    Regex("(?is)<div\\b[^>]*>(?:(?!<div\\b).)*?${'${'}metadataAliases}\\s*[:：-].*?</div\\s*>"),
+                    ""
+                )
+            val withoutGameMetadata = articleWithoutMetadataRows
                 .replace(
                     Regex("(?is)<h([1-6])\\b[^>]*>\\s*(?:معلومات\\s*اللعبة|game\\s*information)\\s*:?\\s*</h\\1>.*?(?=<h[1-6]\\b[^>]*>|$)"),
                     ""
                 )
-                .replace(
-                    Regex("(?is)<(ul|ol)\\b[^>]*>.*?(?:الحجم|حجم|size|النسخة|version|title\\s*id|cusa|الصيغة|format|اللغة|languages?|كلمة\\s*السر|كلمه\\s*السر|password|pass|الحقوق|credits|rights).*?</\\1\\s*>"),
-                    ""
-                )
-                .replace(
-                    Regex("(?is)<li\\b[^>]*>.*?(?:الحجم|حجم|size|النسخة|version|title\\s*id|cusa|الصيغة|format|اللغة|languages?|كلمة\\s*السر|كلمه\\s*السر|password|pass|الحقوق|credits|rights).*?</li\\s*>"),
-                    ""
-                )
-                .replace(Regex("(?is)<ul\\b[^>]*>\\s*</ul\\s*>"), "")
             val articleHtml = withoutGameMetadata
                 .replace(Regex("(?is)<script[^>]*>.*?</script>"), "")
                 .replace(Regex("(?is)<style[^>]*>.*?</style>"), "")
