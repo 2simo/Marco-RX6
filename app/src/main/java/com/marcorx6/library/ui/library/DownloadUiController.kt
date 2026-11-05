@@ -131,7 +131,12 @@ internal class DownloadUiController(
             setPadding(0, dp(7), 0, dp(18))
         })
         val list = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
-        val lastProgress = mutableMapOf<Long, Int>()
+        data class ProgressViews(
+            val status: TextView,
+            val details: TextView,
+            val progress: android.widget.ProgressBar
+        )
+        val progressViews = mutableMapOf<Long, ProgressViews>()
         val lastSpeedSample = mutableMapOf<Long, Pair<Long, Long>>()
         var lastRenderedSnapshot: String? = null
         val handler = Handler(Looper.getMainLooper())
@@ -140,20 +145,78 @@ internal class DownloadUiController(
             isVerticalScrollBarEnabled = false
             addView(list, LinearLayout.LayoutParams(-1, -2))
         }
+        fun updateProgress(item: com.marcorx6.library.data.DownloadEntry, views: ProgressViews) {
+            val statusLabel = when (item.status) {
+                DownloadManager.STATUS_PENDING -> translate("في الانتظار")
+                DownloadManager.STATUS_RUNNING -> translate("قيد التنزيل")
+                DownloadManager.STATUS_PAUSED -> translate("متوقف مؤقتاً")
+                DownloadManager.STATUS_SUCCESSFUL -> translate("اكتمل")
+                DownloadManager.STATUS_FAILED -> translate("فشل")
+                else -> translate("غير معروف")
+            }
+            val percent = if (item.totalBytes > 0L)
+                (item.downloadedBytes * 100L / item.totalBytes).coerceIn(0L, 100L).toInt() else 0
+            val now = SystemClock.elapsedRealtime()
+            val previous = lastSpeedSample[item.id]
+            val speed = if (item.status == DownloadManager.STATUS_RUNNING && previous != null && now > previous.second) {
+                ((item.downloadedBytes - previous.first).coerceAtLeast(0L) * 1000L) /
+                    (now - previous.second).coerceAtLeast(1L)
+            } else 0L
+            lastSpeedSample[item.id] = item.downloadedBytes to now
+
+            views.status.text = if (item.totalBytes > 0L) "$statusLabel  •  $percent%" else statusLabel
+            views.status.setTextColor(when (item.status) {
+                DownloadManager.STATUS_SUCCESSFUL -> Color.rgb(36, 170, 112)
+                DownloadManager.STATUS_FAILED -> Color.rgb(230, 85, 96)
+                else -> primary
+            })
+            val downloaded = android.text.format.Formatter.formatFileSize(activity, item.downloadedBytes.coerceAtLeast(0L))
+            val details = StringBuilder(downloaded)
+            if (item.totalBytes > 0L) {
+                val total = android.text.format.Formatter.formatFileSize(activity, item.totalBytes)
+                details.append(" / ").append(total)
+            } else {
+                details.append(" / ").append(translate("الحجم غير معروف"))
+            }
+            if (item.status == DownloadManager.STATUS_RUNNING && speed > 0L) {
+                details.append("  •  ")
+                    .append(android.text.format.Formatter.formatFileSize(activity, speed))
+                    .append("/s")
+                if (item.totalBytes > item.downloadedBytes) {
+                    val seconds = (item.totalBytes - item.downloadedBytes) / speed
+                    val eta = when {
+                        seconds < 60L -> seconds.toString() + "s"
+                        seconds < 3600L -> (seconds / 60L).toString() + "m " + (seconds % 60L) + "s"
+                        else -> (seconds / 3600L).toString() + "h " + ((seconds % 3600L) / 60L) + "m"
+                    }
+                    details.append("  •  ").append(translate("متبقي")).append(" ").append(eta)
+                }
+            }
+            views.details.text = details.toString()
+            views.progress.visibility = if (item.status == DownloadManager.STATUS_RUNNING && item.totalBytes > 0L) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
+            views.progress.progress = percent
+        }
+
         fun render() {
             val entries = try { downloadRepository.getDownloads() } catch (error: Exception) {
                 Toast.makeText(activity, translate("تعذر قراءة التنزيلات") + ": ${error.message}", Toast.LENGTH_LONG).show()
                 emptyList()
             }
             val snapshot = entries.joinToString("|") { entry ->
-                val visiblePercent = if (entry.totalBytes > 0L)
-                    (entry.downloadedBytes * 100L / entry.totalBytes).coerceIn(0L, 100L) else -1L
-                "${entry.id}:${entry.status}:$visiblePercent"
+                "${entry.id}:${entry.status}:${entry.title}"
             }
-            if (snapshot == lastRenderedSnapshot) return
+            if (snapshot == lastRenderedSnapshot) {
+                entries.forEach { item -> progressViews[item.id]?.let { updateProgress(item, it) } }
+                return
+            }
             lastRenderedSnapshot = snapshot
-            // Only detach/rebuild rows after detecting a real visible change.
-            // Clearing first made the list disappear on every 900 ms poll.
+            // Rebuild only when the queue structure or a row status changes.
+            // Byte counters, speed and ETA update in-place without detaching cards.
+            progressViews.clear()
             list.removeAllViews()
             if (entries.isEmpty()) {
                 val empty = LinearLayout(activity).apply {
@@ -190,23 +253,6 @@ internal class DownloadUiController(
                 })
                 list.addView(empty, LinearLayout.LayoutParams(-1, -2))
             } else entries.forEach { item ->
-                val status = when (item.status) {
-                    DownloadManager.STATUS_PENDING -> translate("في الانتظار")
-                    DownloadManager.STATUS_RUNNING -> translate("قيد التنزيل")
-                    DownloadManager.STATUS_PAUSED -> translate("متوقف مؤقتاً")
-                    DownloadManager.STATUS_SUCCESSFUL -> translate("اكتمل")
-                    DownloadManager.STATUS_FAILED -> translate("فشل")
-                    else -> translate("غير معروف")
-                }
-                val percent = if (item.totalBytes > 0L)
-                    (item.downloadedBytes * 100L / item.totalBytes).coerceIn(0L, 100L).toInt() else 0
-                val now = SystemClock.elapsedRealtime()
-                val previousSample = lastSpeedSample[item.id]
-                val speedBytesPerSecond = if (previousSample != null && now > previousSample.second) {
-                    ((item.downloadedBytes - previousSample.first).coerceAtLeast(0L) * 1000L) /
-                        (now - previousSample.second).coerceAtLeast(1L)
-                } else 0L
-                lastSpeedSample[item.id] = item.downloadedBytes to now
                 val card = LinearLayout(activity).apply {
                     orientation = LinearLayout.VERTICAL
                     setPadding(dp(15), dp(14), dp(15), dp(14))
@@ -218,52 +264,36 @@ internal class DownloadUiController(
                         setStroke(dp(1), if (dark) Color.argb(165, 80, 151, 215) else Color.argb(175, 153, 195, 236))
                     }
                 }
-                // Download rows are informational; keep them non-clickable so they
-                // are not announced as interactive controls without an action.
                 card.addView(TextView(activity).apply {
                     text = item.title
                     textSize = 14f
                     setTypeface(null, android.graphics.Typeface.BOLD)
                     setTextColor(heading)
                 })
-                card.addView(TextView(activity).apply {
-                    text = if (item.totalBytes > 0L) "$status  •  $percent%" else status
+                val statusView = TextView(activity).apply {
                     textSize = 11f
-                    setTextColor(when (item.status) {
-                        DownloadManager.STATUS_SUCCESSFUL -> Color.rgb(36, 170, 112)
-                        DownloadManager.STATUS_FAILED -> Color.rgb(230, 85, 96)
-                        else -> primary
-                    })
                     setPadding(0, dp(6), 0, 0)
-                })
-                if (item.totalBytes > 0L) {
-                    val downloadedLabel = android.text.format.Formatter.formatFileSize(activity, item.downloadedBytes.coerceAtLeast(0L))
-                    val totalLabel = android.text.format.Formatter.formatFileSize(activity, item.totalBytes.coerceAtLeast(0L))
-                    val speedLabel = if (item.status == DownloadManager.STATUS_RUNNING && speedBytesPerSecond > 0L)
-                        "  •  ${android.text.format.Formatter.formatFileSize(activity, speedBytesPerSecond)}/s" else ""
-                    card.addView(TextView(activity).apply {
-                        text = "$downloadedLabel / $totalLabel$speedLabel"
-                        textSize = 10f
-                        setTextColor(muted)
-                        setPadding(0, dp(4), 0, 0)
-                    })
                 }
-                if (item.totalBytes > 0L && item.status == DownloadManager.STATUS_RUNNING) {
-                    val oldPercent = lastProgress[item.id] ?: percent
-                    val progress = android.widget.ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
-                        max = 100
-                        this.progress = oldPercent.coerceIn(0, 100)
-                        progressTintList = android.content.res.ColorStateList.valueOf(primary)
-                        progressBackgroundTintList = android.content.res.ColorStateList.valueOf(
-                            if (dark) Color.argb(90, 110, 150, 190) else Color.argb(70, 70, 120, 180)
-                        )
-                    }
-                    card.addView(progress, LinearLayout.LayoutParams(-1, dp(7)).apply { topMargin = dp(10) })
-                    // Update only when the visible percentage changes. Recreating and
-                    // animating every row on each polling tick caused a brief screen flash.
-                    progress.progress = percent
-                    lastProgress[item.id] = percent
+                card.addView(statusView)
+                val detailsView = TextView(activity).apply {
+                    textSize = 10f
+                    setTextColor(muted)
+                    setPadding(0, dp(4), 0, 0)
                 }
+                card.addView(detailsView)
+                val progressView = android.widget.ProgressBar(
+                    activity, null, android.R.attr.progressBarStyleHorizontal
+                ).apply {
+                    max = 100
+                    progressTintList = android.content.res.ColorStateList.valueOf(primary)
+                    progressBackgroundTintList = android.content.res.ColorStateList.valueOf(
+                        if (dark) Color.argb(90, 110, 150, 190) else Color.argb(70, 70, 120, 180)
+                    )
+                }
+                card.addView(progressView, LinearLayout.LayoutParams(-1, dp(7)).apply { topMargin = dp(10) })
+                val rowProgressViews = ProgressViews(statusView, detailsView, progressView)
+                progressViews[item.id] = rowProgressViews
+                updateProgress(item, rowProgressViews)
                 if (item.status == DownloadManager.STATUS_SUCCESSFUL || item.status == DownloadManager.STATUS_FAILED ||
                     item.status == DownloadManager.STATUS_RUNNING || item.status == DownloadManager.STATUS_PENDING ||
                     item.status == DownloadManager.STATUS_PAUSED) {
@@ -308,7 +338,7 @@ internal class DownloadUiController(
                     if (item.status == DownloadManager.STATUS_RUNNING || item.status == DownloadManager.STATUS_PENDING) {
                         row.addView(smallAction(translate("إيقاف مؤقت")) {
                             if (downloadRepository.pauseDownload(item.id)) {
-                                lastProgress.remove(item.id)
+
                                 lastSpeedSample.remove(item.id)
                                 lastRenderedSnapshot = null
                                 render()
@@ -331,7 +361,7 @@ internal class DownloadUiController(
                     if (item.status == DownloadManager.STATUS_RUNNING || item.status == DownloadManager.STATUS_PENDING || item.status == DownloadManager.STATUS_PAUSED) {
                         row.addView(smallAction(translate("إلغاء التنزيل")) {
                             if (downloadRepository.deleteDownload(item.id)) {
-                                lastProgress.remove(item.id)
+
                                 lastSpeedSample.remove(item.id)
                                 lastRenderedSnapshot = null
                                 render()
@@ -348,7 +378,7 @@ internal class DownloadUiController(
                             .setNegativeButton(translate("إلغاء"), null)
                             .setPositiveButton(translate("حذف")) { _, _ ->
                                 if (downloadRepository.deleteDownload(item.id)) {
-                                    lastProgress.remove(item.id)
+
                                     lastSpeedSample.remove(item.id)
                                     render()
                                     Toast.makeText(activity, translate("تم حذف التنزيل"), Toast.LENGTH_SHORT).show()
