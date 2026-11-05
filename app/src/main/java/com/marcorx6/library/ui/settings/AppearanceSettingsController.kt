@@ -207,7 +207,7 @@ internal class AppearanceSettingsController(
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         root.addView(settingRow(
             translate(if (adminSessionConnected()) "فصل حساب المشرف" else "ربط حساب المشرف (اختياري)"),
-            translate(if (adminSessionConnected()) "إيقاف صلاحيات Blogger وGoogle Drive" else "اختياري: صلاحيات Blogger للنشر وDrive لرفع الأغلفة"),
+            translate(if (adminSessionConnected()) "حساب المشرف مربوط؛ صلاحيات Blogger للنشر وDrive لرفع الأغلفة مفعّلة" else "تسجيل Google العادي لا يفعّل النشر. اربط هنا حساب Blogger المشرف نفسه لتفعيل النشر ورفع الأغلفة"),
             onAdminSessionAction
         ), LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         root.addView(settingRow(translate("الخط وحجم النص"), translate("تخصيص عائلة الخط وحجم القراءة"), showTypographySettings),
