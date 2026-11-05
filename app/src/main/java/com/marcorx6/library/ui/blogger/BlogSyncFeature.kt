@@ -16,7 +16,8 @@ internal class BlogSyncFeature(
     merge: (List<Game>) -> Pair<Int, Int>,
     setBlogId: (String) -> Unit,
     refreshAccess: () -> Unit,
-    renderGames: () -> Unit
+    renderGames: () -> Unit,
+    translate: (String) -> String
 ) {
     private val controller = BlogSyncController(
         context = context,
@@ -31,7 +32,8 @@ internal class BlogSyncFeature(
         merge = merge,
         setBlogId = setBlogId,
         refreshAccess = refreshAccess,
-        renderGames = renderGames
+        renderGames = renderGames,
+        translate = translate
     )
 
     fun sync(showResult: Boolean) = controller.sync(showResult)
