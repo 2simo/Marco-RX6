@@ -477,6 +477,7 @@ internal object LanguageTranslator {
             "اختر اللون الذي سيظهر في الأزرار والعناصر التفاعلية." to listOf("Choose the color used for buttons and interactive elements.", "Choisissez la couleur des boutons et des éléments interactifs.", "Elige el color de los botones y elementos interactivos."),
             "هل ترغب في تلقي إشعار عند نشر مقالات جديدة في المدونة؟" to listOf("Would you like to be notified when new blog articles are published?", "Souhaitez-vous recevoir une notification lors de la publication de nouveaux articles ?", "¿Quieres recibir avisos cuando se publiquen nuevos artículos?"),
             "تم إعداد مكتبتك. اختياراتك محفوظة ويمكنك تغييرها لاحقاً من الإعدادات." to listOf("Your library is ready. Your choices are saved and can be changed later in Settings.", "Votre bibliothèque est prête. Vos choix sont enregistrés et modifiables dans les paramètres.", "Tu biblioteca está lista. Tus opciones se han guardado y puedes cambiarlas en Ajustes."),
+        )
         val index = when (lang) { "en" -> 0; "fr" -> 1; "es" -> 2; else -> return ar }
         return translations[ar]?.get(index) ?: ar
     }
