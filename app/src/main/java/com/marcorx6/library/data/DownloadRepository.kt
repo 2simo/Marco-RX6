@@ -102,14 +102,10 @@ internal class DownloadRepository(context: Context) {
     fun pauseDownload(id: Long): Boolean {
         val item = database.get(id) ?: return false
         if (item.status == DownloadManager.STATUS_SUCCESSFUL) return false
-        // Persist the paused state before cancellation so the UI never mistakes the row
-        // for a completed/removed item while WorkManager is stopping the active worker.
+        // Request cancellation first, then persist PAUSED so the row remains visible
+        // while WorkManager transitions the worker to its cancelled state.
+        workManager.cancelUniqueWork(workName(id))
         database.status(id, DownloadManager.STATUS_PAUSED)
-        val cancellation = workManager.cancelUniqueWork(workName(id))
-        cancellation.result.addListener(
-            { database.status(id, DownloadManager.STATUS_PAUSED) },
-            java.util.concurrent.Executor { command -> command.run() }
-        )
         return true
     }
 
