@@ -96,7 +96,6 @@ internal class GameDetailsFeature(
         downloadLinksViewFactory = downloadLinksViewFactory,
         applyMotionPreferences = applyMotionPreferences,
         applyUnifiedSkin = applyUnifiedSkin,
-        rounded = rounded,
         translate = tr
     )
 
