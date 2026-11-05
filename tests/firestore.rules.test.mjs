@@ -64,21 +64,18 @@ describe("Firestore user isolation rules", () => {
     await assertSucceeds(deleteDoc(profile));
   });
 
-  it("allows a guest UID to access its own profile and nested preferences", async () => {
+  it("allows a guest UID to keep only its minimal own profile", async () => {
     // Firebase anonymous users are authenticated and are scoped by their UID.
     const db = testEnv.authenticatedContext("anonymous-guest-uid").firestore();
 
     await assertSucceeds(
       setDoc(doc(db, "users/anonymous-guest-uid"), { isAnonymous: true }),
     );
-    await assertSucceeds(
+    await assertFails(
       setDoc(
         doc(db, "users/anonymous-guest-uid/settings/preferences"),
         { values: { theme: "dark" } },
       ),
-    );
-    await assertSucceeds(
-      getDoc(doc(db, "users/anonymous-guest-uid/settings/preferences")),
     );
   });
 
