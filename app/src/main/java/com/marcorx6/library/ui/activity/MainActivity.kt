@@ -67,6 +67,11 @@ class MainActivity : ComponentActivity() {
         cancelScreenMotion(view)
         setContentView(view)
         LanguageTranslator.translateViewTree(view, appearanceRuntimeFeature.currentLanguage())
+        view.viewTreeObserver.addOnGlobalLayoutListener {
+            if (view.isAttachedToWindow) {
+                LanguageTranslator.translateViewTree(view, appearanceRuntimeFeature.currentLanguage())
+            }
+        }
         applyMotionPreferences(view)
         applyUnifiedSkin(view)
     }
@@ -203,11 +208,11 @@ class MainActivity : ComponentActivity() {
             applyUnifiedSkin = ::applyUnifiedSkin,
             applyMotionPreferences = ::applyMotionPreferences,
             onAvatarSaved = {
-                Toast.makeText(this, "تم تحديث صورة الملف الشخصي", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, tr("تم تحديث صورة الملف الشخصي"), Toast.LENGTH_SHORT).show()
                 userExperienceRuntimeFeature.showProfile()
             },
             onAvatarError = { message ->
-                Toast.makeText(this, "تعذر حفظ الصورة: $message", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "${tr("تعذر حفظ الصورة")}: $message", Toast.LENGTH_LONG).show()
             },
             isNotificationsEnabled = activityServicesRuntimeFeature::areNotificationsEnabled,
             setNotificationsEnabled = activityServicesRuntimeFeature::setNotificationsEnabled,
@@ -284,18 +289,18 @@ class MainActivity : ComponentActivity() {
                         googleAccountRuntimeFeature.signOut {
                             googleAccountRuntimeFeature.isAdminSession = false
                             createInterface()
-                            Toast.makeText(this, "حساب Google المختار مختلف عن حساب MARCO RX6. سجّل بنفس البريد الإلكتروني.", Toast.LENGTH_LONG).show()
+                            Toast.makeText(this, tr("حساب Google المختار مختلف عن حساب MARCO RX6. سجّل بنفس البريد الإلكتروني."), Toast.LENGTH_LONG).show()
                         }
                     } else {
                         createInterface()
                         bloggerRuntimeFeature.refreshAccess()
-                        Toast.makeText(this, "تم ربط نفس حساب Google؛ جارٍ التحقق من صلاحيات Blogger…", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this, tr("تم ربط نفس حساب Google؛ جارٍ التحقق من صلاحيات Blogger…"), Toast.LENGTH_LONG).show()
                     }
                 },
                 onFailure = { message ->
                     googleAccountRuntimeFeature.isAdminSession = false
                     createInterface()
-                    Toast.makeText(this, "فشل تسجيل الدخول إلى Google: $message", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "${tr("فشل تسجيل الدخول إلى Google")}: $message", Toast.LENGTH_LONG).show()
                 }
             )
         },
@@ -305,9 +310,9 @@ class MainActivity : ComponentActivity() {
         onDownloadFolderSelected = { uri ->
             try {
                 downloadStoragePreferences.saveTree(uri)
-                Toast.makeText(this, "تم حفظ مجلد التنزيلات: ${downloadStoragePreferences.displayName()}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "${tr("تم حفظ مجلد التنزيلات")}: ${downloadStoragePreferences.displayName()}", Toast.LENGTH_LONG).show()
             } catch (error: Exception) {
-                Toast.makeText(this, "تعذر حفظ صلاحية المجلد: ${error.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "${tr("تعذر حفظ صلاحية المجلد")}: ${error.message}", Toast.LENGTH_LONG).show()
             }
         }
     )
@@ -392,7 +397,7 @@ class MainActivity : ComponentActivity() {
                         createInterface()
                     }
                 } else if (firebaseAuthRepository.currentUser?.email.isNullOrBlank()) {
-                    Toast.makeText(this, "سجّل الدخول إلى حساب MARCO RX6 أولاً", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, tr("سجّل الدخول إلى حساب MARCO RX6 أولاً"), Toast.LENGTH_LONG).show()
                 } else {
                     firebaseAccountController.connectAdminAccount()
                 }
