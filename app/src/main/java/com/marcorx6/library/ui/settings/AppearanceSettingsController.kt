@@ -71,14 +71,13 @@ internal class AppearanceSettingsController(
             setPadding(0, dp(5), 0, 0)
         })
         header.addView(heading, LinearLayout.LayoutParams(0, -2, 1f))
-        header.addView(TextView(activity).apply {
-            text = "×"
+        header.addView(android.widget.ImageView(activity).apply {
+            setImageResource(com.marcorx6.library.R.drawable.ic_action_close)
+            imageTintList = android.content.res.ColorStateList.valueOf(muted)
+            scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
             contentDescription = translate("إغلاق الإعدادات")
             minWidth = dp(48)
             minHeight = dp(48)
-            textSize = 30f
-            gravity = Gravity.CENTER
-            setTextColor(muted)
             addGlassTouch(this)
             setOnClickListener { onBack() }
         }, LinearLayout.LayoutParams(dp(48), dp(48)))
