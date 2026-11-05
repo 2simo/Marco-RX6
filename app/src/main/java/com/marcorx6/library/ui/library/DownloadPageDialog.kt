@@ -238,14 +238,19 @@ internal class DownloadPageDialog(
         var adBlockerEnabled = adPreferences.getBoolean("download_page_ad_blocker", true)
         val allowedHosts = adPreferences.getString("download_page_ad_allowlist", "").orEmpty()
             .split(',', ';').map { it.trim().lowercase() }.filter { it.isNotBlank() }.toSet()
-        val adToggle = toolbarAction(if (adBlockerEnabled) "حجب ✓" else "حجب ×") {
+        val adToggle = toolbarAction("حجب الإعلانات", {
             adBlockerEnabled = !adBlockerEnabled
             adPreferences.edit().putBoolean("download_page_ad_blocker", adBlockerEnabled).apply()
-            (toolbar.getChildAt(toolbar.childCount - 1) as? TextView)?.text =
-                if (adBlockerEnabled) "حجب ✓" else "حجب ×"
+            (toolbar.getChildAt(toolbar.childCount - 1) as? TextView)?.apply {
+                text = "حجب الإعلانات"
+                setCompoundDrawablesRelativeWithIntrinsicBounds(
+                    if (adBlockerEnabled) com.marcorx6.library.R.drawable.ic_action_check
+                    else com.marcorx6.library.R.drawable.ic_action_close, 0, 0, 0
+                )
+            }
             blockedStats.text = translate(if (adBlockerEnabled) "تم تفعيل حجب الإعلانات" else "تم إيقاف حجب الإعلانات")
             webView.reload()
-        }
+        }, if (adBlockerEnabled) com.marcorx6.library.R.drawable.ic_action_check else com.marcorx6.library.R.drawable.ic_action_close)
         toolbar.addView(adToggle)
         val blockedRequests = AtomicInteger(0)
         val blockedAdHosts = setOf(
