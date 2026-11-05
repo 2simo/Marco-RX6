@@ -7,7 +7,8 @@ import android.widget.Toast
 import java.io.File
 
 internal class GameOfflineArchiveController(
-    private val activity: Activity
+    private val activity: Activity,
+    private val translate: (String) -> String
 ) {
     fun buttonLabel(archiveFile: File, translate: (String) -> String): String =
         if (archiveFile.isFile) translate("قراءة دون إنترنت") else translate("حفظ دون إنترنت")
@@ -21,14 +22,14 @@ internal class GameOfflineArchiveController(
             // Local-file access is enabled only for an explicitly opened saved archive.
             webView.settings.allowFileAccess = true
             webView.loadUrl(Uri.fromFile(archiveFile).toString())
-            Toast.makeText(activity, "تم فتح النسخة المحفوظة", Toast.LENGTH_SHORT).show()
+            Toast.makeText(activity, translate("تم فتح النسخة المحفوظة"), Toast.LENGTH_SHORT).show()
         } else {
             webView.saveWebArchive(archiveFile.absolutePath, false) { savedPath ->
                 postToUi {
                     if (!savedPath.isNullOrBlank() && File(savedPath).isFile) {
-                        Toast.makeText(activity, "تم حفظ المقال للقراءة دون اتصال", Toast.LENGTH_LONG).show()
+                        Toast.makeText(activity, translate("تم حفظ المقال للقراءة دون اتصال"), Toast.LENGTH_LONG).show()
                     } else {
-                        Toast.makeText(activity, "تعذر حفظ المقال. انتظر اكتمال تحميل الصور ثم حاول مجدداً.", Toast.LENGTH_LONG).show()
+                        Toast.makeText(activity, translate("تعذر حفظ المقال. انتظر اكتمال تحميل الصور ثم حاول مجدداً."), Toast.LENGTH_LONG).show()
                     }
                 }
             }
