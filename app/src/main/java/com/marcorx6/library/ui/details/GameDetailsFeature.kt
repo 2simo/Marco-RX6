@@ -24,7 +24,6 @@ internal class GameDetailsFeature(
     gray: () -> Int,
     panel: () -> Int,
     tr: (String) -> String,
-    targetLanguage: () -> String,
     loadCover: (android.widget.ImageView, String, String) -> Unit,
     saveGames: () -> Unit,
     renderGames: () -> Unit,
@@ -39,9 +38,6 @@ internal class GameDetailsFeature(
     applyMotionPreferences: (View) -> Unit,
     applyUnifiedSkin: (View) -> Unit
 ) {
-    private val articleWebViewFactory = GameArticleWebViewFactory(activity)
-    private val offlineArchiveController = GameOfflineArchiveController(activity, tr)
-
     private val favoriteToggleFactory = GameFavoriteToggleFactory(
         activity = activity,
         games = games,
@@ -50,19 +46,6 @@ internal class GameDetailsFeature(
         red = red,
         saveGames = saveGames,
         renderGames = renderGames
-    )
-
-    private val watchlistViewFactory = GameWatchlistViewFactory(
-        activity = activity,
-        games = games,
-        dp = dp,
-        rounded = rounded,
-        white = white,
-        panel = panel,
-        saveGames = saveGames,
-        renderGames = renderGames,
-        styleAlertDialog = styleAlertDialog,
-        translate = tr
     )
 
     private val topBarFactory = GameDetailsTopBarFactory(
@@ -78,15 +61,12 @@ internal class GameDetailsFeature(
     private val identityViewFactory = GameDetailsIdentityViewFactory(
         activity = activity,
         dp = dp,
-        rounded = rounded,
         makeText = makeText,
         isDarkMode = isDarkMode,
         white = white,
         gray = gray,
         loadCover = loadCover,
-        watchlistViewFactory = watchlistViewFactory,
-        translate = tr,
-        targetLanguage = targetLanguage
+        translate = tr
     )
 
     private val downloadLinksViewFactory = GameDownloadLinksViewFactory(
@@ -102,27 +82,6 @@ internal class GameDetailsFeature(
         translate = tr
     )
 
-    private val similarGamesViewFactory = GameSimilarGamesViewFactory(
-        activity = activity,
-        dp = dp,
-        rounded = rounded,
-        makeText = makeText,
-        isDarkMode = isDarkMode,
-        white = white,
-        translate = tr,
-        loadCover = loadCover
-    )
-
-    private val bottomBarFactory = GameDetailsBottomBarFactory(
-        activity = activity,
-        dp = dp,
-        rounded = rounded,
-        isDarkMode = isDarkMode,
-        white = white,
-        panel = panel,
-        translate = tr
-    )
-
     private val controller = GameDetailsController(
         activity = activity,
         games = { games },
@@ -134,18 +93,7 @@ internal class GameDetailsFeature(
         enqueueGameDownload = enqueueGameDownload,
         topBarFactory = topBarFactory,
         identityViewFactory = identityViewFactory,
-        similarGamesViewFactory = similarGamesViewFactory,
-        articleWebViewFactory = articleWebViewFactory,
         downloadLinksViewFactory = downloadLinksViewFactory,
-        bottomBarFactory = bottomBarFactory,
-        offlineArchiveController = offlineArchiveController,
-        filesDir = filesDir,
-        stableCacheName = stableCacheName,
-        isAdmin = isAdmin,
-        postToUi = postToUi,
-        openGameLink = openGameLink,
-        showGameDialog = showGameDialog,
-        deleteGame = deleteGame,
         applyMotionPreferences = applyMotionPreferences,
         applyUnifiedSkin = applyUnifiedSkin,
         rounded = rounded,
