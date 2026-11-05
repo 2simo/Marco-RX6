@@ -114,11 +114,11 @@ internal class GameArticleWebViewFactory(
             // Keep the surrounding article and download sections intact.
             val articleWithoutMetadataRows = articleWithoutIntro
                 .replace(
-                    Regex("(?is)<(p|li|tr|dd|dt)\\b[^>]*>\\s*(?:<[^>]+>\\s*)*${'${'}metadataAliases}\\s*[:：-].*?</\\1\\s*>"),
+                    Regex("(?is)<(p|li|tr|dd|dt)\\b[^>]*>\\s*(?:<[^>]+>\\s*)*${metadataAliases}\\s*[:：-].*?</\\1\\s*>"),
                     ""
                 )
                 .replace(
-                    Regex("(?is)<div\\b[^>]*>(?:(?!<div\\b).)*?${'${'}metadataAliases}\\s*[:：-].*?</div\\s*>"),
+                    Regex("(?is)<div\\b[^>]*>(?:(?!<div\\b).)*?${metadataAliases}\\s*[:：-].*?</div\\s*>"),
                     ""
                 )
             val withoutGameMetadata = articleWithoutMetadataRows
