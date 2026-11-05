@@ -2,7 +2,7 @@ package com.marcorx6.library.ui
 
 import androidx.activity.ComponentActivity
 import android.content.SharedPreferences
-import android.widget.Toast
+import android.widget.Toast\nimport com.marcorx6.library.ui.settings.LocalContentTranslator
 
 /** Owns language preference access, translation, and language picker interaction. */
 internal class LanguageFeature(
@@ -30,6 +30,27 @@ internal class LanguageFeature(
                 Toast.makeText(activity, translate("تم حفظ اللغة"), Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton(translate("إغلاق"), null)
+            .setPositiveButton(translate("تحميل نموذج الترجمة")) { _, _ ->
+                val target = currentLanguage()
+                if (target == "ar") {
+                    Toast.makeText(activity, translate("العربية لا تحتاج إلى نموذج ترجمة"), Toast.LENGTH_SHORT).show()
+                } else {
+                    val translator = LocalContentTranslator(activity)
+                    Toast.makeText(activity, translate("جارٍ تحميل نموذج الترجمة"), Toast.LENGTH_SHORT).show()
+                    translator.downloadModel(
+                        sourceLanguage = "ar",
+                        targetLanguage = target,
+                        onReady = {
+                            Toast.makeText(activity, translate("نموذج الترجمة جاهز"), Toast.LENGTH_LONG).show()
+                            translator.close()
+                        },
+                        onError = {
+                            Toast.makeText(activity, translate("تعذر تحميل نموذج الترجمة"), Toast.LENGTH_LONG).show()
+                            translator.close()
+                        }
+                    )
+                }
+            }
             .show()
             .also(styleDialog)
     }
