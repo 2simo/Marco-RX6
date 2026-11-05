@@ -63,6 +63,8 @@ internal class ResumableDownloadWorker(
                 connectTimeout = 20000
                 readTimeout = 30000
                 requestMethod = "GET"
+                setRequestProperty("Accept", "*/*")
+                setRequestProperty("Accept-Encoding", "identity")
                 if (item.userAgent.isNotBlank()) setRequestProperty("User-Agent", item.userAgent)
                 if (item.cookie.isNotBlank()) setRequestProperty("Cookie", item.cookie)
                 if (item.referrer.isNotBlank()) setRequestProperty("Referer", item.referrer)
@@ -125,6 +127,8 @@ internal class ResumableDownloadWorker(
                         offset += count
                         val now = System.currentTimeMillis()
                         if (now - lastUpdate >= 500L) {
+                            sink.flush()
+                            sink.fd.sync()
                             database.progress(item.id, offset, total, etag, modified)
                             lastUpdate = now
                         }
