@@ -80,7 +80,7 @@ internal class GameDetailsController(
         val downloadButtons = bloggerDownloadButtons
             ?: downloadLinksViewFactory.create(game.downloadLinks, game.name)
         downloadButtons?.let { buttons ->
-            root.addView(buttons, root.indexOfChild(articleWebView))
+            root.addView(buttons, root.indexOfChild(articleWebView), LinearLayout.LayoutParams(-1, -2))
         }
 
         similarGamesViewFactory.create(game, games()) { item ->
