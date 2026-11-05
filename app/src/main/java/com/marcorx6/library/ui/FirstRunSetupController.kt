@@ -192,14 +192,14 @@ internal class FirstRunSetupController(
                         bottomMargin = dp(10)
                     })
                     if (animate) viewFactory.animateIn(folderCard)
-                    val skipCard = viewFactory.optionCard(
-                        tr("استخدام تخزين التطبيق"),
-                        downloadFolderName() == "تخزين التطبيق",
-                        tr("يمكنك اختيار مجلد آخر لاحقاً من إعدادات التخزين.")
-                    )
-                    skipCard.setOnClickListener { renderStep(step, false) }
-                    choices.addView(skipCard, LinearLayout.LayoutParams(-1, -2))
-                    if (animate) viewFactory.animateIn(skipCard)
+                    choices.addView(makeText(
+                        tr("يمكنك تخطي هذه الخطوة والمتابعة بالتخزين الافتراضي."),
+                        11f,
+                        Color.rgb(164, 184, 207),
+                        false
+                    ).apply {
+                        setPadding(dp(4), dp(12), dp(4), dp(4))
+                    }, LinearLayout.LayoutParams(-1, -2))
                 }
                 6 -> {
                     val readyCard = viewFactory.optionCard(tr("مكتبتك جاهزة!"), true, tr("تم حفظ المنصة واللغة والمظهر واللون والإشعارات ومكان التنزيلات."))
