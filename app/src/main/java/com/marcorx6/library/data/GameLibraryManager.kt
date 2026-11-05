@@ -54,6 +54,7 @@ internal object GameLibraryManager {
         year: String,
         sortMode: String
     ): List<Game> {
+        val normalizedQuery = query.trim()
         val filtered = games.filter { item ->
             val categoryMatch = when (category) {
                 "ALL" -> true
@@ -61,7 +62,6 @@ internal object GameLibraryManager {
                 "BLOG" -> item.blogImported
                 else -> item.platform == category
             }
-            val normalizedQuery = query.trim()
             val searchMatch = normalizedQuery.isBlank() ||
                 item.name.contains(normalizedQuery, ignoreCase = true) ||
                 item.platform.contains(normalizedQuery, ignoreCase = true) ||
