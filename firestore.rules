@@ -30,9 +30,18 @@ service cloud.firestore {
           || (!isAnonymous()
             && request.resource.data.keys().hasOnly([
               'uid', 'isAnonymous', 'createdAt', 'updatedAt',
-              'email', 'displayName', 'photoUrl', 'bio'
+              'email', 'displayName', 'photoUrl', 'bio', 'photoData'
             ])
-            && request.resource.data.keys().size() <= 8)
+            && request.resource.data.keys().size() <= 9
+            && (!('displayName' in request.resource.data)
+              || (request.resource.data.displayName is string
+                && request.resource.data.displayName.size() <= 40))
+            && (!('bio' in request.resource.data)
+              || (request.resource.data.bio is string
+                && request.resource.data.bio.size() <= 160))
+            && (!('photoData' in request.resource.data)
+              || (request.resource.data.photoData is string
+                && request.resource.data.photoData.size() <= 600000)))
         );
 
       match /settings/preferences {
