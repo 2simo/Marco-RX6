@@ -153,7 +153,7 @@ internal class DownloadPageDialog(
         val candidateScroll = ScrollView(activity).apply {
             isVerticalScrollBarEnabled = false
             visibility = View.GONE
-            addView(candidates, ScrollView.LayoutParams(-1, -2))
+            addView(candidates, android.widget.FrameLayout.LayoutParams(-1, -2))
         }
         root.addView(candidateScroll, LinearLayout.LayoutParams(-1, dp(112)))
 
@@ -203,6 +203,8 @@ internal class DownloadPageDialog(
             loadsImagesAutomatically = true
             allowFileAccess = false
             allowContentAccess = false
+            javaScriptCanOpenWindowsAutomatically = false
+            setSupportMultipleWindows(false)
             mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW
             if (android.os.Build.VERSION.SDK_INT >= 26) safeBrowsingEnabled = true
         }
