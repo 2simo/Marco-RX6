@@ -205,6 +205,11 @@ internal class AppearanceSettingsController(
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         root.addView(settingRow(translate("الإشعارات"), translate("التحكم في تنبيهات المقالات الجديدة"), showNotificationSettings),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
+        root.addView(settingRow(
+            translate(if (adminSessionConnected()) "فصل حساب المشرف" else "ربط حساب المشرف (اختياري)"),
+            translate(if (adminSessionConnected()) "إيقاف صلاحيات Blogger وGoogle Drive" else "اختياري: صلاحيات Blogger للنشر وDrive لرفع الأغلفة"),
+            onAdminSessionAction
+        ), LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         root.addView(settingRow(translate("الخط وحجم النص"), translate("تخصيص عائلة الخط وحجم القراءة"), showTypographySettings),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         root.addView(settingRow(translate("التخزين"), translate("عرض مساحة التطبيق والملفات المؤقتة وإدارة ذاكرة التخزين المؤقت")) {
