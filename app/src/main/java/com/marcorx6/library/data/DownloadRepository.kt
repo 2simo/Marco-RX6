@@ -139,11 +139,7 @@ internal class DownloadRepository(context: Context) {
         } else if (item.localPath.isNotBlank()) {
             File(item.localPath).delete()
         }
-        val directory = File(
-            appContext.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS)
-                ?: appContext.filesDir,
-            "MARCO_RX6"
-        )
+        val directory = File(appContext.filesDir, "MARCO_RX6_downloads")
         File(directory, "$id.part").delete()
         database.delete(id)
         return true

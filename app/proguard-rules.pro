@@ -10,3 +10,8 @@
 
 # Preserve generic and annotation metadata used by AndroidX and Google APIs.
 -keepattributes Signature,*Annotation*,InnerClasses,EnclosingMethod
+
+# WorkManager stores worker class names for scheduled and resumable work.
+-keep class com.marcorx6.library.data.ResumableDownloadWorker {
+    public <init>(android.content.Context, androidx.work.WorkerParameters);
+}

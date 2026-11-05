@@ -7,6 +7,8 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.ServiceInfo
 import android.os.Build
+import android.net.Uri
+import android.webkit.MimeTypeMap
 import android.provider.DocumentsContract
 import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
@@ -57,13 +59,7 @@ internal class ResumableDownloadWorker(
     }
 
     private fun download(item: StoredDownload, database: DownloadDatabase): Result {
-        val directory = File(
-            applicationContext.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS)
-                ?: applicationContext.filesDir,
-            "MARCO_RX6"
-        ).apply { mkdirs() }
-        val safeName = item.title.replace(Regex("[^A-Za-z0-9._-]"), "_")
-            .trim('_').take(90).ifBlank { "download_${item.id}" }
+        val directory = File(applicationContext.filesDir, "MARCO_RX6_downloads").apply { mkdirs() }
         val partial = File(directory, "${item.id}.part")
         var offset = if (partial.exists()) partial.length() else 0L
         var connection: HttpURLConnection? = null
@@ -100,6 +96,22 @@ internal class ResumableDownloadWorker(
             val etag = connection.getHeaderField("ETag") ?: item.etag
             val modified = connection.getHeaderField("Last-Modified") ?: item.lastModified
             val mime = connection.contentType?.substringBefore(';')?.trim().orEmpty().ifBlank { item.mimeType }
+            val remoteName = Uri.parse(item.url).lastPathSegment.orEmpty()
+            val suggestedName = remoteName.takeIf { it.contains('.') && !it.startsWith('.') } ?: item.title
+            val cleanedName = suggestedName.replace(Regex("[^A-Za-z0-9._-]"), "_")
+                .trim('_').take(100).ifBlank { "download_${item.id}" }
+            val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mime)
+            val safeName = if (!cleanedName.contains('.') && !extension.isNullOrBlank()) {
+                "$cleanedName.$extension"
+            } else cleanedName
+            if (append) {
+                val rangeStart = Regex("^bytes (\\d+)-").find(connection.getHeaderField("Content-Range").orEmpty())
+                    ?.groupValues?.getOrNull(1)?.toLongOrNull()
+                if (rangeStart != offset) {
+                    partial.delete()
+                    throw IOException("Server returned an invalid resume range")
+                }
+            }
             database.progress(item.id, offset, total, etag, modified)
             connection.inputStream.use { input ->
                 FileOutputStream(partial, append).use { sink ->
@@ -125,7 +137,7 @@ internal class ResumableDownloadWorker(
                 throw InterruptedException("Download stopped")
             }
             if (total > 0L && offset != total) {
-                throw IllegalStateException("Incomplete file: $offset / $total")
+                throw IOException("Incomplete file: $offset / $total")
             }
             val selectedTree = DownloadStoragePreferences(applicationContext).treeUri()
             val savedLocation = if (selectedTree != null) {
