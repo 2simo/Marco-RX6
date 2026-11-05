@@ -31,7 +31,8 @@ internal class DownloadUiController(
     private val isDarkMode: () -> Boolean,
     private val setContentView: (View) -> Unit,
     private val translate: (String) -> String,
-    private val onBack: () -> Unit
+    private val onBack: () -> Unit,
+    private val openGameSource: (String) -> Unit
 ) {
     fun enqueueGameDownload(
         link: String,
@@ -39,7 +40,8 @@ internal class DownloadUiController(
         userAgent: String = "",
         contentDisposition: String = "",
         hintedMimeType: String = "",
-        referrer: String = ""
+        referrer: String = "",
+        sourcePostUrl: String = ""
     ) {
         val secureLink = SecureUrlPolicy.toHttpsUrl(link)
         if (secureLink == null) {
@@ -48,7 +50,7 @@ internal class DownloadUiController(
         }
         Toast.makeText(activity, translate("جارٍ التحقق من رابط الملف…"), Toast.LENGTH_SHORT).show()
         downloadRepository.enqueue(
-            secureLink, title, userAgent, contentDisposition, hintedMimeType, referrer
+            secureLink, title, userAgent, contentDisposition, hintedMimeType, referrer, sourcePostUrl
         ) { result ->
             activity.runOnUiThread {
                 when (result) {
@@ -57,7 +59,7 @@ internal class DownloadUiController(
                     is DownloadStartResult.OpenInBrowser -> {
                         Toast.makeText(activity, translate("هذا رابط صفحة تحميل؛ افتح الصفحة لإكمال الخطوات واختيار الملف المباشر"), Toast.LENGTH_LONG).show()
                         DownloadPageDialog(activity, translate).show(result.finalUrl, title) { url, gameTitle, userAgent, disposition, mimeType, pageUrl ->
-                            enqueueGameDownload(url, gameTitle, userAgent, disposition, mimeType, pageUrl)
+                            enqueueGameDownload(url, gameTitle, userAgent, disposition, mimeType, pageUrl, sourcePostUrl)
                         }
                     }
                     is DownloadStartResult.Failed ->
@@ -297,6 +299,11 @@ internal class DownloadUiController(
                         Toast.makeText(activity, translate("تم إلغاء التنزيل"), Toast.LENGTH_SHORT).show()
                     } else Toast.makeText(activity, translate("تعذر إلغاء التنزيل"), Toast.LENGTH_SHORT).show()
                 }, start = true)
+            }
+            if (item.status == DownloadManager.STATUS_FAILED && item.sourcePostUrl.isNotBlank()) {
+                addAction(smallAction(translate("تحديث رابط التحميل"), true) {
+                    openGameSource(item.sourcePostUrl)
+                })
             }
             if (item.status == DownloadManager.STATUS_SUCCESSFUL || item.status == DownloadManager.STATUS_FAILED) {
                 addAction(smallAction(translate("حذف")) {

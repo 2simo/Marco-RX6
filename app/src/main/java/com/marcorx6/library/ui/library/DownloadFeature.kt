@@ -10,10 +10,11 @@ internal class DownloadFeature(
     isDarkMode: () -> Boolean,
     setContentView: (android.view.View) -> Unit,
     translate: (String) -> String,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    openGameSource: (String) -> Unit
 ) {
     private val repository = DownloadRepository(activity.applicationContext)
-    private val controller = DownloadUiController(activity, repository, styleDialog, isDarkMode, setContentView, translate, onBack)
+    private val controller = DownloadUiController(activity, repository, styleDialog, isDarkMode, setContentView, translate, onBack, openGameSource)
 
     fun enqueueGameDownload(
         link: String,
@@ -21,9 +22,10 @@ internal class DownloadFeature(
         userAgent: String = "",
         contentDisposition: String = "",
         hintedMimeType: String = "",
-        referrer: String = ""
+        referrer: String = "",
+        sourcePostUrl: String = ""
     ) = controller.enqueueGameDownload(
-        link, title, userAgent, contentDisposition, hintedMimeType, referrer
+        link, title, userAgent, contentDisposition, hintedMimeType, referrer, sourcePostUrl
     )
 
     fun showManager() = controller.showDownloadManager()

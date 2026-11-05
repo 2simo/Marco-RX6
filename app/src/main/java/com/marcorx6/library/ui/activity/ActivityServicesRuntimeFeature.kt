@@ -14,12 +14,13 @@ internal class ActivityServicesRuntimeFeature(
     private val isDarkMode: () -> Boolean,
     private val translate: (String) -> String,
     setContentView: (android.view.View) -> Unit,
-    showHome: () -> Unit
+    showHome: () -> Unit,
+    openGameSource: (String) -> Unit
 ) {
     val ioExecutor = java.util.concurrent.Executors.newCachedThreadPool()
 
     private val downloadFeature by lazy {
-        DownloadFeature(activity, styleAlertDialog, isDarkMode, setContentView, translate) { showHome() }
+        DownloadFeature(activity, styleAlertDialog, isDarkMode, setContentView, translate, { showHome() }, openGameSource)
     }
     private val notificationsFeature by lazy { NotificationsFeature(activity, styleAlertDialog, translate) }
     private val systemBarAppearanceController by lazy {
@@ -44,9 +45,10 @@ internal class ActivityServicesRuntimeFeature(
         userAgent: String = "",
         contentDisposition: String = "",
         hintedMimeType: String = "",
-        referrer: String = ""
+        referrer: String = "",
+        sourcePostUrl: String = ""
     ) = downloadFeature.enqueueGameDownload(
-        link, title, userAgent, contentDisposition, hintedMimeType, referrer
+        link, title, userAgent, contentDisposition, hintedMimeType, referrer, sourcePostUrl
     )
 
     fun showDownloadManager() = downloadFeature.showManager()

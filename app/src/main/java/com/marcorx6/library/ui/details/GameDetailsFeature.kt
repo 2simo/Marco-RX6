@@ -18,7 +18,7 @@ internal class GameDetailsFeature(
     isDarkMode: () -> Boolean,
     fontFamilyName: () -> String,
     fontScale: () -> Float,
-    enqueueGameDownload: (String, String, String, String, String, String) -> Unit,
+    enqueueGameDownload: (String, String, String, String, String, String, String) -> Unit,
     white: () -> Int,
     red: () -> Int,
     gray: () -> Int,
@@ -74,8 +74,8 @@ internal class GameDetailsFeature(
         panel = panel,
         red = red,
         white = white,
-        enqueueDownload = { url, label ->
-            enqueueGameDownload(url, label, "", "", "", "")
+        enqueueDownload = { url, label, sourcePostUrl ->
+            enqueueGameDownload(url, label, "", "", "", "", sourcePostUrl)
         },
         translate = tr
     )

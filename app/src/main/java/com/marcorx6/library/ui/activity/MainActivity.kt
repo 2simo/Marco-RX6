@@ -134,7 +134,11 @@ class MainActivity : ComponentActivity() {
     private fun showFirebaseAccount() = firebaseAccountController.show()
 
     private val activityServicesRuntimeFeature: ActivityServicesRuntimeFeature by lazy {
-        ActivityServicesRuntimeFeature(this, ::styleAlertDialog, ::isDarkMode, ::tr, ::showRootScreen, ::createInterface)
+        ActivityServicesRuntimeFeature(this, ::styleAlertDialog, ::isDarkMode, ::tr, ::showRootScreen, ::createInterface) { source ->
+            val target = games.firstOrNull { it.sourcePostUrl == source || it.url == source }
+            if (target != null) gameExperienceFeature.showDetails(target)
+            else Toast.makeText(this, tr("تعذر العثور على معلومات اللعبة داخل المكتبة؛ حدّث المكتبة أولاً"), Toast.LENGTH_LONG).show()
+        }
     }
 
     private val appearancePaletteFeature: AppearancePaletteRuntimeFeature by lazy { AppearancePaletteRuntimeFeature(this) }
@@ -487,7 +491,9 @@ class MainActivity : ComponentActivity() {
             isDarkMode = ::isDarkMode,
             fontFamilyName = ::fontFamilyName,
             fontScale = ::fontScale,
-            enqueueGameDownload = activityServicesRuntimeFeature::enqueueGameDownload,
+            enqueueGameDownload = { url, title, agent, disposition, mime, referrer, source ->
+                activityServicesRuntimeFeature.enqueueGameDownload(url, title, agent, disposition, mime, referrer, source)
+            },
             white = { white },
             red = { red },
             gray = { gray },

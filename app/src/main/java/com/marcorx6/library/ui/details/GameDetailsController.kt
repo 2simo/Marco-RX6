@@ -46,9 +46,9 @@ internal class GameDetailsController(
         // The game page is intentionally limited to the cover + one information card
         // + native download buttons. Blogger HTML is used only to extract metadata
         // and direct download links; the article body is not displayed here.
-        val bloggerDownloadButtons = downloadLinksViewFactory.createFromHtml(game.bloggerHtml, game.name)
+        val bloggerDownloadButtons = downloadLinksViewFactory.createFromHtml(game.bloggerHtml, game.name, game.sourcePostUrl.ifBlank { game.url })
         val downloadButtons = bloggerDownloadButtons
-            ?: downloadLinksViewFactory.create(game.downloadLinks, game.name)
+            ?: downloadLinksViewFactory.create(game.downloadLinks, game.name, game.sourcePostUrl.ifBlank { game.url })
         downloadButtons?.let { buttons ->
             content.addView(buttons, LinearLayout.LayoutParams(-1, -2))
         }

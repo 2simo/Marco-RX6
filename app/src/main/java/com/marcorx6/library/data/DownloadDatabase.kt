@@ -20,11 +20,12 @@ internal data class StoredDownload(
     val etag: String,
     val lastModified: String,
     val localPath: String,
-    val error: String
+    val error: String,
+    val sourcePostUrl: String
 )
 
 internal class DownloadDatabase private constructor(context: Context) :
-    SQLiteOpenHelper(context.applicationContext, "marco_downloads.db", null, 1) {
+    SQLiteOpenHelper(context.applicationContext, "marco_downloads.db", null, 2) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -42,21 +43,41 @@ internal class DownloadDatabase private constructor(context: Context) :
                 etag TEXT NOT NULL DEFAULT '',
                 last_modified TEXT NOT NULL DEFAULT '',
                 local_path TEXT NOT NULL DEFAULT '',
-                error TEXT NOT NULL DEFAULT ''
+                error TEXT NOT NULL DEFAULT '',
+                source_post_url TEXT NOT NULL DEFAULT ''
             )"""
         )
     }
 
-    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        if (oldVersion < 2) db.execSQL("ALTER TABLE downloads ADD COLUMN source_post_url TEXT NOT NULL DEFAULT ''")
+    }
 
     @Synchronized
-    fun insert(id: Long, url: String, title: String, userAgent: String, cookie: String, referrer: String, mime: String) {
+    fun insert(id: Long, url: String, title: String, userAgent: String, cookie: String, referrer: String, mime: String, sourcePostUrl: String = "") {
         val values = ContentValues().apply {
             put("id", id); put("url", url); put("title", title)
             put("user_agent", userAgent); put("cookie", cookie); put("referrer", referrer)
             put("mime_type", mime); put("status", DownloadManager.STATUS_PENDING)
+            put("source_post_url", sourcePostUrl)
         }
         writableDatabase.insertOrThrow("downloads", null, values)
+    }
+
+    @Synchronized
+    fun findFailedBySource(sourcePostUrl: String): StoredDownload? {
+        if (sourcePostUrl.isBlank()) return null
+        return readableDatabase.query("downloads", null, "source_post_url=? AND status=?", arrayOf(sourcePostUrl, DownloadManager.STATUS_FAILED.toString()), null, null, "id DESC", "1")
+            .use { if (it.moveToFirst()) it.toRecord() else null }
+    }
+
+    @Synchronized
+    fun refreshSource(id: Long, url: String, userAgent: String, cookie: String, referrer: String, mime: String) {
+        writableDatabase.update("downloads", ContentValues().apply {
+            put("url", url); put("user_agent", userAgent); put("cookie", cookie)
+            put("referrer", referrer); put("mime_type", mime)
+            put("status", DownloadManager.STATUS_PENDING); put("error", "")
+        }, "id=?", arrayOf(id.toString()))
     }
 
     @Synchronized
@@ -123,7 +144,8 @@ internal class DownloadDatabase private constructor(context: Context) :
         etag = getString(getColumnIndexOrThrow("etag")),
         lastModified = getString(getColumnIndexOrThrow("last_modified")),
         localPath = getString(getColumnIndexOrThrow("local_path")),
-        error = getString(getColumnIndexOrThrow("error"))
+        error = getString(getColumnIndexOrThrow("error")),
+        sourcePostUrl = getString(getColumnIndexOrThrow("source_post_url"))
     )
 
     companion object {

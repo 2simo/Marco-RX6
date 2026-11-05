@@ -19,7 +19,7 @@ internal class GameExperienceRuntimeFeature(
     private val isDarkMode: () -> Boolean,
     private val fontFamilyName: () -> String,
     private val fontScale: () -> Float,
-    private val enqueueGameDownload: (String, String, String, String, String, String) -> Unit,
+    private val enqueueGameDownload: (String, String, String, String, String, String, String) -> Unit,
     private val white: () -> Int,
     private val red: () -> Int,
     private val gray: () -> Int,

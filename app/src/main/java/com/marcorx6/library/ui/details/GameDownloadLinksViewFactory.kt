@@ -21,17 +21,17 @@ internal class GameDownloadLinksViewFactory(
     private val panel: () -> Int,
     private val red: () -> Int,
     private val white: () -> Int,
-    private val enqueueDownload: (url: String, label: String) -> Unit,
+    private val enqueueDownload: (url: String, label: String, sourcePostUrl: String) -> Unit,
     private val translate: (String) -> String
 ) {
-    fun createFromHtml(bloggerHtml: String, gameName: String): View? {
+    fun createFromHtml(bloggerHtml: String, gameName: String, sourcePostUrl: String): View? {
         if (bloggerHtml.isBlank()) return null
         // Reuse the strict Blogger link classifier so article/social/navigation links
         // are not incorrectly rendered as download buttons.
-        return create(BloggerFeedParser.extractDownloadLinks(bloggerHtml), gameName)
+        return create(BloggerFeedParser.extractDownloadLinks(bloggerHtml), gameName, sourcePostUrl)
     }
 
-    fun create(downloadLinks: String, gameName: String): View? {
+    fun create(downloadLinks: String, gameName: String, sourcePostUrl: String): View? {
         val downloads = try { JSONArray(downloadLinks) } catch (_: Exception) { JSONArray() }
         if (downloads.length() == 0) return null
 
@@ -92,7 +92,7 @@ internal class GameDownloadLinksViewFactory(
                         )
                         .setNegativeButton(translate("إلغاء"), null)
                         .setPositiveButton(translate("بدء التنزيل")) { _, _ ->
-                            enqueueDownload(target, downloadTitle)
+                            enqueueDownload(target, downloadTitle, sourcePostUrl)
                         }
                         .show()
                 }

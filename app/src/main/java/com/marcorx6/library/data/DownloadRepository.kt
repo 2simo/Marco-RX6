@@ -26,7 +26,8 @@ internal data class DownloadEntry(
     val status: Int,
     val downloadedBytes: Long,
     val totalBytes: Long,
-    val mimeType: String?
+    val mimeType: String?,
+    val sourcePostUrl: String
 )
 
 internal sealed class DownloadStartResult {
@@ -48,6 +49,7 @@ internal class DownloadRepository(context: Context) {
         contentDisposition: String = "",
         hintedMimeType: String = "",
         referrer: String = "",
+        sourcePostUrl: String = "",
         onResult: (DownloadStartResult) -> Unit
     ) {
         Thread {
@@ -61,11 +63,17 @@ internal class DownloadRepository(context: Context) {
                     if (!probe.finalUrl.startsWith("https://", ignoreCase = true)) {
                         throw SecurityException("رابط التحويل النهائي لا يستخدم HTTPS؛ تم إيقاف التنزيل لحماية بياناتك")
                     }
-                    val id = System.currentTimeMillis().coerceAtLeast(1L)
                     val finalTitle = probe.fileName ?: title.ifBlank { "MARCO RX6" }
                     val cookie = CookieManager.getInstance().getCookie(probe.finalUrl).orEmpty()
-                    database.insert(id, probe.finalUrl, finalTitle, userAgent, cookie, referrer, probe.mimeType)
-                    enqueueWork(id, ExistingWorkPolicy.KEEP)
+                    val previous = database.findFailedBySource(sourcePostUrl)
+                    if (previous != null) {
+                        database.refreshSource(previous.id, probe.finalUrl, userAgent, cookie, referrer, probe.mimeType)
+                        enqueueWork(previous.id, ExistingWorkPolicy.REPLACE)
+                    } else {
+                        val id = System.currentTimeMillis().coerceAtLeast(1L)
+                        database.insert(id, probe.finalUrl, finalTitle, userAgent, cookie, referrer, probe.mimeType, sourcePostUrl)
+                        enqueueWork(id, ExistingWorkPolicy.KEEP)
+                    }
                     DownloadStartResult.Enqueued(finalTitle)
                 }
             } catch (error: Exception) {
@@ -95,7 +103,8 @@ internal class DownloadRepository(context: Context) {
             status = item.status,
             downloadedBytes = item.downloadedBytes,
             totalBytes = item.totalBytes,
-            mimeType = item.mimeType
+            mimeType = item.mimeType,
+            sourcePostUrl = item.sourcePostUrl
         )
     }
 
