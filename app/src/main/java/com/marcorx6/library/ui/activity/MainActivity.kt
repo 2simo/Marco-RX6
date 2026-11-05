@@ -307,9 +307,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        FirebaseAppCheck.getInstance().installAppCheckProviderFactory(
-            PlayIntegrityAppCheckProviderFactory.getInstance()
-        )
+        val appCheckProvider: AppCheckProviderFactory =
+            if (BuildConfig.DEBUG) DebugAppCheckProviderFactory.getInstance()
+            else PlayIntegrityAppCheckProviderFactory.getInstance()
+        FirebaseAppCheck.getInstance().installAppCheckProviderFactory(appCheckProvider)
         onBackPressedDispatcher.addCallback(this, secondaryScreenBackCallback)
         firebaseSessionCoordinator.start()
         lifecycleCoordinator.onCreate()
