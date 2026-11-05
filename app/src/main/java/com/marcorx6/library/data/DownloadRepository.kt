@@ -4,10 +4,20 @@ import android.app.DownloadManager
 import android.content.Context
 import android.net.Uri
 import android.webkit.CookieManager
+import androidx.core.content.FileProvider
+import androidx.work.BackoffPolicy
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.marcorx6.library.network.SecureUrlPolicy
+import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 internal data class DownloadEntry(
     val id: Long,
@@ -24,13 +34,11 @@ internal sealed class DownloadStartResult {
     data class Failed(val message: String) : DownloadStartResult()
 }
 
-/**
- * Handles secure URL inspection and Android DownloadManager operations.
- * Presentation and user feedback are owned by the UI layer.
- */
+/** Owns the app's persistent, resumable download queue. */
 internal class DownloadRepository(context: Context) {
     private val appContext = context.applicationContext
-    private val manager = appContext.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+    private val database = DownloadDatabase.get(appContext)
+    private val workManager = WorkManager.getInstance(appContext)
 
     fun enqueue(
         link: String,
@@ -52,22 +60,14 @@ internal class DownloadRepository(context: Context) {
                     if (!probe.finalUrl.startsWith("https://", ignoreCase = true)) {
                         throw SecurityException("رابط التحويل النهائي لا يستخدم HTTPS؛ تم إيقاف التنزيل لحماية بياناتك")
                     }
-                    val request = DownloadManager.Request(Uri.parse(probe.finalUrl))
-                        .setTitle(title.ifBlank { "MARCO RX6" })
-                        .setDescription("تنزيل ملف عبر MARCO RX6")
-                        .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                        .setAllowedOverMetered(true)
-                        .setAllowedOverRoaming(false)
-                    if (probe.mimeType.isNotBlank()) request.setMimeType(probe.mimeType)
-                    if (userAgent.isNotBlank()) request.addRequestHeader("User-Agent", userAgent)
-                    if (Uri.parse(secureLink).host.equals(Uri.parse(probe.finalUrl).host, ignoreCase = true)) {
-                        CookieManager.getInstance().getCookie(probe.finalUrl)?.takeIf { it.isNotBlank() }?.let {
-                            request.addRequestHeader("Cookie", it)
-                        }
-                    }
-                    if (referrer.isNotBlank()) request.addRequestHeader("Referer", referrer)
-                    manager.enqueue(request)
-                    DownloadStartResult.Enqueued(title.ifBlank { "MARCO RX6" })
+                    val id = System.currentTimeMillis().coerceAtLeast(1L)
+                    val finalTitle = title.ifBlank { "MARCO RX6" }
+                    val cookie = if (Uri.parse(secureLink).host.equals(Uri.parse(probe.finalUrl).host, true)) {
+                        CookieManager.getInstance().getCookie(probe.finalUrl).orEmpty()
+                    } else ""
+                    database.insert(id, probe.finalUrl, finalTitle, userAgent, cookie, referrer, probe.mimeType)
+                    enqueueWork(id, ExistingWorkPolicy.KEEP)
+                    DownloadStartResult.Enqueued(finalTitle)
                 }
             } catch (error: Exception) {
                 DownloadStartResult.Failed(error.message ?: "تعذر بدء تنزيل الملف")
@@ -76,31 +76,73 @@ internal class DownloadRepository(context: Context) {
         }.start()
     }
 
-    fun getDownloads(): List<DownloadEntry> {
-        val query = DownloadManager.Query().setFilterByStatus(
-            DownloadManager.STATUS_PENDING or DownloadManager.STATUS_RUNNING or
-                DownloadManager.STATUS_PAUSED or DownloadManager.STATUS_SUCCESSFUL or
-                DownloadManager.STATUS_FAILED
-        )
-        val entries = mutableListOf<DownloadEntry>()
-        manager.query(query)?.use { cursor ->
-            while (cursor.moveToNext()) {
-                entries += DownloadEntry(
-                    id = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_ID)),
-                    title = cursor.getString(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TITLE)),
-                    status = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)),
-                    downloadedBytes = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)),
-                    totalBytes = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)),
-                    mimeType = cursor.getString(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_MEDIA_TYPE))
-                )
-            }
-        }
-        return entries
+    private fun enqueueWork(id: Long, policy: ExistingWorkPolicy) {
+        val request = OneTimeWorkRequestBuilder<ResumableDownloadWorker>()
+            .setInputData(workDataOf(ResumableDownloadWorker.KEY_ID to id))
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build()
+            )
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30L, TimeUnit.SECONDS)
+            .build()
+        workManager.enqueueUniqueWork(workName(id), policy, request)
     }
 
-    fun openDownloadedFile(id: Long): Uri? = manager.getUriForDownloadedFile(id)
+    fun getDownloads(): List<DownloadEntry> = database.all().map { item ->
+        DownloadEntry(
+            id = item.id,
+            title = item.title,
+            status = item.status,
+            downloadedBytes = item.downloadedBytes,
+            totalBytes = item.totalBytes,
+            mimeType = item.mimeType
+        )
+    }
 
-    fun deleteDownload(id: Long): Boolean = manager.remove(id) > 0
+    fun pauseDownload(id: Long): Boolean {
+        val item = database.get(id) ?: return false
+        if (item.status == DownloadManager.STATUS_SUCCESSFUL) return false
+        database.status(id, DownloadManager.STATUS_PAUSED)
+        workManager.cancelUniqueWork(workName(id))
+        return true
+    }
+
+    fun resumeDownload(id: Long): Boolean {
+        val item = database.get(id) ?: return false
+        if (item.status == DownloadManager.STATUS_SUCCESSFUL) return false
+        database.status(id, DownloadManager.STATUS_PENDING)
+        enqueueWork(id, ExistingWorkPolicy.REPLACE)
+        return true
+    }
+
+    fun openDownloadedFile(id: Long): Uri? {
+        val item = database.get(id) ?: return null
+        if (item.status != DownloadManager.STATUS_SUCCESSFUL || item.localPath.isBlank()) return null
+        val file = File(item.localPath)
+        if (!file.isFile) return null
+        return FileProvider.getUriForFile(
+            appContext,
+            "${appContext.packageName}.files",
+            file
+        )
+    }
+
+    fun deleteDownload(id: Long): Boolean {
+        val item = database.get(id) ?: return false
+        workManager.cancelUniqueWork(workName(id))
+        if (item.localPath.isNotBlank()) File(item.localPath).delete()
+        val directory = File(
+            appContext.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS)
+                ?: appContext.filesDir,
+            "MARCO_RX6"
+        )
+        File(directory, "$id.part").delete()
+        database.delete(id)
+        return true
+    }
+
+    private fun workName(id: Long) = "marco_rx6_download_$id"
 
     private data class DownloadProbe(
         val finalUrl: String,
@@ -133,8 +175,6 @@ internal class DownloadRepository(context: Context) {
             val finalUrl = connection.url.toString()
             if (code !in 200..299) throw IllegalStateException("الخادم رفض رابط التنزيل (HTTP $code)")
             if (mime == "text/html" || mime == "application/xhtml+xml") {
-                // Hand HTML interstitials to the in-app browser so the user can
-                // complete normal site steps and select a real file link.
                 return DownloadProbe(finalUrl, mime, false)
             }
             val path = Uri.parse(finalUrl).lastPathSegment.orEmpty().lowercase(Locale.ROOT)
