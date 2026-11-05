@@ -39,11 +39,7 @@ internal class ResumableDownloadWorker(
         } catch (error: Exception) {
             val latest = database.get(id)
             if (latest == null || latest.status == DownloadDatabase.STATUS_CANCELLED) {
-                val directory = File(
-                    applicationContext.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS)
-                        ?: applicationContext.filesDir,
-                    "MARCO_RX6"
-                )
+                val directory = File(applicationContext.filesDir, "MARCO_RX6_downloads")
                 File(directory, "$id.part").delete()
                 Result.success()
             } else if (latest.status == DownloadManager.STATUS_PAUSED) {
