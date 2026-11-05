@@ -109,6 +109,30 @@ class BloggerAccessControllerTest {
     }
 
     @Test
+    fun refreshesUiAndExplainsWhenSignedInAccountHasNoBlogId() {
+        var admin = true
+        var refreshed = 0
+        var errorMessage: String? = null
+        val controller = BloggerAccessController(
+            executor = directExecutor,
+            checkAccess = { true },
+            currentAccountId = { "account-1" },
+            currentBlogId = { "" },
+            setAdmin = { admin = it },
+            postToUi = { it() },
+            refreshUi = { refreshed++ },
+            onDenied = {},
+            onError = { errorMessage = it }
+        )
+
+        controller.refresh("", "account-1", true)
+
+        assertEquals(false, admin)
+        assertEquals(1, refreshed)
+        assertEquals(true, errorMessage?.contains("معرّف مدونة Blogger") == true)
+    }
+
+    @Test
     fun clearsAdminWhenAccountOrBlogIsMissing() {
         var admin = true
         var checks = 0
