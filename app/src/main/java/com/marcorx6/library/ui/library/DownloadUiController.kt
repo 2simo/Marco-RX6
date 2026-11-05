@@ -143,7 +143,7 @@ internal class DownloadUiController(
         val rows = linkedMapOf<Long, RowViews>()
         val lastSpeedSample = mutableMapOf<Long, Pair<Long, Long>>()
         val handler = Handler(Looper.getMainLooper())
-        lateinit var render: () -> Unit
+        var render: (() -> Unit)? = null
         val emptyState = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
@@ -270,14 +270,14 @@ internal class DownloadUiController(
             if (item.status == DownloadManager.STATUS_RUNNING || item.status == DownloadManager.STATUS_PENDING) {
                 addAction(smallAction(translate("إيقاف مؤقت")) {
                     if (downloadRepository.pauseDownload(item.id)) {
-                        lastSpeedSample.remove(item.id); render.invoke()
+                        lastSpeedSample.remove(item.id); render?.invoke()
                         Toast.makeText(activity, translate("تم إيقاف التنزيل مؤقتاً"), Toast.LENGTH_SHORT).show()
                     } else Toast.makeText(activity, translate("تعذر إيقاف التنزيل مؤقتاً"), Toast.LENGTH_SHORT).show()
                 })
             } else if (item.status == DownloadManager.STATUS_PAUSED) {
                 addAction(smallAction(translate("استكمال")) {
                     if (downloadRepository.resumeDownload(item.id)) {
-                        lastSpeedSample.remove(item.id); render.invoke()
+                        lastSpeedSample.remove(item.id); render?.invoke()
                         Toast.makeText(activity, translate("تم استكمال التنزيل"), Toast.LENGTH_SHORT).show()
                     } else Toast.makeText(activity, translate("تعذر استكمال التنزيل"), Toast.LENGTH_SHORT).show()
                 })
@@ -286,7 +286,7 @@ internal class DownloadUiController(
                 item.status == DownloadManager.STATUS_PAUSED) {
                 addAction(smallAction(translate("إلغاء التنزيل")) {
                     if (downloadRepository.deleteDownload(item.id)) {
-                        lastSpeedSample.remove(item.id); render.invoke()
+                        lastSpeedSample.remove(item.id); render?.invoke()
                         Toast.makeText(activity, translate("تم إلغاء التنزيل"), Toast.LENGTH_SHORT).show()
                     } else Toast.makeText(activity, translate("تعذر إلغاء التنزيل"), Toast.LENGTH_SHORT).show()
                 }, start = true)
@@ -298,7 +298,7 @@ internal class DownloadUiController(
                         .setNegativeButton(translate("إلغاء"), null)
                         .setPositiveButton(translate("حذف")) { _, _ ->
                             if (downloadRepository.deleteDownload(item.id)) {
-                                lastSpeedSample.remove(item.id); render.invoke()
+                                lastSpeedSample.remove(item.id); render?.invoke()
                                 Toast.makeText(activity, translate("تم حذف التنزيل"), Toast.LENGTH_SHORT).show()
                             } else Toast.makeText(activity, translate("تعذر حذف التنزيل"), Toast.LENGTH_SHORT).show()
                         }.show()
@@ -375,11 +375,11 @@ internal class DownloadUiController(
                 }
             }
         }
-        render.invoke()
+        render?.invoke()
         val refreshTask = object : Runnable {
             override fun run() {
                 if (!activity.isFinishing && !activity.isDestroyed && root.isAttachedToWindow) {
-                    render.invoke()
+                    render?.invoke()
                     handler.postDelayed(this, 900L)
                 }
             }
