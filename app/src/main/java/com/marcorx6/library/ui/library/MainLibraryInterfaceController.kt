@@ -501,16 +501,16 @@ internal class MainLibraryInterfaceController(
         applyUnifiedSkin(shell)
         ViewCompat.setOnApplyWindowInsetsListener(shell) { _, insets ->
             val safeAreas = insets.getInsets(
-                WindowInsetsCompat.Type.navigationBars() or WindowInsetsCompat.Type.displayCutout()
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
             )
             dockParams.bottomMargin = dp(12) + safeAreas.bottom
             dock.layoutParams = dockParams
-            pageScroll.setPadding(0, 0, 0, dp(84) + safeAreas.bottom)
+            pageScroll.setPadding(0, safeAreas.top, 0, dp(84) + safeAreas.bottom)
             insets
         }
         setContentView(shell)
         applyMotionPreferences(shell)
-        root.requestApplyInsets()
+        ViewCompat.requestApplyInsets(shell)
         search.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
