@@ -52,6 +52,8 @@ internal class BloggerPostComposerController(
     private val saveGames: () -> Unit,
     private val renderGames: () -> Unit,
     private val applyUnifiedSkin: (View) -> Unit,
+    private val setContentView: (View) -> Unit,
+    private val onBack: () -> Unit,
     private val translate: (String) -> String
 ) {
     private data class LinkFields(val label: EditText, val url: EditText, val row: LinearLayout)
@@ -234,13 +236,47 @@ internal class BloggerPostComposerController(
             setPadding(0, dp(3), 0, dp(8))
             addView(box)
         }
-        val dialog = AlertDialog.Builder(activity)
-            .setView(scroll)
-            .setNegativeButton(translate("إغلاق"), null)
-            .setNeutralButton(translate("معاينة"), null)
-            .setPositiveButton(translate(if (existing == null) "نشر المقال" else "حفظ التعديلات"), null)
-            .create()
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        val page = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(14), dp(10), dp(14), dp(12))
+            setBackgroundColor(bg())
+        }
+        val toolbar = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(4), dp(4), dp(4), dp(10))
+        }
+        val back = ImageView(activity).apply {
+            setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
+            contentDescription = translate("الرجوع من استوديو النشر")
+            setPadding(dp(12), dp(12), dp(12), dp(12))
+            background = rounded(panel(), 14)
+            setOnClickListener { onBack() }
+        }
+        toolbar.addView(back, LinearLayout.LayoutParams(dp(48), dp(48)))
+        toolbar.addView(makeText(translate(if (existing == null) "استوديو النشر" else "تحرير المقال"), 19f, white(), true),
+            LinearLayout.LayoutParams(0, -2, 1f))
+        page.addView(toolbar, LinearLayout.LayoutParams(-1, -2))
+        page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
+        val actions = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, dp(10), 0, 0)
+        }
+        val closeButton = makeAction("إغلاق").apply {
+            setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.ic_menu_revert, 0, 0, 0)
+            setOnClickListener { onBack() }
+        }
+        val previewButton = makeAction("معاينة").apply {
+            setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.ic_menu_view, 0, 0, 0)
+        }
+        val publishButton = makeAction(if (existing == null) "نشر المقال" else "حفظ التعديلات", primary = true).apply {
+            setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.ic_menu_save, 0, 0, 0)
+        }
+        actions.addView(closeButton, LinearLayout.LayoutParams(0, dp(52), 1f).apply { marginEnd = dp(6) })
+        actions.addView(previewButton, LinearLayout.LayoutParams(0, dp(52), 1f).apply { marginEnd = dp(6) })
+        actions.addView(publishButton, LinearLayout.LayoutParams(0, dp(52), 1.25f))
+        page.addView(actions, LinearLayout.LayoutParams(-1, -2))
 
         fun collectLinks(): String? {
             val result = JSONArray()
@@ -261,15 +297,7 @@ internal class BloggerPostComposerController(
             return result.toString()
         }
 
-        dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).apply {
-                minHeight = dp(48)
-                contentDescription = translate("إغلاق استوديو النشر")
-            }
-            dialog.getButton(AlertDialog.BUTTON_NEUTRAL).apply {
-                minHeight = dp(48)
-                contentDescription = translate("معاينة المقال قبل النشر")
-                setOnClickListener {
+        previewButton.setOnClickListener {
                     val linksJson = collectLinks() ?: return@setOnClickListener
                     val firstUrl = try { JSONArray(linksJson).optJSONObject(0)?.optString("url").orEmpty() } catch (_: Exception) { "" }
                     if (firstUrl.isBlank()) {
@@ -304,11 +332,8 @@ internal class BloggerPostComposerController(
                     styleAlertDialog(previewDialog)
                     previewDialog.getButton(AlertDialog.BUTTON_POSITIVE).minHeight = dp(48)
                 }
-            }
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).apply {
-                minHeight = dp(52)
-                contentDescription = translate(if (existing == null) "نشر المقال على Blogger" else "حفظ تعديلات المقال")
-                setOnClickListener {
+        }
+        publishButton.setOnClickListener {
                     val postTitle = title.text.toString().trim()
                     val coverLink = coverUrl.text.toString().trim()
                     val linksJson = collectLinks() ?: return@setOnClickListener
@@ -358,7 +383,7 @@ internal class BloggerPostComposerController(
                         rights = rights.text.toString(),
                         downloadLinksJson = linksJson
                     )
-                    isEnabled = false
+                    publishButton.isEnabled = false
                     saveController.save(
                         post = post,
                         labels = selectedLabels.toList(),
@@ -372,30 +397,20 @@ internal class BloggerPostComposerController(
                             resetCoverUploadFailed()
                             saveGames()
                             renderGames()
-                            dialog.dismiss()
                             Toast.makeText(activity, translate("تم نشر المقال على Blogger"), Toast.LENGTH_LONG).show()
                         },
                         onError = { message ->
-                            dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true
+                            publishButton.isEnabled = true
                             Toast.makeText(activity, translate(message), Toast.LENGTH_LONG).show()
                         }
                     )
-                }
-            }
         }
 
-        dialog.show()
-        styleAlertDialog(dialog)
-        applyUnifiedSkin(box)
-        box.alpha = 0f
-        box.translationY = dp(14).toFloat()
-        box.animate().alpha(1f).translationY(0f).setDuration(280L)
+        setContentView(page)
+        applyUnifiedSkin(page)
+        page.alpha = 0f
+        page.translationY = dp(14).toFloat()
+        page.animate().alpha(1f).translationY(0f).setDuration(280L)
             .setInterpolator(android.view.animation.DecelerateInterpolator()).start()
-        dialog.window?.apply {
-            setBackgroundDrawableResource(android.R.color.transparent)
-            setLayout(-1, -1)
-            setGravity(Gravity.FILL)
-            setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
-        }
     }
 }
