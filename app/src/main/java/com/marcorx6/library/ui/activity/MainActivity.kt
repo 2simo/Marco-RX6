@@ -1,6 +1,8 @@
 
 package com.marcorx6.library.ui.activity
 
+import com.marcorx6.library.BuildConfig
+
 import com.marcorx6.library.ui.appearance.AppearanceRuntimeFeature
 import com.marcorx6.library.ui.appearance.AppearancePaletteRuntimeFeature
 import com.marcorx6.library.ui.blog.BloggerRuntimeFeature
