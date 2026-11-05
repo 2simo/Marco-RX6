@@ -2,7 +2,8 @@ package com.marcorx6.library.ui
 
 import androidx.activity.ComponentActivity
 import android.content.SharedPreferences
-import android.widget.Toast\nimport com.marcorx6.library.ui.settings.LocalContentTranslator
+import android.widget.Toast
+import com.marcorx6.library.ui.settings.LocalContentTranslator
 
 /** Owns language preference access, translation, and language picker interaction. */
 internal class LanguageFeature(
@@ -19,7 +20,12 @@ internal class LanguageFeature(
 
     fun showPicker() {
         val codes = arrayOf("ar", "en", "fr", "es")
-        val labels = arrayOf(translate("العربية"), translate("الإنجليزية"), translate("الفرنسية"), translate("الإسبانية"))
+        val labels = arrayOf(
+            translate("العربية"),
+            translate("الإنجليزية"),
+            translate("الفرنسية"),
+            translate("الإسبانية")
+        )
         val current = codes.indexOf(currentLanguage()).coerceAtLeast(0)
         android.app.AlertDialog.Builder(activity)
             .setTitle(translate("اختر لغة التطبيق"))
