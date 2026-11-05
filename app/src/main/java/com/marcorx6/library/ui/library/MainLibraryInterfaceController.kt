@@ -434,11 +434,11 @@ internal class MainLibraryInterfaceController(
                     setStroke(dp(1), if (active) Color.argb(185, 135, 204, 255)
                     else Color.TRANSPARENT)
                 }
+                val iconTint = if (active) Color.WHITE
+                    else if (isDarkMode()) Color.rgb(190, 211, 235) else Color.rgb(62, 91, 130)
                 (item.getChildAt(0) as? ImageView)?.imageTintList =
-                    android.content.res.ColorStateList.valueOf(
-                        if (active) Color.WHITE
-                        else if (isDarkMode()) Color.rgb(190, 211, 235) else Color.rgb(62, 91, 130)
-                    )
+                    android.content.res.ColorStateList.valueOf(iconTint)
+                (item.getChildAt(1) as? TextView)?.setTextColor(iconTint)
                 item.animate().cancel()
                 item.scaleX = 1f
                 item.scaleY = 1f
@@ -448,9 +448,9 @@ internal class MainLibraryInterfaceController(
             val item = LinearLayout(context).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
-                setPadding(dp(5), dp(5), dp(5), dp(5))
+                setPadding(dp(4), dp(4), dp(4), dp(3))
                 minimumWidth = dp(48)
-                minimumHeight = dp(48)
+                minimumHeight = dp(58)
                 isClickable = true
                 isFocusable = true
                 if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
@@ -470,12 +470,20 @@ internal class MainLibraryInterfaceController(
                     if (isDarkMode()) silver else Color.rgb(62, 91, 130)
                 )
                 scaleType = ImageView.ScaleType.FIT_CENTER
-                contentDescription = label
                 importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-            }, LinearLayout.LayoutParams(dp(25), dp(25)))
+            }, LinearLayout.LayoutParams(dp(21), dp(21)))
+            item.addView(TextView(context).apply {
+                text = label
+                textSize = 9f
+                maxLines = 1
+                gravity = Gravity.CENTER
+                typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                setTextColor(if (isDarkMode()) silver else Color.rgb(62, 91, 130))
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(2) })
             dockItems[key] = item
             dockLabels[key] = label
-            dock.addView(item, LinearLayout.LayoutParams(0, dp(48), 1f).apply {
+            dock.addView(item, LinearLayout.LayoutParams(0, dp(58), 1f).apply {
                 marginStart = dp(3); marginEnd = dp(3)
             })
         }
