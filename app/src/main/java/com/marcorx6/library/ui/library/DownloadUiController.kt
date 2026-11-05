@@ -270,7 +270,7 @@ internal class DownloadUiController(
                         minHeight = dp(42)
                         setPadding(dp(13), dp(9), dp(13), dp(9))
                         setTextColor(if (filled) Color.WHITE else primary)
-                        background = GradientDrawable().apply {
+                        this.background = GradientDrawable().apply {
                             setColor(if (filled) Color.argb(225, 42, 145, 255)
                                 else if (dark) Color.argb(190, 15, 43, 70) else Color.WHITE)
                             cornerRadius = dp(12).toFloat()
