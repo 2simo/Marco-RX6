@@ -43,7 +43,7 @@ internal class CoverRepository(context: Context) : AutoCloseable {
             bundledAsset.isNotBlank() -> "asset:$bundledAsset|url:$imageUrl"
             else -> "url:$imageUrl"
         }
-        if (localFile == null && !hasBundledAsset && imageUrl.isBlank()) {
+        if (localFile == null && bundledAsset.isBlank() && imageUrl.isBlank()) {
             mainHandler.post { onLoaded(null) }
             return key
         }
