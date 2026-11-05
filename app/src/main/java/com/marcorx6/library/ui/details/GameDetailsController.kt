@@ -9,6 +9,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import android.widget.LinearLayout
 import android.widget.ScrollView
+import android.widget.FrameLayout
 import com.marcorx6.library.data.Game
 import java.io.File
 
@@ -68,7 +69,7 @@ internal class GameDetailsController(
         val content = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
         }
-        contentScroll.addView(content, ScrollView.LayoutParams(-1, -2))
+        contentScroll.addView(content, FrameLayout.LayoutParams(-1, -2))
         root.addView(contentScroll, LinearLayout.LayoutParams(-1, 0, 1f))
 
         val identity = identityViewFactory.create(game)
