@@ -54,7 +54,7 @@ internal class DownloadRepository(context: Context) {
             val result = try {
                 val secureLink = SecureUrlPolicy.toHttpsUrl(link)
                     ?: throw SecurityException("رابط التنزيل غير آمن أو غير صالح؛ يجب استخدام HTTPS")
-                val probe = inspect(secureLink, userAgent, contentDisposition, hintedMimeType)
+                val probe = inspect(secureLink, userAgent, contentDisposition, hintedMimeType, referrer)
                 if (!probe.isDirectFile) {
                     DownloadStartResult.OpenInBrowser(probe.finalUrl)
                 } else {
@@ -63,9 +63,7 @@ internal class DownloadRepository(context: Context) {
                     }
                     val id = System.currentTimeMillis().coerceAtLeast(1L)
                     val finalTitle = probe.fileName ?: title.ifBlank { "MARCO RX6" }
-                    val cookie = if (Uri.parse(secureLink).host.equals(Uri.parse(probe.finalUrl).host, true)) {
-                        CookieManager.getInstance().getCookie(probe.finalUrl).orEmpty()
-                    } else ""
+                    val cookie = CookieManager.getInstance().getCookie(probe.finalUrl).orEmpty()
                     database.insert(id, probe.finalUrl, finalTitle, userAgent, cookie, referrer, probe.mimeType)
                     enqueueWork(id, ExistingWorkPolicy.KEEP)
                     DownloadStartResult.Enqueued(finalTitle)
@@ -158,7 +156,8 @@ internal class DownloadRepository(context: Context) {
         link: String,
         userAgent: String,
         hintedDisposition: String,
-        hintedMimeType: String
+        hintedMimeType: String,
+        referrer: String
     ): DownloadProbe {
         val connection = (URL(link).openConnection() as HttpURLConnection).apply {
             instanceFollowRedirects = true
@@ -166,7 +165,10 @@ internal class DownloadRepository(context: Context) {
             readTimeout = 12000
             requestMethod = "GET"
             setRequestProperty("Range", "bytes=0-0")
+            setRequestProperty("Accept", "*/*")
+            setRequestProperty("Accept-Encoding", "identity")
             if (userAgent.isNotBlank()) setRequestProperty("User-Agent", userAgent)
+            if (referrer.isNotBlank()) setRequestProperty("Referer", referrer)
             CookieManager.getInstance().getCookie(link)?.takeIf { it.isNotBlank() }?.let {
                 setRequestProperty("Cookie", it)
             }
