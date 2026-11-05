@@ -291,6 +291,7 @@ internal object LanguageTranslator {
             "تسجيل Google العادي لا يفعّل النشر. اربط هنا حساب Blogger المشرف نفسه لتفعيل النشر ورفع الأغلفة" to listOf("A regular Google sign-in does not enable publishing. Link the Blogger owner account here to enable publishing and cover uploads.", "Une connexion Google classique n’active pas la publication. Associez ici le compte propriétaire Blogger pour activer la publication et l’envoi des couvertures.", "Un inicio de sesión normal de Google no activa la publicación. Vincula aquí la cuenta propietaria de Blogger para activar la publicación y la subida de portadas."),
             "عرض مساحة التطبيق والملفات المؤقتة وإدارة ذاكرة التخزين المؤقت" to listOf("View app storage and temporary files and manage the cache", "Consulter le stockage de l’application et les fichiers temporaires, et gérer le cache", "Ver el almacenamiento de la aplicación y los archivos temporales y gestionar la caché"),
             "معلومات اللعبة" to listOf("Game information", "Informations sur le jeu", "Información del juego"),
+            "نبذة عن اللعبة" to listOf("About this game", "À propos de ce jeu", "Acerca de este juego"),
             "الحجم" to listOf("Size", "Taille", "Tamaño"),
             "حجم" to listOf("Size", "Taille", "Tamaño"),
             "النسخة" to listOf("Version", "Version", "Versión"),
