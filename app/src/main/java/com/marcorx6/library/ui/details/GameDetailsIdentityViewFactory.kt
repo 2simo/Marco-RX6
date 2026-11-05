@@ -80,6 +80,19 @@ internal class GameDetailsIdentityViewFactory(
             bottomMargin = dp(13)
         })
 
+        // App-branded introduction belongs above the metadata card, not below download buttons.
+        root.addView(makeText(
+            "أهلاً بمستخدمي تطبيق MARCO RX6 الكرام، إليكم لعبة جديدة من إضافاتنا الحصرية بروابط مباشرة وسريعة.",
+            14f,
+            muted,
+            false
+        ).apply {
+            gravity = android.view.Gravity.START
+            textDirection = android.view.View.TEXT_DIRECTION_RTL
+            setLineSpacing(dp(2).toFloat(), 1f)
+            setPadding(dp(3), dp(2), dp(3), dp(14))
+        }, LinearLayout.LayoutParams(-1, -2))
+
         val details = extractGameDetails(game.bloggerHtml)
         if (details.isNotEmpty()) {
             val infoCard = LinearLayout(activity).apply {
