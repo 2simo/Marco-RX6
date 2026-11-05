@@ -41,7 +41,9 @@ internal class GameDetailsIdentityViewFactory(
         }
 
         val cover = ImageView(activity).apply {
-            scaleType = ImageView.ScaleType.CENTER_CROP
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            adjustViewBounds = true
+            maxHeight = dp(270)
             background = GradientDrawable().apply {
                 setColor(if (dark) Color.rgb(13, 34, 57) else Color.rgb(225, 240, 255))
                 cornerRadius = dp(15).toFloat()
@@ -54,7 +56,9 @@ internal class GameDetailsIdentityViewFactory(
         } else {
             cover.setImageResource(android.R.drawable.ic_menu_gallery)
         }
-        root.addView(cover, LinearLayout.LayoutParams(-1, dp(184)))
+        root.addView(cover, LinearLayout.LayoutParams(dp(180), dp(270)).apply {
+            gravity = android.view.Gravity.CENTER_HORIZONTAL
+        })
 
         root.addView(makeText(game.name, 21f, primary, true).apply {
             maxLines = 2
@@ -133,28 +137,47 @@ internal class GameDetailsIdentityViewFactory(
 
     private fun extractGameDetails(html: String): List<Pair<String, String>> {
         if (html.isBlank()) return emptyList()
-        val normalizedHtml = html
-            .replace(Regex("(?i)<br\\s*/?>"), "\n")
-            .replace(Regex("(?i)</(p|div|li|tr|h[1-6]|blockquote)\\s*>"), "\n")
-            .replace(Regex("(?i)<li\\b[^>]*>"), "\n")
-        val plain = Html.fromHtml(normalizedHtml, Html.FROM_HTML_MODE_LEGACY).toString()
-            .replace('\u00a0', ' ')
-            .replace(Regex("[ \\t]+"), " ")
         val fields = listOf(
             "الحجم" to listOf("الحجم", "حجم", "size"),
             "النسخة" to listOf("النسخة", "version", "title id", "cusa"),
             "الصيغة" to listOf("الصيغة", "format"),
             "اللغة" to listOf("اللغة", "language", "languages"),
-            "كلمة السر" to listOf("كلمة السر", "password", "pass"),
+            "كلمة السر" to listOf("كلمة السر", "كلمه السر", "password", "pass"),
             "الحقوق" to listOf("الحقوق", "credits", "rights")
         )
-        return fields.map { (label, aliases) ->
-            val alternatives = aliases.joinToString("|") { Regex.escape(it) }
-            val match = Regex(
-                "(?im)(?:^|[\\n\\r|•])\\s*(?:$alternatives)[ \\t]*[:：-][ \\t]*([^\\n\\r|•]*)"
-            ).find(plain)
-            val value = match?.groupValues?.get(1)?.trim()?.trimEnd('.', ',', ';')
-            label to value?.takeIf { it.isNotBlank() }.orEmpty().ifBlank { "غير محدد" }
+        fun plainText(value: String): String = Html.fromHtml(
+            value, Html.FROM_HTML_MODE_LEGACY
+        ).toString().replace('\\u00a0', ' ').replace(Regex("\\s+"), " ").trim()
+
+        // Blogger commonly puts every field in its own <li>. Parse each item
+        // independently so a missing newline cannot merge the next field into it.
+        val entries = linkedMapOf<String, String>()
+        Regex("(?is)<li\\b[^>]*>(.*?)</li\\s*>").findAll(html).forEach { item ->
+            val text = plainText(item.groupValues[1]).trim(' ', ':', '：', '-', '•')
+            fields.forEach { (label, aliases) ->
+                val alias = aliases.joinToString("|") { Regex.escape(it) }
+                val match = Regex("(?i)^\\s*(?:$alias)\\s*[:：-]\\s*(.*?)\\s*$").find(text)
+                val value = match?.groupValues?.get(1)?.trim()?.trimEnd('.', ',', ';')
+                if (!value.isNullOrBlank()) entries[label] = value
+            }
         }
+
+        // Fallback for articles that use paragraphs or plain text rather than list items.
+        if (entries.size < fields.size) {
+            val plain = plainText(
+                html.replace(Regex("(?i)<br\\s*/?>"), "\\n")
+                    .replace(Regex("(?i)</(p|div|tr|h[1-6]|blockquote)\\s*>"), "\\n")
+            )
+            fields.forEach { (label, aliases) ->
+                if (entries[label].isNullOrBlank()) {
+                    val alias = aliases.joinToString("|") { Regex.escape(it) }
+                    val match = Regex("(?i)(?:^|[\\n\\r])\\s*(?:$alias)\\s*[:：-]\\s*([^\\n\\r]+)").find(plain)
+                    match?.groupValues?.get(1)?.trim()?.takeIf { it.isNotBlank() }?.let {
+                        entries[label] = it.trimEnd('.', ',', ';')
+                    }
+                }
+            }
+        }
+        return fields.map { (label, _) -> label to (entries[label]?.takeIf { it.isNotBlank() } ?: "غير محدد") }
     }
 }
