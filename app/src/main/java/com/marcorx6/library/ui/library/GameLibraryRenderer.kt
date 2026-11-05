@@ -58,15 +58,6 @@ internal class GameLibraryRenderer(
                     })
                     return
                 }
-                val heading = LinearLayout(activity).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
-                val title = when (selected) {
-                    "ALL" -> tr("اكتشف الألعاب"); "FAVORITES" -> tr("المفضلة"); "BLOG" -> tr("المدونة")
-                    "WANT_TO_PLAY" -> tr("أريد لعبها"); "PLAYING" -> tr("ألعبها حالياً"); "COMPLETED" -> tr("أنهيتها")
-                    else -> tr("ألعاب") + " " + selected
-                }
-                heading.addView(makeText(title, 18f, white, true), LinearLayout.LayoutParams(0, -2, 1f))
-                heading.addView(makeText(sorted.size.toString() + " " + tr("لعبة"), 10f, red, true))
-                gameList.addView(heading, LinearLayout.LayoutParams(-1, -2).apply { setMargins(dp(2), dp(10), dp(2), dp(12)) })
                 for (index in sorted.indices step 2) {
                     val row = LinearLayout(activity).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.TOP }
                     for (offset in 0..1) {
