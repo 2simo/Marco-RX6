@@ -195,6 +195,14 @@ internal class MainLibraryInterfaceController(
             setPadding(dp(10), 0, dp(6), 0)
             setAdapter(ArrayAdapter(context, android.R.layout.simple_dropdown_item_1line,
                 games().map { it.name }.distinct().take(80)))
+            // Keep autocomplete suggestions aligned with the active glass theme instead
+            // of Android's default opaque grey popup.
+            setDropDownBackgroundDrawable(GradientDrawable().apply {
+                setColor(if (isDarkMode()) Color.rgb(13, 34, 56) else Color.rgb(248, 251, 255))
+                cornerRadius = dp(14).toFloat()
+                setStroke(dp(1), if (isDarkMode()) Color.rgb(58, 111, 169) else Color.rgb(174, 205, 239))
+            })
+            dropDownVerticalOffset = dp(5)
             setOnFocusChangeListener { _, focused ->
                 if (focused && text.isNotEmpty()) showDropDown()
             }
