@@ -20,6 +20,14 @@ internal class BloggerAccessController(
         val version = ++requestVersion
         if (!hasAccount || accountId == null || blogId.isBlank()) {
             setAdmin(false)
+            postToUi {
+                if (version == requestVersion) {
+                    refreshUi()
+                    if (hasAccount && accountId != null && blogId.isBlank()) {
+                        onError("معرّف مدونة Blogger غير متوفر حالياً. انتظر اكتمال المزامنة ثم أعد ربط حساب المشرف من الإعدادات.")
+                    }
+                }
+            }
             return
         }
 
