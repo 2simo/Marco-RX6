@@ -34,12 +34,25 @@ internal class FirstRunSetupViewFactory(
                 )
             }
             elevation = dp(if (selected) 4 else 1).toFloat()
-            addView(makeText(
-                if (selected) "✓   $label" else label,
+            val optionHeader = LinearLayout(activity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+            }
+            optionHeader.addView(makeText(
+                label,
                 16f,
                 if (selected) android.graphics.Color.WHITE else android.graphics.Color.rgb(222, 232, 245),
                 true
-            ))
+            ), LinearLayout.LayoutParams(0, -2, 1f))
+            if (selected) {
+                optionHeader.addView(android.widget.ImageView(activity).apply {
+                    setImageResource(com.marcorx6.library.R.drawable.ic_action_check)
+                    imageTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.WHITE)
+                    contentDescription = "Selected"
+                    scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
+                }, LinearLayout.LayoutParams(dp(22), dp(22)))
+            }
+            addView(optionHeader)
             if (detail.isNotBlank()) {
                 addView(makeText(detail, 10f, android.graphics.Color.rgb(153, 174, 199), false).apply {
                     setPadding(0, dp(5), 0, 0)
