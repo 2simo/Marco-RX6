@@ -39,7 +39,15 @@ internal class GameArticleWebViewFactory(
             }
             val raw = if (bloggerHtml.isNotBlank()) bloggerHtml else
                 "<h2>$gameName</h2>"
-            val articleHtml = raw.replace(Regex("(?is)<script[^>]*>.*?</script>"), "")
+            // The details screen shows the library cover separately. Keep this article
+            // area informational only: remove embedded media and inline links so that
+            // the cover is displayed once and download destinations appear only as buttons.
+            val articleHtml = raw
+                .replace(Regex("(?is)<script[^>]*>.*?</script>"), "")
+                .replace(Regex("(?is)<style[^>]*>.*?</style>"), "")
+                .replace(Regex("(?is)<(img|source|picture|svg|iframe|video|audio|object|embed)\\b[^>]*>(?:.*?</\\1\\s*>)?"), "")
+                .replace(Regex("(?is)<a\\b[^>]*>.*?</a\\s*>"), "")
+                .replace(Regex("(?is)</?(figure|figcaption)\\b[^>]*>"), "")
                 .replace(Regex("(?i)\\s(onload|onclick|onerror)\\s*=\\s*(['\"]).*?\\2"), "")
             val style = """
                 <meta name="viewport" content="width=device-width, initial-scale=1">
