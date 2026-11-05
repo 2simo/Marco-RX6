@@ -10,10 +10,12 @@ import java.net.URL
 import java.util.Locale
 
 internal data class DownloadEntry(
+    val id: Long,
     val title: String,
     val status: Int,
     val downloadedBytes: Long,
-    val totalBytes: Long
+    val totalBytes: Long,
+    val mimeType: String?
 )
 
 internal sealed class DownloadStartResult {
@@ -84,15 +86,21 @@ internal class DownloadRepository(context: Context) {
         manager.query(query)?.use { cursor ->
             while (cursor.moveToNext()) {
                 entries += DownloadEntry(
+                    id = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_ID)),
                     title = cursor.getString(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TITLE)),
                     status = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)),
                     downloadedBytes = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)),
-                    totalBytes = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+                    totalBytes = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)),
+                    mimeType = cursor.getString(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_MEDIA_TYPE))
                 )
             }
         }
         return entries
     }
+
+    fun openDownloadedFile(id: Long): Uri? = manager.getUriForDownloadedFile(id)
+
+    fun deleteDownload(id: Long): Boolean = manager.remove(id) > 0
 
     private data class DownloadProbe(
         val finalUrl: String,
