@@ -14,7 +14,6 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import com.marcorx6.library.data.Game
-import java.io.File
 
 internal class ProfileController(
     private val activity: Activity,
@@ -137,74 +136,6 @@ internal class ProfileController(
         stats.addView(statCard(favoriteCount.toString(), tr("المفضلة")), LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(6) })
         box.addView(stats, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(14) })
 
-        fun directoryBytes(directory: File?): Long {
-            if (directory == null || !directory.exists()) return 0L
-            return try {
-                directory.walkTopDown().filter { it.isFile }.sumOf { file ->
-                    try { file.length().coerceAtLeast(0L) } catch (_: Exception) { 0L }
-                }
-            } catch (_: Exception) { 0L }
-        }
-        fun readableSize(bytes: Long): String {
-            val mb = bytes.toDouble() / (1024.0 * 1024.0)
-            return if (mb >= 1024.0) String.format(java.util.Locale.ROOT, "%.2f GB", mb / 1024.0)
-            else String.format(java.util.Locale.ROOT, "%.1f MB", mb)
-        }
-        val cacheBytes = directoryBytes(activity.cacheDir)
-        val appFilesBytes = directoryBytes(activity.filesDir)
-        val storageCard = LinearLayout(activity).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            background = GradientDrawable(
-                GradientDrawable.Orientation.LEFT_RIGHT,
-                if (dark) intArrayOf(Color.argb(220, 21, 63, 102), Color.argb(207, 8, 27, 47))
-                else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(216, 224, 240, 255))
-            ).apply {
-                cornerRadius = dp(16).toFloat()
-                setStroke(dp(1), if (dark) Color.argb(155, 80, 151, 215) else Color.argb(165, 153, 195, 236))
-            }
-            elevation = dp(2).toFloat()
-            setPadding(dp(14), dp(13), dp(14), dp(13))
-            addView(makeText("▤", 22f, Color.rgb(75, 165, 255), true))
-            val copy = LinearLayout(activity).apply {
-                orientation = LinearLayout.VERTICAL
-                setPadding(dp(12), 0, 0, 0)
-                addView(makeText(tr("مساحة التخزين"), 13f, white(), true))
-                addView(makeText("${tr("ملفات التطبيق:")} ${readableSize(appFilesBytes)}  •  Cache: ${readableSize(cacheBytes)}", 10f, gray(), false).apply {
-                    setPadding(0, dp(3), 0, 0)
-                })
-            }
-            addView(copy, LinearLayout.LayoutParams(0, -2, 1f))
-            addView(makeText("›", 22f, gray(), true))
-            minimumHeight = dp(56)
-            isClickable = true
-            isFocusable = true
-            contentDescription = tr("عرض تفاصيل مساحة التخزين وإعدادات التطبيق")
-            setOnClickListener {
-                AlertDialog.Builder(activity)
-                    .setTitle(tr("مساحة التخزين"))
-                    .setMessage(
-                        "${tr("ملفات التطبيق:")} ${readableSize(appFilesBytes)}\n" +
-                        "${tr("الملفات المؤقتة (Cache):")} ${readableSize(cacheBytes)}\n\n" +
-                        tr("هذه أرقام الملفات المحلية التي يديرها التطبيق. لا يتم حذف أي ملف من هنا.")
-                    )
-                    .setPositiveButton(tr("إعدادات التخزين")) { _, _ ->
-                        try {
-                            val intent = android.content.Intent(
-                                android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                                android.net.Uri.parse("package:${activity.packageName}")
-                            )
-                            activity.startActivity(intent)
-                        } catch (_: Exception) {
-                            Toast.makeText(activity, tr("تعذر فتح إعدادات التطبيق"), Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                    .setNegativeButton(tr("إغلاق"), null)
-                    .show().also(styleAlertDialog)
-            }
-            addTouchFeedback(this)
-        }
-        box.addView(storageCard, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
         fun settingButton(icon: String, label: String, detail: String, action: () -> Unit) = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -234,9 +165,7 @@ internal class ProfileController(
             setOnClickListener { action() }
             addTouchFeedback(this)
         }
-        box.addView(settingButton("♙", tr("الحساب"), tr("إنشاء حساب أو تسجيل الدخول • الاستخدام كزائر متاح")) { showAccount() }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
-        box.addView(settingButton("文", tr("اللغة"), tr("العربية • English • Français • Español")) { showLanguagePicker() }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
-        box.addView(settingButton("♧", tr("الإشعارات"), tr("التحكم في تنبيهات المقالات الجديدة")) { showNotificationSettings() })
+        box.addView(settingButton("♙", tr("الحساب"), tr("إنشاء حساب أو تسجيل الدخول • الاستخدام كزائر متاح")) { showAccount() })
         val header = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
