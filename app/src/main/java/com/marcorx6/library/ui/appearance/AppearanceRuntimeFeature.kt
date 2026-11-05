@@ -76,6 +76,8 @@ internal class AppearanceRuntimeFeature(
             recreateInterface = recreateInterface,
             showLanguagePicker = ::showLanguagePicker,
             showNotificationSettings = showNotifications,
+            adminSessionConnected = adminSessionConnected,
+            onAdminSessionAction = onAdminSessionAction,
             setContentView = setContentView,
             onBack = onBack,
             translate = ::translate
