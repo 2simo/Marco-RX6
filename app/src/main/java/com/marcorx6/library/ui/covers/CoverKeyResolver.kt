@@ -7,17 +7,15 @@ internal object CoverKeyResolver {
     fun resolve(
         localPath: String,
         imageUrl: String,
-        stableCacheName: (String) -> String,
-        assetExists: (String) -> Boolean
+        stableCacheName: (String) -> String
     ): String {
         val localFile = localPath.takeIf { it.isNotBlank() && File(it).isFile }?.let(::File)
         val asset = if (imageUrl.isNotBlank()) {
             "offline_images/${stableCacheName(imageUrl)}.webp"
         } else ""
-        val hasAsset = asset.isNotBlank() && assetExists(asset)
         return when {
             localFile != null -> "file:${localFile.absolutePath}|url:$imageUrl"
-            hasAsset -> "asset:$asset|url:$imageUrl"
+            asset.isNotBlank() -> "asset:$asset|url:$imageUrl"
             else -> "url:$imageUrl"
         }
     }
