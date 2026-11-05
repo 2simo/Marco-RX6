@@ -264,7 +264,9 @@ internal class DownloadUiController(
                     progress.progress = percent
                     lastProgress[item.id] = percent
                 }
-                if (item.status == DownloadManager.STATUS_SUCCESSFUL || item.status == DownloadManager.STATUS_FAILED) {
+                if (item.status == DownloadManager.STATUS_SUCCESSFUL || item.status == DownloadManager.STATUS_FAILED ||
+                    item.status == DownloadManager.STATUS_RUNNING || item.status == DownloadManager.STATUS_PENDING ||
+                    item.status == DownloadManager.STATUS_PAUSED) {
                     val row = LinearLayout(activity).apply {
                         orientation = LinearLayout.HORIZONTAL
                         gravity = Gravity.CENTER_VERTICAL
@@ -303,6 +305,20 @@ internal class DownloadUiController(
                             }
                         }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
                     }
+                    if (item.status == DownloadManager.STATUS_RUNNING || item.status == DownloadManager.STATUS_PENDING || item.status == DownloadManager.STATUS_PAUSED) {
+                        row.addView(smallAction(translate("إلغاء التنزيل")) {
+                            if (downloadRepository.deleteDownload(item.id)) {
+                                lastProgress.remove(item.id)
+                                lastSpeedSample.remove(item.id)
+                                lastRenderedSnapshot = null
+                                render()
+                                Toast.makeText(activity, translate("تم إلغاء التنزيل"), Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(activity, translate("تعذر إلغاء التنزيل"), Toast.LENGTH_SHORT).show()
+                            }
+                        }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
+                    }
+                    if (item.status == DownloadManager.STATUS_SUCCESSFUL || item.status == DownloadManager.STATUS_FAILED) {
                     row.addView(smallAction(translate("حذف")) {
                         AlertDialog.Builder(activity)
                             .setMessage(translate("هل تريد حذف هذا التنزيل؟"))
@@ -318,6 +334,7 @@ internal class DownloadUiController(
                                 }
                             }.show()
                     }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(6) })
+                    }
                     card.addView(row)
                 }
                 list.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
