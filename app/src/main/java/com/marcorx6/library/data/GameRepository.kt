@@ -29,7 +29,6 @@ internal class GameRepository(context: Context) {
                     .put("isFavorite", game.isFavorite)
                     .put("bloggerPostId", game.bloggerPostId)
                     .put("bloggerHtml", game.bloggerHtml)
-                    .put("playStatus", game.playStatus)
                     .put("genre", game.genre)
                     .put("releaseYear", game.releaseYear)
             )
@@ -59,7 +58,6 @@ internal class GameRepository(context: Context) {
                         item.optBoolean("isFavorite", false),
                         item.optString("bloggerPostId", ""),
                         item.optString("bloggerHtml", ""),
-                        item.optString("playStatus", ""),
                         item.optString("genre", ""),
                         item.optString("releaseYear", "")
                     )
