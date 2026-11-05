@@ -45,7 +45,7 @@ internal class GameDownloadLinksViewFactory(
                 normalizedLabel.contains("paste link") ||
                 normalizedLabel.contains("insert link")) return@forEachIndexed
             parsed.put(org.json.JSONObject().put("url", href).put(
-                "label", label.ifBlank { "\${translate("تحميل")} \${index + 1}" }
+                "label", label.ifBlank { "${translate("تحميل")} ${index + 1}" }
             ))
         }
         return create(parsed.toString(), gameName)
@@ -62,7 +62,7 @@ internal class GameDownloadLinksViewFactory(
         downloadSection.addView(TextView(activity).apply {
             text = "روابط التحميل"
             textSize = 16f
-            setTextColor(Color.WHITE)
+            setTextColor(white())
             setTypeface(null, Typeface.BOLD)
             setPadding(0, 0, 0, dp(8))
         }, LinearLayout.LayoutParams(-1, -2))
@@ -73,7 +73,7 @@ internal class GameDownloadLinksViewFactory(
             val item = downloads.optJSONObject(index) ?: continue
             val target = item.optString("url").trim()
             if (!target.startsWith("https://", ignoreCase = true)) continue
-            val label = item.optString("label").ifBlank { "\${translate("تحميل")} \${index + 1}" }
+            val label = item.optString("label").ifBlank { "${translate("تحميل")} ${index + 1}" }
             downloadRow.addView(TextView(activity).apply {
                 text = "⬇  $label"
                 contentDescription = label
