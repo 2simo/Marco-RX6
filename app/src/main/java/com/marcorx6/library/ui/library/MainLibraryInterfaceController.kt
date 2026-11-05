@@ -391,6 +391,9 @@ internal class MainLibraryInterfaceController(
             isFillViewport = true
             isVerticalScrollBarEnabled = false
             clipToPadding = false
+            // Reserve room for the floating dock so the final game card and actions
+            // remain reachable instead of being hidden underneath it.
+            setPadding(0, 0, 0, dp(84))
             addView(root, ViewGroup.LayoutParams(-1, -2))
         }
         val shell = FrameLayout(context).apply {
@@ -502,6 +505,7 @@ internal class MainLibraryInterfaceController(
             )
             dockParams.bottomMargin = dp(12) + safeAreas.bottom
             dock.layoutParams = dockParams
+            pageScroll.setPadding(0, 0, 0, dp(84) + safeAreas.bottom)
             insets
         }
         setContentView(shell)
