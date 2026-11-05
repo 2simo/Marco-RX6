@@ -232,7 +232,15 @@ internal class FirstRunSetupController(
                         notificationsEnabled = notificationsEnabled
                     ) {
                         dialog.dismiss()
-                        recreateActivity()
+                        CommunityChannelsController(
+                            activity = activity,
+                            dp = dp,
+                            makeText = makeText,
+                            translate = { value -> LanguageTranslator.translate(value, languageCode) }
+                        ).show {
+                            settings.edit().putBoolean("community_channels_prompted", true).apply()
+                            recreateActivity()
+                        }
                     }
                 }
             }
