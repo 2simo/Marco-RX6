@@ -55,7 +55,20 @@ internal class GameArticleWebViewFactory(
             // The details screen shows the library cover separately. Keep this article
             // area informational only: remove embedded media and inline links so that
             // the cover is displayed once and download destinations appear only as buttons.
-            val articleHtml = raw
+            // Metadata is already rendered in the dedicated information card above.
+            // Remove the matching Blogger list rows and heading from the article body
+            // so the old-format information does not appear a second time below buttons.
+            val withoutGameMetadata = raw
+                .replace(
+                    Regex("(?is)<li\\b[^>]*>.*?(?:الحجم|حجم|size|النسخة|version|title\\s*id|cusa|الصيغة|format|اللغة|languages?|كلمة\\s*السر|كلمه\\s*السر|password|pass|الحقوق|credits|rights).*?</li\\s*>"),
+                    ""
+                )
+                .replace(
+                    Regex("(?is)<h[1-6][^>]*>\\s*(?:معلومات\\s*اللعبة|game\\s*information)\\s*:?\\s*</h[1-6]>"),
+                    ""
+                )
+                .replace(Regex("(?is)<ul\\b[^>]*>\\s*</ul\\s*>"), "")
+            val articleHtml = withoutGameMetadata
                 .replace(Regex("(?is)<script[^>]*>.*?</script>"), "")
                 .replace(Regex("(?is)<style[^>]*>.*?</style>"), "")
                 .replace(Regex("(?is)<(img|source|picture|svg|iframe|video|audio|object|embed)\\b[^>]*>(?:.*?</\\1\\s*>)?"), "")
