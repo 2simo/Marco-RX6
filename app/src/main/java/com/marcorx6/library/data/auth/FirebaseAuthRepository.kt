@@ -47,8 +47,24 @@ internal class FirebaseAuthRepository(
         val user = auth.currentUser
             ?: return Tasks.forException(IllegalStateException("لا يوجد حساب حالي لربط Google به"))
         val credential = GoogleAuthProvider.getCredential(idToken, null)
-        return user.linkWithCredential(credential)
+        return user.linkWithCredential(credential).refreshLinkedUserToken()
     }
+
+    private fun Task<AuthResult>.refreshLinkedUserToken(): Task<AuthResult> =
+        continueWithTask { linkTask ->
+            if (!linkTask.isSuccessful) {
+                throw linkTask.exception ?: IllegalStateException("تعذر ربط الحساب")
+            }
+            val result = linkTask.result
+            val linkedUser = result.user
+                ?: return@continueWithTask Tasks.forResult(result)
+            linkedUser.getIdToken(true).continueWithTask { tokenTask ->
+                if (!tokenTask.isSuccessful) {
+                    throw tokenTask.exception ?: IllegalStateException("تعذر تحديث رمز الحساب")
+                }
+                Tasks.forResult(result)
+            }
+        }
 
     /** Sign in to an existing Firebase Google account. */
     fun signInWithGoogle(idToken: String): Task<AuthResult> =
