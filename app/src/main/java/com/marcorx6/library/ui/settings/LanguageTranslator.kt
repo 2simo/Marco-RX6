@@ -174,6 +174,7 @@ internal object LanguageTranslator {
             "مسح الفلاتر" to listOf("Clear filters", "Effacer les filtres", "Borrar filtros"),
             "إغلاق" to listOf("Close", "Fermer", "Cerrar"),
             "إشعارات المقالات الجديدة" to listOf("New article notifications", "Notifications des nouveaux articles", "Avisos de nuevos artículos"),
+            "فتح إعدادات الإشعارات" to listOf("Open notification settings", "Ouvrir les paramètres de notification", "Abrir ajustes de notificaciones"),
             "الإشعارات مفعّلة. يتحقق تطبيق MARCO RX6 من مدونتك دورياً وينبهك عند نشر مقال جديد." to listOf("Notifications are on. MARCO RX6 checks your blog periodically and alerts you when a new article is published.", "Les notifications sont activées. MARCO RX6 vérifie régulièrement votre blog et vous avertit lors d’une nouvelle publication.", "Las notificaciones están activadas. MARCO RX6 revisa tu blog periódicamente y te avisa cuando se publica un artículo nuevo."),
             "الإشعارات متوقفة. فعّلها ليصلك تنبيه عند نشر مقال جديد." to listOf("Notifications are off. Turn them on to be alerted when a new article is published.", "Les notifications sont désactivées. Activez-les pour être averti des nouveaux articles.", "Los avisos están desactivados. Actívalos para recibir alertas de nuevos artículos."),
             "إبقاء مفعّلة" to listOf("Keep enabled", "Laisser activées", "Mantener activadas"),
