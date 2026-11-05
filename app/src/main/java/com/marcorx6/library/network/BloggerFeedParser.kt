@@ -212,6 +212,7 @@ internal object BloggerFeedParser {
         val seenUrls = mutableSetOf<String>()
         val downloadTerms = listOf(
             "تحميل", "download", "game", "update", "dlc",
+            "اللعبة", "التحديث", "الباتش", "باتش",
             "mediafire", "mega", "google drive", "drive.google",
             "pixeldrain", "1fichier", "uptobox", "rapidgator",
             "uploaded", "filecrypt", "4shared"
@@ -224,14 +225,19 @@ internal object BloggerFeedParser {
             val label = decodeHtmlEntities(labelHtml.replace(Regex("(?is)<[^>]*>"), " "))
                 .replace(Regex("\\s+"), " ").trim()
             val normalizedLabel = label.lowercase(Locale.ROOT)
+            val urlPath = href.substringBefore('?').substringBefore('#').lowercase(Locale.ROOT)
+            val isImageUrl = Regex("\\.(?:jpe?g|png|gif|webp|bmp|svg|avif|jfif)$")
+                .containsMatchIn(urlPath)
 
-            // Blogger article bodies contain ordinary links as well as download links.
-            // Only keep links whose visible label identifies a download or known file host.
+            // Cover images are commonly wrapped in an anchor. Never expose image
+            // resources as download buttons, even if a stale/imported label resembles
+            // a file type such as OBJ.
+            // Keep links whose visible label identifies an actual game download.
             val isDownloadLink = downloadTerms.any { term ->
                 normalizedLabel.contains(term)
             }
             if (!href.startsWith("https://", ignoreCase = true) ||
-                label.isBlank() || !isDownloadLink || !seenUrls.add(href)
+                label.isBlank() || isImageUrl || !isDownloadLink || !seenUrls.add(href)
             ) continue
 
             result.put(JSONObject().put("label", label).put("url", href))
