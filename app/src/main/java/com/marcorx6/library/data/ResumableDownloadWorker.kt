@@ -114,7 +114,6 @@ internal class ResumableDownloadWorker(
                         val now = System.currentTimeMillis()
                         if (now - lastUpdate >= 500L) {
                             database.progress(item.id, offset, total, etag, modified)
-                            setProgressAsync(androidx.work.workDataOf("downloaded" to offset, "total" to total))
                             lastUpdate = now
                         }
                     }
