@@ -493,6 +493,7 @@ class MainActivity : ComponentActivity() {
             gray = { gray },
             panel = { panel },
             translate = ::tr,
+            targetLanguage = appearanceRuntimeFeature::currentLanguage,
             loadCover = coverRuntimeFeature::load,
             saveGames = gameDataRuntimeFeature::saveGames,
             renderGames = ::renderGames,
