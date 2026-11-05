@@ -96,8 +96,8 @@ internal class FirebaseAccountController(
                 }
                 clipToOutline = true
                 contentDescription = translate("صورة الحساب")
-                setImageResource(android.R.drawable.ic_menu_camera)
-                setColorFilter(Color.rgb(75, 165, 255))
+                setImageResource(com.marcorx6.library.R.drawable.ic_nav_profile)
+                imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(75, 165, 255))
             }
             page.addView(photoView, LinearLayout.LayoutParams(dp(104), dp(104)).apply {
                 gravity = Gravity.CENTER
@@ -204,7 +204,8 @@ internal class FirebaseAccountController(
                     }
                     if (profilePhotoData.isNullOrBlank() && user.photoUrl != null) {
                         // The provider photo remains available as the account's fallback identity.
-                        photoView.setImageResource(android.R.drawable.ic_menu_camera)
+                        photoView.setImageResource(com.marcorx6.library.R.drawable.ic_nav_profile)
+                        photoView.imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(75, 165, 255))
                     }
                     profileLoaded = true
                     saveButton.isEnabled = true
