@@ -24,6 +24,7 @@ internal class FirstRunSetupCompletionController(
             .putString("preferred_platform", preferredPlatform)
             .putBoolean("setup_completed", true)
             .putBoolean("profile_prompted", true)
+            .putBoolean("community_channels_prompted", false)
             .apply()
         appearance.edit()
             .putBoolean("dark_mode", darkMode)
