@@ -96,6 +96,32 @@ class BloggerFeedParserTest {
     }
 
     @Test
+    fun excludesLinkedBloggerCoverAndKeepsArabicDownloadButtons() {
+        val html = """
+            <div class="separator">
+              <a href="https://blogger.googleusercontent.com/img/b/cover/s747/game-cover.jpg">
+                <img src="https://blogger.googleusercontent.com/img/b/cover/s320/game-cover.jpg" />
+              </a>
+            </div>
+            <a href="https://vik1ngfile.site/f/game">اللعبة</a>
+            <a href="https://vik1ngfile.site/f/update">التحديث</a>
+            <a href="https://vik1ngfile.site/f/patch">الباتش</a>
+            <a href="https://vik1ngfile.site/f/dlc">DLC</a>
+        """.trimIndent()
+
+        val links = org.json.JSONArray(BloggerFeedParser.extractDownloadLinks(html))
+        assertEquals(4, links.length())
+        assertEquals("اللعبة", links.getJSONObject(0).getString("label"))
+        assertEquals("التحديث", links.getJSONObject(1).getString("label"))
+        assertEquals("الباتش", links.getJSONObject(2).getString("label"))
+        assertEquals("DLC", links.getJSONObject(3).getString("label"))
+        assertEquals(
+            "https://vik1ngfile.site/f/game",
+            links.getJSONObject(0).getString("url")
+        )
+    }
+
+    @Test
     fun decodesHtmlEntitiesInDownloadUrlsAndRemovesDuplicates() {
         val html = """
             <a href="https://example.com/download?id=1&amp;part=2">Download Part 1</a>
