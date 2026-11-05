@@ -2,6 +2,11 @@ package com.marcorx6.library.ui.auth
 
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.util.Base64
 import android.app.AlertDialog
 import android.text.InputType
 import android.text.method.HideReturnsTransformationMethod
@@ -12,6 +17,7 @@ import android.view.Gravity
 import android.view.View
 import android.util.Patterns
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -19,6 +25,7 @@ import android.widget.Toast
 import com.marcorx6.library.data.auth.FirebaseAuthRepository
 import com.marcorx6.library.data.auth.FirebaseUserDocumentRepository
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.EmailAuthProvider
@@ -44,6 +51,7 @@ internal class FirebaseAccountController(
     private val dp: (Int) -> Int,
     private val isDarkMode: () -> Boolean,
     private val applyUnifiedSkin: (View) -> Unit,
+    private val launchProfilePhotoPicker: (Intent) -> Unit,
     private val translate: (String) -> String
 ) {
     private val userDocuments = FirebaseUserDocumentRepository()
@@ -79,20 +87,138 @@ internal class FirebaseAccountController(
             action(page, translate("تسجيل الدخول بالبريد الإلكتروني"), translate("لديك حساب MARCO RX6 بالفعل؟"), dark, run = { showEmailForm(createAccount = false) })
             action(page, translate("نسيت كلمة المرور؟"), translate("استرجاع الوصول إلى حسابك"), dark, run = ::showPasswordResetForm)
         } else {
-            val displayName = user.displayName?.takeIf { it.isNotBlank() } ?: user.email.orEmpty()
+            val photoView = ImageView(activity).apply {
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                background = GradientDrawable().apply {
+                    shape = GradientDrawable.OVAL
+                    setColor(if (dark) Color.rgb(25, 53, 82) else Color.rgb(218, 235, 252))
+                    setStroke(dp(2), Color.rgb(75, 165, 255))
+                }
+                clipToOutline = true
+                contentDescription = translate("صورة الحساب")
+                setImageResource(android.R.drawable.ic_menu_camera)
+                setColorFilter(Color.rgb(75, 165, 255))
+            }
+            page.addView(photoView, LinearLayout.LayoutParams(dp(104), dp(104)).apply {
+                gravity = Gravity.CENTER
+                bottomMargin = dp(8)
+            })
+            action(page, translate("تغيير صورة الحساب"), translate("اختيار صورة من هاتفك وحفظها في ملفك السحابي"), dark, run = ::chooseProfilePhoto)
+
             page.addView(TextView(activity).apply {
-                text = displayName
-                textSize = 18f
+                text = translate("الاسم")
+                textSize = 13f
                 setTypeface(null, android.graphics.Typeface.BOLD)
                 setTextColor(if (dark) Color.WHITE else Color.rgb(18, 42, 68))
-                setPadding(0, dp(4), 0, dp(4))
+                setPadding(0, dp(8), 0, dp(6))
             })
+            val nameInput = accountInput(
+                translate("اسم المستخدم"),
+                InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS
+            ).apply {
+                setText(user.displayName.orEmpty())
+                setSelection(text.length)
+            }
+            page.addView(nameInput, LinearLayout.LayoutParams(-1, dp(54)).apply { bottomMargin = dp(12) })
+
+            page.addView(TextView(activity).apply {
+                text = translate("نبذة عنك")
+                textSize = 13f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(if (dark) Color.WHITE else Color.rgb(18, 42, 68))
+                setPadding(0, dp(4), 0, dp(6))
+            })
+            val bioInput = EditText(activity).apply {
+                hint = translate("اكتب نبذة قصيرة عنك...")
+                inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+                setSingleLine(false)
+                minLines = 3
+                maxLines = 5
+                gravity = Gravity.TOP or Gravity.START
+                textSize = 14f
+                setTextColor(if (dark) Color.WHITE else Color.rgb(20, 45, 70))
+                setHintTextColor(if (dark) Color.rgb(133, 164, 195) else Color.rgb(112, 139, 166))
+                setPadding(dp(16), dp(12), dp(16), dp(12))
+                background = GradientDrawable().apply {
+                    cornerRadius = dp(14).toFloat()
+                    setColor(if (dark) Color.argb(155, 20, 45, 72) else Color.argb(220, 255, 255, 255))
+                    setStroke(dp(1), if (dark) Color.argb(120, 103, 164, 222) else Color.argb(160, 151, 190, 226))
+                }
+            }
+            page.addView(bioInput, LinearLayout.LayoutParams(-1, dp(112)).apply { bottomMargin = dp(8) })
+
+            var profilePhotoData: String? = null
+            var profileLoaded = false
+            val saveButton = accountSubmitButton(translate("حفظ التغييرات")) { button ->
+                val name = nameInput.text.toString().trim()
+                val bio = bioInput.text.toString().trim()
+                if (name.isBlank() || name.length > 40) {
+                    toast("الاسم ضروري وخاصو يكون أقل من 40 حرف")
+                    return@accountSubmitButton
+                }
+                if (bio.length > 160) {
+                    toast("النبذة خاصها تكون أقل من 160 حرف")
+                    return@accountSubmitButton
+                }
+                if (!profileLoaded) {
+                    toast("كنحمّلو معلومات الملف الشخصي، عاود المحاولة بعد لحظة")
+                    return@accountSubmitButton
+                }
+                button.isEnabled = false
+                user.updateProfile(
+                    UserProfileChangeRequest.Builder().setDisplayName(name).build()
+                ).addOnSuccessListener {
+                    userDocuments.saveProfile(
+                        uid = user.uid,
+                        displayName = name,
+                        bio = bio,
+                        photoUrl = user.photoUrl?.toString(),
+                        photoData = profilePhotoData
+                    ).addOnSuccessListener {
+                        toast("تم حفظ معلومات الملف الشخصي")
+                        onAccountChanged()
+                    }.addOnFailureListener { error ->
+                        button.isEnabled = true
+                        toast(error.localizedMessage ?: "تعذر حفظ الملف الشخصي في السحابة")
+                    }
+                }.addOnFailureListener { error ->
+                    button.isEnabled = true
+                    toast(error.localizedMessage ?: "تعذر تحديث اسم الحساب")
+                }
+            }
+            saveButton.isEnabled = false
+            page.addView(saveButton, LinearLayout.LayoutParams(-1, dp(52)).apply { bottomMargin = dp(18) })
+
+            userDocuments.loadUser(user.uid)
+                .addOnSuccessListener { snapshot ->
+                    profilePhotoData = snapshot.getString("photoData")
+                    bioInput.setText(snapshot.getString("bio").orEmpty())
+                    profilePhotoData?.let { encoded ->
+                        runCatching {
+                            val bytes = Base64.decode(encoded, Base64.DEFAULT)
+                            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                        }.getOrNull()?.let { bitmap ->
+                            photoView.setImageBitmap(bitmap)
+                            photoView.clearColorFilter()
+                        }
+                    }
+                    if (profilePhotoData.isNullOrBlank() && user.photoUrl != null) {
+                        // The provider photo remains available as the account's fallback identity.
+                        photoView.setImageResource(android.R.drawable.ic_menu_camera)
+                    }
+                    profileLoaded = true
+                    saveButton.isEnabled = true
+                }
+                .addOnFailureListener { error ->
+                    toast(error.localizedMessage ?: "تعذر تحميل الملف الشخصي")
+                }
+
             user.email?.let { email ->
                 page.addView(TextView(activity).apply {
                     text = email
-                    textSize = 13f
+                    textSize = 12f
                     setTextColor(if (dark) Color.rgb(160, 190, 218) else Color.rgb(75, 105, 136))
-                    setPadding(0, 0, 0, dp(20))
+                    setPadding(0, 0, 0, dp(16))
                 })
             }
             action(page, translate("تسجيل الخروج"), translate("الخروج من حساب MARCO RX6"), dark, run = {
@@ -111,6 +237,70 @@ internal class FirebaseAccountController(
             setPadding(0, dp(18), 0, dp(8))
         })
         showAccountPage(page)
+    }
+
+    private fun chooseProfilePhoto() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "image/*"
+        }
+        launchProfilePhotoPicker(intent)
+    }
+
+    fun handleProfilePhotoSelected(uri: Uri) {
+        val user = authRepository.currentUser
+        if (user == null || user.isAnonymous) {
+            toast("سجّل الدخول أولاً لإضافة صورة الحساب")
+            return
+        }
+        try {
+            val encoded = compressProfilePhoto(uri)
+            userDocuments.saveProfile(
+                uid = user.uid,
+                displayName = user.displayName,
+                bio = null,
+                photoUrl = user.photoUrl?.toString(),
+                photoData = encoded
+            ).addOnSuccessListener {
+                toast("تم تحديث صورة الحساب")
+                show()
+            }.addOnFailureListener { error ->
+                toast(error.localizedMessage ?: "تعذر حفظ صورة الحساب")
+            }
+        } catch (error: Exception) {
+            toast(error.localizedMessage ?: "تعذرت قراءة الصورة المختارة")
+        }
+    }
+
+    private fun compressProfilePhoto(uri: Uri): String {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        activity.contentResolver.openInputStream(uri).use { stream ->
+            requireNotNull(stream) { "تعذرت قراءة الصورة" }
+            BitmapFactory.decodeStream(stream, null, bounds)
+        }
+        require(bounds.outWidth > 0 && bounds.outHeight > 0) { "الملف المختار ليس صورة صالحة" }
+        var sample = 1
+        while (bounds.outWidth / sample > 768 || bounds.outHeight / sample > 768) sample *= 2
+        val options = BitmapFactory.Options().apply { inSampleSize = sample }
+        val bitmap = activity.contentResolver.openInputStream(uri).use { stream ->
+            requireNotNull(stream) { "تعذرت قراءة الصورة" }
+            BitmapFactory.decodeStream(stream, null, options)
+        } ?: throw IllegalArgumentException("تعذر فك ترميز الصورة")
+        val scaled = if (bitmap.width > 384 || bitmap.height > 384) {
+            val ratio = minOf(384f / bitmap.width, 384f / bitmap.height)
+            Bitmap.createScaledBitmap(bitmap, (bitmap.width * ratio).toInt().coerceAtLeast(1), (bitmap.height * ratio).toInt().coerceAtLeast(1), true)
+        } else bitmap
+        if (scaled !== bitmap) bitmap.recycle()
+        val output = java.io.ByteArrayOutputStream()
+        var quality = 82
+        do {
+            output.reset()
+            scaled.compress(Bitmap.CompressFormat.JPEG, quality, output)
+            quality -= 8
+        } while (output.size() > 420_000 && quality >= 42)
+        scaled.recycle()
+        require(output.size() <= 450_000) { "الصورة كبيرة بزاف، اختار صورة أصغر" }
+        return Base64.encodeToString(output.toByteArray(), Base64.NO_WRAP)
     }
 
     private fun action(
