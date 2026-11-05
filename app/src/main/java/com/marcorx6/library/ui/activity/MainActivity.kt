@@ -374,7 +374,12 @@ class MainActivity : ComponentActivity() {
             loadCover = coverRuntimeFeature::load,
             showDetails = { game -> gameExperienceFeature.showDetails(game) },
             styleDialog = ::styleAlertDialog,
-            showNotificationSettings = activityServicesRuntimeFeature::showNotificationSettings,
+            toggleDarkMode = {
+                appearancePreferences().edit()
+                    .putBoolean("dark_mode", !isDarkMode())
+                    .apply()
+                recreate()
+            },
             showAppearanceSettings = { appearanceRuntimeFeature.showAppearanceSettings() },
             showGameDialog = { bloggerRuntimeFeature.showComposer() },
             showProfile = { userExperienceRuntimeFeature.showProfile() },
