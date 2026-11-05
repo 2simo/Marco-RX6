@@ -92,7 +92,23 @@ internal class GameArticleWebViewFactory(
                 "أهلاً بكم متابعي مدونة MARCO_RX6 الكرام. إليكم لعبة جديدة من إضافاتنا الحصرية بروابط مباشرة وسريعة.",
                 "أهلاً بمستخدمي تطبيق MARCO RX6 الكرام، إليكم لعبة جديدة من إضافاتنا الحصرية بروابط مباشرة وسريعة."
             )
-            val withoutGameMetadata = appBrandedRaw
+            // The introduction is now rendered natively above the metadata card.
+            // Remove only that exact introductory paragraph from the article WebView,
+            // preserving every other article paragraph and section.
+            val articleWithoutIntro = appBrandedRaw
+                .replace(
+                    Regex("(?is)<p\\b[^>]*>.*?(?:أهلاً\\s+بكم\\s+متابعي\\s+مدونة\\s+MARCO_RX6|أهلاً\\s+بمستخدمي\\s+تطبيق\\s+MARCO\\s+RX6).*?إضافاتنا\\s+الحصرية\\s+بروابط\\s+مباشرة\\s+وسريعة.*?</p>"),
+                    ""
+                )
+                .replace(
+                    "أهلاً بكم متابعي مدونة MARCO_RX6 الكرام. إليكم لعبة جديدة من إضافاتنا الحصرية بروابط مباشرة وسريعة.",
+                    ""
+                )
+                .replace(
+                    "أهلاً بمستخدمي تطبيق MARCO RX6 الكرام، إليكم لعبة جديدة من إضافاتنا الحصرية بروابط مباشرة وسريعة.",
+                    ""
+                )
+            val withoutGameMetadata = articleWithoutIntro
                 .replace(
                     Regex("(?is)<h([1-6])\\b[^>]*>\\s*(?:معلومات\\s*اللعبة|game\\s*information)\\s*:?\\s*</h\\1>.*?(?=<h[1-6]\\b[^>]*>|$)"),
                     ""
