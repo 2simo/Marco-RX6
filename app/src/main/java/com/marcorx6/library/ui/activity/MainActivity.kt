@@ -224,6 +224,8 @@ class MainActivity : ComponentActivity() {
             scheduleNotifications = activityServicesRuntimeFeature::scheduleNotifications,
             cancelNotifications = activityServicesRuntimeFeature::cancelNotifications,
             requestNotificationPermission = activityServicesRuntimeFeature::requestNotificationPermissionIfNeeded,
+            launchDownloadFolderPicker = activityResultRuntimeFeature::launchDownloadFolderPicker,
+            downloadFolderName = downloadStoragePreferences::displayName,
             onPlatformSelected = { libraryViewState.selected = it },
             recreateActivity = ::recreate,
             showFirstRunSetup = ::showFirstRunSetup,
