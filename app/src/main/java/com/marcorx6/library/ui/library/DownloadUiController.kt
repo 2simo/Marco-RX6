@@ -208,9 +208,11 @@ internal class DownloadUiController(
             if (item.totalBytes > 0L) {
                 details.append(" / ").append(android.text.format.Formatter.formatFileSize(activity, item.totalBytes))
             } else details.append(" / ").append(translate("الحجم غير معروف"))
-            if (item.status == DownloadManager.STATUS_RUNNING && speed > 0L) {
-                details.append("  •  ").append(android.text.format.Formatter.formatFileSize(activity, speed)).append("/s")
-                if (item.totalBytes > item.downloadedBytes) {
+            if (item.status == DownloadManager.STATUS_RUNNING) {
+                details.append("  •  ")
+                    .append(android.text.format.Formatter.formatFileSize(activity, speed))
+                    .append("/s")
+                if (speed > 0L && item.totalBytes > item.downloadedBytes) {
                     val seconds = (item.totalBytes - item.downloadedBytes) / speed
                     val eta = when {
                         seconds < 60L -> seconds.toString() + "s"
