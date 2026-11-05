@@ -1,6 +1,8 @@
 package com.marcorx6.library.ui
 
 import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import android.app.AlertDialog
 import android.widget.EditText
 import android.content.SharedPreferences
@@ -216,6 +218,26 @@ internal class AppearanceSettingsController(
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         root.addView(settingRow(translate("اللغة"), translate("العربية والإنجليزية والفرنسية والإسبانية"), showLanguagePicker),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
+        root.addView(settingRow(
+            translate("قناة Telegram الرسمية"),
+            translate("تابع أخبار وإعلانات MARCO RX6 على Telegram")
+        ) {
+            runCatching {
+                activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(CommunityChannelsController.TELEGRAM_URL)))
+            }.onFailure {
+                Toast.makeText(activity, translate("تعذر فتح الرابط"), Toast.LENGTH_SHORT).show()
+            }
+        }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
+        root.addView(settingRow(
+            translate("قناة YouTube الرسمية"),
+            translate("شاهد فيديوهات وشروحات MARCO RX6 على YouTube")
+        ) {
+            runCatching {
+                activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(CommunityChannelsController.YOUTUBE_URL)))
+            }.onFailure {
+                Toast.makeText(activity, translate("تعذر فتح الرابط"), Toast.LENGTH_SHORT).show()
+            }
+        }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         root.addView(settingRow(
             translate("استثناء مواقع من حجب الإعلانات"),
             translate("أضف النطاقات المسموح بها مفصولة بفاصلة، مثلاً example.com"),
