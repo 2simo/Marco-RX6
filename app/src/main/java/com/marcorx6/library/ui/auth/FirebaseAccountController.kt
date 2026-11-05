@@ -20,6 +20,7 @@ import com.marcorx6.library.data.auth.FirebaseAuthRepository
 import com.marcorx6.library.data.auth.FirebaseUserDocumentRepository
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.FirebaseAuthException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -137,7 +138,20 @@ internal class FirebaseAccountController(
                 toast("تم تسجيل الدخول بحساب Google بنجاح")
                 onAccountChanged()
             }.addOnFailureListener { error ->
-                toast(error.localizedMessage ?: "تعذر ربط حساب Google")
+                // If this Google identity already belongs to a Firebase account,
+                // sign into that existing account instead of leaving the visitor stuck.
+                if (current?.isAnonymous == true && error is FirebaseAuthUserCollisionException) {
+                    authRepository.signInWithGoogle(token)
+                        .addOnSuccessListener {
+                            toast("تم تسجيل الدخول إلى حساب Google الموجود")
+                            onAccountChanged()
+                        }
+                        .addOnFailureListener { signInError ->
+                            toast(authErrorMessage(signInError, "تعذر تسجيل الدخول إلى حساب Google الموجود"))
+                        }
+                } else {
+                    toast(authErrorMessage(error, "تعذر ربط حساب Google"))
+                }
             }
         }.addOnFailureListener { error ->
             val apiError = error as? ApiException
