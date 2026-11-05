@@ -7,6 +7,7 @@ import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.marcorx6.library.data.Game
+import com.marcorx6.library.network.BloggerFeedClient
 import com.marcorx6.library.data.GameLibraryStore
 import java.util.concurrent.ExecutorService
 
@@ -17,18 +18,18 @@ import java.util.concurrent.ExecutorService
 internal class BloggerRuntimeFeature(
     activity: ComponentActivity,
     services: BloggerServices,
-    executor: ExecutorService,
+    private val executor: ExecutorService,
     currentAccount: () -> GoogleSignInAccount?,
     currentBlogId: () -> String,
     setAdmin: (Boolean) -> Unit,
     isAdminSession: () -> Boolean,
     feedUrl: String = "https://marcorx6.blogspot.com/feeds/posts/default?alt=json&max-results=100",
-    postToUi: (() -> Unit) -> Unit,
+    private val postToUi: (() -> Unit) -> Unit,
     refreshUi: () -> Unit,
-    merge: (List<Game>) -> Pair<Int, Int>,
+    private val merge: (List<Game>) -> Pair<Int, Int>,
     setBlogId: (String) -> Unit,
     refreshAccess: () -> Unit,
-    renderGames: () -> Unit,
+    private val renderGames: () -> Unit,
     gameLibraryStore: GameLibraryStore,
     dp: (Int) -> Int,
     bg: () -> Int,
