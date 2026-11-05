@@ -281,7 +281,7 @@ internal class DownloadPageDialog(
             val count = blockedRequests.incrementAndGet()
             activity.runOnUiThread {
                 if (blockedStats.isAttachedToWindow) {
-                    blockedStats.text = translate("الإعلانات والمتتبعات المحجوبة: $count")
+                    blockedStats.text = "${translate("الإعلانات والمتتبعات المحجوبة:")} $count"
                 }
             }
         }
