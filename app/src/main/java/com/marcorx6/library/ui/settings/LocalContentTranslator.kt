@@ -57,6 +57,30 @@ internal class LocalContentTranslator(context: Context) {
             }
     }
 
+
+    fun translateAutomatically(
+        text: String,
+        targetLanguage: String,
+        onTranslated: (String) -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        if (text.isBlank() || targetLanguage !in SUPPORTED_LANGUAGES) {
+            onTranslated(text)
+            return
+        }
+        languageIdentifier.identifyLanguage(text)
+            .addOnSuccessListener { source ->
+                if (source == "und" || source !in SUPPORTED_LANGUAGES) {
+                    onTranslated(text)
+                } else {
+                    translate(text, source, targetLanguage, onTranslated, onError)
+                }
+            }
+            .addOnFailureListener { error ->
+                onError(error as? Exception ?: Exception(error))
+            }
+    }
+
     private fun translatorFor(source: String, target: String): Translator {
         require(source in SUPPORTED_LANGUAGES && target in SUPPORTED_LANGUAGES) {
             "Unsupported translation language pair: $source -> $target"
