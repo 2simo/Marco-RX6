@@ -123,7 +123,7 @@ internal class GameArticleWebViewFactory(
                 articleWithoutIntro,
                 Regex("(?is)<(p|li|tr|dd|dt)\\b[^>]*>(.*?)</\\1\\s*>")
             ).let { rows ->
-                stripMetadataRows(rows, Regex("(?is)<div\\b[^>]*>((?:(?!<div\\b).)*?)</div\\s*>"))
+                stripMetadataRows(rows, Regex("(?is)<(div)\\b[^>]*>((?:(?!<div\\b).)*?)</\\1\\s*>"))
             }
             val withoutGameMetadata = articleWithoutMetadataRows
                 .replace(
