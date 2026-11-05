@@ -100,6 +100,16 @@ internal class DownloadPageDialog(
             }
 
         val webView = WebView(activity)
+        toolbar.addView(toolbarAction("↻") {
+            val currentUrl = SecureUrlPolicy.toHttpsUrl(webView.url ?: safeStartUrl)
+            if (currentUrl != null) {
+                status.text = translate("جارٍ تحديث الصفحة…")
+                webView.stopLoading()
+                webView.loadUrl(currentUrl)
+            } else {
+                Toast.makeText(activity, translate("رابط الصفحة غير صالح"), Toast.LENGTH_SHORT).show()
+            }
+        })
         toolbar.addView(toolbarAction(translate("خارجي")) {
             try {
                 val currentUrl = SecureUrlPolicy.toHttpsUrl(webView.url ?: safeStartUrl)
@@ -246,7 +256,19 @@ internal class DownloadPageDialog(
             "advertising.com", "3lift.com", "contextweb.com", "sovrn.com",
             "inmobi.com", "unityads.unity3d.com", "applovin.com",
             "vungle.com", "chartboost.com", "ironsrc.com", "appsflyer.com",
-            "adjust.com", "branch.io", "scorecardresearch.com"
+            "adjust.com", "branch.io", "scorecardresearch.com",
+            "adcolony.com", "adnxs-simple.com", "adsafeprotected.com",
+            "adroll.com", "advertising.com", "amplitude.com", "app-measurement.com",
+            "bidswitch.net", "bluekai.com", "bouncex.net", "casalemedia.com",
+            "clarity.ms", "connectad.io", "demdex.net",
+            "e-planning.net", "everesttech.net", "eyeota.net", "flashtalking.com",
+            "google-analytics.com", "hotjar.com", "ibillboard.com", "krxd.net",
+            "lijit.com", "mathtag.com", "moatads.com", "omnitagjs.com",
+            "pixel.quantserve.com", "quantserve.com", "rlcdn.com", "samba.tv",
+            "serving-sys.com", "sharethrough.com", "simpli.fi", "siteimproveanalytics.com",
+            "smartadserver.com", "sportradarserving.com", 
+            "teads.tv", "triplelift.com", "turn.com", "undertone.com",
+            "yieldlove.com", "zemanta.com"
         )
         fun hostIsAllowed(host: String): Boolean =
             allowedHosts.any { host == it || host.endsWith(".$it") }
@@ -268,13 +290,27 @@ internal class DownloadPageDialog(
             if (!adBlockerEnabled) return
             val script = """(function(){try{
               var selectors=['iframe[src*="doubleclick"]','iframe[src*="googlesyndication"]',
+                'iframe[src*="adservice"]','iframe[src*="adnxs"]','iframe[src*="outbrain"]',
                 '[id^="google_ads"]','[id*="ad-container"]','[class*="ad-container"]',
-                '[class*="advertisement"]','[class*="advert-banner"]','[data-ad]',
-                'ins.adsbygoogle','amp-ad','div[id*="taboola"]','div[class*="taboola"]',
+                '[class*="advertisement"]','[class*="advert-banner"]','[class*="ad-slot"]',
+                '[class*="sponsored"]','[data-ad]','[data-ad-unit]','[data-advertisement]',
+                'ins.adsbygoogle','amp-ad','amp-embed[type="taboola"]',
+                'div[id*="taboola"]','div[class*="taboola"]',
                 'div[id*="outbrain"]','div[class*="outbrain"]'];
-              var n=0;selectors.forEach(function(s){document.querySelectorAll(s).forEach(function(e){
-                if(n<80){e.style.setProperty('display','none','important');n++;}
-              });});
+              function hideAds(root){var n=0;selectors.forEach(function(s){
+                try{root.querySelectorAll(s).forEach(function(e){
+                  if(n<120){e.style.setProperty('display','none','important');n++;}
+                });}catch(ignore){}
+              });}
+              hideAds(document);
+              if(!window.__marcoAdObserver){
+                window.__marcoAdObserver=new MutationObserver(function(records){
+                  records.forEach(function(record){record.addedNodes.forEach(function(node){
+                    if(node&&node.nodeType===1){hideAds(node);}});
+                  });
+                });
+                window.__marcoAdObserver.observe(document.documentElement,{childList:true,subtree:true});
+              }
             }catch(e){}})();"""
             webView.evaluateJavascript(script, null)
         }
