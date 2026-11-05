@@ -80,15 +80,32 @@ internal class GameDetailsFeature(
         translate = tr
     )
 
+    private val similarGamesViewFactory = GameSimilarGamesViewFactory(
+        activity = activity,
+        dp = dp,
+        rounded = rounded,
+        makeText = makeText,
+        isDarkMode = isDarkMode,
+        white = white,
+        translate = tr,
+        loadCover = loadCover
+    )
+
     private val controller = GameDetailsController(
         activity = activity,
+        games = { games },
         bg = bg,
         dp = dp,
         topBarFactory = topBarFactory,
         identityViewFactory = identityViewFactory,
+        similarGamesViewFactory = similarGamesViewFactory,
         downloadLinksViewFactory = downloadLinksViewFactory,
+        isAdmin = isAdmin,
+        showGameDialog = showGameDialog,
+        deleteGame = deleteGame,
         applyMotionPreferences = applyMotionPreferences,
         applyUnifiedSkin = applyUnifiedSkin,
+        translate = tr
     )
 
     fun show(game: Game) = controller.show(game)
