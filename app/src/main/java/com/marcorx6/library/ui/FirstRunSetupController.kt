@@ -155,6 +155,7 @@ internal class FirstRunSetupController(
                         "PS2" -> "PlayStation 2"
                         "PS3" -> "PlayStation 3"
                         "PS4" -> "PlayStation 4"
+                        else -> platform
                     }
                     addChoice(platform, description, preferredPlatform == platform) {
                         preferredPlatform = platform
