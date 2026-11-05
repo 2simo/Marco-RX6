@@ -62,7 +62,7 @@ internal class DownloadRepository(context: Context) {
                         throw SecurityException("رابط التحويل النهائي لا يستخدم HTTPS؛ تم إيقاف التنزيل لحماية بياناتك")
                     }
                     val id = System.currentTimeMillis().coerceAtLeast(1L)
-                    val finalTitle = title.ifBlank { "MARCO RX6" }
+                    val finalTitle = probe.fileName ?: title.ifBlank { "MARCO RX6" }
                     val cookie = if (Uri.parse(secureLink).host.equals(Uri.parse(probe.finalUrl).host, true)) {
                         CookieManager.getInstance().getCookie(probe.finalUrl).orEmpty()
                     } else ""
@@ -150,7 +150,8 @@ internal class DownloadRepository(context: Context) {
     private data class DownloadProbe(
         val finalUrl: String,
         val mimeType: String,
-        val isDirectFile: Boolean
+        val isDirectFile: Boolean,
+        val fileName: String?
     )
 
     private fun inspect(
@@ -178,7 +179,7 @@ internal class DownloadRepository(context: Context) {
             val finalUrl = connection.url.toString()
             if (code !in 200..299) throw IllegalStateException("الخادم رفض رابط التنزيل (HTTP $code)")
             if (mime == "text/html" || mime == "application/xhtml+xml") {
-                return DownloadProbe(finalUrl, mime, false)
+                return DownloadProbe(finalUrl, mime, false, null)
             }
             val path = Uri.parse(finalUrl).lastPathSegment.orEmpty().lowercase(Locale.ROOT)
             val hasFileExtension = Regex("""\.(apk|zip|7z|rar|iso|pkg|bin|cue|chd|img|pbp|cso|nsp|xci|pdf|mp4|mp3)$""").containsMatchIn(path)
@@ -191,7 +192,8 @@ internal class DownloadRepository(context: Context) {
             val isBinary = mime == "application/octet-stream" ||
                 (mime.startsWith("application/") && !structuredText) ||
                 mime.startsWith("video/") || mime.startsWith("audio/")
-            return DownloadProbe(finalUrl, mime, isAttachment || isBinary || hasFileExtension)
+            return DownloadProbe(finalUrl, mime, isAttachment || isBinary || hasFileExtension,
+                DownloadFileNames.fromResponse(disposition, finalUrl))
         } finally {
             connection.disconnect()
         }
