@@ -157,7 +157,7 @@ internal class DownloadUiController(
             }
             addView(android.widget.ImageView(activity).apply {
                 setImageResource(com.marcorx6.library.R.drawable.ic_action_download)
-                imageTintList = android.content.res.ColorStateList.valueOf(primary)
+                imageTintList = android.content.res.ColorStateList.valueOf(muted)
                 scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
                 contentDescription = translate("التنزيلات")
             }, LinearLayout.LayoutParams(dp(48), dp(48)))
