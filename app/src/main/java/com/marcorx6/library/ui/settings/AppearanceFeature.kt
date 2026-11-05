@@ -52,6 +52,8 @@ internal class AppearanceFeature(
             recreateActivity = recreateActivity,
             showLanguagePicker = showLanguagePicker,
             showNotificationSettings = showNotificationSettings,
+            adminSessionConnected = adminSessionConnected,
+            onAdminSessionAction = onAdminSessionAction,
             showTypographySettings = ::showTypographySettings,
             setContentView = setContentView,
             onBack = onBack,
