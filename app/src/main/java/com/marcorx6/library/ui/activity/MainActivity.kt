@@ -248,9 +248,19 @@ class MainActivity : ComponentActivity() {
                 data = data,
                 onSuccess = {
                     googleAccountRuntimeFeature.isAdminSession = false
-                    createInterface()
-                    bloggerRuntimeFeature.refreshAccess()
-                    Toast.makeText(this, "تم ربط حساب Google؛ جارٍ التحقق من صلاحيات Blogger…", Toast.LENGTH_LONG).show()
+                    val firebaseEmail = firebaseAuthRepository.currentUser?.email?.trim()?.lowercase()
+                    val bloggerEmail = googleAccountRuntimeFeature.currentAccount()?.email?.trim()?.lowercase()
+                    if (firebaseEmail.isNullOrBlank() || bloggerEmail.isNullOrBlank() || firebaseEmail != bloggerEmail) {
+                        googleAccountRuntimeFeature.signOut {
+                            googleAccountRuntimeFeature.isAdminSession = false
+                            createInterface()
+                            Toast.makeText(this, "حساب Google المختار مختلف عن حساب MARCO RX6. سجّل بنفس البريد الإلكتروني.", Toast.LENGTH_LONG).show()
+                        }
+                    } else {
+                        createInterface()
+                        bloggerRuntimeFeature.refreshAccess()
+                        Toast.makeText(this, "تم ربط نفس حساب Google؛ جارٍ التحقق من صلاحيات Blogger…", Toast.LENGTH_LONG).show()
+                    }
                 },
                 onFailure = { message ->
                     googleAccountRuntimeFeature.isAdminSession = false
