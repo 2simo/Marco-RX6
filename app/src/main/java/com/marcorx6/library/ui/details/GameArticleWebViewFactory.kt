@@ -23,7 +23,9 @@ internal class GameArticleWebViewFactory(
             setBackgroundColor(backgroundColor)
             setLayerType(View.LAYER_TYPE_HARDWARE, null)
             isVerticalScrollBarEnabled = false
-            settings.javaScriptEnabled = false
+            // JavaScript is enabled only for local DOM height measurement. Article
+            // scripts and event handlers are stripped before the HTML is loaded.
+            settings.javaScriptEnabled = true
             settings.domStorageEnabled = false
             // Remote article content cannot access local files or content providers.
             settings.allowFileAccess = false
@@ -37,19 +39,22 @@ internal class GameArticleWebViewFactory(
             webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
-                    // The details screen owns the vertical scroll. Resize the WebView
-                    // to its rendered article height instead of reserving a fixed
-                    // 520dp viewport when the article contains only a short intro.
+                    // Measure the actual DOM, not WebView's viewport/contentHeight
+                    // (which can retain the old fixed viewport and create a blank box).
                     view?.post {
                         val articleView = view
-                        val renderedHeight = (articleView.contentHeight * articleView.scale).toInt()
-                        // Do not impose a minimum viewport: it leaves a visible empty
-                        // rectangle after short introductions or when metadata was removed.
-                        val targetHeight = renderedHeight.coerceAtLeast(1)
-                        val params = articleView.layoutParams
-                        if (params != null && params.height != targetHeight) {
-                            params.height = targetHeight
-                            articleView.layoutParams = params
+                        articleView.evaluateJavascript(
+                            "(document.documentElement.scrollHeight || document.body.scrollHeight || 1).toString()"
+                        ) { result ->
+                            val cssHeight = result?.trim()?.trim('"')?.toFloatOrNull()
+                                ?: articleView.contentHeight.toFloat()
+                            val targetHeight = (cssHeight * activity.resources.displayMetrics.density)
+                                .toInt().coerceAtLeast(1)
+                            val params = articleView.layoutParams
+                            if (params != null && params.height != targetHeight) {
+                                params.height = targetHeight
+                                articleView.layoutParams = params
+                            }
                         }
                     }
                 }
