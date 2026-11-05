@@ -15,6 +15,7 @@ internal object LanguageTranslator {
             "مكان التنزيلات" to listOf("Download location", "Emplacement des téléchargements", "Ubicación de descarga"),
             "اختر المجلد الذي تريد حفظ الملفات التي تنزّلها فيه. هذه الخطوة اختيارية ويمكنك تخطيها." to listOf("Choose where downloaded files should be saved. This step is optional and can be skipped.", "Choisissez où enregistrer les fichiers téléchargés. Cette étape est facultative.", "Elige dónde guardar los archivos descargados. Este paso es opcional."),
             "اختيار مجلد التنزيلات" to listOf("Choose download folder", "Choisir le dossier de téléchargement", "Elegir carpeta de descargas"),
+            "اختر مجلداً لحفظ التنزيلات فيه." to listOf("Choose a folder where downloads will be saved.", "Choisissez un dossier où enregistrer les téléchargements.", "Elige una carpeta donde guardar las descargas."),
             "المجلد الحالي:" to listOf("Current folder:", "Dossier actuel :", "Carpeta actual:"),
             "استخدام تخزين التطبيق" to listOf("Use app storage", "Utiliser le stockage de l’application", "Usar almacenamiento de la aplicación"),
             "يمكنك اختيار مجلد آخر لاحقاً من إعدادات التخزين." to listOf("You can choose another folder later in Storage settings.", "Vous pourrez choisir un autre dossier plus tard dans les paramètres de stockage.", "Puedes elegir otra carpeta más tarde en los ajustes de almacenamiento."),
