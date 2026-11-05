@@ -59,9 +59,6 @@ internal object GameLibraryManager {
             val categoryMatch = when (category) {
                 "ALL" -> true
                 "FAVORITES" -> item.isFavorite
-                "WANT_TO_PLAY" -> item.playStatus == "WANT_TO_PLAY"
-                "PLAYING" -> item.playStatus == "PLAYING"
-                "COMPLETED" -> item.playStatus == "COMPLETED"
                 "BLOG" -> item.blogImported
                 else -> item.platform == category
             }
