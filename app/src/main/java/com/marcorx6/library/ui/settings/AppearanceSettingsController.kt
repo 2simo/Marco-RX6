@@ -76,8 +76,8 @@ internal class AppearanceSettingsController(
             imageTintList = android.content.res.ColorStateList.valueOf(muted)
             scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
             contentDescription = translate("إغلاق الإعدادات")
-            minWidth = dp(48)
-            minHeight = dp(48)
+            minimumWidth = dp(48)
+            minimumHeight = dp(48)
             addGlassTouch(this)
             setOnClickListener { onBack() }
         }, LinearLayout.LayoutParams(dp(48), dp(48)))
