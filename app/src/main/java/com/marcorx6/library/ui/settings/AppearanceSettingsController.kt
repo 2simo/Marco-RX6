@@ -141,7 +141,11 @@ internal class AppearanceSettingsController(
         val toggle = TextView(activity).apply {
             contentDescription = translate("تبديل حركات وانتقالات الواجهة")
             minimumHeight = dp(48)
-            text = translate(if (preferences.getBoolean("animations", true)) "الحركات مفعّلة  ✓" else "الحركات متوقفة")
+            text = translate(if (preferences.getBoolean("animations", true)) "الحركات مفعّلة  ✓" else "الحركات متوقفة").replace("✓", "").trim()
+            if (preferences.getBoolean("animations", true)) {
+                setCompoundDrawablesRelativeWithIntrinsicBounds(com.marcorx6.library.R.drawable.ic_action_check, 0, 0, 0)
+                compoundDrawablePadding = dp(6)
+            }
             textSize = 13f
             gravity = Gravity.CENTER
             setTextColor(if (preferences.getBoolean("animations", true)) Color.WHITE else blue)
@@ -156,7 +160,8 @@ internal class AppearanceSettingsController(
                 val enabled = !preferences.getBoolean("animations", true)
                 preferences.edit().putBoolean("animations", enabled).apply()
                 applyMotionPreferences(activity.window.decorView)
-                text = translate(if (enabled) "الحركات مفعّلة  ✓" else "الحركات متوقفة")
+                text = translate(if (enabled) "الحركات مفعّلة  ✓" else "الحركات متوقفة").replace("✓", "").trim()
+                setCompoundDrawablesRelativeWithIntrinsicBounds(if (enabled) com.marcorx6.library.R.drawable.ic_action_check else 0, 0, 0, 0)
                 contentDescription = translate(if (enabled) "إيقاف حركات وانتقالات الواجهة" else "تفعيل حركات وانتقالات الواجهة")
                 setTextColor(if (enabled) Color.WHITE else blue)
                 background = GradientDrawable().apply {
