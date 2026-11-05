@@ -389,4 +389,34 @@ internal object LanguageTranslator {
         val index = when (lang) { "en" -> 0; "fr" -> 1; "es" -> 2; else -> return ar }
         return translations[ar]?.get(index) ?: ar
     }
+
+    /**
+     * Applies exact, known UI-string translations to a freshly rendered screen.
+     * Dynamic game titles, filenames, URLs and user-authored content are left untouched.
+     */
+    fun translateViewTree(view: android.view.View, lang: String) {
+        if (lang == "ar") return
+        if (view is android.widget.TextView) {
+            val current = view.text?.toString()
+            if (!current.isNullOrEmpty()) {
+                val translated = translate(current, lang)
+                if (translated != current) view.text = translated
+            }
+            val hint = view.hint?.toString()
+            if (!hint.isNullOrEmpty()) {
+                val translatedHint = translate(hint, lang)
+                if (translatedHint != hint) view.hint = translatedHint
+            }
+        }
+        val description = view.contentDescription?.toString()
+        if (!description.isNullOrEmpty()) {
+            val translatedDescription = translate(description, lang)
+            if (translatedDescription != description) view.contentDescription = translatedDescription
+        }
+        if (view is android.view.ViewGroup) {
+            for (index in 0 until view.childCount) {
+                translateViewTree(view.getChildAt(index), lang)
+            }
+        }
+    }
 }
