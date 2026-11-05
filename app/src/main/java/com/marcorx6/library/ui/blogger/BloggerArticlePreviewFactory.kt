@@ -1,7 +1,6 @@
 package com.marcorx6.library.ui
 
 import com.marcorx6.library.network.BloggerArticleBuilder
-
 import android.app.Activity
 import android.webkit.WebView
 
@@ -17,19 +16,33 @@ internal class BloggerArticlePreviewFactory(
         releaseYear: String,
         body: String,
         coverUrl: String,
-        relatedLink: String
+        relatedLink: String,
+        packageSize: String = "",
+        version: String = "",
+        fileFormat: String = "PKG",
+        language: String = "الإنجليزية",
+        password: String = "",
+        rights: String = "",
+        downloadLinksJson: String = ""
     ): WebView {
         val previewTitle = title.trim().ifBlank { "معاينة المقال" }
         val previewHtml =
             "<html><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><body style=\"background:${if (isDarkMode()) "#0a0b11" else "#f5f7fb"};color:${if (isDarkMode()) "#f4f4f8" else "#202638"};padding:12px;\">" +
                 BloggerArticleBuilder.build(
-                    previewTitle,
-                    labels,
-                    genre,
-                    releaseYear,
-                    body,
-                    coverUrl,
-                    relatedLink
+                    title = previewTitle,
+                    categories = labels,
+                    genre = genre,
+                    releaseYear = releaseYear,
+                    description = body,
+                    coverUrl = coverUrl,
+                    downloadUrl = relatedLink,
+                    packageSize = packageSize,
+                    version = version,
+                    fileFormat = fileFormat,
+                    language = language,
+                    password = password,
+                    rights = rights,
+                    downloadLinksJson = downloadLinksJson
                 ) +
                 "</body></html>"
 
