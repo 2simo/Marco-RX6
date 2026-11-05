@@ -55,60 +55,6 @@ internal class GameDetailsIdentityViewFactory(
             gravity = android.view.Gravity.CENTER_HORIZONTAL
         })
 
-        val description = game.description.trim()
-        val genre = game.genre.trim()
-        val year = game.releaseYear.trim()
-        if (description.isNotBlank() || genre.isNotBlank() || year.isNotBlank()) {
-            val summaryCard = LinearLayout(activity).apply {
-                orientation = LinearLayout.VERTICAL
-                setPadding(dp(13), dp(12), dp(13), dp(12))
-                background = GradientDrawable().apply {
-                    setColor(if (dark) Color.rgb(22, 39, 59) else Color.rgb(244, 248, 253))
-                    cornerRadius = dp(16).toFloat()
-                    setStroke(dp(1), if (dark) Color.rgb(57, 83, 112) else Color.rgb(213, 226, 241))
-                }
-            }
-            if (genre.isNotBlank() || year.isNotBlank()) {
-                val tags = LinearLayout(activity).apply {
-                    orientation = LinearLayout.HORIZONTAL
-                    gravity = android.view.Gravity.START or android.view.Gravity.CENTER_VERTICAL
-                }
-                listOfNotNull(
-                    genre.takeIf { it.isNotBlank() },
-                    year.takeIf { it.isNotBlank() }
-                ).forEach { value ->
-                    tags.addView(makeText(value, 11f, if (dark) Color.rgb(180, 218, 255) else Color.rgb(28, 105, 184), true).apply {
-                        setPadding(dp(10), dp(6), dp(10), dp(6))
-                        background = GradientDrawable().apply {
-                            setColor(if (dark) Color.rgb(30, 65, 99) else Color.rgb(222, 239, 255))
-                            cornerRadius = dp(10).toFloat()
-                        }
-                    }, LinearLayout.LayoutParams(-2, -2).apply {
-                        marginEnd = dp(7)
-                        bottomMargin = dp(9)
-                    })
-                }
-                summaryCard.addView(tags, LinearLayout.LayoutParams(-1, -2))
-            }
-            if (description.isNotBlank()) {
-                summaryCard.addView(makeText(translate("نبذة عن اللعبة"), 15f, primary, true).apply {
-                    setPadding(0, 0, 0, dp(6))
-                })
-                summaryCard.addView(makeText(description, 13f, muted, false).apply {
-                    textDirection = android.view.View.TEXT_DIRECTION_FIRST_STRONG
-                    textAlignment = android.view.View.TEXT_ALIGNMENT_VIEW_START
-                    gravity = android.view.Gravity.START
-                    setLineSpacing(dp(3).toFloat(), 1f)
-                    maxLines = Int.MAX_VALUE
-                    setHorizontallyScrolling(false)
-                })
-            }
-            root.addView(summaryCard, LinearLayout.LayoutParams(-1, -2).apply {
-                topMargin = dp(12)
-                bottomMargin = dp(12)
-            })
-        }
-
         val details = extractGameDetails(game.bloggerHtml)
         if (details.isNotEmpty()) {
             val infoCard = LinearLayout(activity).apply {
