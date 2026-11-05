@@ -2,16 +2,53 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Each authenticated account (including a Firebase anonymous guest) can access
-    // only its own profile, settings, and future private user data.
-    match /users/{userId} {
-      allow read, create, update, delete: if request.auth != null
-        && request.auth.uid == userId;
+    function signedInAs(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
 
-      match /{document=**} {
-        allow read, write: if request.auth != null
-          && request.auth.uid == userId;
+    function isAnonymous() {
+      return request.auth != null
+        && request.auth.token.firebase.sign_in_provider == 'anonymous';
+    }
+
+    function validGuestProfile() {
+      return request.resource.data.keys().hasOnly([
+          'uid', 'isAnonymous', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.keys().hasAll(['uid', 'isAnonymous', 'updatedAt'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.isAnonymous == true;
+    }
+
+    function validGuestPreferences() {
+      return request.resource.data.keys().hasOnly(['values', 'updatedAt'])
+        && request.resource.data.keys().hasAll(['values', 'updatedAt'])
+        && request.resource.data.values is map
+        && request.resource.data.values.keys().size() <= 20;
+    }
+
+    // Anonymous sessions may keep only a minimal, self-owned profile and a
+    // bounded preferences map. They cannot create arbitrary nested documents.
+    match /users/{userId} {
+      allow read, delete: if signedInAs(userId);
+      allow create, update: if signedInAs(userId)
+        && (
+          (isAnonymous() && validGuestProfile())
+          || (!isAnonymous()
+            && request.resource.data.keys().hasOnly([
+              'uid', 'isAnonymous', 'createdAt', 'updatedAt',
+              'email', 'displayName', 'photoUrl', 'bio'
+            ])
+            && request.resource.data.keys().size() <= 8)
+        );
+
+      match /settings/preferences {
+        allow read, delete: if signedInAs(userId);
+        allow create, update: if signedInAs(userId)
+          && validGuestPreferences();
       }
+
+      // No other nested collections/documents are writable.
     }
 
     // Everything outside /users/{uid} stays denied by default.
