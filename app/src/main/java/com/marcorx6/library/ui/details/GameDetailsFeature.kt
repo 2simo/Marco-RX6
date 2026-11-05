@@ -63,8 +63,6 @@ internal class GameDetailsFeature(
         dp = dp,
         makeText = makeText,
         isDarkMode = isDarkMode,
-        white = white,
-        gray = gray,
         loadCover = loadCover,
         translate = tr
     )
