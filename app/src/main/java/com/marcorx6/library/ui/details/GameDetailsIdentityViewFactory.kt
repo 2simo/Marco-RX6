@@ -147,7 +147,7 @@ internal class GameDetailsIdentityViewFactory(
         )
         fun plainText(value: String): String = Html.fromHtml(
             value, Html.FROM_HTML_MODE_LEGACY
-        ).toString().replace('\\u00a0', ' ').replace(Regex("\\s+"), " ").trim()
+        ).toString().replace('\u00a0', ' ').replace(Regex("\\s+"), " ").trim()
 
         // Blogger commonly puts every field in its own <li>. Parse each item
         // independently so a missing newline cannot merge the next field into it.
