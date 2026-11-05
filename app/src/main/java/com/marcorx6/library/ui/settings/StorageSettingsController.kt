@@ -20,7 +20,9 @@ internal class StorageSettingsController(
     private val activity: Activity,
     private val setContentView: (View) -> Unit,
     private val onBack: () -> Unit,
-    private val translate: (String) -> String
+    private val translate: (String) -> String,
+    private val launchDownloadFolderPicker: () -> Unit,
+    private val downloadFolderName: () -> String
 ) {
     private fun dp(value: Int): Int =
         (value * activity.resources.displayMetrics.density).toInt()
@@ -119,6 +121,43 @@ internal class StorageSettingsController(
         }
         usageCard.addView(details)
         root.addView(usageCard, LinearLayout.LayoutParams(-1, -2).apply {
+            bottomMargin = dp(14)
+        })
+
+        val downloadLocationCard = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(17), dp(16), dp(17), dp(16))
+            background = GradientDrawable().apply {
+                setColor(if (dark) Color.rgb(15, 39, 64) else Color.WHITE)
+                cornerRadius = dp(20).toFloat()
+                setStroke(dp(1), if (dark) Color.rgb(53, 105, 158) else Color.rgb(175, 207, 239))
+            }
+        }
+        downloadLocationCard.addView(TextView(activity).apply {
+            text = translate("مجلد حفظ التنزيلات")
+            textSize = 15f
+            setTypeface(null, Typeface.BOLD)
+            setTextColor(ink)
+        })
+        downloadLocationCard.addView(TextView(activity).apply {
+            text = downloadFolderName()
+            textSize = 12f
+            setTextColor(muted)
+            setPadding(0, dp(7), 0, dp(12))
+        })
+        downloadLocationCard.addView(TextView(activity).apply {
+            text = translate("اختيار أو تغيير المجلد")
+            textSize = 13f
+            gravity = Gravity.CENTER
+            minHeight = dp(48)
+            setTextColor(Color.WHITE)
+            background = GradientDrawable().apply {
+                setColor(blue)
+                cornerRadius = dp(14).toFloat()
+            }
+            setOnClickListener { launchDownloadFolderPicker() }
+        })
+        root.addView(downloadLocationCard, LinearLayout.LayoutParams(-1, -2).apply {
             bottomMargin = dp(14)
         })
 

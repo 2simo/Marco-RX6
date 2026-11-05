@@ -4,6 +4,7 @@ import android.app.DownloadManager
 import android.content.Context
 import android.net.Uri
 import android.webkit.CookieManager
+import android.provider.DocumentsContract
 import androidx.core.content.FileProvider
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
@@ -119,6 +120,7 @@ internal class DownloadRepository(context: Context) {
     fun openDownloadedFile(id: Long): Uri? {
         val item = database.get(id) ?: return null
         if (item.status != DownloadManager.STATUS_SUCCESSFUL || item.localPath.isBlank()) return null
+        if (item.localPath.startsWith("content://")) return Uri.parse(item.localPath)
         val file = File(item.localPath)
         if (!file.isFile) return null
         return FileProvider.getUriForFile(
@@ -132,7 +134,11 @@ internal class DownloadRepository(context: Context) {
         val item = database.get(id) ?: return false
         database.cancel(id)
         workManager.cancelUniqueWork(workName(id))
-        if (item.localPath.isNotBlank()) File(item.localPath).delete()
+        if (item.localPath.startsWith("content://")) {
+            runCatching { DocumentsContract.deleteDocument(appContext.contentResolver, Uri.parse(item.localPath)) }
+        } else if (item.localPath.isNotBlank()) {
+            File(item.localPath).delete()
+        }
         val directory = File(
             appContext.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS)
                 ?: appContext.filesDir,

@@ -15,6 +15,7 @@ import com.marcorx6.library.ui.library.MainLibraryRuntimeFeature
 import com.marcorx6.library.ui.GameImportMerger
 import com.marcorx6.library.ui.library.MainLibraryViewState
 import com.marcorx6.library.data.Game
+import com.marcorx6.library.data.DownloadStoragePreferences
 import com.marcorx6.library.data.auth.FirebaseSessionCoordinator
 import com.marcorx6.library.data.auth.FirebaseAuthRepository
 import com.google.firebase.appcheck.FirebaseAppCheck
@@ -49,6 +50,8 @@ class MainActivity : ComponentActivity() {
         applyMotionPreferences(view)
         applyUnifiedSkin(view)
     }
+
+    private val downloadStoragePreferences by lazy { DownloadStoragePreferences(applicationContext) }
 
     private val firebaseSessionCoordinator: FirebaseSessionCoordinator by lazy {
         FirebaseSessionCoordinator()
@@ -278,7 +281,15 @@ class MainActivity : ComponentActivity() {
         },
         onFirebaseGoogleSignInResult = { data -> firebaseAccountController.handleGoogleSignInResult(data) },
         onAvatarSelected = { uri -> firebaseAccountController.handleProfilePhotoSelected(uri) },
-        onCoverSelected = { uri -> coverFeature.selectionController.handle(uri) }
+        onCoverSelected = { uri -> coverFeature.selectionController.handle(uri) },
+        onDownloadFolderSelected = { uri ->
+            try {
+                downloadStoragePreferences.saveTree(uri)
+                Toast.makeText(this, "تم حفظ مجلد التنزيلات: ${downloadStoragePreferences.displayName()}", Toast.LENGTH_LONG).show()
+            } catch (error: Exception) {
+                Toast.makeText(this, "تعذر حفظ صلاحية المجلد: ${error.message}", Toast.LENGTH_LONG).show()
+            }
+        }
     )
 
     private val lifecycleCoordinator: MainActivityLifecycleCoordinator by lazy {
@@ -351,6 +362,8 @@ class MainActivity : ComponentActivity() {
             gray = { gray },
             accentForeground = ::accentForeground,
             showNotifications = activityServicesRuntimeFeature::showNotificationSettings,
+            launchDownloadFolderPicker = activityResultRuntimeFeature::launchDownloadFolderPicker,
+            downloadFolderName = downloadStoragePreferences::displayName,
             adminSessionConnected = { googleAccountRuntimeFeature.isAdminSession },
             onAdminSessionAction = {
                 if (googleAccountRuntimeFeature.isAdminSession) {

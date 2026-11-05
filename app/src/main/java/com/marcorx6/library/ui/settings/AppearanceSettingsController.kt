@@ -19,6 +19,8 @@ internal class AppearanceSettingsController(
     private val recreateActivity: () -> Unit,
     private val showLanguagePicker: () -> Unit,
     private val showNotificationSettings: () -> Unit,
+    private val launchDownloadFolderPicker: () -> Unit,
+    private val downloadFolderName: () -> String,
     private val adminSessionConnected: () -> Boolean,
     private val onAdminSessionAction: () -> Unit,
     private val showTypographySettings: () -> Unit,
@@ -252,7 +254,10 @@ internal class AppearanceSettingsController(
         root.addView(settingRow(translate("الخط وحجم النص"), translate("تخصيص عائلة الخط وحجم القراءة"), showTypographySettings),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         root.addView(settingRow(translate("التخزين"), translate("عرض مساحة التطبيق والملفات المؤقتة وإدارة ذاكرة التخزين المؤقت")) {
-            StorageSettingsController(activity, setContentView, { show() }, translate).show()
+            StorageSettingsController(
+                activity, setContentView, { show() }, translate,
+                launchDownloadFolderPicker, downloadFolderName
+            ).show()
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
 
         root.addView(TextView(activity).apply {

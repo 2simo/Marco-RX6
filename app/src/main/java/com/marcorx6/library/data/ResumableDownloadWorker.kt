@@ -7,6 +7,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.ServiceInfo
 import android.os.Build
+import android.provider.DocumentsContract
 import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
@@ -64,7 +65,6 @@ internal class ResumableDownloadWorker(
         val safeName = item.title.replace(Regex("[^A-Za-z0-9._-]"), "_")
             .trim('_').take(90).ifBlank { "download_${item.id}" }
         val partial = File(directory, "${item.id}.part")
-        val output = File(directory, "${item.id}_$safeName")
         var offset = if (partial.exists()) partial.length() else 0L
         var connection: HttpURLConnection? = null
         try {
@@ -127,12 +127,39 @@ internal class ResumableDownloadWorker(
             if (total > 0L && offset != total) {
                 throw IllegalStateException("Incomplete file: $offset / $total")
             }
-            if (output.exists()) output.delete()
-            if (!partial.renameTo(output)) {
-                partial.copyTo(output, overwrite = true)
+            val selectedTree = DownloadStoragePreferences(applicationContext).treeUri()
+            val savedLocation = if (selectedTree != null) {
+                val resolver = applicationContext.contentResolver
+                val parentUri = DocumentsContract.buildDocumentUriUsingTree(
+                    selectedTree,
+                    DocumentsContract.getTreeDocumentId(selectedTree)
+                )
+                val targetUri = DocumentsContract.createDocument(
+                    resolver,
+                    parentUri,
+                    mime.ifBlank { "application/octet-stream" },
+                    safeName
+                ) ?: throw IOException("Could not create a file in the selected download folder")
+                try {
+                    resolver.openOutputStream(targetUri, "w")?.use { destination ->
+                        partial.inputStream().use { source -> source.copyTo(destination) }
+                    } ?: throw IOException("Could not write to the selected download folder")
+                } catch (error: Exception) {
+                    runCatching { DocumentsContract.deleteDocument(resolver, targetUri) }
+                    throw error
+                }
                 partial.delete()
+                targetUri.toString()
+            } else {
+                val output = File(directory, "${item.id}_$safeName")
+                if (output.exists()) output.delete()
+                if (!partial.renameTo(output)) {
+                    partial.copyTo(output, overwrite = true)
+                    partial.delete()
+                }
+                output.absolutePath
             }
-            database.complete(item.id, output.absolutePath, mime)
+            database.complete(item.id, savedLocation, mime)
             return Result.success()
         } finally {
             connection?.disconnect()

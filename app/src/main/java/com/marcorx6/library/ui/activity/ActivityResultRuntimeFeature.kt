@@ -14,7 +14,8 @@ internal class ActivityResultRuntimeFeature(
     onGoogleSignInResult: (Intent?) -> Unit,
     onFirebaseGoogleSignInResult: (Intent?) -> Unit,
     onAvatarSelected: (Uri) -> Unit,
-    onCoverSelected: (Uri) -> Unit
+    onCoverSelected: (Uri) -> Unit,
+    onDownloadFolderSelected: (Uri) -> Unit
 ) {
     companion object {
         private const val SIGN_IN_REQUEST_CODE = 1002
@@ -51,8 +52,14 @@ internal class ActivityResultRuntimeFeature(
             controller.handle(AVATAR_REQUEST_CODE, result.resultCode, result.data)
         }
 
+    private val downloadFolderPickerLauncher =
+        activity.registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+            uri?.let(onDownloadFolderSelected)
+        }
+
     fun launchGoogleSignIn(intent: Intent) = googleSignInLauncher.launch(intent)
     fun launchFirebaseGoogleSignIn(intent: Intent) = firebaseGoogleSignInLauncher.launch(intent)
     fun launchCoverPicker(intent: Intent) = coverPickerLauncher.launch(intent)
     fun launchProfileAvatar(intent: Intent) = profileAvatarLauncher.launch(intent)
+    fun launchDownloadFolderPicker() = downloadFolderPickerLauncher.launch(null)
 }
