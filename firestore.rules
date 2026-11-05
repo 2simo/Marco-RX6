@@ -37,7 +37,10 @@ service cloud.firestore {
 
       match /settings/preferences {
         // Preferences are cloud-synced only for non-anonymous accounts.
-        allow read, delete: if signedInAs(userId) && !isAnonymous();
+        allow read: if signedInAs(userId) && !isAnonymous();
+        // Guests may delete their own preferences during account deletion,
+        // but cannot read, create, or update cloud preferences.
+        allow delete: if signedInAs(userId);
         allow create, update: if signedInAs(userId)
           && !isAnonymous()
           && request.resource.data.keys().hasOnly(['values', 'updatedAt'])
