@@ -132,10 +132,7 @@ internal class BloggerPostComposerController(
 
         if (existing != null) {
             title.setText(existing.name)
-            body.setText(existing.description)
             coverUrl.setText(existing.coverUrl)
-            genre.setText(existing.genre)
-            releaseYear.setText(existing.releaseYear)
             size.setText(existing.packageSize)
             version.setText(existing.version)
             format.setText(existing.fileFormat.ifBlank { "PKG" })
@@ -145,27 +142,12 @@ internal class BloggerPostComposerController(
         } else {
             format.setText("PKG")
             language.setText("الإنجليزية")
-            body.setText("")
             if (pendingCoverPublicUrl().isNotBlank()) coverUrl.setText(pendingCoverPublicUrl())
         }
 
         val labelsUi = labelsController.create(existing?.platform, existing == null)
         val selectedLabels = labelsUi.selectedLabels
-        box.addView(section("01 • " + translate("العنوان وأقسام المقال")))
-        addField(box, title)
-        addField(box, labelsUi.button)
-        addField(box, genre)
-        addField(box, releaseYear)
-
-        box.addView(section("02 • " + translate("معلومات اللعبة")))
-        addField(box, size)
-        addField(box, version)
-        addField(box, format)
-        addField(box, language)
-        addField(box, password)
-        addField(box, rights)
-
-        box.addView(section("03 • " + translate("صورة الغلاف")))
+        box.addView(section("01 • " + translate("صورة الغلاف")))
         box.addView(coverPreview, LinearLayout.LayoutParams(-1, dp(178)).apply {
             bottomMargin = dp(9)
         })
@@ -175,6 +157,18 @@ internal class BloggerPostComposerController(
             setOnClickListener { chooseCover() }
         })
         addField(box, coverUrl)
+
+        box.addView(section("02 • " + translate("العنوان وأقسام المقال")))
+        addField(box, title)
+        addField(box, labelsUi.button)
+
+        box.addView(section("03 • " + translate("معلومات اللعبة")))
+        addField(box, size)
+        addField(box, version)
+        addField(box, format)
+        addField(box, language)
+        addField(box, password)
+        addField(box, rights)
 
         box.addView(section("04 • " + translate("روابط التحميل المباشرة")))
         val linksContainer = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
@@ -235,8 +229,6 @@ internal class BloggerPostComposerController(
             setOnClickListener { addLinkRow() }
         })
 
-        box.addView(section("05 • " + translate("وصف اللعبة")))
-        addField(box, body)
 
         val scroll = ScrollView(activity).apply {
             isFillViewport = true
@@ -286,9 +278,9 @@ internal class BloggerPostComposerController(
                     val web = previewFactory.create(
                         title = title.text.toString(),
                         labels = selectedLabels.joinToString("، "),
-                        genre = genre.text.toString(),
-                        releaseYear = releaseYear.text.toString(),
-                        body = body.text.toString(),
+                        genre = "",
+                        releaseYear = "",
+                        body = "",
                         coverUrl = coverUrl.text.toString(),
                         relatedLink = firstUrl,
                         packageSize = size.text.toString(),
@@ -325,7 +317,7 @@ internal class BloggerPostComposerController(
                         title = postTitle,
                         coverUrl = coverLink,
                         relatedLink = firstUrl,
-                        content = body.text.toString().trim()
+                        content = ""
                     )
                     if (validationFailure != null) {
                         when (validationFailure.field) {
@@ -343,7 +335,7 @@ internal class BloggerPostComposerController(
                         existing = existing,
                         title = postTitle,
                         labels = selectedLabels.toList(),
-                        description = body.text.toString().trim(),
+                        description = "",
                         coverLink = coverLink,
                         relatedLink = firstUrl,
                         genre = genre.text.toString(),
