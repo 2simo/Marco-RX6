@@ -143,6 +143,7 @@ internal class DownloadUiController(
         val rows = linkedMapOf<Long, RowViews>()
         val lastSpeedSample = mutableMapOf<Long, Pair<Long, Long>>()
         val handler = Handler(Looper.getMainLooper())
+        lateinit var render: () -> Unit
         val emptyState = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
@@ -269,7 +270,7 @@ internal class DownloadUiController(
             if (item.status == DownloadManager.STATUS_RUNNING || item.status == DownloadManager.STATUS_PENDING) {
                 addAction(smallAction(translate("إيقاف مؤقت")) {
                     if (downloadRepository.pauseDownload(item.id)) {
-                        lastSpeedSample.remove(item.id); render()
+                        lastSpeedSample.remove(item.id); render.invoke()
                         Toast.makeText(activity, translate("تم إيقاف التنزيل مؤقتاً"), Toast.LENGTH_SHORT).show()
                     } else Toast.makeText(activity, translate("تعذر إيقاف التنزيل مؤقتاً"), Toast.LENGTH_SHORT).show()
                 })
@@ -342,8 +343,8 @@ internal class DownloadUiController(
             return RowViews(card, titleView, statusView, detailsView, progressView, actions)
         }
 
-        fun render() {
-            if (activity.isFinishing || activity.isDestroyed) return
+        render = {
+            if (activity.isFinishing || activity.isDestroyed) return@render
             val entries = try { downloadRepository.getDownloads() } catch (error: Exception) {
                 Toast.makeText(activity, translate("تعذر قراءة التنزيلات") + ": ${error.message}", Toast.LENGTH_LONG).show()
                 return
@@ -374,11 +375,11 @@ internal class DownloadUiController(
                 }
             }
         }
-        render()
+        render.invoke()
         val refreshTask = object : Runnable {
             override fun run() {
                 if (!activity.isFinishing && !activity.isDestroyed && root.isAttachedToWindow) {
-                    render()
+                    render.invoke()
                     handler.postDelayed(this, 900L)
                 }
             }
@@ -392,6 +393,9 @@ internal class DownloadUiController(
                 handler.removeCallbacks(refreshTask)
             }
         })
+        root.layoutTransition = null
+        list.layoutTransition = null
+        emptyState.layoutTransition = null
         root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
             val safe = insets.getInsets(
@@ -402,6 +406,12 @@ internal class DownloadUiController(
             insets
         }
         setContentView(root)
+        root.layoutTransition = null
+        list.layoutTransition = null
+        rows.values.forEach { row ->
+            row.card.layoutTransition = null
+            row.actions.layoutTransition = null
+        }
         activity.window?.apply {
             statusBarColor = Color.TRANSPARENT
             navigationBarColor = Color.TRANSPARENT
