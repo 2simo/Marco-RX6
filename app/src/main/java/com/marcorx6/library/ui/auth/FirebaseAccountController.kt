@@ -444,14 +444,19 @@ internal class FirebaseAccountController(
             setTextColor(if (dark) Color.WHITE else Color.rgb(18, 42, 68))
         }
         header.addView(heading, LinearLayout.LayoutParams(0, dp(52), 1f))
-        header.addView(TextView(activity).apply {
-            text = "‹"
-            textSize = 32f
-            gravity = Gravity.CENTER
-            setTextColor(Color.rgb(75, 165, 255))
+        header.addView(ImageView(activity).apply {
+            setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
+            imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(75, 165, 255))
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
             contentDescription = translate("رجوع")
-            minWidth = dp(48)
-            minHeight = dp(48)
+            setPadding(dp(12), dp(12), dp(12), dp(12))
+            isClickable = true
+            isFocusable = true
+            if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
+                android.content.res.ColorStateList.valueOf(Color.argb(72, 75, 165, 255)),
+                null,
+                android.graphics.drawable.ColorDrawable(Color.WHITE)
+            )
             setOnClickListener { show() }
         }, LinearLayout.LayoutParams(dp(48), dp(48)))
         page.addView(header)
