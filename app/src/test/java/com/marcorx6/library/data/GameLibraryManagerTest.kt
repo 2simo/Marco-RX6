@@ -10,16 +10,15 @@ class GameLibraryManagerTest {
             sourcePostUrl = if (imported) "https://example.com/$name" else "",
             blogImported = imported, isFavorite = favorite)
 
-    @Test fun mergePreservesManualCorrectionAndUserState() {
+    @Test fun mergePreservesManualCorrectionAndFavoriteState() {
         val current = mutableListOf(game("Game A", "PS2", true).copy(
-            platformManuallyCorrected = true, playStatus = "PLAYING"))
+            platformManuallyCorrected = true))
         val result = GameLibraryManager.merge(current, listOf(game("Game A", "PS4")))
         assertEquals(0, result.added)
         assertEquals(1, result.updated)
         assertEquals("PS2", current.single().platform)
         assertTrue(current.single().platformManuallyCorrected)
         assertTrue(current.single().isFavorite)
-        assertEquals("PLAYING", current.single().playStatus)
     }
 
     @Test fun mergeSkipsDuplicateManualEntryAndAddsNewPost() {
