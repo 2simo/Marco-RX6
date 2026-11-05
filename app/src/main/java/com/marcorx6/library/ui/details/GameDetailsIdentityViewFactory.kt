@@ -19,7 +19,6 @@ internal class GameDetailsIdentityViewFactory(
 ) {
     fun create(game: Game): LinearLayout {
         val dark = isDarkMode()
-        val blue = if (dark) Color.rgb(99, 185, 255) else Color.rgb(22, 125, 224)
         val muted = if (dark) Color.rgb(170, 190, 214) else Color.rgb(91, 108, 130)
         val primary = if (dark) Color.rgb(244, 247, 252) else Color.rgb(32, 38, 56)
         val root = LinearLayout(activity).apply {
@@ -150,6 +149,10 @@ internal class GameDetailsIdentityViewFactory(
                 }
             }
         }
-        return fields.map { (label, _) -> label to (entries[label]?.takeIf { it.isNotBlank() } ?: "غير محدد") }
+        // Show only metadata that actually exists in the Blogger post. Placeholder
+        // rows made incomplete game records look like duplicated or fabricated data.
+        return fields.mapNotNull { (label, _) ->
+            entries[label]?.takeIf { it.isNotBlank() }?.let { value -> label to value }
+        }
     }
 }
