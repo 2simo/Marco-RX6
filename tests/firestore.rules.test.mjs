@@ -110,6 +110,29 @@ describe("Firestore user isolation rules", () => {
     await assertSucceeds(deleteDoc(doc(db, `users/${uid}`)));
   });
 
+  it("allows a registered user to update bounded profile fields and photo data", async () => {
+    const db = testEnv.authenticatedContext("profile-editor").firestore();
+    const profile = doc(db, "users/profile-editor");
+
+    await assertSucceeds(
+      setDoc(profile, {
+        displayName: "Marco RX6",
+        bio: "Retro gaming fan",
+        photoData: "a".repeat(420000),
+        updatedAt: new Date(),
+      }),
+    );
+    await assertFails(
+      updateDoc(profile, { photoData: "a".repeat(600001) }),
+    );
+    await assertFails(
+      updateDoc(profile, { bio: "x".repeat(161) }),
+    );
+    await assertFails(
+      updateDoc(profile, { privateAdminFlag: true }),
+    );
+  });
+
   it("allows a registered account to create preferences only with the required fields", async () => {
     const db = testEnv.authenticatedContext("registered-user").firestore();
     await assertSucceeds(
