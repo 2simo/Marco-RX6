@@ -31,12 +31,13 @@ internal object BloggerFeedParser {
         val platform = platformFromCategories(entry) ?: "BLOG"
         val image = extractFirstImage(content).ifBlank { extractFeedThumbnail(entry) }
         val cleanText = htmlToText(content)
+        val description = extractDescription(content).ifBlank { cleanText.take(1800) }
         val links = extractDownloadLinks(content)
 
         return Game(
             name = title,
             platform = platform,
-            description = cleanText.take(1800),
+            description = description.take(1800),
             url = postUrl,
             coverUrl = image,
             sourcePostUrl = postUrl,
@@ -53,6 +54,14 @@ internal object BloggerFeedParser {
         )
     }
 
+
+
+    private fun extractDescription(html: String): String {
+        val section = Regex(
+            "(?is)<h[1-6][^>]*>\\s*وصف اللعبة\\s*:?\\s*</h[1-6]>(.*?)(?:</div>\\s*$|$)"
+        ).find(html)?.groupValues?.getOrNull(1).orEmpty()
+        return if (section.isBlank()) "" else htmlToText(section)
+    }
 
     private fun extractInfoValue(html: String, label: String): String {
         val escapedLabel = Pattern.quote(label)
