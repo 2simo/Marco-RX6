@@ -37,8 +37,6 @@ internal class FirebaseAccountController(
     private val onAccountChanged: () -> Unit,
     private val launchGoogleSignIn: (Intent) -> Unit,
     private val launchAdminGoogleSignIn: (Intent) -> Unit,
-    private val isAdminSession: () -> Boolean,
-    private val signOutAdmin: () -> Unit,
     private val styleDialog: (AlertDialog) -> Unit,
     private val setContentView: (View) -> Unit,
     private val onBack: () -> Unit,
