@@ -36,9 +36,8 @@ internal object BloggerPostInputValidator {
         if (relatedLink.isNotBlank() && !relatedLink.startsWith("https://")) {
             return Failure("أدخل رابطاً يبدأ بـ HTTPS", Field.RELATED_LINK)
         }
-        if (content.isBlank()) {
-            return Failure("أدخل وصف المقال", Field.BODY)
-        }
+        // The structured game information and download links can form a complete
+        // post without a free-form description, so BODY is intentionally optional.
         return null
     }
 }
