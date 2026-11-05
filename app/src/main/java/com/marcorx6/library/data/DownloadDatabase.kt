@@ -66,7 +66,7 @@ internal class DownloadDatabase private constructor(context: Context) :
 
     @Synchronized
     fun all(): List<StoredDownload> =
-        readableDatabase.query("downloads", null, null, null, null, null, "id DESC")
+        readableDatabase.query("downloads", null, "status<>?", arrayOf(STATUS_CANCELLED.toString()), null, null, "id DESC")
             .use { cursor -> buildList { while (cursor.moveToNext()) add(cursor.toRecord()) } }
 
     @Synchronized
@@ -93,6 +93,13 @@ internal class DownloadDatabase private constructor(context: Context) :
     }
 
     @Synchronized
+    fun cancel(id: Long) {
+        writableDatabase.update("downloads", ContentValues().apply {
+            put("status", STATUS_CANCELLED)
+        }, "id=?", arrayOf(id.toString()))
+    }
+
+    @Synchronized
     fun delete(id: Long) {
         writableDatabase.delete("downloads", "id=?", arrayOf(id.toString()))
     }
@@ -115,6 +122,7 @@ internal class DownloadDatabase private constructor(context: Context) :
     )
 
     companion object {
+        const val STATUS_CANCELLED = 6
         @Volatile private var instance: DownloadDatabase? = null
         fun get(context: Context): DownloadDatabase =
             instance ?: synchronized(this) {
