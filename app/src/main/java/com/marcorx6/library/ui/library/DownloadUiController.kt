@@ -359,37 +359,6 @@ internal class DownloadUiController(
             }
         })
         root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
-        val actions = LinearLayout(activity).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, dp(12), 0, 0)
-        }
-        fun action(label: String, filled: Boolean, onClick: () -> Unit) = TextView(activity).apply {
-            text = label
-            textSize = 12f
-            gravity = Gravity.CENTER
-            setTextColor(if (filled) Color.WHITE else primary)
-            this.background = GradientDrawable().apply {
-                setColor(if (filled) Color.argb(224, 42, 145, 255)
-                    else if (dark) Color.argb(205, 15, 43, 70) else Color.argb(220, 255, 255, 255))
-                cornerRadius = dp(16).toFloat()
-                setStroke(dp(1), if (filled) Color.argb(175, 119, 194, 255) else primary)
-            }
-            minWidth = dp(48)
-            minHeight = dp(48)
-            isClickable = true
-            isFocusable = true
-            contentDescription = label
-            setPadding(dp(14), dp(13), dp(14), dp(13))
-            addGlassTouch(this)
-            setOnClickListener { onClick() }
-        }
-        actions.addView(action(translate("تحديث"), false) { render() }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(7) })
-        actions.addView(action(translate("تنزيلات النظام"), true) {
-            try { activity.startActivity(Intent(DownloadManager.ACTION_VIEW_DOWNLOADS)) }
-            catch (_: Exception) { Toast.makeText(activity, translate("تعذر فتح مدير تنزيلات النظام"), Toast.LENGTH_SHORT).show() }
-        }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(7) })
-        root.addView(actions)
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
             val safe = insets.getInsets(
                 androidx.core.view.WindowInsetsCompat.Type.systemBars() or
