@@ -53,6 +53,10 @@ internal class GameDownloadLinksViewFactory(
             val item = downloads.optJSONObject(index) ?: continue
             val target = item.optString("url").trim()
             if (!(target.startsWith("https://", ignoreCase = true) || target.startsWith("http://", ignoreCase = true))) continue
+            // Older imported records may still contain a cover URL in downloadLinks.
+            // Filter common image resources here as a second line of defence.
+            val targetPath = target.substringBefore('?').substringBefore('#').lowercase(java.util.Locale.ROOT)
+            if (Regex("\\.(?:jpe?g|png|gif|webp|bmp|svg|avif|jfif)$").containsMatchIn(targetPath)) continue
             val label = item.optString("label").ifBlank { "${translate("تحميل")} ${index + 1}" }
             downloadRow.addView(TextView(activity).apply {
                 text = "⬇  $label"
