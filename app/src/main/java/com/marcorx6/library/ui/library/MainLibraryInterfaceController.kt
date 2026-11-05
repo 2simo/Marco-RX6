@@ -43,7 +43,7 @@ internal class MainLibraryInterfaceController(
     private val setCountText: (TextView) -> Unit,
     private val setGameList: (LinearLayout) -> Unit,
     private val renderGames: () -> Unit,
-    private val showNotificationSettings: () -> Unit,
+    private val toggleDarkMode: () -> Unit,
     private val showAppearanceSettings: () -> Unit,
     private val showAdvancedFilters: () -> Unit,
     private val showGameDialog: () -> Unit,
@@ -134,7 +134,7 @@ internal class MainLibraryInterfaceController(
             )
             setOnClickListener { action() }
         }
-        header.addView(headerAction("♧", tr("الإشعارات")) { showNotificationSettings() },
+        header.addView(headerAction(if (isDarkMode()) "☀" else "☾", tr(if (isDarkMode()) "الوضع الفاتح" else "الوضع الداكن")) { toggleDarkMode() },
             LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginEnd = dp(8) })
         header.addView(headerAction("⚙", tr("الإعدادات")) { showAppearanceSettings() },
             LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginEnd = dp(8) })
@@ -204,7 +204,7 @@ internal class MainLibraryInterfaceController(
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        listOf("ALL", "PS2", "PS3", "PS4", "BLOG", "FAVORITES", "WANT_TO_PLAY", "PLAYING", "COMPLETED").forEach { category ->
+        listOf("ALL", "PS2", "PS3", "PS4", "BLOG", "WANT_TO_PLAY", "PLAYING", "COMPLETED").forEach { category ->
             val chip = TextView(context).apply {
                 text = when (category) {
                     "ALL" -> tr("الكل")
@@ -391,11 +391,7 @@ internal class MainLibraryInterfaceController(
             elevation = dp(14).toFloat()
             setPadding(dp(7), dp(7), dp(7), dp(7))
         }
-        if (activeDockTab in setOf("DOWNLOADS", "PROFILE", "SETTINGS")) {
-            activeDockTab = if (selected == "FAVORITES") "LIBRARY" else "HOME"
-        } else if (selected == "FAVORITES" && activeDockTab == "HOME") {
-            activeDockTab = "LIBRARY"
-        }
+        if (activeDockTab !in setOf("HOME", "EXPLORE", "SETTINGS")) activeDockTab = "HOME"
         val dockItems = linkedMapOf<String, LinearLayout>()
         val dockLabels = linkedMapOf<String, String>()
         fun renderDockSelection() {
@@ -464,17 +460,12 @@ internal class MainLibraryInterfaceController(
         dockItem("HOME", "⌂", tr("الرئيسية")) {
             selected = "ALL"; renderGames(); pageScroll.smoothScrollTo(0, 0)
         }
-        dockItem("LIBRARY", "♡", tr("المفضلة")) {
-            selected = "FAVORITES"; renderGames(); pageScroll.smoothScrollTo(0, 0)
-        }
-        dockItem("DOWNLOADS", "⬇", tr("التنزيلات")) { showDownloads() }
         dockItem("EXPLORE", "⌕", tr("استكشف")) {
             search.requestFocus()
             pageScroll.smoothScrollTo(0, 0)
             (context.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager)
                 .showSoftInput(search, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
         }
-        dockItem("PROFILE", "♙", tr("حسابي")) { showProfile() }
         dockItem("SETTINGS", "⚙", tr("الإعدادات")) { showAppearanceSettings() }
         renderDockSelection()
         val dockParams = FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply {
