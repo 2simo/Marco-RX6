@@ -66,6 +66,36 @@ internal class GameDetailsIdentityViewFactory(
             ellipsize = android.text.TextUtils.TruncateAt.END
             setPadding(dp(2), dp(13), dp(2), dp(5))
         })
+
+        if (game.description.isNotBlank()) {
+            val descriptionView = makeText(game.description, 15f, muted, false).apply {
+                textDirection = android.view.View.TEXT_DIRECTION_FIRST_STRONG
+                gravity = android.view.Gravity.START
+                textAlignment = android.view.View.TEXT_ALIGNMENT_VIEW_START
+                setLineSpacing(dp(2).toFloat(), 1f)
+                setPadding(dp(3), dp(2), dp(3), dp(12))
+            }
+            root.addView(descriptionView, LinearLayout.LayoutParams(-1, -2))
+            val target = targetLanguage()
+            if (target != "ar") {
+                val translator = LocalContentTranslator(activity)
+                translator.translateAutomatically(
+                    text = game.description,
+                    targetLanguage = target,
+                    onTranslated = { translated ->
+                        descriptionView.post {
+                            if (descriptionView.isAttachedToWindow && translated.isNotBlank()) {
+                                descriptionView.text = translated
+                            }
+                            translator.close()
+                        }
+                    },
+                    onError = {
+                        descriptionView.post { translator.close() }
+                    }
+                )
+            }
+        }
         val platformChip = TextView(activity).apply {
             text = game.platform.uppercase()
             textSize = 11f
