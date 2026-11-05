@@ -28,7 +28,7 @@ internal object DownloadFileNames {
             .take(180)
         if (name.isBlank()) name = "download_$id"
         val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
-        if (!name.contains('.').also { hasExtension -> hasExtension } && !extension.isNullOrBlank()) {
+        if (!name.contains('.') && !extension.isNullOrBlank()) {
             name = "$name.$extension"
         }
         return name
