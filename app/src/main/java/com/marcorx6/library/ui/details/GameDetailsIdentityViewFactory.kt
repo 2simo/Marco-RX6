@@ -63,12 +63,6 @@ internal class GameDetailsIdentityViewFactory(
             gravity = android.view.Gravity.CENTER_HORIZONTAL
         })
 
-        root.addView(makeText(game.name, 21f, primary, true).apply {
-            maxLines = 2
-            ellipsize = android.text.TextUtils.TruncateAt.END
-            setPadding(dp(2), dp(13), dp(2), dp(5))
-        })
-
         if (game.description.isNotBlank()) {
             val descriptionView = makeText(game.description, 15f, muted, false).apply {
                 textDirection = android.view.View.TEXT_DIRECTION_FIRST_STRONG
@@ -98,21 +92,6 @@ internal class GameDetailsIdentityViewFactory(
                 )
             }
         }
-        val platformChip = TextView(activity).apply {
-            text = game.platform.uppercase()
-            textSize = 11f
-            setTextColor(blue)
-            setPadding(dp(11), dp(5), dp(11), dp(5))
-            background = GradientDrawable().apply {
-                setColor(if (dark) Color.rgb(24, 57, 88) else Color.rgb(222, 239, 255))
-                cornerRadius = dp(30).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(57, 126, 187) else Color.rgb(153, 202, 246))
-            }
-        }
-        root.addView(platformChip, LinearLayout.LayoutParams(-2, -2).apply {
-            bottomMargin = dp(13)
-        })
-
         // App-branded introduction belongs above the metadata card, not below download buttons.
         root.addView(makeText(
             translate("أهلاً بمستخدمي تطبيق MARCO RX6 الكرام، إليكم لعبة جديدة من إضافاتنا الحصرية بروابط مباشرة وسريعة."),
