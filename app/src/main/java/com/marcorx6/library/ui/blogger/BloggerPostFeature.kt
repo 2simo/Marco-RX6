@@ -68,7 +68,8 @@ internal class BloggerPostFeature(
     private val saveController = BloggerPostSaveController(
         executeIo = executeIo,
         postToUi = postToUi,
-        savePost = services.posts::savePost
+        savePost = services.posts::savePost,
+        translate = translate
     )
 
     private val previewFactory = BloggerArticlePreviewFactory(

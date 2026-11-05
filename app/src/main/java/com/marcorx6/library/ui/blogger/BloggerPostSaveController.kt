@@ -6,7 +6,8 @@ import org.json.JSONObject
 internal class BloggerPostSaveController(
     private val executeIo: (() -> Unit) -> Unit,
     private val postToUi: (() -> Unit) -> Unit,
-    private val savePost: (Game, List<String>, String?) -> JSONObject
+    private val savePost: (Game, List<String>, String?) -> JSONObject,
+    private val translate: (String) -> String
 ) {
     fun save(
         post: Game,
@@ -29,7 +30,7 @@ internal class BloggerPostSaveController(
                     onSuccess(saved)
                 }
             } catch (e: Exception) {
-                postToUi { onError(e.message ?: "فشل نشر المقال") }
+                postToUi { onError(translate(e.message ?: "فشل نشر المقال")) }
             }
         }
     }

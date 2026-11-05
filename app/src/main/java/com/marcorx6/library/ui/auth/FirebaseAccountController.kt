@@ -153,15 +153,15 @@ internal class FirebaseAccountController(
                 val name = nameInput.text.toString().trim()
                 val bio = bioInput.text.toString().trim()
                 if (name.isBlank() || name.length > 40) {
-                    toast("الاسم ضروري وخاصو يكون أقل من 40 حرف")
+                    toast("الاسم مطلوب ويجب ألا يتجاوز 40 حرفاً.")
                     return@accountSubmitButton
                 }
                 if (bio.length > 160) {
-                    toast("النبذة خاصها تكون أقل من 160 حرف")
+                    toast("يجب ألا تتجاوز النبذة 160 حرفاً.")
                     return@accountSubmitButton
                 }
                 if (!profileLoaded) {
-                    toast("كنحمّلو معلومات الملف الشخصي، عاود المحاولة بعد لحظة")
+                    toast("جارٍ تحميل معلومات الملف الشخصي، يُرجى المحاولة مجدداً بعد لحظة.")
                     return@accountSubmitButton
                 }
                 button.isEnabled = false
@@ -301,7 +301,7 @@ internal class FirebaseAccountController(
             quality -= 8
         } while (output.size() > 420_000 && quality >= 42)
         scaled.recycle()
-        require(output.size() <= 450_000) { "الصورة كبيرة بزاف، اختار صورة أصغر" }
+        require(output.size() <= 450_000) { "الصورة كبيرة جداً، اختر صورة أصغر." }
         return Base64.encodeToString(output.toByteArray(), Base64.NO_WRAP)
     }
 
@@ -559,7 +559,7 @@ internal class FirebaseAccountController(
     private fun showPasswordResetForm() {
         val page = createAccountFormPage(
             translate("استرجاع كلمة المرور"),
-            translate("دخل البريد الإلكتروني المرتبط بحسابك وسنرسل لك رابط إعادة التعيين.")
+            translate("أدخل البريد الإلكتروني المرتبط بحسابك، وسنرسل إليك رابط إعادة التعيين.")
         )
         val email = accountInput(
             translate("البريد الإلكتروني"),
@@ -575,7 +575,7 @@ internal class FirebaseAccountController(
             button.isEnabled = false
             authRepository.sendPasswordReset(address)
                 .addOnSuccessListener {
-                    toast("إلا كان الحساب موجود، غادي توصلك رسالة استرجاع كلمة المرور")
+                    toast("إذا كان الحساب موجوداً، فستصلك رسالة لإعادة تعيين كلمة المرور.")
                     show()
                 }
                 .addOnFailureListener { error ->
@@ -666,7 +666,7 @@ internal class FirebaseAccountController(
             val address = email.text.toString().trim()
             val secret = password.text.toString()
             if (!Patterns.EMAIL_ADDRESS.matcher(address).matches() || secret.isBlank()) {
-                toast("دخل بريد إلكتروني صحيح وكلمة المرور")
+                toast("أدخل عنوان بريد إلكتروني صحيحاً وكلمة المرور.")
                 return@accountSubmitButton
             }
             if (createAccount && secret != confirmPassword?.text?.toString()) {
@@ -674,7 +674,7 @@ internal class FirebaseAccountController(
                 return@accountSubmitButton
             }
             if (createAccount && secret.length < 6) {
-                toast("كلمة المرور خاصها تكون 6 أحرف على الأقل")
+                toast("يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.")
                 return@accountSubmitButton
             }
             button.isEnabled = false
@@ -704,13 +704,13 @@ internal class FirebaseAccountController(
 
     private fun confirmAccountDeletion(user: FirebaseUser?) {
         if (user == null) {
-            toast("ما كاين حتى حساب لحذفه دابا")
+            toast("لا يوجد حساب لحذفه حالياً.")
             return
         }
         AlertDialog.Builder(activity)
             .setTitle(translate("حذف حساب MARCO RX6؟"))
             .setMessage(
-                translate("هاد العملية نهائية: غادي نحذف ملف الحساب والإعدادات المحفوظة فـ Firebase، ومن بعد حساب Firebase نفسه. مكتبة الألعاب والملفات المحلية فالتيليفون، وحساب Google المسؤول ومحتوى Blogger وDrive، ما غاديش نمسوهم.")
+                translate("هذه العملية نهائية: سنحذف ملف الحساب والإعدادات المحفوظة في Firebase، ثم حساب Firebase نفسه. لن نحذف مكتبة الألعاب أو الملفات المحلية على الهاتف أو حساب Google المسؤول أو محتوى Blogger وDrive.")
             )
             .setNegativeButton(translate("إلغاء"), null)
             .setPositiveButton(translate("متابعة")) { _, _ ->
@@ -718,7 +718,7 @@ internal class FirebaseAccountController(
                     user.isAnonymous -> deleteAccountDataAndAuth(user)
                     user.providerData.any { it.providerId == "password" } -> showDeletePasswordPrompt(user)
                     user.providerData.any { it.providerId == "google.com" } -> reauthenticateGoogleForDeletion(user)
-                    else -> toast("طريقة التحقق من هاد الحساب غير مدعومة حالياً. تواصل مع الدعم.")
+                    else -> toast("طريقة التحقق من هذا الحساب غير مدعومة حالياً. يُرجى التواصل مع الدعم.")
                 }
             }
             .show()
@@ -733,7 +733,7 @@ internal class FirebaseAccountController(
         }
         val dialog = AlertDialog.Builder(activity)
             .setTitle(translate("تأكيد هوية صاحب الحساب"))
-            .setMessage(translate("دخل كلمة المرور الحالية باش نتحققو من هويتك قبل الحذف."))
+            .setMessage(translate("أأدخل كلمة المرور الحالية. للتحقق من هويتك قبل الحذف."))
             .setView(password)
             .setNegativeButton("إلغاء", null)
             .setPositiveButton(translate("تحقق وحذف"), null)
@@ -743,7 +743,7 @@ internal class FirebaseAccountController(
                 val secret = password.text.toString()
                 val email = user.email
                 if (secret.isBlank() || email.isNullOrBlank()) {
-                    toast("دخل كلمة المرور الحالية")
+                    toast("أدخل كلمة المرور الحالية.")
                     return@setOnClickListener
                 }
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false

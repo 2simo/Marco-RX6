@@ -2,9 +2,7 @@ package com.marcorx6.library.ui
 
 /** Centralized static translations for the app interface. */
 internal object LanguageTranslator {
-    fun translate(ar: String, lang: String): String {
-        if (lang == "ar") return ar
-        val translations = mapOf(
+    private val translations = mapOf(
             "الإعدادات والمظهر" to listOf("Settings & appearance", "Paramètres et apparence", "Ajustes y apariencia"),
             "خصص تجربة MARCO RX6 بالطريقة التي تناسبك" to listOf("Customize your MARCO RX6 experience", "Personnalisez votre expérience MARCO RX6", "Personaliza tu experiencia MARCO RX6"),
             "رابط التنزيل غير آمن أو غير صالح؛ يجب استخدام HTTPS" to listOf("Invalid or unsafe download link; HTTPS is required", "Lien de téléchargement invalide ou non sécurisé ; HTTPS est requis", "Enlace de descarga no válido o inseguro; se requiere HTTPS"),
@@ -289,6 +287,53 @@ internal object LanguageTranslator {
             "معاينة المقال" to listOf("Article preview", "Aperçu de l’article", "Vista previa del artículo"),
             "هذا الحساب لا يملك صلاحية النشر أو التعديل في مدونة Blogger" to listOf("This account does not have permission to publish or edit on the Blogger blog", "Ce compte n’est pas autorisé à publier ou modifier des articles sur le blog Blogger", "Esta cuenta no tiene permiso para publicar ni editar en el blog de Blogger"),
             "تعذر التحقق من صلاحيات Blogger" to listOf("Could not verify Blogger permissions", "Impossible de vérifier les autorisations Blogger", "No se pudieron verificar los permisos de Blogger"),
+            "يرجى تسجيل الدخول بحساب Google" to listOf("Please sign in with a Google account", "Veuillez vous connecter avec un compte Google", "Inicia sesión con una cuenta de Google"),
+            "بيانات حساب Google غير متاحة" to listOf("Google account information is unavailable", "Les informations du compte Google sont indisponibles", "La información de la cuenta de Google no está disponible"),
+            "يرجى تسجيل الدخول بحساب المسؤول" to listOf("Please sign in with the administrator account", "Veuillez vous connecter avec le compte administrateur", "Inicia sesión con la cuenta de administrador"),
+            "يلزم التحقق من صلاحيات Blogger قبل رفع الأغلفة" to listOf("Verify Blogger permissions before uploading covers", "Vérifiez les autorisations Blogger avant d’envoyer les couvertures", "Verifica los permisos de Blogger antes de subir portadas"),
+            "فشل نشر المقال" to listOf("Article publishing failed", "Échec de la publication de l’article", "No se pudo publicar el artículo"),
+            "الاسم مطلوب ويجب ألا يتجاوز 40 حرفاً." to listOf("Name is required and must not exceed 40 characters.", "Le nom est obligatoire et ne doit pas dépasser 40 caractères.", "El nombre es obligatorio y no debe superar los 40 caracteres."),
+            "يجب ألا تتجاوز النبذة 160 حرفاً." to listOf("The bio must not exceed 160 characters.", "La biographie ne doit pas dépasser 160 caractères.", "La descripción no debe superar los 160 caracteres."),
+            "جارٍ تحميل معلومات الملف الشخصي، يُرجى المحاولة مجدداً بعد لحظة." to listOf("Loading profile information. Please try again in a moment.", "Chargement des informations du profil. Veuillez réessayer dans un instant.", "Cargando la información del perfil. Inténtalo de nuevo en un momento."),
+            "الصورة كبيرة جداً، اختر صورة أصغر." to listOf("The image is too large. Choose a smaller image.", "L’image est trop volumineuse. Choisissez-en une plus petite.", "La imagen es demasiado grande. Elige una más pequeña."),
+            "أدخل البريد الإلكتروني المرتبط بحسابك، وسنرسل إليك رابط إعادة التعيين." to listOf("Enter the email address linked to your account and we will send you a reset link.", "Saisissez l’adresse e-mail associée à votre compte et nous vous enverrons un lien de réinitialisation.", "Introduce el correo asociado a tu cuenta y te enviaremos un enlace de restablecimiento."),
+            "إذا كان الحساب موجوداً، فستصلك رسالة لإعادة تعيين كلمة المرور." to listOf("If the account exists, you will receive a password reset email.", "Si le compte existe, vous recevrez un e-mail de réinitialisation du mot de passe.", "Si la cuenta existe, recibirás un correo para restablecer la contraseña."),
+            "أدخل عنوان بريد إلكتروني صحيحاً وكلمة المرور." to listOf("Enter a valid email address and password.", "Saisissez une adresse e-mail valide et un mot de passe.", "Introduce un correo electrónico válido y una contraseña."),
+            "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل." to listOf("The password must contain at least 6 characters.", "Le mot de passe doit contenir au moins 6 caractères.", "La contraseña debe tener al menos 6 caracteres."),
+            "لا يوجد حساب لحذفه حالياً." to listOf("There is no account to delete right now.", "Aucun compte à supprimer pour le moment.", "No hay ninguna cuenta que eliminar por ahora."),
+            "هذه العملية نهائية: سنحذف ملف الحساب والإعدادات المحفوظة في Firebase، ثم حساب Firebase نفسه. لن نحذف مكتبة الألعاب أو الملفات المحلية على الهاتف أو حساب Google المسؤول أو محتوى Blogger وDrive." to listOf("This action is permanent: the account profile and settings stored in Firebase will be deleted, followed by the Firebase account itself. Your game library, local phone files, admin Google account, Blogger content and Drive files will remain untouched.", "Cette action est définitive : le profil et les paramètres du compte enregistrés dans Firebase seront supprimés, puis le compte Firebase lui-même. La bibliothèque de jeux, les fichiers locaux du téléphone, le compte Google administrateur, le contenu Blogger et les fichiers Drive resteront intacts.", "Esta acción es permanente: se eliminarán el perfil y los ajustes guardados en Firebase y, después, la propia cuenta de Firebase. La biblioteca de juegos, los archivos locales del teléfono, la cuenta de Google administradora, el contenido de Blogger y los archivos de Drive permanecerán intactos."),
+            "طريقة التحقق من هذا الحساب غير مدعومة حالياً. يُرجى التواصل مع الدعم." to listOf("The verification method for this account is not currently supported. Please contact support.", "La méthode de vérification de ce compte n’est pas prise en charge actuellement. Veuillez contacter l’assistance.", "El método de verificación de esta cuenta no es compatible actualmente. Ponte en contacto con soporte."),
+            "أدخل كلمة المرور الحالية للتحقق من هويتك قبل الحذف." to listOf("Enter your current password to verify your identity before deletion.", "Saisissez votre mot de passe actuel pour vérifier votre identité avant la suppression.", "Introduce tu contraseña actual para verificar tu identidad antes de eliminarla."),
+            "أدخل كلمة المرور الحالية." to listOf("Enter your current password.", "Saisissez votre mot de passe actuel.", "Introduce tu contraseña actual."),
+            "لا توجد تنزيلات حالياً." to listOf("No downloads yet.", "Aucun téléchargement pour le moment.", "Aún no hay descargas."),
+            "اختر لعبة، ثم أضف رابط التحميل من صفحة التفاصيل ليظهر هنا." to listOf("Choose a game, then add its download link from the details page to see it here.", "Choisissez un jeu, puis ajoutez son lien de téléchargement depuis la page de détails pour le voir ici.", "Elige un juego y añade su enlace de descarga desde la página de detalles para verlo aquí."),
+            "لا يملك هذا المقال معرّف Blogger. زامن المدونة ثم حاول مجدداً." to listOf("This article has no Blogger ID. Sync the blog and try again.", "Cet article ne possède pas d’identifiant Blogger. Synchronisez le blog puis réessayez.", "Este artículo no tiene un ID de Blogger. Sincroniza el blog e inténtalo de nuevo."),
+            "لا يملك هذا المقال معرّف Blogger." to listOf("This article has no Blogger ID.", "Cet article ne possède pas d’identifiant Blogger.", "Este artículo no tiene un ID de Blogger."),
+            "لم يتم التحقق من صلاحيات Blogger لهذا الحساب" to listOf("Blogger permissions have not been verified for this account", "Les autorisations Blogger de ce compte n’ont pas été vérifiées", "No se han verificado los permisos de Blogger para esta cuenta"),
+            "زامن المدونة أولاً ثم حاول مجدداً." to listOf("Sync the blog first, then try again.", "Synchronisez d’abord le blog, puis réessayez.", "Sincroniza primero el blog y vuelve a intentarlo."),
+            "تعذر إنشاء مجلد الأغلفة" to listOf("Could not create the covers folder", "Impossible de créer le dossier des couvertures", "No se pudo crear la carpeta de portadas"),
+            "تعذرت قراءة الصورة" to listOf("Could not read the image", "Impossible de lire l’image", "No se pudo leer la imagen"),
+            "رابط التحويل النهائي لا يستخدم HTTPS؛ تم إيقاف التنزيل لحماية بياناتك" to listOf("The final redirect does not use HTTPS; the download was stopped to protect your data", "La redirection finale n’utilise pas HTTPS ; le téléchargement a été arrêté pour protéger vos données", "La redirección final no usa HTTPS; se detuvo la descarga para proteger tus datos"),
+            "تعذر بدء تنزيل الملف" to listOf("Could not start the file download", "Impossible de démarrer le téléchargement du fichier", "No se pudo iniciar la descarga del archivo"),
+            "تخزين التطبيق" to listOf("App storage", "Stockage de l’application", "Almacenamiento de la aplicación"),
+            "مجلد مختار" to listOf("Selected folder", "Dossier sélectionné", "Carpeta seleccionada"),
+            "تعذر إنشاء مجلد الصورة الشخصية" to listOf("Could not create the profile photo folder", "Impossible de créer le dossier de la photo de profil", "No se pudo crear la carpeta de la foto de perfil"),
+            "سجّل الخروج من الحساب الحالي قبل إنشاء حساب جديد" to listOf("Sign out of the current account before creating a new account", "Déconnectez-vous du compte actuel avant d’en créer un nouveau", "Cierra la sesión actual antes de crear una cuenta nueva"),
+            "لا يوجد حساب حالي لربط Google به" to listOf("There is no current account to link with Google", "Aucun compte actuel à associer à Google", "No hay ninguna cuenta actual para vincular con Google"),
+            "تعذر ربط الحساب" to listOf("Could not link the account", "Impossible d’associer le compte", "No se pudo vincular la cuenta"),
+            "تعذر تحديث رمز الحساب" to listOf("Could not update the account token", "Impossible de mettre à jour le jeton du compte", "No se pudo actualizar el token de la cuenta"),
+            "لا يوجد حساب لحذفه" to listOf("There is no account to delete", "Aucun compte à supprimer", "No hay ninguna cuenta que eliminar"),
+            "تعذر قراءة ملف المستخدم" to listOf("Could not read the user profile", "Impossible de lire le profil utilisateur", "No se pudo leer el perfil del usuario"),
+            "تعذر حذف إعدادات الحساب" to listOf("Could not delete account settings", "Impossible de supprimer les paramètres du compte", "No se pudieron eliminar los ajustes de la cuenta"),
+            "رمز الوصول إلى Google Drive غير متاح" to listOf("Google Drive access token is unavailable", "Le jeton d’accès à Google Drive est indisponible", "El token de acceso a Google Drive no está disponible"),
+            "ملف الصورة فارغ أو غير موجود" to listOf("The image file is empty or missing", "Le fichier image est vide ou introuvable", "El archivo de imagen está vacío o introuvable"),
+            "حجم صورة الغلاف يتجاوز 10 ميغابايت" to listOf("The cover image exceeds 10 MB", "L’image de couverture dépasse 10 Mo", "La imagen de portada supera los 10 MB"),
+            "لم يرجع Google Drive معرّف الصورة" to listOf("Google Drive did not return an image ID", "Google Drive n’a pas renvoyé d’identifiant d’image", "Google Drive no devolvió un ID de imagen"),
+            "رابط الصورة لا يعيد ملف صورة مباشراً" to listOf("The image URL does not return a direct image file", "L’URL de l’image ne renvoie pas un fichier image direct", "La URL de la imagen no devuelve un archivo de imagen directo"),
+            "فشل رفع الصورة إلى Google Drive" to listOf("Could not upload the image to Google Drive", "Impossible d’envoyer l’image vers Google Drive", "No se pudo subir la imagen a Google Drive"),
+            "تم رفع الصورة لكن تعذر جعلها متاحة للموقع" to listOf("The image was uploaded, but could not be made available to the website", "L’image a été envoyée, mais n’a pas pu être rendue accessible au site", "La imagen se subió, pero no se pudo hacer accesible al sitio"),
+            "تعذر التحقق من رابط الصورة" to listOf("Could not verify the image URL", "Impossible de vérifier l’URL de l’image", "No se pudo verificar la URL de la imagen"),
+            "الخادم رفض رابط التنزيل" to listOf("The server rejected the download URL", "Le serveur a refusé l’URL de téléchargement", "El servidor rechazó la URL de descarga"),
             "تم إعداد مكتبتك. اختياراتك محفوظة ويمكنك تغييرها لاحقاً من الإعدادات." to listOf("Your library is ready. Your choices are saved and can be changed later in Settings.", "Votre bibliothèque est prête. Vos choix sont enregistrés et modifiables dans les paramètres.", "Tu biblioteca está lista. Tus opciones se guardan y podrás cambiarlas en Ajustes."),
             "السابق" to listOf("Back", "Précédent", "Anterior"),
             "التالي" to listOf("Next", "Suivant", "Siguiente"),
@@ -592,8 +637,25 @@ internal object LanguageTranslator {
             "هل ترغب في تلقي إشعار عند نشر مقالات جديدة في المدونة؟" to listOf("Would you like to be notified when new blog articles are published?", "Souhaitez-vous recevoir une notification lors de la publication de nouveaux articles ?", "¿Quieres recibir avisos cuando se publiquen nuevos artículos?"),
             "تم إعداد مكتبتك. اختياراتك محفوظة ويمكنك تغييرها لاحقاً من الإعدادات." to listOf("Your library is ready. Your choices are saved and can be changed later in Settings.", "Votre bibliothèque est prête. Vos choix sont enregistrés et modifiables dans les paramètres.", "Tu biblioteca está lista. Tus opciones se han guardado y puedes cambiarlas en Ajustes."),
         )
+
+    fun translate(ar: String, lang: String): String {
+        if (lang == "ar") return ar
         val index = when (lang) { "en" -> 0; "fr" -> 1; "es" -> 2; else -> return ar }
-        return translations[ar]?.get(index) ?: ar
+        fun localized(key: String): String? = translations[key]?.get(index)
+
+        Regex("^الخادم رفض رابط التنزيل \\(HTTP ([^)]+)\\)$").matchEntire(ar)?.let { match ->
+            return "${localized("الخادم رفض رابط التنزيل") ?: "الخادم رفض رابط التنزيل"} (HTTP ${match.groupValues[1]})"
+        }
+        Regex("^فشل رفع الصورة إلى Google Drive \\(([^)]+)\\): (.*)$", RegexOption.DOT_MATCHES_ALL).matchEntire(ar)?.let { match ->
+            return "${localized("فشل رفع الصورة إلى Google Drive") ?: "فشل رفع الصورة إلى Google Drive"} (${match.groupValues[1]}): ${match.groupValues[2]}"
+        }
+        Regex("^تم رفع الصورة لكن تعذر جعلها متاحة للموقع \\(([^)]+)\\): (.*)$", RegexOption.DOT_MATCHES_ALL).matchEntire(ar)?.let { match ->
+            return "${localized("تم رفع الصورة لكن تعذر جعلها متاحة للموقع") ?: "تم رفع الصورة لكن تعذر جعلها متاحة للموقع"} (${match.groupValues[1]}): ${match.groupValues[2]}"
+        }
+        Regex("^تعذر التحقق من رابط الصورة \\(HTTP ([^،]+)، النوع: (.*)\\)$").matchEntire(ar)?.let { match ->
+            return "${localized("تعذر التحقق من رابط الصورة") ?: "تعذر التحقق من رابط الصورة"} (HTTP ${match.groupValues[1]}, type: ${match.groupValues[2]})"
+        }
+        return localized(ar) ?: ar
     }
 
     /**

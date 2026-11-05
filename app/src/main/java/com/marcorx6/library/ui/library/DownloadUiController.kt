@@ -61,7 +61,7 @@ internal class DownloadUiController(
                         }
                     }
                     is DownloadStartResult.Failed ->
-                        Toast.makeText(activity, result.message, Toast.LENGTH_LONG).show()
+                        Toast.makeText(activity, translate(result.message), Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -162,12 +162,12 @@ internal class DownloadUiController(
                 contentDescription = translate("التنزيلات")
             }, LinearLayout.LayoutParams(dp(48), dp(48)))
             addView(TextView(activity).apply {
-                text = translate("ما كايناش تنزيلات دابا"); textSize = 17f
+                text = translate("لا توجد تنزيلات حالياً."); textSize = 17f
                 setTypeface(null, android.graphics.Typeface.BOLD); setTextColor(heading)
                 gravity = Gravity.CENTER; setPadding(0, dp(10), 0, dp(6))
             })
             addView(TextView(activity).apply {
-                text = translate("اختار لعبة، ومن صفحة التفاصيل أضف رابط التحميل باش يبان هنا.")
+                text = translate("اختر لعبة، ثم أضف رابط التحميل من صفحة التفاصيل ليظهر هنا.")
                 textSize = 12f; setTextColor(muted); gravity = Gravity.CENTER
             })
         }
@@ -353,7 +353,7 @@ internal class DownloadUiController(
         render = renderBlock@{
             if (activity.isFinishing || activity.isDestroyed) return@renderBlock
             val entries = try { downloadRepository.getDownloads() } catch (error: Exception) {
-                Toast.makeText(activity, translate("تعذر قراءة التنزيلات") + ": ${error.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(activity, translate("تعذر قراءة التنزيلات") + (error.message?.takeIf { it.isNotBlank() }?.let { ": ${translate(it)}" } ?: ""), Toast.LENGTH_LONG).show()
                 return@renderBlock
             }
             val currentIds = entries.map { it.id }.toSet()

@@ -21,7 +21,7 @@ internal class GameDeletionController(
     fun delete(game: Game) {
         AlertDialog.Builder(activity)
             .setTitle(translate("حذف المقال"))
-            .setMessage(translate("هل تريد حذف المقال") + " " + game.name + "؟")
+            .setMessage(translate("هل تريد حذف المقال") + " " + game.name + translate("؟"))
             .setNegativeButton(translate("إلغاء"), null)
             .setPositiveButton(translate("حذف")) { _, _ ->
                 if (!isAdminSession() || bloggerBlogId().isBlank() || game.bloggerPostId.isBlank()) {
