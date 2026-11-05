@@ -95,6 +95,7 @@ class MainActivity : ComponentActivity() {
             dp = ::dp,
             isDarkMode = ::isDarkMode,
             applyUnifiedSkin = ::applyUnifiedSkin,
+            launchProfilePhotoPicker = { intent -> activityResultRuntimeFeature.launchProfileAvatar(intent) },
             translate = ::tr
         )
     }
@@ -273,7 +274,7 @@ class MainActivity : ComponentActivity() {
             )
         },
         onFirebaseGoogleSignInResult = { data -> firebaseAccountController.handleGoogleSignInResult(data) },
-        onAvatarSelected = { uri -> userExperienceRuntimeFeature.avatarController.handle(uri) },
+        onAvatarSelected = { uri -> firebaseAccountController.handleProfilePhotoSelected(uri) },
         onCoverSelected = { uri -> coverFeature.selectionController.handle(uri) }
     )
 
