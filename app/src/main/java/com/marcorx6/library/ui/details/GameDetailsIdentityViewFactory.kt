@@ -25,6 +25,7 @@ internal class GameDetailsIdentityViewFactory(
         val dark = isDarkMode()
         val blue = if (dark) Color.rgb(99, 185, 255) else Color.rgb(22, 125, 224)
         val muted = if (dark) Color.rgb(170, 190, 214) else Color.rgb(91, 108, 130)
+        val primary = if (dark) Color.rgb(244, 247, 252) else Color.rgb(32, 38, 56)
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(13), dp(13), dp(13), dp(13))
@@ -55,7 +56,7 @@ internal class GameDetailsIdentityViewFactory(
         }
         root.addView(cover, LinearLayout.LayoutParams(-1, dp(184)))
 
-        root.addView(makeText(game.name, 21f, white(), true).apply {
+        root.addView(makeText(game.name, 21f, primary, true).apply {
             maxLines = 2
             ellipsize = android.text.TextUtils.TruncateAt.END
             setPadding(dp(2), dp(13), dp(2), dp(5))
@@ -103,7 +104,7 @@ internal class GameDetailsIdentityViewFactory(
                         }
                     }
                     cell.addView(makeText(item.first, 10f, muted, false))
-                    cell.addView(makeText(item.second, 14f, white(), true).apply {
+                    cell.addView(makeText(item.second, 14f, primary, true).apply {
                         maxLines = 2
                         ellipsize = android.text.TextUtils.TruncateAt.END
                         setPadding(0, dp(3), 0, 0)
