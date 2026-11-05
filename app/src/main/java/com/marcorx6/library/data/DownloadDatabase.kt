@@ -81,7 +81,6 @@ internal class DownloadDatabase private constructor(context: Context) :
         writableDatabase.update("downloads", ContentValues().apply {
             put("downloaded", downloaded); put("total", total)
             put("etag", etag); put("last_modified", modified)
-            put("status", DownloadManager.STATUS_RUNNING)
         }, "id=?", arrayOf(id.toString()))
     }
 
