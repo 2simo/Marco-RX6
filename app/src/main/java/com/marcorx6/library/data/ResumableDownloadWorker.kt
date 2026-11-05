@@ -35,14 +35,15 @@ internal class ResumableDownloadWorker(
             download(item, database)
         } catch (error: Exception) {
             val latest = database.get(id)
-            if (latest == null || latest.status == DownloadDatabase.STATUS_CANCELLED ||
-                latest.status == DownloadManager.STATUS_PAUSED) {
+            if (latest == null || latest.status == DownloadDatabase.STATUS_CANCELLED) {
                 val directory = File(
                     applicationContext.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS)
                         ?: applicationContext.filesDir,
                     "MARCO_RX6"
                 )
                 File(directory, "$id.part").delete()
+                Result.success()
+            } else if (latest.status == DownloadManager.STATUS_PAUSED) {
                 Result.success()
             } else if (isStopped || error is IOException) {
                 database.status(id, DownloadManager.STATUS_PENDING, error.message ?: "Network interrupted")
