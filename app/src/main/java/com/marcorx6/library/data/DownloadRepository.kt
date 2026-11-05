@@ -130,6 +130,7 @@ internal class DownloadRepository(context: Context) {
 
     fun deleteDownload(id: Long): Boolean {
         val item = database.get(id) ?: return false
+        database.cancel(id)
         workManager.cancelUniqueWork(workName(id))
         if (item.localPath.isNotBlank()) File(item.localPath).delete()
         val directory = File(
