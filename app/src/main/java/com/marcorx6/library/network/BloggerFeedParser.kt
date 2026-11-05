@@ -43,8 +43,24 @@ internal object BloggerFeedParser {
             downloadLinks = links,
             blogImported = true,
             bloggerPostId = entry.optJSONObject("id")?.optString(36.toChar().toString() + "t", "")?.let { Regex("post-(\\d+)").find(it)?.groupValues?.getOrNull(1).orEmpty() } ?: "",
-            bloggerHtml = entry.optString("offlineHtml").ifBlank { content }
+            bloggerHtml = entry.optString("offlineHtml").ifBlank { content },
+            packageSize = extractInfoValue(content, "الحجم"),
+            version = extractInfoValue(content, "النسخة"),
+            fileFormat = extractInfoValue(content, "الصيغة"),
+            language = extractInfoValue(content, "اللغة"),
+            password = extractInfoValue(content, "كلمة السر"),
+            rights = extractInfoValue(content, "الحقوق")
         )
+    }
+
+
+    private fun extractInfoValue(html: String, label: String): String {
+        val escapedLabel = Pattern.quote(label)
+        val match = Regex(
+            "(?is)<li[^>]*>\\s*<strong[^>]*>\\s*$escapedLabel\\s*:?\\s*</strong>\\s*(.*?)\\s*</li>"
+        ).find(html) ?: return ""
+        return decodeHtmlEntities(match.groupValues[1].replace(Regex("(?is)<[^>]*>"), " "))
+            .replace(Regex("\\s+"), " ").trim()
     }
 
     fun findPostUrl(entry: JSONObject): String {
@@ -233,7 +249,12 @@ internal object BloggerFeedParser {
             // resources as download buttons, even if a stale/imported label resembles
             // a file type such as OBJ.
             // Keep links whose visible label identifies an actual game download.
-            val isDownloadLink = downloadTerms.any { term ->
+            val downloadSection = Regex(
+                "(?is)<h[1-6][^>]*>[^<]*روابط التحميل المباشرة[^<]*</h[1-6]>(.*?)(?:<h[1-6]\\b|$)"
+            ).find(html)?.groupValues?.getOrNull(1).orEmpty()
+            val insideDownloadSection = downloadSection.isNotBlank() &&
+                downloadSection.contains(matcher.group())
+            val isDownloadLink = insideDownloadSection || downloadTerms.any { term ->
                 normalizedLabel.contains(term)
             }
             if (!href.startsWith("https://", ignoreCase = true) ||
