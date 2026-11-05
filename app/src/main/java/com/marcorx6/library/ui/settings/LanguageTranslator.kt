@@ -306,7 +306,16 @@ internal object LanguageTranslator {
             "أدخل عنوان المقال" to listOf("Enter the article title", "Saisissez le titre de l’article", "Introduce el título del artículo"),
             "أدخل رابط صورة يبدأ بـ HTTPS" to listOf("Enter an image URL that starts with HTTPS", "Saisissez une URL d’image commençant par HTTPS", "Introduce una URL de imagen que empiece por HTTPS"),
             "أدخل رابطاً يبدأ بـ HTTPS" to listOf("Enter a link that starts with HTTPS", "Saisissez un lien commençant par HTTPS", "Introduce un enlace que empiece por HTTPS"),
-            "أدخل وصف المقال" to listOf("Enter the article description", "Saisissez la description de l’article", "Introduce la descripción del artículo")
+            "أدخل وصف المقال" to listOf("Enter the article description", "Saisissez la description de l’article", "Introduce la descripción del artículo"),
+            "متبقي" to listOf("Remaining", "Restant", "Restante"),
+            "إيقاف مؤقت" to listOf("Pause", "Pause", "Pausar"),
+            "استئناف التنزيل" to listOf("Resume download", "Reprendre le téléchargement", "Reanudar descarga"),
+            "تم إيقاف التنزيل مؤقتاً" to listOf("Download paused", "Téléchargement mis en pause", "Descarga pausada"),
+            "تم استئناف التنزيل" to listOf("Download resumed", "Téléchargement repris", "Descarga reanudada"),
+            "جارٍ تحديث الصفحة…" to listOf("Refreshing page…", "Actualisation de la page…", "Actualizando la página…"),
+            "رابط الصفحة غير صالح" to listOf("Invalid page address", "Adresse de page invalide", "Dirección de página no válida"),
+            "تعذر فتح المتصفح الخارجي" to listOf("Could not open external browser", "Impossible d’ouvrir le navigateur externe", "No se pudo abrir el navegador externo"),
+            "خارجي" to listOf("External", "Externe", "Externo")
         )
         val index = when (lang) { "en" -> 0; "fr" -> 1; "es" -> 2; else -> return ar }
         return translations[ar]?.get(index) ?: ar
