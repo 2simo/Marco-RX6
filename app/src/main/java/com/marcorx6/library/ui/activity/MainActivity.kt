@@ -15,6 +15,8 @@ import com.marcorx6.library.ui.library.MainLibraryViewState
 import com.marcorx6.library.data.Game
 import com.marcorx6.library.data.auth.FirebaseSessionCoordinator
 import com.marcorx6.library.data.auth.FirebaseAuthRepository
+import com.google.firebase.appcheck.FirebaseAppCheck
+import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory
 import com.marcorx6.library.data.auth.FirebaseUserDocumentRepository
 import com.marcorx6.library.ui.auth.FirebaseAccountController
 import com.marcorx6.library.ui.auth.GoogleAccountRuntimeFeature
@@ -293,6 +295,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        FirebaseAppCheck.getInstance().installAppCheckProviderFactory(
+            PlayIntegrityAppCheckProviderFactory.getInstance()
+        )
         onBackPressedDispatcher.addCallback(this, secondaryScreenBackCallback)
         firebaseSessionCoordinator.start()
         lifecycleCoordinator.onCreate()
