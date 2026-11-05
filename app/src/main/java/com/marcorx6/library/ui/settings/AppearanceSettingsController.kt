@@ -232,7 +232,7 @@ internal class AppearanceSettingsController(
                 .setView(input)
                 .setNegativeButton(translate("إلغاء"), null)
                 .setPositiveButton(translate("حفظ")) { _, _ ->
-                    val domains = input.text.toString().split(',', ';', '\\n')
+                    val domains = input.text.toString().split(',', ';')
                         .map { it.trim().lowercase() }
                         .filter { it.matches(Regex("[a-z0-9.-]+")) && !it.startsWith(".") && !it.endsWith(".") }
                         .distinct()
