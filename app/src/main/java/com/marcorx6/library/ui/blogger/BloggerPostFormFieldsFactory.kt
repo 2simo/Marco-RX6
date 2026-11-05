@@ -2,7 +2,6 @@ package com.marcorx6.library.ui
 
 import android.app.Activity
 import android.graphics.drawable.Drawable
-import android.view.Gravity
 import android.widget.EditText
 import android.widget.ImageView
 
@@ -38,24 +37,16 @@ internal class BloggerPostFormFieldsFactory(
                 android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
         }
         val title = input("عنوان المقال")
-        val body = makeInput(translate("وصف المقال (اختياري)")).apply {
-            minLines = 5
-            minHeight = dp(130)
-            gravity = Gravity.TOP or Gravity.START
-            inputType = android.text.InputType.TYPE_CLASS_TEXT or
-                android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE or
-                android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
-            setPadding(dp(13), dp(12), dp(13), dp(12))
-            contentDescription = translate("وصف اللعبة")
-        }
+        // Retained as an empty compatibility field; free-form descriptions are no longer part of this template.
+        val body = input("").apply { visibility = android.view.View.GONE }
         val coverUrl = input("رابط صورة الغلاف (اختياري)").apply {
             inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_URI
         }
         val relatedLink = input("رابط التحميل الأساسي (اختياري)").apply {
             inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_URI
         }
-        val genre = input("نوع اللعبة (مثال: أكشن، مغامرات)")
-        val releaseYear = input("سنة الإصدار (مثال: 2024)", number = true)
+        val genre = input("").apply { visibility = android.view.View.GONE }
+        val releaseYear = input("", number = true).apply { visibility = android.view.View.GONE }
         val packageSize = input("الحجم (مثال: 2.5 GB)")
         val version = input("النسخة (مثال: v1.5)")
         val fileFormat = input("الصيغة (مثال: PKG)")
