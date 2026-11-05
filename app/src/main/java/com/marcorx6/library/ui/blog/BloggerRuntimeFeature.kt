@@ -23,7 +23,7 @@ internal class BloggerRuntimeFeature(
     currentBlogId: () -> String,
     setAdmin: (Boolean) -> Unit,
     isAdminSession: () -> Boolean,
-    feedUrl: String = "https://marcorx6.blogspot.com/feeds/posts/default?alt=json&max-results=100",
+    private val feedUrl: String = "https://marcorx6.blogspot.com/feeds/posts/default?alt=json&max-results=100",
     private val postToUi: (() -> Unit) -> Unit,
     refreshUi: () -> Unit,
     private val merge: (List<Game>) -> Pair<Int, Int>,
