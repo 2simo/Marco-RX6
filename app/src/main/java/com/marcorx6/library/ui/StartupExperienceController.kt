@@ -150,6 +150,9 @@ internal class StartupExperienceController(
                 val settings = activity.getSharedPreferences("app_settings", Activity.MODE_PRIVATE)
                 if (!settings.getBoolean("setup_completed", false)) {
                     showFirstRunSetup()
+                } else if (!settings.getBoolean("community_channels_prompted", true)) {
+                    settings.edit().putBoolean("community_channels_prompted", true).apply()
+                    CommunityChannelsController(activity, dp, makeText, translate).show()
                 } else if (!settings.getBoolean("profile_prompted", false)) {
                     settings.edit().putBoolean("profile_prompted", true).apply()
                     showProfile()
