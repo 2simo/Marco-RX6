@@ -398,6 +398,7 @@ internal class BloggerPostComposerController(
                             saveGames()
                             renderGames()
                             Toast.makeText(activity, translate("تم نشر المقال على Blogger"), Toast.LENGTH_LONG).show()
+                            onBack()
                         },
                         onError = { message ->
                             publishButton.isEnabled = true
