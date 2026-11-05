@@ -86,7 +86,8 @@ internal class BloggerRuntimeFeature(
             merge = merge,
             setBlogId = setBlogId,
             refreshAccess = refreshAccess,
-            renderGames = renderGames
+            renderGames = renderGames,
+            translate = translate
         )
     }
 
