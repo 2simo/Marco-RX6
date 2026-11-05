@@ -90,32 +90,33 @@ internal class GameDetailsIdentityViewFactory(
             infoCard.addView(makeText("معلومات اللعبة", 16f, primary, true).apply {
                 setPadding(0, 0, 0, dp(10))
             })
-            details.chunked(2).forEach { pair ->
-                val row = LinearLayout(activity).apply {
-                    orientation = LinearLayout.HORIZONTAL
-                }
-                pair.forEach { item ->
-                    val cell = LinearLayout(activity).apply {
-                        orientation = LinearLayout.VERTICAL
-                        setPadding(dp(9), dp(8), dp(7), dp(8))
-                        background = GradientDrawable().apply {
-                            setColor(if (dark) Color.rgb(35, 54, 77) else Color.WHITE)
-                            cornerRadius = dp(11).toFloat()
-                        }
+            details.forEach { item ->
+                val cell = LinearLayout(activity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(dp(12), dp(10), dp(12), dp(10))
+                    background = GradientDrawable().apply {
+                        setColor(if (dark) Color.rgb(35, 54, 77) else Color.WHITE)
+                        cornerRadius = dp(11).toFloat()
                     }
-                    cell.addView(makeText(item.first, 10f, muted, false))
-                    cell.addView(makeText(item.second, 14f, primary, true).apply {
-                        maxLines = 2
-                        ellipsize = android.text.TextUtils.TruncateAt.END
-                        setPadding(0, dp(3), 0, 0)
-                    })
-                    row.addView(cell, LinearLayout.LayoutParams(0, -2, 1f).apply {
-                        if (row.childCount > 0) marginStart = dp(7)
-                    })
                 }
-                if (pair.size == 1) row.addView(LinearLayout(activity), LinearLayout.LayoutParams(0, 1, 1f))
-                infoCard.addView(row, LinearLayout.LayoutParams(-1, -2).apply {
-                    bottomMargin = dp(7)
+                cell.addView(makeText(item.first, 12f, muted, false).apply {
+                    textDirection = android.view.View.TEXT_DIRECTION_RTL
+                    gravity = android.view.Gravity.START
+                    includeFontPadding = true
+                }, LinearLayout.LayoutParams(-1, -2))
+                cell.addView(makeText(item.second, 15f, primary, true).apply {
+                    textDirection = android.view.View.TEXT_DIRECTION_FIRST_STRONG
+                    gravity = android.view.Gravity.START
+                    textAlignment = android.view.View.TEXT_ALIGNMENT_VIEW_START
+                    includeFontPadding = true
+                    setPadding(0, dp(4), 0, 0)
+                    // Keep the complete value visible, even when it needs several lines.
+                    maxLines = Int.MAX_VALUE
+                    ellipsize = null
+                    setHorizontallyScrolling(false)
+                }, LinearLayout.LayoutParams(-1, -2))
+                infoCard.addView(cell, LinearLayout.LayoutParams(-1, -2).apply {
+                    bottomMargin = dp(8)
                 })
             }
             root.addView(infoCard, LinearLayout.LayoutParams(-1, -2).apply {
