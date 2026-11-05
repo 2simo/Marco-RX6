@@ -61,11 +61,15 @@ internal object GameLibraryManager {
                 "BLOG" -> item.blogImported
                 else -> item.platform == category
             }
-            val searchMatch = item.name.contains(query, ignoreCase = true) ||
-                item.platform.contains(query, ignoreCase = true) ||
-                item.description.contains(query, ignoreCase = true)
-            val genreMatch = genre.isBlank() || item.genre.equals(genre, ignoreCase = true)
-            val yearMatch = year.isBlank() || item.releaseYear == year
+            val normalizedQuery = query.trim()
+            val searchMatch = normalizedQuery.isBlank() ||
+                item.name.contains(normalizedQuery, ignoreCase = true) ||
+                item.platform.contains(normalizedQuery, ignoreCase = true) ||
+                item.description.contains(normalizedQuery, ignoreCase = true) ||
+                item.genre.contains(normalizedQuery, ignoreCase = true) ||
+                item.releaseYear.contains(normalizedQuery, ignoreCase = true)
+            val genreMatch = genre.isBlank() || item.genre.trim().equals(genre.trim(), ignoreCase = true)
+            val yearMatch = year.isBlank() || item.releaseYear.trim() == year.trim()
             categoryMatch && searchMatch && genreMatch && yearMatch
         }
         return when (sortMode) {
