@@ -58,13 +58,21 @@ internal class GameArticleWebViewFactory(
             // Metadata is already rendered in the dedicated information card above.
             // Remove the matching Blogger list rows and heading from the article body
             // so the old-format information does not appear a second time below buttons.
+            // Keep the introduction, but remove the complete legacy game-information
+            // section from the article. Its values are already shown in the new card.
+            // Stop at the next heading (normally the download-links heading), which is
+            // handled separately below and must not consume the introduction.
             val withoutGameMetadata = raw
                 .replace(
-                    Regex("(?is)<li\\b[^>]*>.*?(?:الحجم|حجم|size|النسخة|version|title\\s*id|cusa|الصيغة|format|اللغة|languages?|كلمة\\s*السر|كلمه\\s*السر|password|pass|الحقوق|credits|rights).*?</li\\s*>"),
+                    Regex("(?is)<h([1-6])\\b[^>]*>\\s*(?:معلومات\\s*اللعبة|game\\s*information)\\s*:?\\s*</h\\1>.*?(?=<h[1-6]\\b[^>]*>|$)"),
                     ""
                 )
                 .replace(
-                    Regex("(?is)<h[1-6][^>]*>\\s*(?:معلومات\\s*اللعبة|game\\s*information)\\s*:?\\s*</h[1-6]>"),
+                    Regex("(?is)<(ul|ol)\\b[^>]*>.*?(?:الحجم|حجم|size|النسخة|version|title\\s*id|cusa|الصيغة|format|اللغة|languages?|كلمة\\s*السر|كلمه\\s*السر|password|pass|الحقوق|credits|rights).*?</\\1\\s*>"),
+                    ""
+                )
+                .replace(
+                    Regex("(?is)<li\\b[^>]*>.*?(?:الحجم|حجم|size|النسخة|version|title\\s*id|cusa|الصيغة|format|اللغة|languages?|كلمة\\s*السر|كلمه\\s*السر|password|pass|الحقوق|credits|rights).*?</li\\s*>"),
                     ""
                 )
                 .replace(Regex("(?is)<ul\\b[^>]*>\\s*</ul\\s*>"), "")
