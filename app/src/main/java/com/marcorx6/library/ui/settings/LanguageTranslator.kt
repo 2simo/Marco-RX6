@@ -400,8 +400,7 @@ internal object LanguageTranslator {
             "رفض" to listOf("Deny", "Refuser", "Denegar"),
             "معلومات التطبيق" to listOf("App information", "Informations sur l’application", "Información de la aplicación"),
             "الإصدار" to listOf("Version", "Version", "Versión"),
-            "حول التطبيق" to listOf("About app", "À propos de l’application", "Acerca de la aplicación")
-        )
+            "حول التطبيق" to listOf("About app", "À propos de l’application", "Acerca de la aplicación"),
             "إغلاق الإعدادات" to listOf("Close settings", "Fermer les paramètres", "Cerrar ajustes"),
             "اللون الرئيسي" to listOf("Primary color", "Couleur principale", "Color principal"),
             "أزرق كهربائي  •  اللون الرسمي للتطبيق" to listOf("Electric blue • Official app color", "Bleu électrique • Couleur officielle", "Azul eléctrico • Color oficial"),
@@ -436,7 +435,7 @@ internal object LanguageTranslator {
             "حجب ×" to listOf("Block ×", "Bloquer ×", "Bloquear ×"),
             "تم تفعيل حجب الإعلانات" to listOf("Ad blocker enabled", "Bloqueur de publicités activé", "Bloqueador de anuncios activado"),
             "تم إيقاف حجب الإعلانات" to listOf("Ad blocker disabled", "Bloqueur de publicités désactivé", "Bloqueador de anuncios desactivado"),
-            "الإعلانات والمتتبعات المحجوبة: $count" to listOf("Ads and trackers blocked: $count", "Publicités et traceurs bloqués : $count", "Anuncios y rastreadores bloqueados: $count"),
+            "الإعلانات والمتتبعات المحجوبة: \$count" to listOf("Ads and trackers blocked: \$count", "Publicités et traceurs bloqués : \$count", "Anuncios y rastreadores bloqueados: \$count"),
             "إذا ظهرت خطوة تحقق أو مؤقت، أكملها داخل هذه الصفحة. الروابط المحتملة تظهر أسفلها." to listOf("If a verification step or timer appears, complete it on this page. Possible links appear below.", "Si une vérification ou un compte à rebours apparaît, terminez-la sur cette page. Les liens possibles s’affichent dessous.", "Si aparece una verificación o un temporizador, complétalo en esta página. Los posibles enlaces aparecen abajo."),
             "تعذر التحقق من أمان اتصال الموقع؛ تم إيقاف فتح الصفحة." to listOf("Could not verify the site connection; page opening was stopped.", "Impossible de vérifier la sécurité de la connexion ; ouverture de la page interrompue.", "No se pudo verificar la seguridad de la conexión; se detuvo la apertura."),
             "تعذر تحميل صفحة الموقع. جرّب فتحها بالمتصفح الخارجي." to listOf("Could not load the page. Try opening it in an external browser.", "Impossible de charger la page. Essayez avec un navigateur externe.", "No se pudo cargar la página. Intenta abrirla en un navegador externo."),
@@ -482,7 +481,7 @@ internal object LanguageTranslator {
             "السابق" to listOf("Previous", "Précédent", "Anterior"),
             "ابدأ الآن" to listOf("Get started", "Commencer", "Comenzar"),
             "التالي" to listOf("Next", "Suivant", "Siguiente"),
-            "خطوة ${step + 1}" to listOf("Step ${step + 1}", "Étape ${step + 1}", "Paso ${step + 1}"),
+            "خطوة \${step + 1}" to listOf("Step \${step + 1}", "Étape \${step + 1}", "Paso \${step + 1}"),
             "منصة المكتبة" to listOf("Library platform", "Plateforme de la bibliothèque", "Plataforma de la biblioteca"),
             "لغة التطبيق" to listOf("App language", "Langue de l’application", "Idioma de la aplicación"),
             "لون الواجهة" to listOf("Interface color", "Couleur de l’interface", "Color de la interfaz"),
