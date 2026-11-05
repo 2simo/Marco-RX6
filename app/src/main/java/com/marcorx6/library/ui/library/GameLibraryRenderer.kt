@@ -47,7 +47,24 @@ internal class GameLibraryRenderer(
                     chip.isSelected = active
                     chip.contentDescription = chip.text.toString() + ", " +
                         tr(if (active) "محدد" else "غير محدد")
-                    chip.background = rounded(if (active) red else panel, 13)
+                    chip.background = GradientDrawable(
+                        GradientDrawable.Orientation.LEFT_RIGHT,
+                        if (active) {
+                            intArrayOf(red, red)
+                        } else if (isDarkMode()) {
+                            intArrayOf(Color.argb(205, 21, 62, 101), Color.argb(188, 8, 27, 47))
+                        } else {
+                            intArrayOf(Color.argb(228, 255, 255, 255), Color.argb(210, 222, 239, 255))
+                        }
+                    ).apply {
+                        cornerRadius = dp(18).toFloat()
+                        setStroke(
+                            dp(1),
+                            if (active) red
+                            else if (isDarkMode()) Color.argb(145, 78, 151, 216)
+                            else Color.argb(155, 151, 195, 237)
+                        )
+                    }
                     chip.setTextColor(if (active) accentForeground() else gray)
                 }
                 val sorted = GameLibraryManager.filterAndSort(games, selected, search.text.toString().trim(), selectedGenre, selectedYear, sortMode)
