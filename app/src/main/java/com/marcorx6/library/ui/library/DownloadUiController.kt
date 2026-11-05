@@ -97,7 +97,7 @@ internal class DownloadUiController(
         }
         val titleBox = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
         titleBox.addView(TextView(activity).apply {
-            text = "MARCO RX6  /  DOWNLOADS"
+            text = "MARCO RX6  /  ${translate("التنزيلات").uppercase()}"
             textSize = 9f
             letterSpacing = 0.12f
             setTextColor(primary)

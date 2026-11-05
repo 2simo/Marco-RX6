@@ -13,6 +13,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import com.marcorx6.library.R
+import com.marcorx6.library.ui.LanguageTranslator
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -185,15 +186,22 @@ internal class ResumableDownloadWorker(
 
     private fun createForegroundInfo(title: String): ForegroundInfo {
         val manager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val language = applicationContext.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+            .getString("language", "ar") ?: "ar"
+        val localize: (String) -> String = { LanguageTranslator.translate(it, language) }
         if (Build.VERSION.SDK_INT >= 26) {
-            manager.createNotificationChannel(
-                NotificationChannel(CHANNEL_ID, "MARCO RX6 downloads", NotificationManager.IMPORTANCE_LOW)
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                localize("تنزيلات MARCO RX6"),
+                NotificationManager.IMPORTANCE_LOW
             )
+            channel.description = localize("تتبع تقدم تنزيلات الألعاب")
+            manager.createNotificationChannel(channel)
         }
         val notification: Notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher)
             .setContentTitle(title.ifBlank { "MARCO RX6" })
-            .setContentText("Downloading")
+            .setContentText(localize("قيد التنزيل"))
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setProgress(0, 0, true)

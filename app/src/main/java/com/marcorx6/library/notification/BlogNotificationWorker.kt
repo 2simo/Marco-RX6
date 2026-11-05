@@ -1,6 +1,7 @@
 package com.marcorx6.library.notification
 
 import com.marcorx6.library.ui.activity.MainActivity
+import com.marcorx6.library.ui.LanguageTranslator
 
 import android.Manifest
 import android.app.NotificationChannel
@@ -84,12 +85,15 @@ open class BlogNotificationWorker(context: Context, params: WorkerParameters) : 
     }
 
     private fun showNotification(postTitle: String, postUrl: String) {
+        val language = applicationContext.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+            .getString("language", "ar") ?: "ar"
+        val localize: (String) -> String = { LanguageTranslator.translate(it, language) }
         if (Build.VERSION.SDK_INT >= 33 &&
             ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.POST_NOTIFICATIONS) !=
             PackageManager.PERMISSION_GRANTED
         ) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(CHANNEL_ID, "New MARCO RX6 posts", NotificationManager.IMPORTANCE_DEFAULT)
+            val channel = NotificationChannel(CHANNEL_ID, localize("إشعارات المقالات الجديدة"), NotificationManager.IMPORTANCE_DEFAULT)
             applicationContext.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         }
         val openTarget = if (postUrl.startsWith("https://")) {
@@ -108,7 +112,7 @@ open class BlogNotificationWorker(context: Context, params: WorkerParameters) : 
         )
         val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("New post on MARCO RX6")
+            .setContentTitle(localize("مقال جديد على MARCO RX6"))
             .setContentText(postTitle)
             .setStyle(NotificationCompat.BigTextStyle().bigText(postTitle))
             .setContentIntent(pendingIntent)

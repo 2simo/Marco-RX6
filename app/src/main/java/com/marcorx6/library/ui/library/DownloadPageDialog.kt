@@ -72,7 +72,7 @@ internal class DownloadPageDialog(
         }
         val titleBox = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
         titleBox.addView(TextView(activity).apply {
-            text = "MARCO RX6  /  DOWNLOAD PAGE"
+            text = "MARCO RX6  /  ${translate("صفحة التحميل").uppercase()}"
             textSize = 9f
             letterSpacing = 0.1f
             setTextColor(primary)
