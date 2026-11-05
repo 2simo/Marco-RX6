@@ -52,187 +52,12 @@ internal class FirebaseAccountController(
     fun show() {
         val user = authRepository.currentUser
         if (user == null || user.isAnonymous) {
-            showGuestActions()
-        } else {
-            showAccountScreen(user)
-        }
-    }
-
-    private fun showGuestActions() = showAccountScreen(authRepository.currentUser)
-
-    private fun showAccountScreen(user: FirebaseUser?) {
-        val dark = isDarkMode()
-        val page = LinearLayout(activity).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutDirection = if (translate("حساب MARCO RX6") == "حساب MARCO RX6") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
-            setPadding(dp(20), dp(18), dp(20), dp(24))
-            setBackgroundColor(if (dark) Color.rgb(6, 16, 30) else Color.rgb(240, 247, 255))
-        }
-        val header = LinearLayout(activity).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-        }
-        val heading = TextView(activity).apply {
-            text = translate("حساب MARCO RX6")
-            textSize = 23f
-            setTextColor(if (dark) Color.WHITE else Color.rgb(18, 42, 68))
-            setTypeface(null, android.graphics.Typeface.BOLD)
-        }
-        header.addView(heading, LinearLayout.LayoutParams(0, dp(52), 1f))
-        val back = TextView(activity).apply {
-            text = "‹"
-            textSize = 32f
-            gravity = Gravity.CENTER
-            setTextColor(Color.rgb(75, 165, 255))
-            contentDescription = translate("رجوع")
-            minWidth = dp(48)
-            minHeight = dp(48)
-            isClickable = true
-            isFocusable = true
-            if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                android.content.res.ColorStateList.valueOf(Color.argb(78, 82, 175, 255)),
-                null,
-                android.graphics.drawable.ColorDrawable(Color.WHITE)
-            )
-            setOnClickListener { onBack() }
-        }
-        header.addView(back, LinearLayout.LayoutParams(dp(48), dp(48)))
-        page.addView(header)
-
-        val hero = LinearLayout(activity).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            setPadding(dp(20), dp(24), dp(20), dp(24))
-            background = GradientDrawable(
-                GradientDrawable.Orientation.TL_BR,
-                if (dark) intArrayOf(Color.argb(218, 23, 105, 190), Color.argb(190, 9, 39, 76))
-                else intArrayOf(Color.argb(225, 211, 235, 255), Color.argb(205, 239, 247, 255))
-            ).apply {
-                cornerRadius = dp(24).toFloat()
-                setStroke(dp(1), if (dark) Color.argb(170, 91, 170, 242) else Color.argb(190, 123, 180, 231))
-            }
-        }
-        val stateTitle = TextView(activity).apply {
-            text = when {
-                isAdminSession() -> translate("وضع المسؤول نشط")
-                user != null && !user.isAnonymous -> translate("مرحباً بعودتك")
-                user?.isAnonymous == true -> translate("أنت تستعمل التطبيق كزائر")
-                else -> translate("اختَر طريقة الدخول")
-            }
-            textSize = 19f
-            gravity = Gravity.CENTER
-            setTextColor(if (dark) Color.WHITE else Color.rgb(17, 54, 89))
-            setTypeface(null, android.graphics.Typeface.BOLD)
-        }
-        val avatar = TextView(activity).apply {
-            val identity = user?.displayName?.trim()?.firstOrNull()
-                ?: user?.email?.trim()?.firstOrNull()
-                ?: 'M'
-            text = identity.uppercase()
-            textSize = 27f
-            gravity = Gravity.CENTER
-            setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(Color.WHITE)
-            background = GradientDrawable(
-                GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(75, 175, 255), Color.rgb(23, 91, 183))
-            ).apply {
-                shape = GradientDrawable.OVAL
-                setStroke(dp(2), Color.argb(190, 190, 225, 255))
-            }
-        }
-        hero.addView(avatar, LinearLayout.LayoutParams(dp(68), dp(68)).apply { bottomMargin = dp(13) })
-        hero.addView(stateTitle)
-        val stateDetail = TextView(activity).apply {
-            text = when {
-                isAdminSession() && user == null -> translate("جلسة Blogger وGoogle Drive مستقلة عن حساب التطبيق")
-                user != null && !user.isAnonymous -> listOfNotNull(user.displayName?.takeIf { it.isNotBlank() }, user.email).joinToString("  •  ") + if (isAdminSession()) "  •  " + translate("مسؤول نشط") else "  •  " + translate("مستخدم")
-                user?.isAnonymous == true -> translate("يمكنك الاستمرار دون حساب أو ربط حسابك لاحقاً")
-                else -> translate("احفظ ملفك الشخصي واستعمل مزايا الحساب على أجهزتك")
-            }
-            textSize = 12f
-            gravity = Gravity.CENTER
-            setPadding(0, dp(8), 0, 0)
-            setTextColor(if (dark) Color.rgb(214, 232, 250) else Color.rgb(54, 91, 126))
-        }
-        hero.addView(stateDetail)
-        page.addView(hero, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(20) })
-
-        fun action(label: String, detail: String, primary: Boolean = false, run: () -> Unit) {
-            val item = LinearLayout(activity).apply {
-                orientation = LinearLayout.VERTICAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(18), dp(14), dp(18), dp(14))
-                background = GradientDrawable(
-                    GradientDrawable.Orientation.TL_BR,
-                    if (primary) intArrayOf(Color.argb(220, 31, 132, 235), Color.argb(195, 16, 82, 164))
-                    else if (dark) intArrayOf(Color.argb(150, 21, 51, 81), Color.argb(125, 11, 32, 56))
-                    else intArrayOf(Color.argb(205, 255, 255, 255), Color.argb(185, 228, 241, 255))
-                ).apply {
-                    cornerRadius = dp(17).toFloat()
-                    setStroke(dp(1), if (primary) Color.argb(210, 112, 184, 255) else if (dark) Color.argb(105, 104, 163, 218) else Color.argb(150, 155, 194, 231))
-                }
-                minimumHeight = dp(64)
-                contentDescription = "$label. $detail"
-                isClickable = true
-                isFocusable = true
-                if (android.os.Build.VERSION.SDK_INT >= 23) {
-                    foreground = android.graphics.drawable.RippleDrawable(
-                        android.content.res.ColorStateList.valueOf(Color.argb(78, 83, 177, 255)),
-                        null,
-                        android.graphics.drawable.ColorDrawable(Color.WHITE)
-                    )
-                }
-                setOnClickListener { run() }
-            }
-            val title = TextView(activity).apply {
-                text = label
-                textSize = 15f
-                setTypeface(null, android.graphics.Typeface.BOLD)
-                setTextColor(if (primary || dark) Color.WHITE else Color.rgb(20, 48, 76))
-            }
-            val subtitle = TextView(activity).apply {
-                text = detail
-                textSize = 11f
-                setPadding(0, dp(4), 0, 0)
-                setTextColor(if (primary) Color.rgb(225, 240, 255) else if (dark) Color.rgb(183, 207, 231) else Color.rgb(83, 111, 139))
-            }
-            item.addView(title)
-            item.addView(subtitle)
-            page.addView(item, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
-        }
-
-        if (user == null || user.isAnonymous) {
-            action(translate("المتابعة كزائر"), translate("استعمل المكتبة دون إنشاء حساب"), run = onBack)
-            action(translate("الدخول باستخدام Google"), translate("ربط حساب Google بحساب MARCO RX6"), primary = true, run = ::startFreshGoogleAccountSelection)
-            action(translate("إنشاء حساب بالبريد الإلكتروني"), translate("حساب جديد مع كلمة مرور"), run = { showEmailForm(createAccount = true) })
-            action(translate("الدخول بالبريد الإلكتروني"), translate("لديك حساب بالفعل؟"), run = { showEmailForm(createAccount = false) })
-            action(
-                translate(if (isAdminSession()) "إيقاف وضع المسؤول" else "دخول المسؤول"),
-                translate("صلاحيات Blogger وGoogle Drive"),
-                primary = isAdminSession(),
-                run = { if (isAdminSession()) signOutAdmin() else startAdminGoogleAccountSelection() }
-            )
+            action(translate("المتابعة كزائر"), translate("العودة إلى المكتبة دون إنشاء ملف شخصي"), run = onBack)
+            action(translate("إنشاء حساب باستخدام Google"), translate("إنشاء حساب جديد أو استخدام حساب Google موجود"), primary = true, run = ::startFreshGoogleAccountSelection)
+            action(translate("إنشاء حساب بالبريد الإلكتروني"), translate("استعمل بريدك الإلكتروني وكلمة مرور"), run = { showEmailForm(createAccount = true) })
+            action(translate("تسجيل الدخول بالبريد الإلكتروني"), translate("لديك حساب MARCO RX6 بالفعل؟"), run = { showEmailForm(createAccount = false) })
             action(translate("نسيت كلمة المرور؟"), translate("استرجاع الوصول إلى حسابك"), run = ::showPasswordResetForm)
-            if (user?.isAnonymous == true) {
-                action(translate("حذف بيانات جلسة الزائر"), translate("حذف ملف الزائر السحابي فقط"), run = { confirmAccountDeletion(user) })
-            }
         } else {
-            action(translate("حالة الحساب"), if (user.isEmailVerified) translate("البريد الإلكتروني مؤكد") else translate("البريد الإلكتروني غير مؤكد"), run = {
-                if (!user.isEmailVerified) authRepository.sendEmailVerification()
-                    ?.addOnSuccessListener { toast("تم إرسال رابط التأكيد إلى بريدك") }
-                    ?.addOnFailureListener { toast("تعذر إرسال رابط التأكيد") }
-            })
-            if (user.providerData.any { it.providerId == "password" }) {
-                action(translate("استرجاع كلمة المرور"), translate("إرسال رابط تغيير كلمة المرور"), run = {
-                    user.email?.let { address -> authRepository.sendPasswordReset(address)
-                        .addOnSuccessListener { toast("تم إرسال رابط استرجاع كلمة المرور") }
-                        .addOnFailureListener { toast("تعذر إرسال رابط الاسترجاع") } }
-                })
-            }
-            action(if (isAdminSession()) translate("إيقاف وضع المسؤول") else translate("دخول المسؤول"), translate("إدارة Blogger وGoogle Drive"), primary = true, run = {
-                if (isAdminSession()) signOutAdmin() else startAdminGoogleAccountSelection()
-            })
             action(translate("تسجيل الخروج"), translate("الخروج من حساب MARCO RX6"), run = {
                 GoogleSignIn.getClient(activity, firebaseGoogleOptions()).signOut().addOnCompleteListener {
                     authRepository.signOut()
@@ -240,7 +65,7 @@ internal class FirebaseAccountController(
                     toast("تم تسجيل الخروج بنجاح")
                 }
             })
-            action(translate("حذف الحساب"), translate("حذف الحساب وبياناته السحابية نهائياً"), run = { confirmAccountDeletion(user) })
+            action(translate("مسح الحساب"), translate("حذف حسابك وبياناته السحابية نهائياً"), run = { confirmAccountDeletion(user) })
         }
         val footer = TextView(activity).apply {
             text = "MARCO RX6  •  SECURE ACCOUNT"
