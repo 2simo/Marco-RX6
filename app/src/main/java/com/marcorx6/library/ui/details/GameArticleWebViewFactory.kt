@@ -43,8 +43,9 @@ internal class GameArticleWebViewFactory(
                     view?.post {
                         val articleView = view
                         val renderedHeight = (articleView.contentHeight * articleView.scale).toInt()
-                        val minimumHeight = (96 * activity.resources.displayMetrics.density).toInt()
-                        val targetHeight = renderedHeight.coerceAtLeast(minimumHeight)
+                        // Do not impose a minimum viewport: it leaves a visible empty
+                        // rectangle after short introductions or when metadata was removed.
+                        val targetHeight = renderedHeight.coerceAtLeast(1)
                         val params = articleView.layoutParams
                         if (params != null && params.height != targetHeight) {
                             params.height = targetHeight
@@ -107,7 +108,7 @@ internal class GameArticleWebViewFactory(
                 <style>
                 *{box-sizing:border-box}
                 html,body{margin:0;padding:0;width:100%;max-width:100%;overflow-x:hidden}
-                body{background:${if (darkMode) "#0a0b11" else "#f5f7fb"} !important;color:${if (darkMode) "#f4f4f8" else "#202638"} !important;font-family:$fontFamily,Arial,sans-serif;font-size:${fontSize}px;line-height:1.9;padding:20px 17px 36px;overflow-wrap:anywhere;direction:rtl;text-align:right}
+                body{background:${if (darkMode) "#0a0b11" else "#f5f7fb"} !important;color:${if (darkMode) "#f4f4f8" else "#202638"} !important;font-family:$fontFamily,Arial,sans-serif;font-size:${fontSize}px;line-height:1.9;padding:20px 17px 0;overflow-wrap:anywhere;direction:rtl;text-align:right}
                 body *{color:inherit !important;background-color:transparent !important}
                 body h1,body h2,body h3,body h4{color:${if (darkMode) "#59b7ff" else "#238de8"} !important;line-height:1.4;margin:25px 0 12px}
                 p{margin:0 0 18px}
