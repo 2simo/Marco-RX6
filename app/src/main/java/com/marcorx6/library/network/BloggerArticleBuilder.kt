@@ -1,11 +1,10 @@
 package com.marcorx6.library.network
 
 import org.json.JSONArray
-import org.json.JSONObject
 
 /**
- * Builds the Blogger article from structured fields.
- * The same HTML is used by preview and publishing to prevent visual/content drift.
+ * Builds the Blogger article from the MARCO RX6 structured publishing template.
+ * Preview and publishing use this same HTML to keep their output identical.
  */
 internal object BloggerArticleBuilder {
     private fun escape(value: String): String = value
@@ -32,51 +31,33 @@ internal object BloggerArticleBuilder {
         val metadata = listOf(
             "الحجم" to packageSize,
             "النسخة" to version,
-            "الصيغة" to fileFormat,
-            "اللغة" to language,
-            "كلمة السر" to password,
+            "الصيغة" to fileFormat.ifBlank { "PKG" },
+            "اللغة" to language.ifBlank { "الإنجليزية" },
+            "كلمة السر " to password,
             "الحقوق" to rights
-        ).filter { it.second.isNotBlank() }
-            .joinToString("\n") { (label, value) ->
-                "<li><strong>${escape(label)}:</strong> ${escape(value)}</li>"
-            }
+        ).joinToString("\n") { (label, value) ->
+            "<li><strong>$label:</strong> ${escape(value)}</li>"
+        }
 
         val links = parseLinks(downloadLinksJson, downloadUrl)
         val linksHtml = links.joinToString("\n") { item ->
-            "<p><a href=\"${escape(item.second)}\" target=\"_blank\" rel=\"noopener noreferrer\">${escape(item.first)}</a></p>"
+            "<p><a href=\"${escape(item.second)}\" target=\"_blank\">${escape(item.first)}</a></p>"
         }
         val safeCover = escape(BloggerFeedParser.normalizeBloggerImageUrl(coverUrl))
         val coverHtml = if (safeCover.isNotBlank()) {
             "<p style=\"text-align:center\"><a href=\"$safeCover\" target=\"_blank\"><img src=\"$safeCover\" alt=\"$safeTitle\" style=\"max-width:100%;height:auto;\"/></a></p>"
         } else ""
-        val safeGenre = escape(genre)
-        val safeYear = escape(releaseYear)
-        val gameMeta = listOfNotNull(
-            safeGenre.takeIf { it.isNotBlank() }?.let { "<li><strong>النوع:</strong> $it</li>" },
-            safeYear.takeIf { it.isNotBlank() }?.let { "<li><strong>سنة الإصدار:</strong> $it</li>" }
-        ).joinToString("\n")
-        val descriptionHtml = description.trim().split(Regex("\\n\\s*\\n"))
-            .filter { it.isNotBlank() }
-            .joinToString("") {
-                "<p>${escape(it).replace("\n", "<br/>")}</p>"
-            }
-        val categoryHtml = categories.takeIf { it.isNotBlank() }
-            ?.let { "<p><strong>الأقسام:</strong> ${escape(it)}</p>" }.orEmpty()
 
         return """
-            <div class="marcorx6-post" dir="rtl">
+            <div class="marcorx6-post">
               <p>أهلاً بكم متابعي مدونة MARCO_RX6 الكرام. إليكم لعبة جديدة من إضافاتنا الحصرية بروابط مباشرة وسريعة.</p>
               $coverHtml
               <h3 style="color: #8b5cf6;">معلومات اللعبة:</h3>
               <ul>
                 $metadata
-                $gameMeta
               </ul>
               <h3 style="color: #8b5cf6;">روابط التحميل المباشرة:</h3>
               $linksHtml
-              $categoryHtml
-              <h3 style="color: #8b5cf6;">وصف اللعبة:</h3>
-              $descriptionHtml
             </div>
         """.trimIndent()
     }
@@ -89,15 +70,15 @@ internal object BloggerArticleBuilder {
                 val item = array.optJSONObject(index) ?: continue
                 val label = item.optString("label").trim()
                 val url = item.optString("url").trim()
-                if (label.isNotBlank() && (url.startsWith("https://") || url.startsWith("http://"))) {
+                if (label.isNotBlank() && (url.startsWith("https://", true) || url.startsWith("http://", true))) {
                     result += label to url
                 }
             }
         } catch (_: Exception) {
-            // Older posts may have no structured links yet.
+            // Older posts may not have structured download links.
         }
         if (result.isEmpty() && fallbackUrl.isNotBlank() &&
-            (fallbackUrl.startsWith("https://") || fallbackUrl.startsWith("http://"))
+            (fallbackUrl.startsWith("https://", true) || fallbackUrl.startsWith("http://", true))
         ) result += "تحميل اللعبة" to fallbackUrl
         return result
     }
