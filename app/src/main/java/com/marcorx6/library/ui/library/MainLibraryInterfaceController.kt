@@ -136,6 +136,8 @@ internal class MainLibraryInterfaceController(
         }
         header.addView(headerAction(if (isDarkMode()) "☀" else "☾", tr(if (isDarkMode()) "الوضع الفاتح" else "الوضع الداكن")) { toggleDarkMode() },
             LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginEnd = dp(8) })
+        header.addView(headerAction("⚙", tr("الإعدادات")) { showAppearanceSettings() },
+            LinearLayout.LayoutParams(dp(48), dp(48)))
 
         root.addView(header)
 
