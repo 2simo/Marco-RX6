@@ -19,7 +19,8 @@ internal class GameDetailsIdentityViewFactory(
     private val white: () -> Int,
     private val gray: () -> Int,
     private val loadCover: (ImageView, String, String) -> Unit,
-    private val watchlistViewFactory: GameWatchlistViewFactory
+    private val watchlistViewFactory: GameWatchlistViewFactory,
+    private val translate: (String) -> String
 ) {
     fun create(game: Game): LinearLayout {
         val dark = isDarkMode()
@@ -82,13 +83,13 @@ internal class GameDetailsIdentityViewFactory(
 
         // App-branded introduction belongs above the metadata card, not below download buttons.
         root.addView(makeText(
-            "أهلاً بمستخدمي تطبيق MARCO RX6 الكرام، إليكم لعبة جديدة من إضافاتنا الحصرية بروابط مباشرة وسريعة.",
+            translate("أهلاً بمستخدمي تطبيق MARCO RX6 الكرام، إليكم لعبة جديدة من إضافاتنا الحصرية بروابط مباشرة وسريعة."),
             14f,
             muted,
             false
         ).apply {
             gravity = android.view.Gravity.START
-            textDirection = android.view.View.TEXT_DIRECTION_RTL
+            textDirection = android.view.View.TEXT_DIRECTION_FIRST_STRONG
             setLineSpacing(dp(2).toFloat(), 1f)
             setPadding(dp(3), dp(2), dp(3), dp(14))
         }, LinearLayout.LayoutParams(-1, -2))
@@ -104,7 +105,7 @@ internal class GameDetailsIdentityViewFactory(
                     setStroke(dp(1), if (dark) Color.rgb(57, 83, 112) else Color.rgb(213, 226, 241))
                 }
             }
-            infoCard.addView(makeText("معلومات اللعبة", 16f, primary, true).apply {
+            infoCard.addView(makeText(translate("معلومات اللعبة"), 16f, primary, true).apply {
                 setPadding(0, 0, 0, dp(10))
             })
             details.forEach { item ->
