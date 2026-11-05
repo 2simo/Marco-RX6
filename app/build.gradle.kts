@@ -21,6 +21,11 @@ android {
         targetSdk = 36
         versionCode = 32
         versionName = "8.15"
+
+        // Phone APKs target ARM devices; omit x86 emulator/desktop native binaries.
+        ndk {
+            abiFilters += setOf("arm64-v8a", "armeabi-v7a")
+        }
     }
 
     signingConfigs {
