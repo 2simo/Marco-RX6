@@ -43,9 +43,12 @@ internal class ResumableDownloadWorker(
                 Result.success()
             } else if (latest.status == DownloadManager.STATUS_PAUSED) {
                 Result.success()
-            } else if (isStopped || error is IOException) {
+            } else if ((isStopped || error is IOException) && runAttemptCount < MAX_AUTOMATIC_RETRIES) {
                 database.status(id, DownloadManager.STATUS_PENDING, error.message ?: "Network interrupted")
                 Result.retry()
+            } else if (error is IOException) {
+                database.status(id, DownloadManager.STATUS_FAILED, error.message ?: "Download needs attention")
+                Result.failure()
             } else {
                 database.status(id, DownloadManager.STATUS_FAILED, error.message ?: "Download failed")
                 Result.failure()
@@ -80,14 +83,16 @@ internal class ResumableDownloadWorker(
                 throw SecurityException("Download redirect did not use HTTPS")
             }
             if (code == 416 && offset > 0L) {
-                // A stale partial file can point beyond the server's current entity size.
-                // Discard it and retry once from byte zero instead of marking resume as failed.
-                partial.delete()
-                throw IOException("Server rejected the resume range; restarting from the beginning")
+                // Keep partial bytes intact; the source may need refreshing before resume.
+                throw IOException("The server rejected resume (HTTP 416). Refresh the game download link to continue.")
             }
             if (code == 408 || code == 429 || code in 500..599) throw IOException("Temporary server error: HTTP $code")
             if (code !in 200..299) throw IllegalStateException("HTTP $code")
             val append = offset > 0L && code == HttpURLConnection.HTTP_PARTIAL
+            val responseEtag = connection.getHeaderField("ETag").orEmpty()
+            if (append && item.etag.isNotBlank() && responseEtag.isNotBlank() && item.etag != responseEtag) {
+                throw IOException("The refreshed link points to a different file version; saved bytes were preserved")
+            }
             if (offset > 0L && !append) {
                 // The server ignored Range or the entity changed. Restart safely instead of
                 // appending a full response to an old partial file.
@@ -221,6 +226,7 @@ internal class ResumableDownloadWorker(
 
     companion object {
         const val KEY_ID = "download_id"
+        private const val MAX_AUTOMATIC_RETRIES = 5
         private const val CHANNEL_ID = "marco_rx6_downloads"
         private const val NOTIFICATION_ID = 6406
     }
