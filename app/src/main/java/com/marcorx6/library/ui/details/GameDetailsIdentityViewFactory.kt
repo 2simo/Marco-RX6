@@ -9,7 +9,6 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.marcorx6.library.data.Game
-import com.marcorx6.library.ui.settings.LocalContentTranslator
 
 internal class GameDetailsIdentityViewFactory(
     private val activity: Activity,
@@ -20,9 +19,7 @@ internal class GameDetailsIdentityViewFactory(
     private val white: () -> Int,
     private val gray: () -> Int,
     private val loadCover: (ImageView, String, String) -> Unit,
-    private val watchlistViewFactory: GameWatchlistViewFactory,
-    private val translate: (String) -> String,
-    private val targetLanguage: () -> String
+    private val translate: (String) -> String
 ) {
     fun create(game: Game): LinearLayout {
         val dark = isDarkMode()
@@ -62,48 +59,6 @@ internal class GameDetailsIdentityViewFactory(
         root.addView(cover, LinearLayout.LayoutParams(dp(180), dp(270)).apply {
             gravity = android.view.Gravity.CENTER_HORIZONTAL
         })
-
-        if (game.description.isNotBlank()) {
-            val descriptionView = makeText(game.description, 15f, muted, false).apply {
-                textDirection = android.view.View.TEXT_DIRECTION_FIRST_STRONG
-                gravity = android.view.Gravity.START
-                textAlignment = android.view.View.TEXT_ALIGNMENT_VIEW_START
-                setLineSpacing(dp(2).toFloat(), 1f)
-                setPadding(dp(3), dp(2), dp(3), dp(12))
-            }
-            root.addView(descriptionView, LinearLayout.LayoutParams(-1, -2))
-            val target = targetLanguage()
-            if (target != "ar") {
-                val translator = LocalContentTranslator(activity)
-                translator.translateAutomatically(
-                    text = game.description,
-                    targetLanguage = target,
-                    onTranslated = { translated ->
-                        descriptionView.post {
-                            if (descriptionView.isAttachedToWindow && translated.isNotBlank()) {
-                                descriptionView.text = translated
-                            }
-                            translator.close()
-                        }
-                    },
-                    onError = {
-                        descriptionView.post { translator.close() }
-                    }
-                )
-            }
-        }
-        // App-branded introduction belongs above the metadata card, not below download buttons.
-        root.addView(makeText(
-            translate("أهلاً بمستخدمي تطبيق MARCO RX6 الكرام، إليكم لعبة جديدة من إضافاتنا الحصرية بروابط مباشرة وسريعة."),
-            14f,
-            muted,
-            false
-        ).apply {
-            gravity = android.view.Gravity.START
-            textDirection = android.view.View.TEXT_DIRECTION_FIRST_STRONG
-            setLineSpacing(dp(2).toFloat(), 1f)
-            setPadding(dp(3), dp(2), dp(3), dp(14))
-        }, LinearLayout.LayoutParams(-1, -2))
 
         val details = extractGameDetails(game.bloggerHtml)
         if (details.isNotEmpty()) {
@@ -153,10 +108,6 @@ internal class GameDetailsIdentityViewFactory(
             })
         }
 
-        val watchlistButton = watchlistViewFactory.create(game)
-        root.addView(watchlistButton, LinearLayout.LayoutParams(-1, -2).apply {
-            topMargin = dp(2)
-        })
         return root
     }
 
