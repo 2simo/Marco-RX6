@@ -41,6 +41,7 @@ internal class FirebaseAccountController(
     private val activity: Activity,
     private val authRepository: FirebaseAuthRepository,
     private val onAccountChanged: () -> Unit,
+    private val onSignedIn: () -> Unit,
     private val launchGoogleSignIn: (Intent) -> Unit,
     private val launchAdminGoogleSignIn: (Intent) -> Unit,
     private val signOutAdmin: () -> Unit,
@@ -674,7 +675,7 @@ internal class FirebaseAccountController(
                 } else {
                     toast("تم تسجيل الدخول بنجاح")
                 }
-                onAccountChanged()
+                onSignedIn()
             }.addOnFailureListener { error ->
                 button.isEnabled = true
                 button.text = if (createAccount) translate("إنشاء الحساب") else translate("دخول")
@@ -791,7 +792,7 @@ internal class FirebaseAccountController(
     /** Complete the normal Firebase account flow without requesting Blogger or Drive scopes. */
     private fun completeGoogleAccountSignIn(message: String) {
         toast(message)
-        onAccountChanged()
+        onSignedIn()
     }
 
     private fun authErrorMessage(error: Exception, fallback: String): String {
