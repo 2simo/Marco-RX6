@@ -206,7 +206,7 @@ internal class AppearanceSettingsController(
         root.addView(settingRow(translate("الخط وحجم النص"), translate("تخصيص عائلة الخط وحجم القراءة"), showTypographySettings),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         root.addView(settingRow(translate("التخزين"), translate("عرض مساحة التطبيق والملفات المؤقتة وإدارة ذاكرة التخزين المؤقت")) {
-            StorageSettingsController(activity, setContentView, onBack, translate).show()
+            StorageSettingsController(activity, setContentView, { show() }, translate).show()
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
 
         root.addView(TextView(activity).apply {
