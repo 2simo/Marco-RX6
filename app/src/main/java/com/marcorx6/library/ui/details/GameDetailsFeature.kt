@@ -106,7 +106,8 @@ internal class GameDetailsFeature(
         makeText = makeText,
         isDarkMode = isDarkMode,
         white = white,
-        translate = tr
+        translate = tr,
+        loadCover = loadCover
     )
 
     private val bottomBarFactory = GameDetailsBottomBarFactory(
