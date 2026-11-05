@@ -110,11 +110,11 @@ internal class DownloadUiController(
             setPadding(0, dp(4), 0, 0)
         })
         header.addView(titleBox, LinearLayout.LayoutParams(0, -2, 1f))
-        header.addView(TextView(activity).apply {
-            text = "×"
-            textSize = 30f
-            gravity = Gravity.CENTER
-            setTextColor(muted)
+        header.addView(android.widget.ImageView(activity).apply {
+            setImageResource(com.marcorx6.library.R.drawable.ic_action_close)
+            imageTintList = android.content.res.ColorStateList.valueOf(muted)
+            scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
+            setPadding(dp(13), dp(13), dp(13), dp(13))
             minWidth = dp(48)
             minHeight = dp(48)
             contentDescription = translate("إغلاق صفحة التنزيلات")
@@ -155,9 +155,12 @@ internal class DownloadUiController(
                 cornerRadius = dp(22).toFloat()
                 setStroke(dp(1), if (dark) Color.argb(165, 80, 151, 215) else Color.argb(175, 153, 195, 236))
             }
-            addView(TextView(activity).apply {
-                text = "↓"; textSize = 42f; gravity = Gravity.CENTER; setTextColor(primary)
-            })
+            addView(android.widget.ImageView(activity).apply {
+                setImageResource(com.marcorx6.library.R.drawable.ic_action_download)
+                imageTintList = android.content.res.ColorStateList.valueOf(primary)
+                scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
+                contentDescription = translate("التنزيلات")
+            }, LinearLayout.LayoutParams(dp(48), dp(48)))
             addView(TextView(activity).apply {
                 text = translate("ما كايناش تنزيلات دابا"); textSize = 17f
                 setTypeface(null, android.graphics.Typeface.BOLD); setTextColor(heading)
