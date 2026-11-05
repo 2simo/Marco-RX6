@@ -307,10 +307,14 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val appCheckProvider: AppCheckProviderFactory =
-            if (BuildConfig.DEBUG) DebugAppCheckProviderFactory.getInstance()
-            else PlayIntegrityAppCheckProviderFactory.getInstance()
-        FirebaseAppCheck.getInstance().installAppCheckProviderFactory(appCheckProvider)
+        val appCheckProvider: AppCheckProviderFactory? = when {
+            BuildConfig.DEBUG -> DebugAppCheckProviderFactory.getInstance()
+            BuildConfig.PLAY_DISTRIBUTION -> PlayIntegrityAppCheckProviderFactory.getInstance()
+            else -> null // GitHub/Telegram sideload builds must not require Play Integrity.
+        }
+        appCheckProvider?.let {
+            FirebaseAppCheck.getInstance().installAppCheckProviderFactory(it)
+        }
         onBackPressedDispatcher.addCallback(this, secondaryScreenBackCallback)
         firebaseSessionCoordinator.start()
         lifecycleCoordinator.onCreate()
