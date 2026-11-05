@@ -109,7 +109,10 @@ internal class GameArticleWebViewFactory(
                     ""
                 )
             val metadataAliases = "(?:الحجم|حجم|size|النسخة|version|title\\s*id|cusa|الصيغة|format|اللغة|languages?|كلمة\\s*السر|كلمه\\s*السر|password|pass|الحقوق|credits|rights)"
-            val metadataLabel = Regex("(?i)^\\s*${metadataAliases}\\b")
+            // Java/Kotlin regex word-boundaries do not reliably recognize Arabic
+            // letters as word characters. Match the complete leading metadata label
+            // followed by a separator (or whitespace), without a trailing \\b.
+            val metadataLabel = Regex("(?i)^\\s*${metadataAliases}(?:\\s*[:：-]\\s*|\\s+|$)")
             fun stripMetadataRows(source: String, tagPattern: Regex): String = tagPattern.replace(source) { match ->
                 val text = android.text.Html.fromHtml(
                     match.groupValues[2], android.text.Html.FROM_HTML_MODE_LEGACY
