@@ -20,13 +20,7 @@ internal class CoverRuntimeFeature(
     private val displayController = CoverDisplayController(
         normalizeUrl = BloggerFeedParser::normalizeBloggerImageUrl,
         resolveKey = { localPath, imageUrl ->
-            CoverKeyResolver.resolve(localPath, imageUrl, repository::stableCacheName) { asset ->
-                try {
-                    appContext.assets.open(asset).use { true }
-                } catch (_: Exception) {
-                    false
-                }
-            }
+            CoverKeyResolver.resolve(localPath, imageUrl, repository::stableCacheName)
         },
         loadBitmap = { localPath, imageUrl, callback ->
             repository.load(localPath, imageUrl, callback)
