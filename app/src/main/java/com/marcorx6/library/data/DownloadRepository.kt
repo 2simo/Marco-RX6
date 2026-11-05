@@ -132,7 +132,13 @@ internal class DownloadRepository(context: Context) {
             val path = Uri.parse(finalUrl).lastPathSegment.orEmpty().lowercase(Locale.ROOT)
             val hasFileExtension = Regex("""\.(apk|zip|7z|rar|iso|pkg|bin|cue|chd|img|pbp|cso|nsp|xci|pdf|mp4|mp3)$""").containsMatchIn(path)
             val isAttachment = disposition.contains("attachment", ignoreCase = true)
-            val isBinary = mime == "application/octet-stream" || mime.startsWith("application/") ||
+            val structuredText = mime in setOf(
+                "application/json", "application/ld+json", "application/xml",
+                "application/javascript", "application/x-javascript",
+                "application/x-www-form-urlencoded", "application/problem+json"
+            ) || mime.startsWith("text/")
+            val isBinary = mime == "application/octet-stream" ||
+                (mime.startsWith("application/") && !structuredText) ||
                 mime.startsWith("video/") || mime.startsWith("audio/")
             return DownloadProbe(finalUrl, mime, isAttachment || isBinary || hasFileExtension)
         } finally {
