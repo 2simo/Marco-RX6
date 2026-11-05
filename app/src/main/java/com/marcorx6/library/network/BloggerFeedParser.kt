@@ -190,33 +190,32 @@ internal object BloggerFeedParser {
         )
 
         val matcher = pattern.matcher(html)
+        val seenUrls = mutableSetOf<String>()
+        val downloadTerms = listOf(
+            "تحميل", "download", "game", "update", "dlc",
+            "mediafire", "mega", "google drive", "drive.google",
+            "pixeldrain", "1fichier", "uptobox", "rapidgator",
+            "uploaded", "filecrypt", "4shared"
+        )
 
         while (matcher.find()) {
-
-            val href = matcher.group(1)?.trim().orEmpty()
+            val rawHref = matcher.group(1)?.trim().orEmpty()
+            val href = Html.fromHtml(rawHref, Html.FROM_HTML_MODE_LEGACY).toString().trim()
             val labelHtml = matcher.group(2).orEmpty()
+            val label = Html.fromHtml(labelHtml, Html.FROM_HTML_MODE_LEGACY)
+                .toString().replace(Regex("\\s+"), " ").trim()
+            val normalizedLabel = label.lowercase(Locale.ROOT)
 
-            @Suppress("DEPRECATION")
-            val label = Html.fromHtml(labelHtml).toString().trim()
-
-            if (href.startsWith("https://") &&
-                label.isNotBlank() &&
-                (
-                    label.contains("اللعبة") ||
-                    label.contains("التحديث") ||
-                    label.contains("الإضافات") ||
-                    label.contains("تحميل") ||
-                    label.contains("Game", true) ||
-                    label.contains("Update", true) ||
-                    label.contains("DLC", true)
-                )
-            ) {
-                result.put(
-                    JSONObject()
-                        .put("label", label)
-                        .put("url", href)
-                )
+            // Blogger article bodies contain ordinary links as well as download links.
+            // Only keep links whose visible label identifies a download or known file host.
+            val isDownloadLink = downloadTerms.any { term ->
+                normalizedLabel.contains(term)
             }
+            if (!href.startsWith("https://", ignoreCase = true) ||
+                label.isBlank() || !isDownloadLink || !seenUrls.add(href)
+            ) continue
+
+            result.put(JSONObject().put("label", label).put("url", href))
         }
 
         return result.toString()

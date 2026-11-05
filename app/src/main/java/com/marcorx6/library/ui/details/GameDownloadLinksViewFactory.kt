@@ -12,6 +12,7 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import org.json.JSONArray
+import com.marcorx6.library.network.BloggerFeedParser
 
 internal class GameDownloadLinksViewFactory(
     private val activity: Activity,
@@ -25,31 +26,9 @@ internal class GameDownloadLinksViewFactory(
 ) {
     fun createFromHtml(bloggerHtml: String, gameName: String): View? {
         if (bloggerHtml.isBlank()) return null
-        val parsed = JSONArray()
-        val anchorPattern = Regex("(?is)<a\\b([^>]*)>(.*?)</a\\s*>")
-        anchorPattern.findAll(bloggerHtml).forEachIndexed { index, match ->
-            val attributes = match.groupValues[1]
-            val hrefMatch = Regex("(?is)\\bhref\\s*=\\s*(?:\"([^\"]*)\"|'([^']*)'|([^\\s>]+))")
-                .find(attributes)
-            val rawHref = hrefMatch?.groupValues?.drop(1)?.firstOrNull { it.isNotBlank() }
-                ?.trim().orEmpty()
-            val href = android.text.Html.fromHtml(rawHref, android.text.Html.FROM_HTML_MODE_LEGACY)
-                .toString().trim()
-            val label = android.text.Html.fromHtml(
-                match.groupValues[2], android.text.Html.FROM_HTML_MODE_LEGACY
-            ).toString().replace(Regex("\\s+"), " ").trim()
-            val normalizedLabel = label.lowercase()
-            if (!(href.startsWith("https://", ignoreCase = true) || href.startsWith("http://", ignoreCase = true)) ||
-                href == "#" || href.endsWith("/#") || label.isBlank() ||
-                normalizedLabel.contains("ضع رابط") ||
-                normalizedLabel.contains("ضع الرابط") ||
-                normalizedLabel.contains("paste link") ||
-                normalizedLabel.contains("insert link")) return@forEachIndexed
-            parsed.put(org.json.JSONObject().put("url", href).put(
-                "label", label.ifBlank { "${translate("تحميل")} ${index + 1}" }
-            ))
-        }
-        return create(parsed.toString(), gameName)
+        // Reuse the strict Blogger link classifier so article/social/navigation links
+        // are not incorrectly rendered as download buttons.
+        return create(BloggerFeedParser.extractDownloadLinks(bloggerHtml), gameName)
     }
 
     fun create(downloadLinks: String, gameName: String): View? {

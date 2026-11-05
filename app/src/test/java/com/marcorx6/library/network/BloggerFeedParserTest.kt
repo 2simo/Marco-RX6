@@ -78,4 +78,36 @@ class BloggerFeedParserTest {
         assertNull(BloggerFeedParser.parseBlogEntry(blankTitle))
         assertNull(BloggerFeedParser.parseBlogEntry(insecureLink))
     }
+    @Test
+    fun extractsOnlyClearlyLabeledDownloadLinksAndKnownFileHosts() {
+        val html = """
+            <p><a href="https://example.com/privacy">Privacy policy</a></p>
+            <a href="https://example.com/game.zip">Download Game ZIP</a>
+            <a href="https://drive.google.com/file/d/123/view">Google Drive</a>
+            <a href="https://example.com/about">About the author</a>
+            <a href="https://example.com/update">تحميل التحديث</a>
+        """.trimIndent()
+
+        val links = org.json.JSONArray(BloggerFeedParser.extractDownloadLinks(html))
+        assertEquals(3, links.length())
+        assertEquals("Download Game ZIP", links.getJSONObject(0).getString("label"))
+        assertEquals("Google Drive", links.getJSONObject(1).getString("label"))
+        assertEquals("تحميل التحديث", links.getJSONObject(2).getString("label"))
+    }
+
+    @Test
+    fun decodesHtmlEntitiesInDownloadUrlsAndRemovesDuplicates() {
+        val html = """
+            <a href="https://example.com/download?id=1&amp;part=2">Download Part 1</a>
+            <a href="https://example.com/download?id=1&amp;part=2">Download Part 1</a>
+        """.trimIndent()
+
+        val links = org.json.JSONArray(BloggerFeedParser.extractDownloadLinks(html))
+        assertEquals(1, links.length())
+        assertEquals(
+            "https://example.com/download?id=1&part=2",
+            links.getJSONObject(0).getString("url")
+        )
+    }
+
 }
