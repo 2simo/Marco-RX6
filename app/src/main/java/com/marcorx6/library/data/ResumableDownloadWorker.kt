@@ -79,7 +79,7 @@ internal class ResumableDownloadWorker(
             if (!connection.url.protocol.equals("https", true)) {
                 throw SecurityException("Download redirect did not use HTTPS")
             }
-            if (code == HttpURLConnection.HTTP_REQUESTED_RANGE_NOT_SATISFIABLE && offset > 0L) {
+            if (code == 416 && offset > 0L) {
                 // A stale partial file can point beyond the server's current entity size.
                 // Discard it and retry once from byte zero instead of marking resume as failed.
                 partial.delete()
