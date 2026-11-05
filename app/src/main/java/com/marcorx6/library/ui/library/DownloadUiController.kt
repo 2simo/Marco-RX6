@@ -131,21 +131,49 @@ internal class DownloadUiController(
             setPadding(0, dp(7), 0, dp(18))
         })
         val list = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
-        class ProgressViews(
+        class RowViews(
+            val card: LinearLayout,
+            val title: TextView,
             val status: TextView,
             val details: TextView,
-            val progress: android.widget.ProgressBar
+            val progress: android.widget.ProgressBar,
+            val actions: LinearLayout,
+            var actionState: String = ""
         )
-        val progressViews = mutableMapOf<Long, ProgressViews>()
+        val rows = linkedMapOf<Long, RowViews>()
         val lastSpeedSample = mutableMapOf<Long, Pair<Long, Long>>()
-        var lastRenderedSnapshot: String? = null
         val handler = Handler(Looper.getMainLooper())
+        val emptyState = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(dp(24), dp(42), dp(24), dp(42))
+            background = GradientDrawable().apply {
+                setColors(if (dark)
+                    intArrayOf(Color.argb(220, 23, 67, 108), Color.argb(208, 8, 27, 47))
+                else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(218, 224, 240, 255)))
+                cornerRadius = dp(22).toFloat()
+                setStroke(dp(1), if (dark) Color.argb(165, 80, 151, 215) else Color.argb(175, 153, 195, 236))
+            }
+            addView(TextView(activity).apply {
+                text = "↓"; textSize = 42f; gravity = Gravity.CENTER; setTextColor(primary)
+            })
+            addView(TextView(activity).apply {
+                text = translate("ما كايناش تنزيلات دابا"); textSize = 17f
+                setTypeface(null, android.graphics.Typeface.BOLD); setTextColor(heading)
+                gravity = Gravity.CENTER; setPadding(0, dp(10), 0, dp(6))
+            })
+            addView(TextView(activity).apply {
+                text = translate("اختار لعبة، ومن صفحة التفاصيل أضف رابط التحميل باش يبان هنا.")
+                textSize = 12f; setTextColor(muted); gravity = Gravity.CENTER
+            })
+        }
         val scroll = ScrollView(activity).apply {
             isFillViewport = true
             isVerticalScrollBarEnabled = false
             addView(list, LinearLayout.LayoutParams(-1, -2))
         }
-        fun updateProgress(item: com.marcorx6.library.data.DownloadEntry, views: ProgressViews) {
+
+        fun updateProgress(item: com.marcorx6.library.data.DownloadEntry, views: RowViews) {
             val statusLabel = when (item.status) {
                 DownloadManager.STATUS_PENDING -> translate("في الانتظار")
                 DownloadManager.STATUS_RUNNING -> translate("قيد التنزيل")
@@ -158,12 +186,16 @@ internal class DownloadUiController(
                 (item.downloadedBytes * 100L / item.totalBytes).coerceIn(0L, 100L).toInt() else 0
             val now = SystemClock.elapsedRealtime()
             val previous = lastSpeedSample[item.id]
-            val speed = if (item.status == DownloadManager.STATUS_RUNNING && previous != null && now > previous.second) {
-                ((item.downloadedBytes - previous.first).coerceAtLeast(0L) * 1000L) /
-                    (now - previous.second).coerceAtLeast(1L)
+            val speed = if (item.status == DownloadManager.STATUS_RUNNING && previous != null &&
+                now > previous.second && item.downloadedBytes >= previous.first) {
+                ((item.downloadedBytes - previous.first) * 1000L) / (now - previous.second).coerceAtLeast(1L)
             } else 0L
-            lastSpeedSample[item.id] = item.downloadedBytes to now
-
+            if (item.status == DownloadManager.STATUS_RUNNING) {
+                lastSpeedSample[item.id] = item.downloadedBytes to now
+            } else {
+                lastSpeedSample.remove(item.id)
+            }
+            views.title.text = item.title
             views.status.text = if (item.totalBytes > 0L) "$statusLabel  •  $percent%" else statusLabel
             views.status.setTextColor(when (item.status) {
                 DownloadManager.STATUS_SUCCESSFUL -> Color.rgb(36, 170, 112)
@@ -173,15 +205,10 @@ internal class DownloadUiController(
             val downloaded = android.text.format.Formatter.formatFileSize(activity, item.downloadedBytes.coerceAtLeast(0L))
             val details = StringBuilder(downloaded)
             if (item.totalBytes > 0L) {
-                val total = android.text.format.Formatter.formatFileSize(activity, item.totalBytes)
-                details.append(" / ").append(total)
-            } else {
-                details.append(" / ").append(translate("الحجم غير معروف"))
-            }
+                details.append(" / ").append(android.text.format.Formatter.formatFileSize(activity, item.totalBytes))
+            } else details.append(" / ").append(translate("الحجم غير معروف"))
             if (item.status == DownloadManager.STATUS_RUNNING && speed > 0L) {
-                details.append("  •  ")
-                    .append(android.text.format.Formatter.formatFileSize(activity, speed))
-                    .append("/s")
+                details.append("  •  ").append(android.text.format.Formatter.formatFileSize(activity, speed)).append("/s")
                 if (item.totalBytes > item.downloadedBytes) {
                     val seconds = (item.totalBytes - item.downloadedBytes) / speed
                     val eta = when {
@@ -193,202 +220,158 @@ internal class DownloadUiController(
                 }
             }
             views.details.text = details.toString()
-            val isRunning = item.status == DownloadManager.STATUS_RUNNING
-            views.progress.isIndeterminate = isRunning && item.totalBytes <= 0L
-            views.progress.visibility = if (isRunning) View.VISIBLE else View.GONE
+            // Keep the progress indicator visible while pending or paused so resume never blanks the row.
+            val hasProgress = item.status == DownloadManager.STATUS_RUNNING ||
+                item.status == DownloadManager.STATUS_PENDING || item.status == DownloadManager.STATUS_PAUSED
+            views.progress.visibility = if (hasProgress) View.VISIBLE else View.GONE
+            views.progress.isIndeterminate = item.status == DownloadManager.STATUS_RUNNING && item.totalBytes <= 0L
             views.progress.progress = percent
         }
 
+        fun smallAction(label: String, filled: Boolean = false, onClick: () -> Unit) =
+            TextView(activity).apply {
+                text = label; textSize = 11f; gravity = Gravity.CENTER
+                minHeight = dp(42); setPadding(dp(13), dp(9), dp(13), dp(9))
+                setTextColor(if (filled) Color.WHITE else primary)
+                background = GradientDrawable().apply {
+                    setColor(if (filled) Color.argb(225, 42, 145, 255)
+                        else if (dark) Color.argb(190, 15, 43, 70) else Color.WHITE)
+                    cornerRadius = dp(12).toFloat(); setStroke(dp(1), primary)
+                }
+                isClickable = true; isFocusable = true; addGlassTouch(this)
+                setOnClickListener { onClick() }
+            }
+
+        fun updateActions(item: com.marcorx6.library.data.DownloadEntry, views: RowViews) {
+            val signature = "${item.status}:${item.id}"
+            if (views.actionState == signature) return
+            views.actionState = signature
+            views.actions.removeAllViews()
+            fun addAction(view: View, start: Boolean = false) {
+                views.actions.addView(view, LinearLayout.LayoutParams(0, -2, 1f).apply {
+                    if (start) marginStart = dp(6) else marginEnd = dp(6)
+                })
+            }
+            if (item.status == DownloadManager.STATUS_SUCCESSFUL) {
+                addAction(smallAction(translate("فتح الملف"), true) {
+                    try {
+                        val uri = downloadRepository.openDownloadedFile(item.id)
+                            ?: throw IllegalStateException("File URI unavailable")
+                        activity.startActivity(Intent(Intent.ACTION_VIEW).apply {
+                            setDataAndType(uri, item.mimeType?.takeIf { it.isNotBlank() } ?: "*/*")
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        })
+                    } catch (_: Exception) {
+                        Toast.makeText(activity, translate("تعذر فتح الملف؛ تحقق من وجود تطبيق مناسب لفتحه"), Toast.LENGTH_LONG).show()
+                    }
+                })
+            }
+            if (item.status == DownloadManager.STATUS_RUNNING || item.status == DownloadManager.STATUS_PENDING) {
+                addAction(smallAction(translate("إيقاف مؤقت")) {
+                    if (downloadRepository.pauseDownload(item.id)) {
+                        lastSpeedSample.remove(item.id); render()
+                        Toast.makeText(activity, translate("تم إيقاف التنزيل مؤقتاً"), Toast.LENGTH_SHORT).show()
+                    } else Toast.makeText(activity, translate("تعذر إيقاف التنزيل مؤقتاً"), Toast.LENGTH_SHORT).show()
+                })
+            } else if (item.status == DownloadManager.STATUS_PAUSED) {
+                addAction(smallAction(translate("استكمال")) {
+                    if (downloadRepository.resumeDownload(item.id)) {
+                        lastSpeedSample.remove(item.id); render()
+                        Toast.makeText(activity, translate("تم استكمال التنزيل"), Toast.LENGTH_SHORT).show()
+                    } else Toast.makeText(activity, translate("تعذر استكمال التنزيل"), Toast.LENGTH_SHORT).show()
+                })
+            }
+            if (item.status == DownloadManager.STATUS_RUNNING || item.status == DownloadManager.STATUS_PENDING ||
+                item.status == DownloadManager.STATUS_PAUSED) {
+                addAction(smallAction(translate("إلغاء التنزيل")) {
+                    if (downloadRepository.deleteDownload(item.id)) {
+                        lastSpeedSample.remove(item.id); render()
+                        Toast.makeText(activity, translate("تم إلغاء التنزيل"), Toast.LENGTH_SHORT).show()
+                    } else Toast.makeText(activity, translate("تعذر إلغاء التنزيل"), Toast.LENGTH_SHORT).show()
+                }, start = true)
+            }
+            if (item.status == DownloadManager.STATUS_SUCCESSFUL || item.status == DownloadManager.STATUS_FAILED) {
+                addAction(smallAction(translate("حذف")) {
+                    AlertDialog.Builder(activity)
+                        .setMessage(translate("هل تريد حذف هذا التنزيل؟"))
+                        .setNegativeButton(translate("إلغاء"), null)
+                        .setPositiveButton(translate("حذف")) { _, _ ->
+                            if (downloadRepository.deleteDownload(item.id)) {
+                                lastSpeedSample.remove(item.id); render()
+                                Toast.makeText(activity, translate("تم حذف التنزيل"), Toast.LENGTH_SHORT).show()
+                            } else Toast.makeText(activity, translate("تعذر حذف التنزيل"), Toast.LENGTH_SHORT).show()
+                        }.show()
+                }, start = true)
+            }
+        }
+
+        fun createRow(item: com.marcorx6.library.data.DownloadEntry): RowViews {
+            val card = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(15), dp(14), dp(15), dp(14))
+                background = GradientDrawable().apply {
+                    setColors(if (dark)
+                        intArrayOf(Color.argb(221, 22, 65, 105), Color.argb(209, 8, 27, 47))
+                    else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(218, 224, 240, 255)))
+                    cornerRadius = dp(17).toFloat()
+                    setStroke(dp(1), if (dark) Color.argb(165, 80, 151, 215) else Color.argb(175, 153, 195, 236))
+                }
+            }
+            val titleView = TextView(activity).apply {
+                textSize = 14f; setTypeface(null, android.graphics.Typeface.BOLD); setTextColor(heading)
+            }
+            val statusView = TextView(activity).apply { textSize = 11f; setPadding(0, dp(6), 0, 0) }
+            val detailsView = TextView(activity).apply {
+                textSize = 10f; setTextColor(muted); setPadding(0, dp(4), 0, 0)
+            }
+            val progressView = android.widget.ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
+                max = 100
+                progressTintList = android.content.res.ColorStateList.valueOf(primary)
+                progressBackgroundTintList = android.content.res.ColorStateList.valueOf(
+                    if (dark) Color.argb(90, 110, 150, 190) else Color.argb(70, 70, 120, 180))
+            }
+            val actions = LinearLayout(activity).apply {
+                orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
+                setPadding(0, dp(10), 0, 0)
+            }
+            card.addView(titleView)
+            card.addView(statusView)
+            card.addView(detailsView)
+            card.addView(progressView, LinearLayout.LayoutParams(-1, dp(7)).apply { topMargin = dp(10) })
+            card.addView(actions)
+            return RowViews(card, titleView, statusView, detailsView, progressView, actions)
+        }
+
         fun render() {
+            if (activity.isFinishing || activity.isDestroyed) return
             val entries = try { downloadRepository.getDownloads() } catch (error: Exception) {
                 Toast.makeText(activity, translate("تعذر قراءة التنزيلات") + ": ${error.message}", Toast.LENGTH_LONG).show()
-                emptyList()
-            }
-            val snapshot = entries.joinToString("|") { entry ->
-                "${entry.id}:${entry.status}:${entry.title}"
-            }
-            if (snapshot == lastRenderedSnapshot) {
-                entries.forEach { item -> progressViews[item.id]?.let { updateProgress(item, it) } }
                 return
             }
-            lastRenderedSnapshot = snapshot
-            // Rebuild only when the queue structure or a row status changes.
-            // Byte counters, speed and ETA update in-place without detaching cards.
-            progressViews.clear()
-            list.removeAllViews()
-            if (entries.isEmpty()) {
-                val empty = LinearLayout(activity).apply {
-                    orientation = LinearLayout.VERTICAL
-                    gravity = Gravity.CENTER
-                    setPadding(dp(24), dp(42), dp(24), dp(42))
-                    this.background = GradientDrawable().apply {
-                        setColors(if (dark)
-                            intArrayOf(Color.argb(220, 23, 67, 108), Color.argb(208, 8, 27, 47))
-                        else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(218, 224, 240, 255)))
-                        cornerRadius = dp(22).toFloat()
-                        setStroke(dp(1), if (dark) Color.argb(165, 80, 151, 215) else Color.argb(175, 153, 195, 236))
-                    }
+            val currentIds = entries.map { it.id }.toSet()
+            val removedIds = rows.keys.filter { it !in currentIds }
+            removedIds.forEach { id ->
+                rows.remove(id)?.let { list.removeView(it.card) }
+                lastSpeedSample.remove(id)
+            }
+            emptyState.visibility = if (entries.isEmpty()) View.VISIBLE else View.GONE
+            if (emptyState.parent == null) list.addView(emptyState, LinearLayout.LayoutParams(-1, -2))
+            entries.forEachIndexed { index, item ->
+                val row = rows[item.id] ?: createRow(item).also { created ->
+                    rows[item.id] = created
+                    val insertAt = index.coerceAtMost(list.childCount)
+                    list.addView(created.card, insertAt, LinearLayout.LayoutParams(-1, -2).apply {
+                        bottomMargin = dp(10)
+                    })
                 }
-                empty.addView(TextView(activity).apply {
-                    text = "↓"
-                    textSize = 42f
-                    gravity = Gravity.CENTER
-                    setTextColor(primary)
-                })
-                empty.addView(TextView(activity).apply {
-                    text = translate("ما كايناش تنزيلات دابا")
-                    textSize = 17f
-                    setTypeface(null, android.graphics.Typeface.BOLD)
-                    setTextColor(heading)
-                    gravity = Gravity.CENTER
-                    setPadding(0, dp(10), 0, dp(6))
-                })
-                empty.addView(TextView(activity).apply {
-                    text = translate("اختار لعبة، ومن صفحة التفاصيل أضف رابط التحميل باش يبان هنا.")
-                    textSize = 12f
-                    setTextColor(muted)
-                    gravity = Gravity.CENTER
-                })
-                list.addView(empty, LinearLayout.LayoutParams(-1, -2))
-            } else entries.forEach { item ->
-                val card = LinearLayout(activity).apply {
-                    orientation = LinearLayout.VERTICAL
-                    setPadding(dp(15), dp(14), dp(15), dp(14))
-                    this.background = GradientDrawable().apply {
-                        setColors(if (dark)
-                            intArrayOf(Color.argb(221, 22, 65, 105), Color.argb(209, 8, 27, 47))
-                        else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(218, 224, 240, 255)))
-                        cornerRadius = dp(17).toFloat()
-                        setStroke(dp(1), if (dark) Color.argb(165, 80, 151, 215) else Color.argb(175, 153, 195, 236))
-                    }
+                updateProgress(item, row)
+                updateActions(item, row)
+                val desiredIndex = index + if (emptyState.visibility == View.VISIBLE) 1 else 0
+                if (row.card.parent === list && list.indexOfChild(row.card) != desiredIndex) {
+                    row.card.animate().cancel()
+                    list.removeView(row.card)
+                    list.addView(row.card, desiredIndex.coerceAtMost(list.childCount))
                 }
-                card.addView(TextView(activity).apply {
-                    text = item.title
-                    textSize = 14f
-                    setTypeface(null, android.graphics.Typeface.BOLD)
-                    setTextColor(heading)
-                })
-                val statusView = TextView(activity).apply {
-                    textSize = 11f
-                    setPadding(0, dp(6), 0, 0)
-                }
-                card.addView(statusView)
-                val detailsView = TextView(activity).apply {
-                    textSize = 10f
-                    setTextColor(muted)
-                    setPadding(0, dp(4), 0, 0)
-                }
-                card.addView(detailsView)
-                val progressView = android.widget.ProgressBar(
-                    activity, null, android.R.attr.progressBarStyleHorizontal
-                ).apply {
-                    max = 100
-                    progressTintList = android.content.res.ColorStateList.valueOf(primary)
-                    progressBackgroundTintList = android.content.res.ColorStateList.valueOf(
-                        if (dark) Color.argb(90, 110, 150, 190) else Color.argb(70, 70, 120, 180)
-                    )
-                }
-                card.addView(progressView, LinearLayout.LayoutParams(-1, dp(7)).apply { topMargin = dp(10) })
-                val rowProgressViews = ProgressViews(statusView, detailsView, progressView)
-                progressViews[item.id] = rowProgressViews
-                updateProgress(item, rowProgressViews)
-                if (item.status == DownloadManager.STATUS_SUCCESSFUL || item.status == DownloadManager.STATUS_FAILED ||
-                    item.status == DownloadManager.STATUS_RUNNING || item.status == DownloadManager.STATUS_PENDING ||
-                    item.status == DownloadManager.STATUS_PAUSED) {
-                    val row = LinearLayout(activity).apply {
-                        orientation = LinearLayout.HORIZONTAL
-                        gravity = Gravity.CENTER_VERTICAL
-                        setPadding(0, dp(10), 0, 0)
-                    }
-                    fun smallAction(label: String, filled: Boolean = false, onClick: () -> Unit) = TextView(activity).apply {
-                        text = label
-                        textSize = 11f
-                        gravity = Gravity.CENTER
-                        minHeight = dp(42)
-                        setPadding(dp(13), dp(9), dp(13), dp(9))
-                        setTextColor(if (filled) Color.WHITE else primary)
-                        this.background = GradientDrawable().apply {
-                            setColor(if (filled) Color.argb(225, 42, 145, 255)
-                                else if (dark) Color.argb(190, 15, 43, 70) else Color.WHITE)
-                            cornerRadius = dp(12).toFloat()
-                            setStroke(dp(1), primary)
-                        }
-                        isClickable = true
-                        isFocusable = true
-                        addGlassTouch(this)
-                        setOnClickListener { onClick() }
-                    }
-                    if (item.status == DownloadManager.STATUS_SUCCESSFUL) {
-                        row.addView(smallAction(translate("فتح الملف"), true) {
-                            try {
-                                val fileUri = downloadRepository.openDownloadedFile(item.id)
-                                    ?: throw IllegalStateException("File URI unavailable")
-                                val openIntent = Intent(Intent.ACTION_VIEW).apply {
-                                    setDataAndType(fileUri, item.mimeType?.takeIf { it.isNotBlank() } ?: "*/*")
-                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                }
-                                activity.startActivity(openIntent)
-                            } catch (_: Exception) {
-                                Toast.makeText(activity, translate("تعذر فتح الملف؛ تحقق من وجود تطبيق مناسب لفتحه"), Toast.LENGTH_LONG).show()
-                            }
-                        }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
-                    }
-                    if (item.status == DownloadManager.STATUS_RUNNING || item.status == DownloadManager.STATUS_PENDING) {
-                        row.addView(smallAction(translate("إيقاف مؤقت")) {
-                            if (downloadRepository.pauseDownload(item.id)) {
-
-                                lastSpeedSample.remove(item.id)
-                                lastRenderedSnapshot = null
-                                render()
-                                Toast.makeText(activity, translate("تم إيقاف التنزيل مؤقتاً"), Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(activity, translate("تعذر إيقاف التنزيل مؤقتاً"), Toast.LENGTH_SHORT).show()
-                            }
-                        }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
-                    } else if (item.status == DownloadManager.STATUS_PAUSED) {
-                        row.addView(smallAction(translate("استكمال")) {
-                            if (downloadRepository.resumeDownload(item.id)) {
-                                lastRenderedSnapshot = null
-                                render()
-                                Toast.makeText(activity, translate("تم استكمال التنزيل"), Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(activity, translate("تعذر استكمال التنزيل"), Toast.LENGTH_SHORT).show()
-                            }
-                        }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
-                    }
-                    if (item.status == DownloadManager.STATUS_RUNNING || item.status == DownloadManager.STATUS_PENDING || item.status == DownloadManager.STATUS_PAUSED) {
-                        row.addView(smallAction(translate("إلغاء التنزيل")) {
-                            if (downloadRepository.deleteDownload(item.id)) {
-
-                                lastSpeedSample.remove(item.id)
-                                lastRenderedSnapshot = null
-                                render()
-                                Toast.makeText(activity, translate("تم إلغاء التنزيل"), Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(activity, translate("تعذر إلغاء التنزيل"), Toast.LENGTH_SHORT).show()
-                            }
-                        }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) })
-                    }
-                    if (item.status == DownloadManager.STATUS_SUCCESSFUL || item.status == DownloadManager.STATUS_FAILED) {
-                    row.addView(smallAction(translate("حذف")) {
-                        AlertDialog.Builder(activity)
-                            .setMessage(translate("هل تريد حذف هذا التنزيل؟"))
-                            .setNegativeButton(translate("إلغاء"), null)
-                            .setPositiveButton(translate("حذف")) { _, _ ->
-                                if (downloadRepository.deleteDownload(item.id)) {
-
-                                    lastSpeedSample.remove(item.id)
-                                    render()
-                                    Toast.makeText(activity, translate("تم حذف التنزيل"), Toast.LENGTH_SHORT).show()
-                                } else {
-                                    Toast.makeText(activity, translate("تعذر حذف التنزيل"), Toast.LENGTH_SHORT).show()
-                                }
-                            }.show()
-                    }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(6) })
-                    }
-                    card.addView(row)
-                }
-                list.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
             }
         }
         render()
