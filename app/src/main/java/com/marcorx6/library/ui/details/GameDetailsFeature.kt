@@ -83,7 +83,8 @@ internal class GameDetailsFeature(
         white = white,
         gray = gray,
         loadCover = loadCover,
-        watchlistViewFactory = watchlistViewFactory
+        watchlistViewFactory = watchlistViewFactory,
+        translate = tr
     )
 
     private val downloadLinksViewFactory = GameDownloadLinksViewFactory(
