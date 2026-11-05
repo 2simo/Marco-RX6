@@ -31,7 +31,7 @@ internal class FirebaseAuthRepository(
         val credential = EmailAuthProvider.getCredential(normalizedEmail, password)
         val user = auth.currentUser
         return when {
-            user?.isAnonymous == true -> user.linkWithCredential(credential)
+            user?.isAnonymous == true -> user.linkWithCredential(credential).refreshLinkedUserToken()
             user == null -> auth.createUserWithEmailAndPassword(normalizedEmail, password)
             else -> Tasks.forException(
                 IllegalStateException("سجّل الخروج من الحساب الحالي قبل إنشاء حساب جديد")
