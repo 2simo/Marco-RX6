@@ -62,6 +62,10 @@ internal class DownloadUiController(
                             enqueueGameDownload(url, gameTitle, userAgent, disposition, mimeType, pageUrl, sourcePostUrl)
                         }
                     }
+                    is DownloadStartResult.RefreshSource -> {
+                        Toast.makeText(activity, translate("تعذر استخدام الرابط القديم؛ جارٍ تحديث معلومات اللعبة من المصدر"), Toast.LENGTH_LONG).show()
+                        openGameSource(result.sourcePostUrl)
+                    }
                     is DownloadStartResult.Failed ->
                         Toast.makeText(activity, translate(result.message), Toast.LENGTH_LONG).show()
                 }

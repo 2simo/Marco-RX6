@@ -91,7 +91,11 @@ internal class ResumableDownloadWorker(
             val append = offset > 0L && code == HttpURLConnection.HTTP_PARTIAL
             val responseEtag = connection.getHeaderField("ETag").orEmpty()
             if (append && item.etag.isNotBlank() && responseEtag.isNotBlank() && item.etag != responseEtag) {
-                throw IOException("The refreshed link points to a different file version; saved bytes were preserved")
+                // A changed validator proves this is a different entity. Discard only now,
+                // after proving the old partial cannot safely be appended to the new file.
+                partial.delete()
+                database.progress(item.id, 0L, -1L, "", "")
+                throw IOException("The file version changed; restarting safely from byte zero")
             }
             if (offset > 0L && !append) {
                 // The server ignored Range or the entity changed. Restart safely instead of

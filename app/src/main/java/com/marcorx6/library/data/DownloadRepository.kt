@@ -34,6 +34,7 @@ internal sealed class DownloadStartResult {
     data class Enqueued(val title: String) : DownloadStartResult()
     data class OpenInBrowser(val finalUrl: String) : DownloadStartResult()
     data class Failed(val message: String) : DownloadStartResult()
+    data class RefreshSource(val sourcePostUrl: String) : DownloadStartResult()
 }
 
 /** Owns the app's persistent, resumable download queue. */
@@ -77,7 +78,10 @@ internal class DownloadRepository(context: Context) {
                     DownloadStartResult.Enqueued(finalTitle)
                 }
             } catch (error: Exception) {
-                DownloadStartResult.Failed(error.message ?: "تعذر بدء تنزيل الملف")
+                val message = error.message ?: "تعذر بدء تنزيل الملف"
+                if (sourcePostUrl.isNotBlank() && Regex("HTTP (401|403|404|410)").containsMatchIn(message)) {
+                    DownloadStartResult.RefreshSource(sourcePostUrl)
+                } else DownloadStartResult.Failed(message)
             }
             onResult(result)
         }.start()
