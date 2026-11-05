@@ -147,13 +147,13 @@ internal class GameDetailsIdentityViewFactory(
             "كلمة السر" to listOf("كلمة السر", "password", "pass"),
             "الحقوق" to listOf("الحقوق", "credits", "rights")
         )
-        return fields.mapNotNull { (label, aliases) ->
+        return fields.map { (label, aliases) ->
             val alternatives = aliases.joinToString("|") { Regex.escape(it) }
             val match = Regex(
                 "(?im)(?:^|[\\n\\r|•])\\s*(?:$alternatives)[ \\t]*[:：-][ \\t]*([^\\n\\r|•]*)"
-            ).find(plain) ?: return@mapNotNull null
-            val value = match.groupValues[1].trim().trimEnd('.', ',', ';')
-            if (value.isBlank()) null else label to value
+            ).find(plain)
+            val value = match?.groupValues?.get(1)?.trim()?.trimEnd('.', ',', ';')
+            label to value?.takeIf { it.isNotBlank() }.orEmpty().ifBlank { "غير محدد" }
         }
     }
 }
