@@ -114,11 +114,11 @@ internal class MainLibraryInterfaceController(
             letterSpacing = 0.01f
         })
         header.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
-        fun headerAction(icon: String, label: String, action: () -> Unit) = TextView(context).apply {
-            text = icon
-            textSize = 19f
-            gravity = Gravity.CENTER
-            setTextColor(if (isDarkMode()) Color.rgb(190, 222, 255) else Color.rgb(35, 126, 224))
+        fun headerAction(iconRes: Int, label: String, action: () -> Unit) = ImageView(context).apply {
+            setImageResource(iconRes)
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
+            imageTintList = android.content.res.ColorStateList.valueOf(if (isDarkMode()) Color.rgb(190, 222, 255) else Color.rgb(35, 126, 224))
+            setPadding(dp(13), dp(13), dp(13), dp(13))
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
                 if (isDarkMode()) intArrayOf(Color.argb(205, 20, 58, 96), Color.argb(180, 9, 28, 52))
                 else intArrayOf(Color.argb(220, 255, 255, 255), Color.argb(190, 218, 237, 255))).apply {
@@ -136,9 +136,9 @@ internal class MainLibraryInterfaceController(
             )
             setOnClickListener { action() }
         }
-        header.addView(headerAction(if (isDarkMode()) "☀" else "☾", tr(if (isDarkMode()) "الوضع الفاتح" else "الوضع الداكن")) { toggleDarkMode() },
+        header.addView(headerAction(if (isDarkMode()) R.drawable.ic_action_sun else R.drawable.ic_action_moon, tr(if (isDarkMode()) "الوضع الفاتح" else "الوضع الداكن")) { toggleDarkMode() },
             LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginEnd = dp(8) })
-        header.addView(headerAction("⚙", tr("الإعدادات")) { showAppearanceSettings() },
+        header.addView(headerAction(R.drawable.ic_action_settings, tr("الإعدادات")) { showAppearanceSettings() },
             LinearLayout.LayoutParams(dp(48), dp(48)))
 
         root.addView(header)
@@ -177,7 +177,12 @@ internal class MainLibraryInterfaceController(
             setPadding(dp(14), 0, dp(14), 0)
             elevation = if (isDarkMode()) 0f else dp(2).toFloat()
         }
-        searchWrap.addView(makeText("⌕", 26f, if (isDarkMode()) silver else Color.rgb(73, 84, 105), true))
+        searchWrap.addView(ImageView(context).apply {
+            setImageResource(R.drawable.ic_action_search)
+            imageTintList = android.content.res.ColorStateList.valueOf(if (isDarkMode()) silver else Color.rgb(73, 84, 105))
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
+            contentDescription = tr("بحث")
+        }, LinearLayout.LayoutParams(dp(24), dp(24)))
         search = AutoCompleteTextView(context).apply {
             hint = tr("ابحث عن الألعاب والمقالات...")
             textSize = 14f
@@ -265,11 +270,11 @@ internal class MainLibraryInterfaceController(
         section.addView(titles, LinearLayout.LayoutParams(0, -2, 1f))
         countText = makeText("0 " + tr("لعبة"), 10f, muted, true)
         section.addView(countText)
-        val sort = TextView(context).apply {
-            text = "⇅"
-            textSize = 19f
-            gravity = Gravity.CENTER
-            setTextColor(silver)
+        val sort = ImageView(context).apply {
+            setImageResource(R.drawable.ic_action_sort)
+            imageTintList = android.content.res.ColorStateList.valueOf(silver)
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
+            setPadding(dp(12), dp(12), dp(12), dp(12))
             background = GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
                 if (isDarkMode()) intArrayOf(Color.argb(210, 21, 62, 101), Color.argb(192, 8, 27, 47))
@@ -298,11 +303,11 @@ internal class MainLibraryInterfaceController(
             }
         }
         section.addView(sort, LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(9) })
-        val advancedFilter = TextView(context).apply {
-            text = "⚙"
-            textSize = 17f
-            gravity = Gravity.CENTER
-            setTextColor(silver)
+        val advancedFilter = ImageView(context).apply {
+            setImageResource(R.drawable.ic_action_filter)
+            imageTintList = android.content.res.ColorStateList.valueOf(silver)
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
+            setPadding(dp(12), dp(12), dp(12), dp(12))
             background = GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
                 if (isDarkMode()) intArrayOf(Color.argb(210, 21, 62, 101), Color.argb(192, 8, 27, 47))
