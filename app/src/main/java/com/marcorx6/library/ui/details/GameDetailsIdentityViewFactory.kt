@@ -117,8 +117,8 @@ internal class GameDetailsIdentityViewFactory(
                         cornerRadius = dp(11).toFloat()
                     }
                 }
-                cell.addView(makeText(item.first, 12f, muted, false).apply {
-                    textDirection = android.view.View.TEXT_DIRECTION_RTL
+                cell.addView(makeText(translate(item.first), 12f, muted, false).apply {
+                    textDirection = android.view.View.TEXT_DIRECTION_FIRST_STRONG
                     gravity = android.view.Gravity.START
                     includeFontPadding = true
                 }, LinearLayout.LayoutParams(-1, -2))

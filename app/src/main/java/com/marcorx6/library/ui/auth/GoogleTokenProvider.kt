@@ -7,15 +7,16 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 /** Owns OAuth token retrieval; Drive access is bound to the verified admin session. */
 internal class GoogleTokenProvider(
     context: Context,
-    private val adminSessionState: AdminSessionState
+    private val adminSessionState: AdminSessionState,
+    private val translate: (String) -> String
 ) {
     private val appContext = context.applicationContext
 
     fun bloggerToken(): String {
         val account = GoogleSignIn.getLastSignedInAccount(appContext)
-            ?: throw IllegalStateException("يرجى تسجيل الدخول بحساب Google")
+            ?: throw IllegalStateException(translate("يرجى تسجيل الدخول بحساب Google"))
         val androidAccount = account.account
-            ?: throw IllegalStateException("بيانات حساب Google غير متاحة")
+            ?: throw IllegalStateException(translate("بيانات حساب Google غير متاحة"))
         return GoogleAuthUtil.getToken(
             appContext,
             androidAccount,
@@ -25,9 +26,9 @@ internal class GoogleTokenProvider(
 
     fun driveToken(): String {
         val account = GoogleSignIn.getLastSignedInAccount(appContext)
-            ?: throw IllegalStateException("يرجى تسجيل الدخول بحساب المسؤول")
+            ?: throw IllegalStateException(translate("يرجى تسجيل الدخول بحساب المسؤول"))
         if (!adminSessionState.isAuthorized(account.id)) {
-            throw SecurityException("يلزم التحقق من صلاحيات Blogger قبل رفع الأغلفة")
+            throw SecurityException(translate("يلزم التحقق من صلاحيات Blogger قبل رفع الأغلفة"))
         }
         val androidAccount = account.account
             ?: throw IllegalStateException("بيانات حساب Google غير متاحة")

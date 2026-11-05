@@ -10,8 +10,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 /**
  * Owns Google account/session operations and the Blogger service composition that depends on them.
  */
-internal class GoogleAccountRuntimeFeature(private val context: Context) {
-    private val googleAdminFeature = GoogleAdminFeature(context)
+internal class GoogleAccountRuntimeFeature(private val context: Context, translate: (String) -> String) {
+    private val googleAdminFeature = GoogleAdminFeature(context, translate)
 
     val tokenProvider get() = googleAdminFeature.tokenProvider
 

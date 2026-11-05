@@ -4,11 +4,11 @@ import android.content.Context
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 
 /** Single feature boundary for Google account operations, verified admin session, and OAuth tokens. */
-internal class GoogleAdminFeature(private val context: Context) {
+internal class GoogleAdminFeature(private val context: Context, translate: (String) -> String) {
     private val sessionState = AdminSessionState()
 
     val accountController = GoogleAccountController(context)
-    val tokenProvider = GoogleTokenProvider(context, sessionState)
+    val tokenProvider = GoogleTokenProvider(context, sessionState, translate)
 
     var blogId: String
         get() = sessionState.blogId()

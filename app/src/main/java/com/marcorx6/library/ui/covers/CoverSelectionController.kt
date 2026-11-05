@@ -51,7 +51,7 @@ internal class CoverSelectionController(
             },
             onFailure = { error ->
                 state.uploadFailed()
-                val details = (error.message ?: error.javaClass.simpleName).ifBlank { translate("خطأ غير معروف") }
+                val details = error.message?.takeIf { it.isNotBlank() }?.let(translate) ?: translate("خطأ غير معروف")
                 val detailsView = TextView(context).apply {
                     text = details
                     setTextIsSelectable(true)

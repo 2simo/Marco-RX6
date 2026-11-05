@@ -175,7 +175,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private val googleAccountRuntimeFeature: GoogleAccountRuntimeFeature by lazy {
-        GoogleAccountRuntimeFeature(applicationContext)
+        GoogleAccountRuntimeFeature(applicationContext, ::tr)
     }
     private val gameDataRuntimeFeature: GameDataRuntimeFeature by lazy { GameDataRuntimeFeature(this) }
     private val userExperienceRuntimeFeature: UserExperienceRuntimeFeature by lazy {
