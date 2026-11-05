@@ -87,7 +87,7 @@ internal class GameDetailsIdentityViewFactory(
                     setStroke(dp(1), if (dark) Color.rgb(57, 83, 112) else Color.rgb(213, 226, 241))
                 }
             }
-            infoCard.addView(makeText("معلومات اللعبة", 16f, white(), true).apply {
+            infoCard.addView(makeText("معلومات اللعبة", 16f, primary, true).apply {
                 setPadding(0, 0, 0, dp(10))
             })
             details.chunked(2).forEach { pair ->
@@ -133,9 +133,9 @@ internal class GameDetailsIdentityViewFactory(
     private fun extractGameDetails(html: String): List<Pair<String, String>> {
         if (html.isBlank()) return emptyList()
         val normalizedHtml = html
-            .replace(Regex("(?i)<br\\s*/?>"), "\\n")
-            .replace(Regex("(?i)</(p|div|li|tr|h[1-6]|blockquote)\\s*>"), "\\n")
-            .replace(Regex("(?i)<li\\b[^>]*>"), "\\n")
+            .replace(Regex("(?i)<br\\s*/?>"), "\n")
+            .replace(Regex("(?i)</(p|div|li|tr|h[1-6]|blockquote)\\s*>"), "\n")
+            .replace(Regex("(?i)<li\\b[^>]*>"), "\n")
         val plain = Html.fromHtml(normalizedHtml, Html.FROM_HTML_MODE_LEGACY).toString()
             .replace('\u00a0', ' ')
             .replace(Regex("[ \\t]+"), " ")
