@@ -25,6 +25,8 @@ internal class AppearanceRuntimeFeature(
     private val gray: () -> Int,
     private val accentForeground: () -> Int,
     private val showNotifications: () -> Unit,
+    private val adminSessionConnected: () -> Boolean,
+    private val onAdminSessionAction: () -> Unit,
     private val recreateActivity: () -> Unit,
     private val recreateInterface: () -> Unit,
     private val setContentView: (View) -> Unit,
