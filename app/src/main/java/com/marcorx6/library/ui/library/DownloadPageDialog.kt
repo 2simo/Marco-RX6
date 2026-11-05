@@ -220,9 +220,18 @@ internal class DownloadPageDialog(
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, false)
         val adPreferences = activity.getSharedPreferences("app_settings", Activity.MODE_PRIVATE)
-        val adBlockerEnabled = adPreferences.getBoolean("download_page_ad_blocker", true)
+        var adBlockerEnabled = adPreferences.getBoolean("download_page_ad_blocker", true)
         val allowedHosts = adPreferences.getString("download_page_ad_allowlist", "").orEmpty()
             .split(',', ';').map { it.trim().lowercase() }.filter { it.isNotBlank() }.toSet()
+        lateinit var adToggle: TextView
+        adToggle = toolbarAction(if (adBlockerEnabled) "حجب ✓" else "حجب ×") {
+            adBlockerEnabled = !adBlockerEnabled
+            adPreferences.edit().putBoolean("download_page_ad_blocker", adBlockerEnabled).apply()
+            adToggle.text = if (adBlockerEnabled) "حجب ✓" else "حجب ×"
+            blockedStats.text = translate(if (adBlockerEnabled) "تم تفعيل حجب الإعلانات" else "تم إيقاف حجب الإعلانات")
+            webView.reload()
+        }
+        toolbar.addView(adToggle)
         val blockedRequests = AtomicInteger(0)
         val blockedAdHosts = setOf(
             "doubleclick.net", "googlesyndication.com", "googleadservices.com",
