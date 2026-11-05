@@ -86,7 +86,13 @@ internal class GameArticleWebViewFactory(
             // section from the article. Its values are already shown in the new card.
             // Stop at the next heading (normally the download-links heading), which is
             // handled separately below and must not consume the introduction.
-            val withoutGameMetadata = raw
+            // Rebrand the legacy Blogger introduction for the app experience.
+            // Blogger remains the content host; users should see MARCO RX6 as the product.
+            val appBrandedRaw = raw.replace(
+                "أهلاً بكم متابعي مدونة MARCO_RX6 الكرام. إليكم لعبة جديدة من إضافاتنا الحصرية بروابط مباشرة وسريعة.",
+                "أهلاً بمستخدمي تطبيق MARCO RX6 الكرام، إليكم لعبة جديدة من إضافاتنا الحصرية بروابط مباشرة وسريعة."
+            )
+            val withoutGameMetadata = appBrandedRaw
                 .replace(
                     Regex("(?is)<h([1-6])\\b[^>]*>\\s*(?:معلومات\\s*اللعبة|game\\s*information)\\s*:?\\s*</h\\1>.*?(?=<h[1-6]\\b[^>]*>|$)"),
                     ""
