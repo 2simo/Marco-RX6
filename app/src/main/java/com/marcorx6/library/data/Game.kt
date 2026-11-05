@@ -14,7 +14,6 @@ data class Game(
     val isFavorite: Boolean = false,
     val bloggerPostId: String = "",
     val bloggerHtml: String = "",
-    val playStatus: String = "",
     val genre: String = "",
     val releaseYear: String = ""
 )
