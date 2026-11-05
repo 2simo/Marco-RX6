@@ -103,7 +103,6 @@ internal class DownloadPageDialog(
         toolbar.addView(toolbarAction("↻") {
             val currentUrl = SecureUrlPolicy.toHttpsUrl(webView.url ?: safeStartUrl)
             if (currentUrl != null) {
-                status.text = translate("جارٍ تحديث الصفحة…")
                 webView.stopLoading()
                 webView.loadUrl(currentUrl)
             } else {
