@@ -70,12 +70,9 @@ class MainActivity : ComponentActivity() {
             activity = this,
             authRepository = firebaseAuthRepository,
             onAccountChanged = {
+                // Keep anonymous visitor sessions available, but never manufacture a
+                // local nickname or photo for a visitor or overwrite Firebase identity.
                 firebaseSessionCoordinator.ensureGuestSession()
-                if (firebaseAuthRepository.currentUser != null) {
-                    val localNickname = getSharedPreferences("user_profile", MODE_PRIVATE)
-                        .getString("nickname", "Player") ?: "Player"
-                    saveFirebaseProfile(localNickname)
-                }
                 createInterface()
             },
             launchGoogleSignIn = { intent -> activityResultRuntimeFeature.launchFirebaseGoogleSignIn(intent) },
