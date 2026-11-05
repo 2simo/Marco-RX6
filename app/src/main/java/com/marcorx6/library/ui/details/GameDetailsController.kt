@@ -98,10 +98,9 @@ internal class GameDetailsController(
             content.addView(buttons, LinearLayout.LayoutParams(-1, -2))
         }
 
-        // Give the embedded article a bounded viewport so the surrounding page
-        // remains scrollable instead of allowing the WebView to consume the
-        // entire screen height during measurement.
-        content.addView(articleWebView, LinearLayout.LayoutParams(-1, dp(520)))
+        // Start collapsed; GameArticleWebViewFactory measures the rendered HTML
+        // and expands this view to the actual article height after page load.
+        content.addView(articleWebView, LinearLayout.LayoutParams(-1, dp(1)))
 
         similarGamesViewFactory.create(game, games()) { item ->
             reader.dismiss()
