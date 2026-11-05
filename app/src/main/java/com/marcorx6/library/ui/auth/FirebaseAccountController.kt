@@ -173,6 +173,10 @@ internal class FirebaseAccountController(
      * This client uses separate scopes/options from Firebase Google sign-in, so the Firebase
      * account session remains untouched. Google signOut clears the app selection, not device accounts.
      */
+    fun connectAdminAccount() {
+        startAdminGoogleAccountSelection()
+    }
+
     private fun startAdminGoogleAccountSelection() {
         val adminClient = com.marcorx6.library.ui.GoogleSignInFactory.create(activity)
         adminClient.signOut().addOnCompleteListener {
