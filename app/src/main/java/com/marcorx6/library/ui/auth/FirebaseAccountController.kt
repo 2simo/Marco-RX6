@@ -179,11 +179,11 @@ internal class FirebaseAccountController(
                         show()
                     }.addOnFailureListener { error ->
                         button.isEnabled = true
-                        toast(error.localizedMessage ?: "تعذر حفظ الملف الشخصي في السحابة")
+                        toast("تعذر حفظ الملف الشخصي في السحابة")
                     }
                 }.addOnFailureListener { error ->
                     button.isEnabled = true
-                    toast(error.localizedMessage ?: "تعذر تحديث اسم الحساب")
+                    toast("تعذر تحديث اسم الحساب")
                 }
             }
             saveButton.isEnabled = false
@@ -212,7 +212,7 @@ internal class FirebaseAccountController(
                     saveButton.isEnabled = true
                 }
                 .addOnFailureListener { error ->
-                    toast(error.localizedMessage ?: "تعذر تحميل الملف الشخصي")
+                    toast("تعذر تحميل الملف الشخصي")
                 }
 
             user.email?.let { email ->
@@ -267,10 +267,10 @@ internal class FirebaseAccountController(
                 toast("تم تحديث صورة الحساب")
                 show()
             }.addOnFailureListener { error ->
-                toast(error.localizedMessage ?: "تعذر حفظ صورة الحساب")
+                toast("تعذر حفظ صورة الحساب")
             }
         } catch (error: Exception) {
-            toast(error.localizedMessage ?: "تعذرت قراءة الصورة المختارة")
+            toast("تعذرت قراءة الصورة المختارة")
         }
     }
 
@@ -754,7 +754,7 @@ internal class FirebaseAccountController(
                     }
                     .addOnFailureListener { error ->
                         dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true
-                        toast(error.localizedMessage ?: "فشل التحقق من كلمة المرور")
+                        toast("فشل التحقق من كلمة المرور")
                     }
             }
         }
@@ -798,11 +798,11 @@ internal class FirebaseAccountController(
                         toast("تم حذف حساب MARCO RX6 وبياناته السحابية بنجاح")
                     }
                     .addOnFailureListener { error ->
-                        toast(error.localizedMessage ?: "تم حذف بيانات الحساب، لكن تعذر حذف حساب الدخول. تواصل مع الدعم.")
+                        toast("تم حذف بيانات الحساب، لكن تعذر حذف حساب الدخول. تواصل مع الدعم.")
                     }
             }
             .addOnFailureListener { error ->
-                toast(error.localizedMessage ?: "تعذر حذف بيانات الحساب؛ لم يتم حذف حساب الدخول")
+                toast("تعذر حذف بيانات الحساب؛ لم يتم حذف حساب الدخول")
             }
     }
 
@@ -823,7 +823,7 @@ internal class FirebaseAccountController(
             "ERROR_NETWORK_REQUEST_FAILED" -> "تحقق من اتصال الإنترنت وحاول مرة أخرى"
             "ERROR_TOO_MANY_REQUESTS" -> "محاولات كثيرة؛ انتظر قليلاً ثم أعد المحاولة"
             "ERROR_OPERATION_NOT_ALLOWED" -> "طريقة الدخول هذه غير مفعّلة حالياً"
-            else -> error.localizedMessage?.takeIf { it.isNotBlank() } ?: fallback
+            else -> fallback
         }
     }
 
