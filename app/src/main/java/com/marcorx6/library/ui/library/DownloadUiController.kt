@@ -131,7 +131,7 @@ internal class DownloadUiController(
             setPadding(0, dp(7), 0, dp(18))
         })
         val list = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
-        data class ProgressViews(
+        class ProgressViews(
             val status: TextView,
             val details: TextView,
             val progress: android.widget.ProgressBar
