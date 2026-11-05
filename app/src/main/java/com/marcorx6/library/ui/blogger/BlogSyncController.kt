@@ -15,15 +15,16 @@ internal class BlogSyncController(
     private val merge: (List<Game>) -> Pair<Int, Int>,
     private val setBlogId: (String) -> Unit,
     private val refreshAccess: () -> Unit,
-    private val renderGames: () -> Unit
+    private val renderGames: () -> Unit,
+    private val translate: (String) -> String
 ) {
     fun sync(showResult: Boolean) {
         if (isSyncing()) {
-            if (showResult) Toast.makeText(context, "المزامنة جارية بالفعل", Toast.LENGTH_SHORT).show()
+            if (showResult) Toast.makeText(context, translate("المزامنة جارية بالفعل"), Toast.LENGTH_SHORT).show()
             return
         }
         setSyncing(true)
-        if (showResult) Toast.makeText(context, "جارٍ الاتصال بمدونة MARCO RX6...", Toast.LENGTH_SHORT).show()
+        if (showResult) Toast.makeText(context, translate("جارٍ الاتصال بمدونة MARCO RX6..."), Toast.LENGTH_SHORT).show()
         executor.execute {
             try {
                 val (blogId, importedGames) = fetch()
@@ -36,7 +37,7 @@ internal class BlogSyncController(
                     if (showResult) {
                         Toast.makeText(
                             context,
-                            "اكتملت المزامنة: تمت إضافة ${result.first} وتحديث ${result.second}",
+                            "${translate("اكتملت المزامنة")}: ${translate("تمت إضافة")} ${result.first} ${translate("وتحديث")} ${result.second}",
                             Toast.LENGTH_LONG
                         ).show()
                     }
@@ -47,7 +48,7 @@ internal class BlogSyncController(
                     if (showResult) {
                         Toast.makeText(
                             context,
-                            "تعذرت المزامنة. تحقق من اتصال الإنترنت وحاول مجدداً.",
+                            translate("تعذرت المزامنة. تحقق من اتصال الإنترنت وحاول مجدداً."),
                             Toast.LENGTH_LONG
                         ).show()
                     }
