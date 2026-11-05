@@ -166,7 +166,8 @@ internal class GameLibraryRenderer(
                             maxLines = 2; minLines = 2; ellipsize = android.text.TextUtils.TruncateAt.END
                             gravity = Gravity.CENTER_VERTICAL; setPadding(dp(4), dp(7), dp(4), dp(2))
                         })
-                        val meta = listOf(game.platform, game.releaseYear).filter { it.isNotBlank() }.joinToString(" • ")
+                        val meta = listOf(game.genre, game.releaseYear)
+                            .map { it.trim() }.filter { it.isNotBlank() }.joinToString(" • ")
                         card.addView(makeText(meta, 9f, red, true).apply {
                             maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END; setPadding(dp(4), 0, dp(4), dp(2))
                         })
