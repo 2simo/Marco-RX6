@@ -1,6 +1,8 @@
 package com.marcorx6.library.ui
 
 import android.app.Activity
+import android.app.AlertDialog
+import android.widget.EditText
 import android.content.SharedPreferences
 import android.view.View
 import android.widget.Toast
@@ -213,6 +215,33 @@ internal class AppearanceSettingsController(
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         root.addView(settingRow(translate("اللغة"), translate("العربية والإنجليزية والفرنسية والإسبانية"), showLanguagePicker),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
+        root.addView(settingRow(
+            translate("استثناء مواقع من حجب الإعلانات"),
+            translate("أضف النطاقات المسموح بها مفصولة بفاصلة، مثلاً example.com"),
+        ) {
+            val input = EditText(activity).apply {
+                setSingleLine(false)
+                minLines = 2
+                setText(preferences.getString("download_page_ad_allowlist", "").orEmpty())
+                hint = "example.com, files.example.org"
+                setPadding(dp(14), dp(12), dp(14), dp(12))
+            }
+            AlertDialog.Builder(activity)
+                .setTitle(translate("المواقع المستثناة"))
+                .setMessage(translate("لن يتم حجب الإعلانات أو الموارد من هذه النطاقات داخل صفحة التحميل."))
+                .setView(input)
+                .setNegativeButton(translate("إلغاء"), null)
+                .setPositiveButton(translate("حفظ")) { _, _ ->
+                    val domains = input.text.toString().split(',', ';', '\\n')
+                        .map { it.trim().lowercase() }
+                        .filter { it.matches(Regex("[a-z0-9.-]+")) && !it.startsWith(".") && !it.endsWith(".") }
+                        .distinct()
+                    preferences.edit().putString("download_page_ad_allowlist", domains.joinToString(",")).apply()
+                    Toast.makeText(activity, translate("تم حفظ استثناءات المواقع"), Toast.LENGTH_SHORT).show()
+                    show()
+                }
+                .show()
+        }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         root.addView(settingRow(translate("الإشعارات"), translate("التحكم في تنبيهات المقالات الجديدة"), showNotificationSettings),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         root.addView(settingRow(
