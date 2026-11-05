@@ -35,7 +35,7 @@ internal class GameDetailsController(
         val content = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
         }
-        contentScroll.addView(content, ScrollView.LayoutParams(-1, -2))
+        contentScroll.addView(content, android.widget.FrameLayout.LayoutParams(-1, -2))
         root.addView(contentScroll, LinearLayout.LayoutParams(-1, 0, 1f))
 
         val identity = identityViewFactory.create(game)
