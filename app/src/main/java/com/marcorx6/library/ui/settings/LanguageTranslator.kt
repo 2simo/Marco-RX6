@@ -273,6 +273,8 @@ internal object LanguageTranslator {
             "حسناً" to listOf("OK", "OK", "Aceptar"),
             "لاحقاً" to listOf("Later", "Plus tard", "Más tarde"),
             "التخزين" to listOf("Storage", "Stockage", "Almacenamiento"),
+            "جارٍ الحساب..." to listOf("Calculating...", "Calcul en cours...", "Calculando..."),
+            "جارٍ حساب مساحة الملفات..." to listOf("Calculating file storage usage...", "Calcul de l’espace des fichiers...", "Calculando el espacio de archivos..."),
             "ذاكرة التخزين المؤقت" to listOf("Cache", "Cache", "Caché"),
             "مسح الملفات المؤقتة؟" to listOf("Clear temporary files?", "Effacer les fichiers temporaires ?", "¿Borrar archivos temporales?"),
             "سيتم حذف الملفات المؤقتة فقط. لن يتم حذف الألعاب أو المفضلة أو التنزيلات أو الحسابات أو أغلفة الألعاب المحفوظة." to listOf("Only temporary files will be deleted. Games, favorites, downloads, accounts, and saved game covers will not be deleted.", "Seuls les fichiers temporaires seront supprimés. Les jeux, favoris, téléchargements, comptes et jaquettes enregistrées ne seront pas supprimés.", "Solo se eliminarán los archivos temporales. No se borrarán los juegos, favoritos, descargas, cuentas ni carátulas guardadas."),
