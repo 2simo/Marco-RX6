@@ -35,6 +35,24 @@ internal class GameArticleWebViewFactory(
             settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW
             settings.mediaPlaybackRequiresUserGesture = true
             webViewClient = object : WebViewClient() {
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    super.onPageFinished(view, url)
+                    // The details screen owns the vertical scroll. Resize the WebView
+                    // to its rendered article height instead of reserving a fixed
+                    // 520dp viewport when the article contains only a short intro.
+                    view?.post {
+                        val articleView = view
+                        val renderedHeight = (articleView.contentHeight * articleView.scale).toInt()
+                        val minimumHeight = (96 * activity.resources.displayMetrics.density).toInt()
+                        val targetHeight = renderedHeight.coerceAtLeast(minimumHeight)
+                        val params = articleView.layoutParams
+                        if (params != null && params.height != targetHeight) {
+                            params.height = targetHeight
+                            articleView.layoutParams = params
+                        }
+                    }
+                }
+
                 override fun shouldOverrideUrlLoading(view: WebView?, request: android.webkit.WebResourceRequest?): Boolean {
                     val target = request?.url?.toString().orEmpty()
                     if (target.startsWith("https://", ignoreCase = true)) onDownload(target, null, null, null, gameUrl)
