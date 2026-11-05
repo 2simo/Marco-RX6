@@ -79,6 +79,12 @@ internal class ResumableDownloadWorker(
             if (!connection.url.protocol.equals("https", true)) {
                 throw SecurityException("Download redirect did not use HTTPS")
             }
+            if (code == HttpURLConnection.HTTP_REQUESTED_RANGE_NOT_SATISFIABLE && offset > 0L) {
+                // A stale partial file can point beyond the server's current entity size.
+                // Discard it and retry once from byte zero instead of marking resume as failed.
+                partial.delete()
+                throw IOException("Server rejected the resume range; restarting from the beginning")
+            }
             if (code == 408 || code == 429 || code in 500..599) throw IOException("Temporary server error: HTTP $code")
             if (code !in 200..299) throw IllegalStateException("HTTP $code")
             val append = offset > 0L && code == HttpURLConnection.HTTP_PARTIAL
