@@ -7,7 +7,6 @@ import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.Drawable
 import android.view.Gravity
 import android.view.View
-import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.TextView
 import org.json.JSONArray
@@ -38,7 +37,7 @@ internal class GameDownloadLinksViewFactory(
                 match.groupValues[2], android.text.Html.FROM_HTML_MODE_LEGACY
             ).toString().replace(Regex("\\s+"), " ").trim()
             val normalizedLabel = label.lowercase()
-            if (!href.startsWith("https://", ignoreCase = true) ||
+            if (!(href.startsWith("https://", ignoreCase = true) || href.startsWith("http://", ignoreCase = true)) ||
                 href == "#" || href.endsWith("/#") || label.isBlank() ||
                 normalizedLabel.contains("ضع رابط") ||
                 normalizedLabel.contains("ضع الرابط") ||
@@ -72,7 +71,7 @@ internal class GameDownloadLinksViewFactory(
         for (index in 0 until downloads.length()) {
             val item = downloads.optJSONObject(index) ?: continue
             val target = item.optString("url").trim()
-            if (!target.startsWith("https://", ignoreCase = true)) continue
+            if (!(target.startsWith("https://", ignoreCase = true) || target.startsWith("http://", ignoreCase = true))) continue
             val label = item.optString("label").ifBlank { "${translate("تحميل")} ${index + 1}" }
             downloadRow.addView(TextView(activity).apply {
                 text = "⬇  $label"
