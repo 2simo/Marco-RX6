@@ -238,7 +238,7 @@ internal class StorageSettingsController(
                 if (activity.isFinishing || activity.isDestroyed) return@runOnUiThread
                 total.text = formatBytes(totalSize)
                 details.text = translate("الملفات المحفوظة") + ": " + formatBytes(filesSize) +
-                    "\\n" + translate("الملفات الخارجية") + ": " + formatBytes(externalSize)
+                    "\n" + translate("الملفات الخارجية") + ": " + formatBytes(externalSize)
                 cacheValue.text = formatBytes(cacheSize) + "  •  " +
                     translate("يمكن حذفها بأمان عند الحاجة")
             }
