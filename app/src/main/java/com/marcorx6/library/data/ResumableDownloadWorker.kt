@@ -14,6 +14,7 @@ import androidx.work.WorkerParameters
 import com.marcorx6.library.R
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -30,11 +31,15 @@ internal class ResumableDownloadWorker(
         if (item.status == DownloadManager.STATUS_PAUSED) return Result.success()
         return try {
             setForeground(createForegroundInfo(item.title))
+            database.status(id, DownloadManager.STATUS_RUNNING)
             download(item, database)
         } catch (error: Exception) {
             val latest = database.get(id)
             if (isStopped || latest?.status == DownloadManager.STATUS_PAUSED) {
                 Result.success()
+            } else if (error is IOException) {
+                database.status(id, DownloadManager.STATUS_PENDING, error.message ?: "Network interrupted")
+                Result.retry()
             } else {
                 database.status(id, DownloadManager.STATUS_FAILED, error.message ?: "Download failed")
                 Result.failure()
@@ -73,6 +78,7 @@ internal class ResumableDownloadWorker(
             if (!connection.url.protocol.equals("https", true)) {
                 throw SecurityException("Download redirect did not use HTTPS")
             }
+            if (code == 408 || code == 429 || code in 500..599) throw IOException("Temporary server error: HTTP $code")
             if (code !in 200..299) throw IllegalStateException("HTTP $code")
             val append = offset > 0L && code == HttpURLConnection.HTTP_PARTIAL
             if (offset > 0L && !append) {
