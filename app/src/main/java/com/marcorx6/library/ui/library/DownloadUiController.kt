@@ -141,7 +141,6 @@ internal class DownloadUiController(
             addView(list, LinearLayout.LayoutParams(-1, -2))
         }
         fun render() {
-            list.removeAllViews()
             val entries = try { downloadRepository.getDownloads() } catch (error: Exception) {
                 Toast.makeText(activity, translate("تعذر قراءة التنزيلات") + ": ${error.message}", Toast.LENGTH_LONG).show()
                 emptyList()
@@ -153,6 +152,9 @@ internal class DownloadUiController(
             }
             if (snapshot == lastRenderedSnapshot) return
             lastRenderedSnapshot = snapshot
+            // Only detach/rebuild rows after detecting a real visible change.
+            // Clearing first made the list disappear on every 900 ms poll.
+            list.removeAllViews()
             if (entries.isEmpty()) {
                 val empty = LinearLayout(activity).apply {
                     orientation = LinearLayout.VERTICAL
