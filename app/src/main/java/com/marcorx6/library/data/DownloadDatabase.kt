@@ -77,6 +77,11 @@ internal class DownloadDatabase private constructor(context: Context) :
     }
 
     @Synchronized
+    fun renameTitle(id: Long, title: String) {
+        writableDatabase.update("downloads", ContentValues().apply { put("title", title) }, "id=?", arrayOf(id.toString()))
+    }
+
+    @Synchronized
     fun progress(id: Long, downloaded: Long, total: Long, etag: String, modified: String) {
         writableDatabase.update("downloads", ContentValues().apply {
             put("downloaded", downloaded); put("total", total)
