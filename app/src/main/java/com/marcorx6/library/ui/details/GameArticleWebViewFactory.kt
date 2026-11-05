@@ -109,18 +109,22 @@ internal class GameArticleWebViewFactory(
                     ""
                 )
             val metadataAliases = "(?:الحجم|حجم|size|النسخة|version|title\\s*id|cusa|الصيغة|format|اللغة|languages?|كلمة\\s*السر|كلمه\\s*السر|password|pass|الحقوق|credits|rights)"
-            // Blogger posts do not all use the same markup. Remove individual metadata
-            // rows from paragraph/table/list markup as well as plain leaf DIV rows.
-            // Keep the surrounding article and download sections intact.
-            val articleWithoutMetadataRows = articleWithoutIntro
-                .replace(
-                    Regex("(?is)<(p|li|tr|dd|dt)\\b[^>]*>\\s*(?:<[^>]+>\\s*)*${metadataAliases}\\s*[:：-].*?</\\1\\s*>"),
-                    ""
-                )
-                .replace(
-                    Regex("(?is)<div\\b[^>]*>(?:(?!<div\\b).)*?${metadataAliases}\\s*[:：-].*?</div\\s*>"),
-                    ""
-                )
+            val metadataLabel = Regex("(?i)^\\s*${metadataAliases}\\b")
+            fun stripMetadataRows(source: String, tagPattern: Regex): String = tagPattern.replace(source) { match ->
+                val text = android.text.Html.fromHtml(
+                    match.groupValues[2], android.text.Html.FROM_HTML_MODE_LEGACY
+                ).toString().trim()
+                if (metadataLabel.containsMatchIn(text)) "" else match.value
+            }
+            // Blogger uses several layouts: plain rows, bold labels, and table cells.
+            // Inspect each row as rendered text so formatting tags or missing colons
+            // cannot cause the same metadata to appear again below the native info card.
+            val articleWithoutMetadataRows = stripMetadataRows(
+                articleWithoutIntro,
+                Regex("(?is)<(p|li|tr|dd|dt)\\b[^>]*>(.*?)</\\1\\s*>")
+            ).let { rows ->
+                stripMetadataRows(rows, Regex("(?is)<div\\b[^>]*>((?:(?!<div\\b).)*?)</div\\s*>"))
+            }
             val withoutGameMetadata = articleWithoutMetadataRows
                 .replace(
                     Regex("(?is)<h([1-6])\\b[^>]*>\\s*(?:معلومات\\s*اللعبة|game\\s*information)\\s*:?\\s*</h\\1>.*?(?=<h[1-6]\\b[^>]*>|$)"),
