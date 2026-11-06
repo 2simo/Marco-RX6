@@ -107,6 +107,7 @@ internal class GameLibraryRenderer(
             }
 
             sectionGames.forEach { game ->
+                lateinit var engagementBadge: TextView
                 val card = LinearLayout(activity).apply {
                     orientation = LinearLayout.HORIZONTAL
                     gravity = Gravity.CENTER_VERTICAL
@@ -127,13 +128,12 @@ internal class GameLibraryRenderer(
                     setOnClickListener {
                         recordViewOnce(game) { loadEngagementSummary(game) { views, average, ratings ->
                             activity.runOnUiThread {
-                                engagementBadge.text = "★ ${if (ratings == 0L) "—" else String.format(java.util.Locale.US, "%.1f", average)}   👁 $views"
+                                engagementBadge.text = "★ ${if (ratings == 0L) "—" else String.format(java.util.Locale.US, "%.1f", average)} ($ratings)   •   $views"
                             }
                         } }
                         showDetails(game)
                     }
                 }
-                lateinit var engagementBadge: TextView
                 val imageFrame = FrameLayout(activity).apply {
                     clipToOutline = true
                     background = rounded(bg, 12)
@@ -145,7 +145,7 @@ internal class GameLibraryRenderer(
                 }
                 imageFrame.addView(image, FrameLayout.LayoutParams(-1, -1))
                 engagementBadge = TextView(activity).apply {
-                    text = "★ —   👁 —"
+                    text = "★ —   •   Views —"
                     textSize = 9f
                     setTextColor(Color.WHITE)
                     gravity = Gravity.CENTER
