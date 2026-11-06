@@ -671,6 +671,13 @@ internal object LanguageTranslator {
             "اختر المظهر الذي يريح عينيك أثناء التصفح." to listOf("Choose the appearance that feels comfortable while browsing.", "Choisissez le thème le plus confortable pour vos yeux.", "Elige el tema que resulte más cómodo para tus ojos."),
             "اختر اللون الذي سيظهر في الأزرار والعناصر التفاعلية." to listOf("Choose the color used for buttons and interactive elements.", "Choisissez la couleur des boutons et des éléments interactifs.", "Elige el color de los botones y elementos interactivos."),
             "هل ترغب في تلقي إشعار عند نشر مقالات جديدة في المدونة؟" to listOf("Would you like to be notified when new blog articles are published?", "Souhaitez-vous recevoir une notification lors de la publication de nouveaux articles ?", "¿Quieres recibir avisos cuando se publiquen nuevos artículos?"),
+            "البحث الذكي" to listOf("Smart search", "Recherche intelligente", "Búsqueda inteligente"),
+            "رجوع" to listOf("Back", "Retour", "Volver"),
+            "اكتب اسم اللعبة أو المنصة أو النوع أو السنة..." to listOf("Enter a game, platform, genre, or year...", "Saisissez un jeu, une plateforme, un genre ou une année...", "Escribe un juego, plataforma, género o año..."),
+            "ابدأ بكتابة اسم اللعبة للبحث" to listOf("Start typing a game name to search", "Commencez à saisir le nom d’un jeu", "Empieza a escribir el nombre de un juego"),
+            "جميع الألعاب" to listOf("All games", "Tous les jeux", "Todos los juegos"),
+            "نتيجة" to listOf("results", "résultats", "resultados"),
+            "لم يتم العثور على ألعاب مطابقة" to listOf("No matching games found", "Aucun jeu correspondant trouvé", "No se encontraron juegos coincidentes"),
             "تم إعداد مكتبتك. اختياراتك محفوظة ويمكنك تغييرها لاحقاً من الإعدادات." to listOf("Your library is ready. Your choices are saved and can be changed later in Settings.", "Votre bibliothèque est prête. Vos choix sont enregistrés et modifiables dans les paramètres.", "Tu biblioteca está lista. Tus opciones se han guardado y puedes cambiarlas en Ajustes."),
         )
 
