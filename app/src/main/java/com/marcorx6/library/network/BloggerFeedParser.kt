@@ -110,24 +110,8 @@ internal object BloggerFeedParser {
         return null
     }
 
-    fun normalizePlatform(value: String): String? {
-
-        val s = value.lowercase(Locale.ROOT)
-            .replace(" ", "")
-            .replace("-", "")
-
-        return when {
-            s == "psp" || s.contains("playstationportable") -> "PSP"
-            s == "ps1" || s.contains("playstation1") ||
-                s.contains("playstationone") -> "PS1"
-            s == "ps2" || s.contains("playstation2") -> "PS2"
-            s == "ps3" || s.contains("playstation3") -> "PS3"
-            s == "ps4" || s.contains("playstation4") -> "PS4"
-            s == "3ds" || s == "nintendo3ds" || s.contains("nintendo3ds") -> "3DS"
-            s == "gba" || s == "gameboyadvance" || s.contains("gameboyadvance") -> "GBA"
-            else -> null
-        }
-    }
+    fun normalizePlatform(value: String): String? =
+        com.marcorx6.library.data.GameLibraryManager.normalizePlatform(value)
 
     // Blogger serves the same uploaded image through size-specific URL paths
     // such as /s320/filename.jpg. Use a larger rendition for the app's cover cards.
