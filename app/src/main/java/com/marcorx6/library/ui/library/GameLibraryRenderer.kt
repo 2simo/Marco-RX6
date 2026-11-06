@@ -82,12 +82,22 @@ internal class GameLibraryRenderer(
 
         val sectioned = selected == "ALL" || selected == "BLOG" || selected == "FAVORITES"
         val priority = listOf("PS4", "PS3", "PS2")
+        // Remove invisible bidi/zero-width marks before grouping so visually identical
+        // platform names cannot produce duplicate sections in Arabic locale.
+        fun canonicalPlatform(raw: String): String {
+            val clean = raw
+                .replace(Regex("[\\u200B-\\u200F\\u202A-\\u202E\\u2066-\\u2069]"), "")
+                .trim()
+                .uppercase(Locale.ROOT)
+            return clean.replace(Regex("^PS\\s*([0-9]+)$"), "PS$1")
+        }
+
         val sections = if (sectioned) {
-            val grouped = sorted.groupBy { it.platform.trim().uppercase(Locale.ROOT) }
+            val grouped = sorted.groupBy { canonicalPlatform(it.platform) }
             priority.filter { grouped[it].orEmpty().isNotEmpty() }.map { it to grouped.getValue(it) } +
                 grouped.keys.filter { it !in priority }.sorted().map { it to grouped.getValue(it) }
         } else {
-            val label = sorted.firstOrNull()?.platform?.trim()?.uppercase(Locale.ROOT)
+            val label = sorted.firstOrNull()?.platform?.let(::canonicalPlatform)
                 ?.takeIf { it.isNotBlank() } ?: selected
             listOf(label to sorted)
         }
@@ -96,17 +106,34 @@ internal class GameLibraryRenderer(
             val heading = LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
+                // Isolate Latin platform codes from Arabic text to avoid bidi reordering.
                 layoutDirection = activity.resources.configuration.layoutDirection
-                textDirection = activity.resources.configuration.layoutDirection
                 setPadding(dp(3), dp(15), dp(3), dp(9))
             }
+            val platformTitle = makeText("\\u2066" + platform + "\\u2069", 16f, white, true).apply {
+                textDirection = View.TEXT_DIRECTION_LTR
+                gravity = Gravity.CENTER_VERTICAL
+            }
             heading.addView(
-                makeText(platform, 16f, white, true),
+                platformTitle,
                 LinearLayout.LayoutParams(0, -2, 1f)
             )
-            heading.addView(
-                makeText(sectionGames.size.toString() + " " + tr("لعبة"), 11f, gray, true)
-            )
+            val sectionCount = makeText(
+                "\\u2067" + sectionGames.size + " " + tr("لعبة") + "\\u2069",
+                11f,
+                gray,
+                true
+            ).apply {
+                textDirection = View.TEXT_DIRECTION_RTL
+                gravity = Gravity.CENTER
+                setPadding(dp(10), dp(5), dp(10), dp(5))
+                background = GradientDrawable().apply {
+                    setColor(if (isDarkMode()) Color.argb(105, 52, 111, 170) else Color.argb(115, 210, 232, 255))
+                    cornerRadius = dp(12).toFloat()
+                    setStroke(dp(1), if (isDarkMode()) Color.argb(120, 92, 165, 225) else Color.argb(130, 145, 190, 232))
+                }
+            }
+            heading.addView(sectionCount)
             gameList.addView(heading, LinearLayout.LayoutParams(-1, -2))
 
             val horizontal = HorizontalScrollView(activity).apply {
