@@ -106,11 +106,11 @@ internal class DownloadPageDialog(
                 minWidth = dp(44)
                 minHeight = dp(44)
                 setPadding(dp(5), dp(5), dp(5), dp(5))
-                background = GradientDrawable().apply {
+                setBackground(GradientDrawable().apply {
                     setColor(surface)
                     cornerRadius = dp(13).toFloat()
                     setStroke(dp(1), border)
-                }
+                })
                 if (android.os.Build.VERSION.SDK_INT >= 23) {
                     compoundDrawableTintList = android.content.res.ColorStateList.valueOf(primary)
                     foreground = android.graphics.drawable.RippleDrawable(
