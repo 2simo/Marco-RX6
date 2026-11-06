@@ -46,6 +46,20 @@ internal object GameLibraryManager {
         return GameMergeResult(added, updated)
     }
 
+    /** Maps platform aliases to canonical labels used by sections and filters. */
+    fun normalizePlatform(value: String): String? {
+        val normalized = value.lowercase(Locale.ROOT).replace(Regex("[\\s_-]+"), "")
+        return when {
+            normalized == "psp" || normalized.contains("playstationportable") -> "PSP"
+            normalized == "ps1" || normalized.contains("playstation1") || normalized.contains("playstationone") -> "PS1"
+            normalized == "ps2" || normalized.contains("playstation2") -> "PS2"
+            normalized == "ps3" || normalized.contains("playstation3") -> "PS3"
+            normalized == "ps4" || normalized.contains("playstation4") -> "PS4"
+            normalized == "3ds" || normalized.contains("nintendo3ds") -> "3DS"
+            normalized == "gba" || normalized.contains("gameboyadvance") -> "GBA"
+            else -> null
+        }
+    }
     fun filterAndSort(
         games: List<Game>,
         category: String,
@@ -60,7 +74,11 @@ internal object GameLibraryManager {
                 "ALL" -> true
                 "FAVORITES" -> item.isFavorite
                 "BLOG" -> item.blogImported
-                else -> item.platform.trim().equals(category.trim(), ignoreCase = true)
+                else -> {
+                    val itemPlatform = normalizePlatform(item.platform) ?: item.platform.trim()
+                    val selectedPlatform = normalizePlatform(category) ?: category.trim()
+                    itemPlatform.equals(selectedPlatform, ignoreCase = true)
+                }
             }
             val searchMatch = normalizedQuery.isBlank() ||
                 item.name.contains(normalizedQuery, ignoreCase = true) ||
