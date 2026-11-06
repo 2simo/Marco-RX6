@@ -33,15 +33,15 @@ internal class AppearanceSettingsController(
     fun show() {
         fun dp(value: Int) = (value * activity.resources.displayMetrics.density).toInt()
         val dark = preferences.getBoolean("dark_mode", true)
-        val bg = if (dark) Color.rgb(7, 17, 31) else Color.rgb(242, 247, 253)
+        val bg = if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247)
         val blue = Color.rgb(190, 198, 210)
-        val ink = if (dark) Color.WHITE else Color.rgb(22, 43, 65)
-        val muted = if (dark) Color.rgb(164, 184, 207) else Color.rgb(91, 112, 137)
+        val ink = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
+        val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
         fun addGlassTouch(view: View) {
             if (android.os.Build.VERSION.SDK_INT >= 23) {
                 view.foreground = android.graphics.drawable.RippleDrawable(
                     android.content.res.ColorStateList.valueOf(
-                        if (dark) Color.argb(82, 76, 169, 255) else Color.argb(55, 35, 126, 224)
+                        if (dark) Color.argb(72, 190, 198, 210) else Color.argb(55, 130, 138, 151)
                     ),
                     null,
                     android.graphics.drawable.ColorDrawable(Color.WHITE)
@@ -94,9 +94,9 @@ internal class AppearanceSettingsController(
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(16), dp(16), dp(16))
             background = GradientDrawable().apply {
-                setColors(if (dark) intArrayOf(Color.argb(222, 23, 68, 110), Color.argb(208, 8, 27, 47)) else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(216, 224, 240, 255)))
+                setColors(if (dark) intArrayOf(Color.argb(225, 35, 38, 45), Color.argb(215, 15, 17, 22)) else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(216, 222, 226, 232)))
                 cornerRadius = dp(20).toFloat()
-                setStroke(dp(1), if (dark) Color.argb(165, 80, 151, 215) else Color.argb(175, 153, 195, 236))
+                setStroke(dp(1), if (dark) Color.argb(165, 130, 138, 151) else Color.argb(175, 160, 168, 181))
             }
         }
         colorCard.addView(TextView(activity).apply {
@@ -106,13 +106,13 @@ internal class AppearanceSettingsController(
             setTextColor(ink)
         })
         colorCard.addView(TextView(activity).apply {
-            text = translate("أزرق كهربائي  •  اللون الرسمي للتطبيق")
+            text = translate("فضي معدني  •  اللون الرسمي للتطبيق")
             textSize = 12f
             setTextColor(muted)
             setPadding(0, dp(8), 0, dp(12))
         })
         colorCard.addView(TextView(activity).apply {
-            text = translate("●   أزرق")
+            text = translate("●   فضي")
             textSize = 14f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(Color.WHITE)
@@ -127,9 +127,9 @@ internal class AppearanceSettingsController(
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(16), dp(16), dp(16))
             background = GradientDrawable().apply {
-                setColors(if (dark) intArrayOf(Color.argb(222, 23, 68, 110), Color.argb(208, 8, 27, 47)) else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(216, 224, 240, 255)))
+                setColors(if (dark) intArrayOf(Color.argb(225, 35, 38, 45), Color.argb(215, 15, 17, 22)) else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(216, 222, 226, 232)))
                 cornerRadius = dp(20).toFloat()
-                setStroke(dp(1), if (dark) Color.argb(165, 80, 151, 215) else Color.argb(175, 153, 195, 236))
+                setStroke(dp(1), if (dark) Color.argb(165, 130, 138, 151) else Color.argb(175, 160, 168, 181))
             }
         }
         animations.addView(TextView(activity).apply {
@@ -180,9 +180,9 @@ internal class AppearanceSettingsController(
                 orientation = LinearLayout.VERTICAL
                 setPadding(dp(16), dp(14), dp(16), dp(14))
                 background = GradientDrawable().apply {
-                    setColors(if (dark) intArrayOf(Color.argb(220, 21, 63, 102), Color.argb(207, 8, 27, 47)) else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(216, 224, 240, 255)))
+                    setColors(if (dark) intArrayOf(Color.argb(220, 21, 63, 102), Color.argb(207, 8, 27, 47)) else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(216, 222, 226, 232)))
                     cornerRadius = dp(18).toFloat()
-                    setStroke(dp(1), if (dark) Color.argb(165, 80, 151, 215) else Color.argb(175, 153, 195, 236))
+                    setStroke(dp(1), if (dark) Color.argb(165, 130, 138, 151) else Color.argb(175, 160, 168, 181))
                 }
                 isClickable = true
                 isFocusable = true
@@ -293,7 +293,7 @@ internal class AppearanceSettingsController(
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
 
         root.addView(TextView(activity).apply {
-            text = "MARCO RX6  •  BLUE EXPERIENCE"
+            text = "MARCO RX6  •  SILVER EXPERIENCE"
             textSize = 9f
             gravity = Gravity.CENTER
             setTextColor(muted)
