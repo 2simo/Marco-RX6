@@ -17,6 +17,7 @@ internal class GameDetailsController(
     private val topBarFactory: GameDetailsTopBarFactory,
     private val identityViewFactory: GameDetailsIdentityViewFactory,
     private val ratingViewFactory: GameRatingViewFactory,
+    private val recordViewOnce: (Game) -> Unit,
     private val similarGamesViewFactory: GameSimilarGamesViewFactory,
     private val downloadLinksViewFactory: GameDownloadLinksViewFactory,
     private val isAdmin: () -> Boolean,
@@ -27,6 +28,7 @@ internal class GameDetailsController(
     private val translate: (String) -> String
 ) {
     fun show(game: Game) {
+        recordViewOnce(game)
         val reader = android.app.Dialog(activity)
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
