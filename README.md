@@ -1,6 +1,6 @@
 # MARCO RX6 — 8.16
 
-[العربية](#marco-rx6-بالعربية) | [English](#marco-rx6-english)
+[العربية](#العربية) | [English](#english)
 
 تطبيق أندرويد لإدارة وتصفح مكتبة ألعاب **PS2 وPS3 وPS4**، مع مزامنة المحتوى من مدونة MARCO RX6 على Blogger.
 
@@ -80,7 +80,7 @@ gradle --no-daemon assembleDebug
 
 ---
 
-# MARCO RX6 (English) {#marco-rx6-english}
+# English
 
 An Android app for browsing and managing a **PS2, PS3, and PS4** game library, synchronized with the MARCO RX6 Blogger site.
 
