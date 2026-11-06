@@ -61,24 +61,16 @@ service cloud.firestore {
       // No other nested collections/documents are writable.
     }
 
-    // Public game engagement: one view document per Firebase UID and one
-    // rating document per registered UID. Ratings are publicly readable so
-    // aggregate scores can be calculated by the client, but only owners write.
+    // Game IDs are SHA-256 hashes generated from stable game identity fields.
     function validGameMetricId(gameId) {
-      // The Android client derives this stable path from SHA-256(game identity).
-      return gameId.matches('^[0-9a-f]{64}
-
-    // Everything else stays denied by default.
-  }
-}
-);
+      return gameId.size() == 64 && gameId.matches('[0-9a-f]{64}');
     }
 
     match /gameMetrics/{gameId}/views/{userId} {
-      // Aggregate counts and ratings are public; writes remain UID-owned.
+      // Public summaries; writes are restricted to the matching Firebase UID.
       allow read: if validGameMetricId(gameId);
-      // A document ID equal to the Firebase UID permits one immutable view
-      // per account/guest installation. Server timestamps prevent client dates.
+      // The UID document path enforces one immutable view per account/guest install.
+      // Requiring request.time ensures createdAt is a Firestore server timestamp.
       allow create: if validGameMetricId(gameId)
         && signedInAs(userId)
         && request.resource.data.keys().hasOnly(['uid', 'createdAt'])
@@ -90,8 +82,8 @@ service cloud.firestore {
 
     match /gameMetrics/{gameId}/ratings/{userId} {
       allow read: if validGameMetricId(gameId);
-      // Guests/anonymous Firebase sessions cannot rate. A registered user owns
-      // exactly one rating document per game and may change its 1..5 value.
+      // Registered users own one rating per game and may update its value.
+      // Anonymous visitors are explicitly denied.
       allow create, update: if validGameMetricId(gameId)
         && signedInAs(userId)
         && !isAnonymous()
