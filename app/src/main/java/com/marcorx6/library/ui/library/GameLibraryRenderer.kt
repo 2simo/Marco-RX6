@@ -13,6 +13,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.marcorx6.library.data.Game
 import com.marcorx6.library.data.GameLibraryManager
+import com.marcorx6.library.network.BloggerFeedParser
 import java.util.Locale
 
 internal class GameLibraryRenderer(
