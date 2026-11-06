@@ -465,7 +465,7 @@ internal class MainLibraryInterfaceController(
                 typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
                 gravity = Gravity.CENTER
                 background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-                    intArrayOf(Color.rgb(46, 145, 255), Color.rgb(20, 91, 190))).apply {
+                    intArrayOf(Color.rgb(190, 198, 210), Color.rgb(105, 113, 126))).apply {
                     cornerRadius = dp(15).toFloat()
                     setStroke(dp(1), Color.argb(190, 135, 202, 255))
                 }
