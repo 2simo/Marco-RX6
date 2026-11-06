@@ -4,6 +4,7 @@ import android.app.Activity
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RatingBar
 import android.widget.TextView
@@ -11,7 +12,7 @@ import android.widget.Toast
 import com.marcorx6.library.data.Game
 import java.util.Locale
 
-/** Displays public score and lets authenticated, non-anonymous users submit one editable rating. */
+/** Public engagement summary plus an editable rating for authenticated, non-anonymous users. */
 internal class GameRatingViewFactory(
     private val activity: Activity,
     private val dp: (Int) -> Int,
@@ -30,7 +31,7 @@ internal class GameRatingViewFactory(
         val muted = if (dark) Color.rgb(170, 190, 214) else Color.rgb(91, 108, 130)
         val card = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(14), dp(12), dp(14), dp(12))
+            setPadding(dp(14), dp(13), dp(14), dp(13))
             background = GradientDrawable().apply {
                 setColor(if (dark) Color.rgb(18, 36, 57) else Color.rgb(245, 249, 255))
                 cornerRadius = dp(16).toFloat()
@@ -38,12 +39,58 @@ internal class GameRatingViewFactory(
             }
         }
         card.addView(makeText(translate("تقييمات اللاعبين"), 15f, white(), true))
-        val summary = makeText(translate("جارٍ تحميل التقييمات…"), 12f, muted, false).apply {
-            setPadding(0, dp(5), 0, dp(4))
+
+        val metrics = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, dp(10), 0, dp(10))
         }
-        card.addView(summary)
+        fun metric(iconRes: Int, label: String, tint: Int): Pair<LinearLayout, TextView> {
+            val chip = LinearLayout(activity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                background = GradientDrawable().apply {
+                    setColor(if (dark) Color.rgb(10, 27, 45) else Color.rgb(232, 242, 254))
+                    cornerRadius = dp(11).toFloat()
+                    setStroke(dp(1), if (dark) Color.rgb(48, 86, 125) else Color.rgb(207, 225, 246))
+                }
+                setPadding(dp(9), dp(8), dp(9), dp(8))
+            }
+            val icon = ImageView(activity).apply {
+                setImageResource(iconRes)
+                imageTintList = android.content.res.ColorStateList.valueOf(tint)
+                contentDescription = label
+            }
+            chip.addView(icon, LinearLayout.LayoutParams(dp(17), dp(17)))
+            val value = makeText("—", 12f, white(), true).apply {
+                setPadding(dp(7), 0, 0, 0)
+            }
+            chip.addView(value)
+            return chip to value
+        }
+        val (ratingMetric, ratingValue) = metric(
+            com.marcorx6.library.R.drawable.ic_engagement_rating,
+            translate("متوسط التقييم"), Color.rgb(255, 190, 55)
+        )
+        val (viewsMetric, viewsValue) = metric(
+            com.marcorx6.library.R.drawable.ic_engagement_views,
+            translate("المشاهدات"), Color.rgb(72, 174, 255)
+        )
+        metrics.addView(ratingMetric, LinearLayout.LayoutParams(0, -2, 1f).apply {
+            marginEnd = dp(6)
+        })
+        metrics.addView(viewsMetric, LinearLayout.LayoutParams(0, -2, 1f))
+        card.addView(metrics)
+
+        val ratingCount = makeText(translate("لا توجد تقييمات بعد"), 11f, muted, false)
+        card.addView(ratingCount)
 
         val registered = isRegisteredUser()
+        card.addView(makeText(
+            translate(if (registered) "قيّم اللعبة" else "سجّل الدخول لتتمكن من تقييم اللعبة"),
+            12f, muted, true
+        ).apply { setPadding(0, dp(12), 0, dp(4)) })
+
         val ratingBar = RatingBar(activity, null, android.R.attr.ratingBarStyle).apply {
             numStars = 5
             stepSize = 1f
@@ -54,11 +101,8 @@ internal class GameRatingViewFactory(
         card.addView(ratingBar, LinearLayout.LayoutParams(-2, -2).apply {
             gravity = Gravity.START
         })
-        if (!registered) {
-            card.addView(makeText(
-                translate("سجّل الدخول لتتمكن من تقييم اللعبة"), 11f, muted, false
-            ).apply { setPadding(0, dp(4), 0, 0) })
-        } else {
+
+        if (registered) {
             loadMyRating(game) { previous ->
                 if (previous != null) ratingBar.rating = previous.toFloat()
             }
@@ -70,7 +114,7 @@ internal class GameRatingViewFactory(
                             ratingBar.isEnabled = true
                             if (success) {
                                 Toast.makeText(activity, translate("تم حفظ تقييمك"), Toast.LENGTH_SHORT).show()
-                                refreshSummary(game, summary)
+                                refreshSummary(game, ratingValue, viewsValue, ratingCount)
                             } else {
                                 Toast.makeText(
                                     activity,
@@ -83,26 +127,33 @@ internal class GameRatingViewFactory(
                 }
             }
         }
-        refreshSummary(game, summary)
+
+        refreshSummary(game, ratingValue, viewsValue, ratingCount)
         return card
     }
 
-    private fun refreshSummary(game: Game, target: TextView) {
+    private fun refreshSummary(
+        game: Game,
+        ratingValue: TextView,
+        viewsValue: TextView,
+        ratingCount: TextView
+    ) {
         loadSummary(game) { views, average, count ->
             activity.runOnUiThread {
-                target.text = if (count == 0L) {
+                ratingValue.text = if (count == 0L) "—" else String.format(Locale.US, "%.1f/5", average)
+                viewsValue.text = compactCount(views)
+                ratingCount.text = if (count == 0L) {
                     translate("لا توجد تقييمات بعد")
                 } else {
-                    String.format(
-                        Locale.getDefault(),
-                        "%s: %.1f/5  •  %d %s",
-                        translate("متوسط التقييم"),
-                        average,
-                        count,
-                        translate("تقييم")
-                    )
+                    count.toString() + " " + translate("تقييم")
                 }
             }
         }
+    }
+
+    private fun compactCount(value: Long): String = when {
+        value >= 1_000_000 -> String.format(Locale.US, "%.1fM", value / 1_000_000.0)
+        value >= 1_000 -> String.format(Locale.US, "%.1fK", value / 1_000.0)
+        else -> value.toString()
     }
 }
