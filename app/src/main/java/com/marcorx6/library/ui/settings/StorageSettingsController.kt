@@ -64,7 +64,7 @@ internal class StorageSettingsController(
         }
         val heading = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
         heading.addView(TextView(activity).apply {
-            text = "MARCO RX6  /  STORAGE"
+            text = "MARCO  /  STORAGE"
             textSize = 9f
             letterSpacing = 0.12f
             setTextColor(silverAccent)
