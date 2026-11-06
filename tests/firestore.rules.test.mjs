@@ -19,6 +19,7 @@ import {
   getDoc,
   getDocs,
   setDoc,
+  serverTimestamp,
   updateDoc,
 } from "firebase/firestore";
 
@@ -173,25 +174,26 @@ describe("Firestore user isolation rules", () => {
     const db = testEnv.authenticatedContext(uid, {
       firebase: { sign_in_provider: "anonymous" },
     }).firestore();
-    const view = doc(db, "gameMetrics/game-abc/views/guest-viewer");
+    const view = doc(db, "gameMetrics/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/views/guest-viewer);
 
-    await assertSucceeds(setDoc(view, { uid, createdAt: new Date() }));
-    await assertFails(updateDoc(view, { createdAt: new Date() }));
+    await assertSucceeds(setDoc(view, { uid, createdAt: serverTimestamp() }));
+    await assertFails(setDoc(view, { uid, createdAt: serverTimestamp() }));
+    await assertFails(updateDoc(view, { createdAt: serverTimestamp() }));
     await assertFails(deleteDoc(view));
   });
 
   it("allows registered users to create and update their own 1-to-5-star rating only", async () => {
     const uid = "registered-rater";
     const db = testEnv.authenticatedContext(uid).firestore();
-    const rating = doc(db, "gameMetrics/game-abc/ratings/registered-rater");
+    const rating = doc(db, "gameMetrics/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/ratings/registered-rater);
 
     await assertSucceeds(setDoc(rating, {
-      uid, rating: 4, updatedAt: new Date(),
+      uid, rating: 4, updatedAt: serverTimestamp(),
     }));
-    await assertSucceeds(updateDoc(rating, { rating: 5, updatedAt: new Date() }));
-    await assertFails(updateDoc(rating, { rating: 6 }));
+    await assertSucceeds(updateDoc(rating, { rating: 5, updatedAt: serverTimestamp() }));
+    await assertFails(updateDoc(rating, { rating: 6, updatedAt: serverTimestamp() }));
     await assertFails(setDoc(
-      doc(db, "gameMetrics/game-abc/ratings/someone-else"),
+      doc(db, "gameMetrics/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/ratings/someone-else),
       { uid: "somebody-else", rating: 5, updatedAt: new Date() },
     ));
   });
@@ -203,8 +205,8 @@ describe("Firestore user isolation rules", () => {
     }).firestore();
 
     await assertFails(setDoc(
-      doc(db, "gameMetrics/game-abc/ratings/anonymous-rater"),
-      { uid, rating: 5, updatedAt: new Date() },
+      doc(db, "gameMetrics/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/ratings/anonymous-rater),
+      { uid, rating: 5, updatedAt: serverTimestamp() },
     ));
   });
 
