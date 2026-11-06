@@ -73,7 +73,7 @@ internal class FirstRunSetupController(
         }
         val progressFill = View(activity).apply {
             background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(Color.rgb(42, 145, 255), Color.rgb(23, 194, 224))).apply {
+                intArrayOf(Color.rgb(190, 198, 210), Color.rgb(137, 145, 158))).apply {
                 cornerRadius = dp(8).toFloat()
             }
         }
@@ -171,7 +171,7 @@ internal class FirstRunSetupController(
                 3 -> {
                     val card = viewFactory.optionCard(tr("أزرق"), true, tr("اللون الرسمي المعتمد في MARCO RX6"))
                     val dot = View(activity).apply {
-                        background = rounded(Color.rgb(42, 145, 255), 20)
+                        background = rounded(Color.rgb(190, 198, 210), 20)
                     }
                     card.addView(dot, LinearLayout.LayoutParams(dp(24), dp(24)).apply { topMargin = dp(9) })
                     choices.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(9) })
