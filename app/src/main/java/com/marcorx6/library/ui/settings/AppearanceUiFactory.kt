@@ -78,7 +78,7 @@ internal class AppearanceUiFactory(
         button.background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
             if (primary) intArrayOf(Color.argb(232, 190, 198, 210), Color.argb(218, 112, 120, 133))
             else if (isDarkMode()) intArrayOf(Color.argb(205, 34, 37, 44), Color.argb(190, 15, 17, 22))
-            else intArrayOf(Color.argb(218, 255, 255, 255), Color.argb(205, 225, 239, 253))).apply {
+            else intArrayOf(Color.argb(218, 255, 255, 255), Color.argb(205, 225, 228, 234))).apply {
             cornerRadius = dp(16).toFloat()
             setStroke(dp(1), if (primary) Color.argb(170, 190, 198, 210)
                 else if (isDarkMode()) Color.argb(165, 130, 138, 151) else Color.argb(175, 160, 168, 181))
@@ -129,7 +129,7 @@ internal class AppearanceUiFactory(
     fun styleAlertDialog(dialog: AlertDialog) {
         dialog.window?.setBackgroundDrawable(GradientDrawable(GradientDrawable.Orientation.TL_BR,
             if (isDarkMode()) intArrayOf(Color.rgb(25, 28, 34), Color.rgb(8, 9, 12))
-            else intArrayOf(Color.WHITE, Color.rgb(239, 243, 251))).apply {
+            else intArrayOf(Color.WHITE, Color.rgb(242, 244, 247))).apply {
             cornerRadius = dp(24).toFloat()
             setStroke(dp(1), if (isDarkMode()) Color.rgb(130, 138, 151) else Color.rgb(211, 215, 222))
         })
@@ -165,7 +165,7 @@ internal class AppearanceUiFactory(
         dialog.getButton(AlertDialog.BUTTON_NEUTRAL)?.let { stylePrimaryButton(it) }
         dialog.listView?.let { list ->
             list.setBackgroundColor(if (isDarkMode()) Color.rgb(17, 19, 24) else Color.WHITE)
-            list.divider = android.graphics.drawable.ColorDrawable(if (isDarkMode()) Color.rgb(57, 61, 70) else Color.rgb(226, 231, 241))
+            list.divider = android.graphics.drawable.ColorDrawable(if (isDarkMode()) Color.rgb(57, 61, 70) else Color.rgb(211, 215, 222))
             list.dividerHeight = dp(1)
             list.post {
                 for (index in 0 until list.childCount) {
