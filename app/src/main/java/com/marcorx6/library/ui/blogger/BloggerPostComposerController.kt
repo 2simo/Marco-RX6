@@ -141,7 +141,25 @@ internal class BloggerPostComposerController(
         val language = form.language
         val password = form.password
         val rights = form.rights
-        val coverPreview = form.coverPreview
+        val coverPreview = form.coverPreview.apply {
+            background = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
+                if (isNight) intArrayOf(
+                    android.graphics.Color.rgb(20, 57, 91),
+                    android.graphics.Color.rgb(7, 25, 45)
+                ) else intArrayOf(
+                    android.graphics.Color.rgb(239, 247, 255),
+                    android.graphics.Color.rgb(218, 235, 253)
+                )
+            ).apply {
+                cornerRadius = dp(15).toFloat()
+                setStroke(
+                    dp(1),
+                    if (isNight) android.graphics.Color.rgb(76, 153, 222)
+                    else android.graphics.Color.rgb(164, 201, 238)
+                )
+            }
+        }
         setCoverFields(coverUrl, coverPreview)
 
         if (existing != null) {
