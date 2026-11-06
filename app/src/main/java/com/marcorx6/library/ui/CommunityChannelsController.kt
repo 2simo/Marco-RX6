@@ -16,7 +16,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 
-/** One-time welcome screen linking new users to the official MARCO RX6 communities. */
+/** One-time welcome screen linking new users to the official MARCO communities. */
 internal class CommunityChannelsController(
     private val activity: Activity,
     private val dp: (Int) -> Int,
@@ -35,11 +35,11 @@ internal class CommunityChannelsController(
                 intArrayOf(Color.rgb(7, 8, 11), Color.rgb(15, 17, 22), Color.rgb(7, 8, 11))
             )
         }
-        root.addView(makeText("MARCO RX6", 12f, Color.rgb(190, 198, 210), true).apply {
+        root.addView(makeText("MARCO", 12f, Color.rgb(190, 198, 210), true).apply {
             gravity = Gravity.CENTER
             letterSpacing = 0.16f
         })
-        root.addView(makeText(translate("مرحباً بك في MARCO RX6"), 25f, Color.WHITE, true).apply {
+        root.addView(makeText(translate("مرحباً بك في MARCO"), 25f, Color.WHITE, true).apply {
             gravity = Gravity.CENTER
             setPadding(0, dp(14), 0, dp(8))
         })
