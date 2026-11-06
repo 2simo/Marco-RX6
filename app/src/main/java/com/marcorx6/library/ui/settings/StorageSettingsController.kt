@@ -51,7 +51,7 @@ internal class StorageSettingsController(
         val bg = if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247)
         val ink = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
         val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
-        val blue = Color.rgb(190, 198, 210)
+        val silverAccent = Color.rgb(190, 198, 210)
 
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
@@ -67,7 +67,7 @@ internal class StorageSettingsController(
             text = "MARCO RX6  /  STORAGE"
             textSize = 9f
             letterSpacing = 0.12f
-            setTextColor(blue)
+            setTextColor(silverAccent)
         })
         heading.addView(TextView(activity).apply {
             text = translate("التخزين")
@@ -78,7 +78,7 @@ internal class StorageSettingsController(
         header.addView(heading, LinearLayout.LayoutParams(0, -2, 1f))
         header.addView(android.widget.ImageView(activity).apply {
             setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
-            imageTintList = android.content.res.ColorStateList.valueOf(blue)
+            imageTintList = android.content.res.ColorStateList.valueOf(silverAccent)
             scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
             contentDescription = translate("رجوع")
             isClickable = true
@@ -151,7 +151,7 @@ internal class StorageSettingsController(
             minHeight = dp(48)
             setTextColor(Color.rgb(20, 23, 29))
             background = GradientDrawable().apply {
-                setColor(blue)
+                setColor(silverAccent)
                 cornerRadius = dp(14).toFloat()
             }
             setOnClickListener { launchDownloadFolderPicker() }
@@ -188,7 +188,7 @@ internal class StorageSettingsController(
             minHeight = dp(48)
             setTextColor(Color.rgb(20, 23, 29))
             background = GradientDrawable().apply {
-                setColor(blue)
+                setColor(silverAccent)
                 cornerRadius = dp(14).toFloat()
             }
             setOnClickListener {
