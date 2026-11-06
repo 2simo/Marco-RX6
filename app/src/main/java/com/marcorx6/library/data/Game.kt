@@ -15,5 +15,11 @@ data class Game(
     val bloggerPostId: String = "",
     val bloggerHtml: String = "",
     val genre: String = "",
-    val releaseYear: String = ""
+    val releaseYear: String = "",
+    val packageSize: String = "",
+    val version: String = "",
+    val fileFormat: String = "",
+    val language: String = "",
+    val password: String = "",
+    val rights: String = ""
 )

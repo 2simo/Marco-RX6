@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - feature/publishing-studio-redesign
 
 permissions:
   contents: read
@@ -95,4 +96,4 @@ jobs:
           if-no-files-found: error
           retention-days: 3
 
-# Build trigger refresh: verify the current main branch changes.
+# Feature branch build: validate the publishing studio and its updated unit tests.

@@ -47,6 +47,10 @@ class BloggerPostInputValidatorTest {
         assertEquals(BloggerPostInputValidator.Field.TITLE, validate(title = " ")?.field)
         assertEquals(BloggerPostInputValidator.Field.COVER_URL, validate(coverUrl = "http://example.com/cover.jpg")?.field)
         assertEquals(BloggerPostInputValidator.Field.RELATED_LINK, validate(relatedLink = "http://example.com")?.field)
-        assertEquals(BloggerPostInputValidator.Field.BODY, validate(body = " ")?.field)
+    }
+
+    @Test
+    fun allowsStructuredPostWithoutFreeFormDescription() {
+        assertNull(validate(body = " "))
     }
 }

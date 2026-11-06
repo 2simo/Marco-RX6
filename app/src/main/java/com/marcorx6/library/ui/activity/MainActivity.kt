@@ -16,6 +16,7 @@ import com.marcorx6.library.ui.GameImportMerger
 import com.marcorx6.library.ui.LanguageTranslator
 import com.marcorx6.library.ui.library.MainLibraryViewState
 import com.marcorx6.library.data.Game
+import com.marcorx6.library.data.GameEngagementRepository
 import com.marcorx6.library.data.DownloadStoragePreferences
 import com.marcorx6.library.data.auth.FirebaseSessionCoordinator
 import com.marcorx6.library.data.auth.FirebaseAuthRepository
@@ -77,6 +78,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private val downloadStoragePreferences by lazy { DownloadStoragePreferences(applicationContext) }
+
+    private val gameEngagementRepository by lazy { GameEngagementRepository() }
 
     private val firebaseSessionCoordinator: FirebaseSessionCoordinator by lazy {
         FirebaseSessionCoordinator()
@@ -265,6 +268,8 @@ class MainActivity : ComponentActivity() {
             executeIo = { task -> activityServicesRuntimeFeature.ioExecutor.execute { task() } },
             styleAlertDialog = ::styleAlertDialog,
             applyUnifiedSkin = ::applyUnifiedSkin,
+            setContentView = ::showRootScreen,
+            onBack = ::createInterface,
             translate = ::tr,
             setCoverFields = { url, preview ->
                 coverFeature.state.urlField = url
@@ -468,7 +473,19 @@ class MainActivity : ComponentActivity() {
             showDownloads = activityServicesRuntimeFeature::showDownloadManager,
             applyTypography = ::applyTypography,
             applyUnifiedSkin = ::applyUnifiedSkin,
-            applyMotionPreferences = ::applyMotionPreferences
+            applyMotionPreferences = ::applyMotionPreferences,
+            loadEngagementSummary = { game, callback ->
+                gameEngagementRepository.loadSummary(game, { summary ->
+                    callback(summary.views, summary.ratingAverage, summary.ratingCount)
+                })
+            },
+            recordViewOnce = { game, onRecorded ->
+                gameEngagementRepository.recordViewOnce(game)
+                    .addOnSuccessListener { if (it) onRecorded() }
+                    .addOnFailureListener { error ->
+                        android.util.Log.w("MarcoGameViews", "Could not record game view", error)
+                    }
+            }
         )
     }
 
@@ -516,7 +533,31 @@ class MainActivity : ComponentActivity() {
             deleteGame = { game -> bloggerRuntimeFeature.delete(game) },
             applyMotionPreferences = ::applyMotionPreferences,
             applyUnifiedSkin = ::applyUnifiedSkin,
-            showDetailsForDay = { game -> gameExperienceFeature.showDetails(game) }
+            showDetailsForDay = { game -> gameExperienceFeature.showDetails(game) },
+            isRegisteredUser = gameEngagementRepository::isRegisteredUser,
+            loadEngagementSummary = { game, callback ->
+                gameEngagementRepository.loadSummary(
+                    game,
+                    callback = { summary ->
+                        callback(summary.views, summary.ratingAverage, summary.ratingCount)
+                    }
+                )
+            },
+            loadMyRating = gameEngagementRepository::loadMyRating,
+            submitRating = { game, rating, callback ->
+                gameEngagementRepository.submitRating(game, rating)
+                    .addOnSuccessListener { callback(true, null) }
+                    .addOnFailureListener { callback(false, it.message) }
+            },
+            recordViewOnce = { game ->
+                gameEngagementRepository.recordViewOnce(game)
+                    .addOnSuccessListener { recorded ->
+                        if (recorded) renderGames()
+                    }
+                    .addOnFailureListener { error ->
+                        android.util.Log.w("MarcoGameViews", "Could not record game view", error)
+                    }
+            }
         )
     }
 

@@ -2,7 +2,6 @@ package com.marcorx6.library.ui
 
 import android.app.Activity
 import android.graphics.drawable.Drawable
-import android.view.Gravity
 import android.widget.EditText
 import android.widget.ImageView
 
@@ -13,6 +12,12 @@ internal data class BloggerPostFormFields(
     val relatedLink: EditText,
     val genre: EditText,
     val releaseYear: EditText,
+    val packageSize: EditText,
+    val version: EditText,
+    val fileFormat: EditText,
+    val language: EditText,
+    val password: EditText,
+    val rights: EditText,
     val coverPreview: ImageView
 )
 
@@ -25,40 +30,29 @@ internal class BloggerPostFormFieldsFactory(
     private val translate: (String) -> String
 ) {
     fun create(): BloggerPostFormFields {
-        val title = makeInput(translate("عنوان المقال")).apply {
-            setSingleLine(true)
-            minHeight = dp(54)
-            imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_NEXT
-        }
-        val body = makeInput(translate("وصف المقال — اكتب المعلومات فقط، وسيُنسّقها القالب تلقائياً")).apply {
-            minLines = 8
-            minHeight = dp(180)
-            gravity = Gravity.TOP or Gravity.START
-            inputType = android.text.InputType.TYPE_CLASS_TEXT or
-                android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE or
-                android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
-            setPadding(dp(13), dp(12), dp(13), dp(12))
-            contentDescription = translate("محتوى المقال: اكتب وصف اللعبة ومعلوماتها هنا")
-        }
-        val coverUrl = makeInput(translate("رابط صورة الغلاف (اختياري)")).apply {
+        fun input(hint: String, number: Boolean = false) = makeInput(translate(hint)).apply {
             setSingleLine(true)
             minHeight = dp(52)
+            if (number) inputType = android.text.InputType.TYPE_CLASS_NUMBER or
+                android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
+        }
+        val title = input("عنوان المقال")
+        // Retained as an empty compatibility field; free-form descriptions are no longer part of this template.
+        val body = input("").apply { visibility = android.view.View.GONE }
+        val coverUrl = input("رابط صورة الغلاف (اختياري)").apply {
             inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_URI
         }
-        val relatedLink = makeInput(translate("رابط التحميل أو رابط إضافي (اختياري)")).apply {
-            setSingleLine(true)
-            minHeight = dp(52)
+        val relatedLink = input("رابط التحميل الأساسي (اختياري)").apply {
             inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_URI
         }
-        val genre = makeInput(translate("نوع اللعبة (مثال: أكشن، مغامرات)")).apply {
-            setSingleLine(true)
-            minHeight = dp(52)
-        }
-        val releaseYear = makeInput(translate("سنة الإصدار (مثال: 2024)")).apply {
-            setSingleLine(true)
-            minHeight = dp(52)
-            inputType = android.text.InputType.TYPE_CLASS_NUMBER
-        }
+        val genre = input("").apply { visibility = android.view.View.GONE }
+        val releaseYear = input("", number = true).apply { visibility = android.view.View.GONE }
+        val packageSize = input("الحجم (مثال: 2.5 GB)")
+        val version = input("النسخة (مثال: v1.5)")
+        val fileFormat = input("الصيغة (مثال: PKG)")
+        val language = input("اللغة (مثال: الإنجليزية)")
+        val password = input("كلمة السر (اختياري)")
+        val rights = input("الحقوق (اختياري)")
         val coverPreview = ImageView(activity).apply {
             scaleType = ImageView.ScaleType.CENTER_CROP
             contentDescription = translate("معاينة صورة غلاف المقال")
@@ -75,6 +69,9 @@ internal class BloggerPostFormFieldsFactory(
             clipToOutline = true
             elevation = dp(2).toFloat()
         }
-        return BloggerPostFormFields(title, body, coverUrl, relatedLink, genre, releaseYear, coverPreview)
+        return BloggerPostFormFields(
+            title, body, coverUrl, relatedLink, genre, releaseYear,
+            packageSize, version, fileFormat, language, password, rights, coverPreview
+        )
     }
 }

@@ -8,6 +8,7 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import com.marcorx6.library.data.Game
+import com.marcorx6.library.ui.details.GameRatingViewFactory
 
 internal class GameDetailsController(
     private val activity: Activity,
@@ -16,6 +17,8 @@ internal class GameDetailsController(
     private val dp: (Int) -> Int,
     private val topBarFactory: GameDetailsTopBarFactory,
     private val identityViewFactory: GameDetailsIdentityViewFactory,
+    private val ratingViewFactory: GameRatingViewFactory,
+    private val recordViewOnce: (Game) -> Unit,
     private val similarGamesViewFactory: GameSimilarGamesViewFactory,
     private val downloadLinksViewFactory: GameDownloadLinksViewFactory,
     private val isAdmin: () -> Boolean,
@@ -26,6 +29,7 @@ internal class GameDetailsController(
     private val translate: (String) -> String
 ) {
     fun show(game: Game) {
+        recordViewOnce(game)
         val reader = android.app.Dialog(activity)
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
@@ -48,6 +52,9 @@ internal class GameDetailsController(
         val identity = identityViewFactory.create(game)
         content.addView(identity, LinearLayout.LayoutParams(-1, -2).apply {
             setMargins(dp(14), dp(12), dp(14), dp(8))
+        })
+        content.addView(ratingViewFactory.create(game), LinearLayout.LayoutParams(-1, -2).apply {
+            setMargins(dp(14), dp(0), dp(14), dp(12))
         })
 
         // Similar titles are displayed as image-cover cards immediately after

@@ -1,6 +1,10 @@
 package com.marcorx6.library.ui
 
 import android.app.AlertDialog
+import android.view.Gravity
+import android.view.View
+import android.view.Window
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
@@ -8,12 +12,13 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import android.view.View
 import com.marcorx6.library.data.Game
+import org.json.JSONArray
+import org.json.JSONObject
 
 /**
- * Owns the Blogger post editor UI and coordinates validation, preview and save.
- * Activity state and persistence remain supplied through narrow callbacks.
+ * Full-screen admin publishing studio. Blogger/Drive operations remain delegated
+ * to the existing controllers so this UI change does not replace either backend.
  */
 internal class BloggerPostComposerController(
     private val activity: ComponentActivity,
@@ -47,8 +52,12 @@ internal class BloggerPostComposerController(
     private val saveGames: () -> Unit,
     private val renderGames: () -> Unit,
     private val applyUnifiedSkin: (View) -> Unit,
+    private val setContentView: (View) -> Unit,
+    private val onBack: () -> Unit,
     private val translate: (String) -> String
 ) {
+    private data class LinkFields(val label: EditText, val url: EditText, val row: LinearLayout)
+
     fun show(existing: Game? = null) {
         if (!isAdminSession()) {
             Toast.makeText(activity, translate("يجب تسجيل الدخول بصلاحية المسؤول للنشر."), Toast.LENGTH_SHORT).show()
@@ -58,28 +67,41 @@ internal class BloggerPostComposerController(
 
         val box = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(16), dp(12), dp(16), dp(18))
+            setPadding(dp(16), dp(12), dp(16), dp(12))
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
                 if (android.os.Build.VERSION.SDK_INT >= 23)
-                    intArrayOf(android.graphics.Color.argb(232, 13, 39, 65), android.graphics.Color.argb(224, 7, 22, 40))
+                    intArrayOf(android.graphics.Color.rgb(9, 31, 54), android.graphics.Color.rgb(6, 17, 32))
                 else intArrayOf(bg(), panel())
             ).apply {
                 cornerRadius = dp(22).toFloat()
                 setStroke(dp(1), android.graphics.Color.argb(115, 74, 153, 222))
             }
         }
-        fun addFormField(view: View) {
-            box.addView(view, LinearLayout.LayoutParams(-1, -2).apply {
-                bottomMargin = dp(9)
-            })
+        fun section(text: String) = makeText(text, 13f, white(), true).apply {
+            setPadding(0, dp(12), 0, dp(7))
         }
+        fun addField(target: LinearLayout, view: View) {
+            target.addView(view, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(9) })
+        }
+        fun makeAction(text: String, primary: Boolean = false) = Button(activity).apply {
+            this.text = translate(text)
+            isAllCaps = false
+            minHeight = dp(48)
+            setTextColor(if (primary) accentForeground() else white())
+            background = if (primary) android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(android.graphics.Color.rgb(37, 132, 222), android.graphics.Color.rgb(15, 73, 145))
+            ).apply { cornerRadius = dp(13).toFloat() }
+            else rounded(panel(), 13)
+        }
+
         val intro = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(14), dp(13), dp(14), dp(13))
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
-                intArrayOf(android.graphics.Color.argb(218, 25, 91, 151), android.graphics.Color.argb(195, 11, 39, 69))
+                intArrayOf(android.graphics.Color.argb(225, 25, 91, 151), android.graphics.Color.argb(205, 11, 39, 69))
             ).apply {
                 cornerRadius = dp(17).toFloat()
                 setStroke(dp(1), android.graphics.Color.argb(130, 103, 177, 239))
@@ -87,223 +109,308 @@ internal class BloggerPostComposerController(
         }
         intro.addView(makeText(
             translate(if (existing == null) "استوديو النشر • MARCO RX6" else "استوديو التحرير • MARCO RX6"),
-            17f, white(), true
+            18f, white(), true
         ))
         intro.addView(makeText(
-            translate("جهّز الغلاف والتفاصيل والمحتوى، ثم عاين المقال قبل إرساله إلى Blogger."),
-            11f, gray(), false
+            translate("أدخل معلومات اللعبة وروابطها، ثم راجع شكل المقال قبل النشر."),
+            12f, gray(), false
         ).apply { setPadding(0, dp(5), 0, 0) })
-        box.addView(intro, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
+        box.addView(intro, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
 
-        val labelsUi = labelsController.create(
-            initialLabel = existing?.platform,
-            isNewPost = existing == null
-        )
-        val selectedLabels = labelsUi.selectedLabels
-        val formFields = formFieldsFactory.create()
-        val title = formFields.title
-        val body = formFields.body
-        val coverUrl = formFields.coverUrl
-        val link = formFields.relatedLink
-        val genre = formFields.genre
-        val releaseYear = formFields.releaseYear
-        val preview = formFields.coverPreview
-        setCoverFields(coverUrl, preview)
+        val form = formFieldsFactory.create()
+        val title = form.title
+        val coverUrl = form.coverUrl
+        val size = form.packageSize
+        val version = form.version
+        val format = form.fileFormat
+        val language = form.language
+        val password = form.password
+        val rights = form.rights
+        val coverPreview = form.coverPreview
+        setCoverFields(coverUrl, coverPreview)
 
         if (existing != null) {
             title.setText(existing.name)
-            if (existing.platform.isNotBlank()) selectedLabels.add(existing.platform)
-            body.setText(existing.description)
             coverUrl.setText(existing.coverUrl)
-            link.setText(existing.url.takeIf { it != existing.sourcePostUrl } ?: "")
-            genre.setText(existing.genre)
-            releaseYear.setText(existing.releaseYear)
+            size.setText(existing.packageSize)
+            version.setText(existing.version)
+            format.setText(existing.fileFormat.ifBlank { "PKG" })
+            language.setText(existing.language.ifBlank { "الإنجليزية" })
+            password.setText(existing.password)
+            rights.setText(existing.rights)
         } else {
-            body.setText("")
+            format.setText("PKG")
+            language.setText("الإنجليزية")
             if (pendingCoverPublicUrl().isNotBlank()) coverUrl.setText(pendingCoverPublicUrl())
         }
 
-        box.addView(makeText("02 • " + translate("صورة الغلاف"), 12f, red(), true).apply {
-            setPadding(0, dp(8), 0, dp(6))
+        val labelsUi = labelsController.create(existing?.platform, existing == null)
+        val selectedLabels = labelsUi.selectedLabels
+        box.addView(section("01 • " + translate("صورة الغلاف")))
+        box.addView(coverPreview, LinearLayout.LayoutParams(-1, dp(178)).apply {
+            bottomMargin = dp(9)
         })
-        box.addView(preview, LinearLayout.LayoutParams(-1, dp(165)).apply {
-            bottomMargin = dp(10)
-        })
-        loadCover(preview, pendingCoverLocalPath(), existing?.coverUrl ?: "")
-        box.addView(Button(activity).apply {
-            text = translate("اختيار صورة الغلاف من الهاتف")
+        loadCover(coverPreview, pendingCoverLocalPath(), existing?.coverUrl ?: "")
+        addField(box, makeAction("اختيار صورة الغلاف من الهاتف", primary = true).apply {
             contentDescription = translate("اختيار صورة غلاف المقال من الهاتف")
-            minHeight = dp(52)
-            isAllCaps = false
-            tag = "marco_primary_action"
-            setTextColor(accentForeground())
-            background = android.graphics.drawable.GradientDrawable(
-                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(
-                    android.graphics.Color.argb(228, 37, 132, 222),
-                    android.graphics.Color.argb(215, 15, 73, 145)
-                )
-            ).apply {
-                cornerRadius = dp(12).toFloat()
-                setStroke(dp(1), android.graphics.Color.argb(190, 126, 197, 255))
-            }
-            isClickable = true
-            isFocusable = true
-            if (android.os.Build.VERSION.SDK_INT >= 23) foreground =
-                android.graphics.drawable.RippleDrawable(
-                    android.content.res.ColorStateList.valueOf(android.graphics.Color.argb(105, 205, 235, 255)),
-                    null,
-                    android.graphics.drawable.GradientDrawable().apply {
-                        setColor(android.graphics.Color.WHITE)
-                        cornerRadius = dp(12).toFloat()
-                    }
-                )
-            elevation = dp(2).toFloat()
             setOnClickListener { chooseCover() }
-        }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
-        box.addView(makeText(translate("أقسام المقال • Labels من المدونة"), 10f, red(), true))
-        labelsUi.button.textSize = 13f
-        addFormField(labelsUi.button)
-        addFormField(genre)
-        addFormField(releaseYear)
-        addFormField(title)
-        box.addView(makeText("03 • " + translate("محتوى المقال"), 12f, red(), true).apply {
-            setPadding(0, dp(12), 0, dp(5))
         })
-        box.addView(body, LinearLayout.LayoutParams(-1, dp(190)).apply { bottomMargin = dp(9) })
-        addFormField(coverUrl)
-        addFormField(link)
+        addField(box, coverUrl)
+
+        box.addView(section("02 • " + translate("العنوان وأقسام المقال")))
+        addField(box, title)
+        addField(box, labelsUi.button)
+
+        box.addView(section("03 • " + translate("معلومات اللعبة")))
+        addField(box, size)
+        addField(box, version)
+        addField(box, format)
+        addField(box, language)
+        addField(box, password)
+        addField(box, rights)
+
+        box.addView(section("04 • " + translate("روابط التحميل المباشرة")))
+        val linksContainer = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
+        val linkRows = mutableListOf<LinkFields>()
+
+        fun addLinkRow(initialLabel: String = "", initialUrl: String = "") {
+            val row = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(12), dp(10), dp(12), dp(10))
+                background = rounded(panel(), 14)
+            }
+            val label = EditText(activity).apply {
+                hint = translate("اسم الرابط (مثال: Google Drive)")
+                setSingleLine(true)
+                minHeight = dp(52)
+                setText(initialLabel)
+                setPadding(dp(12), dp(10), dp(12), dp(10))
+            }
+            val url = EditText(activity).apply {
+                hint = translate("رابط التحميل HTTPS")
+                setSingleLine(true)
+                minHeight = dp(52)
+                inputType = android.text.InputType.TYPE_CLASS_TEXT or
+                    android.text.InputType.TYPE_TEXT_VARIATION_URI
+                setText(initialUrl)
+                setPadding(dp(12), dp(10), dp(12), dp(10))
+            }
+            row.addView(makeText(translate("رابط تحميل"), 12f, white(), true))
+            addField(row, label)
+            addField(row, url)
+            val remove = makeAction("إزالة هذا الرابط").apply {
+                setTextColor(android.graphics.Color.rgb(255, 130, 145))
+                setOnClickListener {
+                    linkRows.removeAll { it.row === row }
+                    linksContainer.removeView(row)
+                }
+            }
+            row.addView(remove, LinearLayout.LayoutParams(-1, -2))
+            linkRows += LinkFields(label, url, row)
+            linksContainer.addView(row, LinearLayout.LayoutParams(-1, -2).apply {
+                bottomMargin = dp(9)
+            })
+        }
+
+        val savedLinks = try { JSONArray(existing?.downloadLinks.orEmpty()) } catch (_: Exception) { JSONArray() }
+        if (savedLinks.length() > 0) {
+            for (i in 0 until savedLinks.length()) {
+                val item = savedLinks.optJSONObject(i) ?: continue
+                addLinkRow(item.optString("label"), item.optString("url"))
+            }
+        } else {
+            val oldUrl = existing?.url.orEmpty().takeIf { it != existing?.sourcePostUrl }.orEmpty()
+            if (oldUrl.isNotBlank()) addLinkRow("تحميل اللعبة", oldUrl)
+            else addLinkRow()
+        }
+        box.addView(linksContainer, LinearLayout.LayoutParams(-1, -2))
+        addField(box, makeAction("إضافة رابط جديد", primary = true).apply {
+            setOnClickListener { addLinkRow() }
+        })
+
 
         val scroll = ScrollView(activity).apply {
             isFillViewport = true
             overScrollMode = View.OVER_SCROLL_NEVER
             clipToPadding = false
-            setPadding(0, dp(4), 0, dp(8))
+            setPadding(0, dp(3), 0, dp(8))
             addView(box)
         }
-        val dialog = AlertDialog.Builder(activity)
-            .setTitle(translate(if (existing == null) "إنشاء مقال جديد" else "تعديل المقال"))
-            .setView(scroll)
-            .setNegativeButton(translate("إغلاق"), null)
-            .setNeutralButton(translate("معاينة"), null)
-            .setPositiveButton(translate(if (existing == null) "نشر المقال" else "حفظ التعديلات"), null)
-            .create()
-
-        dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).apply {
-                minHeight = dp(48)
-                contentDescription = translate("إغلاق محرر المقال")
-            }
-            dialog.getButton(AlertDialog.BUTTON_NEUTRAL).apply {
-                minHeight = dp(48)
-                contentDescription = translate("معاينة المقال قبل النشر")
-                setOnClickListener {
-                val web = previewFactory.create(
-                    title = title.text.toString(),
-                    labels = selectedLabels.joinToString("، "),
-                    genre = genre.text.toString(),
-                    releaseYear = releaseYear.text.toString(),
-                    body = body.text.toString(),
-                    coverUrl = coverUrl.text.toString(),
-                    relatedLink = link.text.toString()
-                ).apply {
-                    contentDescription = translate("معاينة كاملة لمقال Blogger قبل النشر")
-                }
-                val previewDialog = AlertDialog.Builder(activity)
-                    .setTitle(translate("معاينة قبل النشر"))
-                    .setView(web)
-                    .setPositiveButton(translate("إغلاق"), null)
-                    .create()
-                previewDialog.show()
-                styleAlertDialog(previewDialog)
-                previewDialog.getButton(AlertDialog.BUTTON_POSITIVE).apply {
-                    minHeight = dp(48)
-                    contentDescription = translate("إغلاق معاينة المقال")
-                }
-                }
-            }
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).apply {
-                minHeight = dp(52)
-                contentDescription = translate(if (existing == null) "نشر المقال على Blogger" else "حفظ تعديلات المقال")
-                setOnClickListener {
-                val postTitle = title.text.toString().trim()
-                val coverLink = coverUrl.text.toString().trim()
-                val relatedLink = link.text.toString().trim()
-                val contentText = body.text.toString().trim()
-                val pendingLocalPath = pendingCoverLocalPath()
-                val validationFailure = BloggerPostInputValidator.validate(
-                    coverUploadInProgress = coverUploadInProgress(),
-                    pendingCoverLocalPath = pendingLocalPath,
-                    selectedLabels = selectedLabels,
-                    title = postTitle,
-                    coverUrl = coverLink,
-                    relatedLink = relatedLink,
-                    content = contentText
-                )
-                if (validationFailure != null) {
-                    when (validationFailure.field) {
-                        BloggerPostInputValidator.Field.TITLE -> title.error = translate(validationFailure.message)
-                        BloggerPostInputValidator.Field.COVER_URL -> coverUrl.error = translate(validationFailure.message)
-                        BloggerPostInputValidator.Field.RELATED_LINK -> link.error = translate(validationFailure.message)
-                        BloggerPostInputValidator.Field.BODY -> body.error = translate(validationFailure.message)
-                        null -> Toast.makeText(
-                            activity,
-                            translate(validationFailure.message),
-                            if (validationFailure.longMessage) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                    return@setOnClickListener
-                }
-                val post = postFactory.create(
-                    existing = existing,
-                    title = postTitle,
-                    labels = selectedLabels.toList(),
-                    description = contentText,
-                    coverLink = coverLink,
-                    relatedLink = relatedLink,
-                    genre = genre.text.toString(),
-                    releaseYear = releaseYear.text.toString(),
-                    pendingCoverLocalPath = pendingLocalPath,
-                    pendingCoverPublicUrl = pendingCoverPublicUrl()
-                )
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
-                saveController.save(
-                    post = post,
-                    labels = selectedLabels.toList(),
-                    existing = existing,
-                    onSuccess = { saved ->
-                        upsertGame(saved, existing)
-                        deleteCoverFileIfUnused(existing?.coverLocalPath.orEmpty())
-                        setPendingCoverLocalPath("")
-                        setPendingCoverPublicUrl("")
-                        resetCoverUploadFailed()
-                        saveGames()
-                        renderGames()
-                        dialog.dismiss()
-                        Toast.makeText(activity, translate("تم نشر المقال على Blogger"), Toast.LENGTH_LONG).show()
-                    },
-                    onError = { message ->
-                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true
-                        Toast.makeText(activity, translate(message), Toast.LENGTH_LONG).show()
-                    }
-                )
-                }
-            }
+        val page = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(14), dp(10), dp(14), dp(12))
+            setBackgroundColor(bg())
         }
-        dialog.show()
-        styleAlertDialog(dialog)
-        applyUnifiedSkin(box)
-        box.alpha = 0f
-        box.translationY = dp(14).toFloat()
-        box.animate()
-            .alpha(1f)
-            .translationY(0f)
-            .setDuration(280L)
-            .setInterpolator(android.view.animation.DecelerateInterpolator())
-            .start()
-        dialog.window?.setLayout(
-            -1,
-            (activity.resources.displayMetrics.heightPixels * 0.88f).toInt()
-        )
+        val toolbar = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(4), dp(4), dp(4), dp(10))
+        }
+        val back = ImageView(activity).apply {
+            setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
+            contentDescription = translate("الرجوع من استوديو النشر")
+            setPadding(dp(12), dp(12), dp(12), dp(12))
+            background = rounded(panel(), 14)
+            setOnClickListener { onBack() }
+        }
+        toolbar.addView(back, LinearLayout.LayoutParams(dp(48), dp(48)))
+        toolbar.addView(makeText(translate(if (existing == null) "استوديو النشر" else "تحرير المقال"), 19f, white(), true),
+            LinearLayout.LayoutParams(0, -2, 1f))
+        page.addView(toolbar, LinearLayout.LayoutParams(-1, -2))
+        page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
+        val actions = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, dp(10), 0, 0)
+        }
+        val closeButton = makeAction("إغلاق").apply {
+            setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.ic_menu_revert, 0, 0, 0)
+            setOnClickListener { onBack() }
+        }
+        val previewButton = makeAction("معاينة").apply {
+            setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.ic_menu_view, 0, 0, 0)
+        }
+        val publishButton = makeAction(if (existing == null) "نشر المقال" else "حفظ التعديلات", primary = true).apply {
+            setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.ic_menu_save, 0, 0, 0)
+        }
+        actions.addView(closeButton, LinearLayout.LayoutParams(0, dp(52), 1f).apply { marginEnd = dp(6) })
+        actions.addView(previewButton, LinearLayout.LayoutParams(0, dp(52), 1f).apply { marginEnd = dp(6) })
+        actions.addView(publishButton, LinearLayout.LayoutParams(0, dp(52), 1.25f))
+        page.addView(actions, LinearLayout.LayoutParams(-1, -2))
+
+        fun collectLinks(): String? {
+            val result = JSONArray()
+            for ((index, item) in linkRows.withIndex()) {
+                val label = item.label.text.toString().trim()
+                val url = item.url.text.toString().trim()
+                if (label.isBlank() && url.isBlank()) continue
+                if (label.isBlank() || url.isBlank()) {
+                    Toast.makeText(activity, translate("أدخل اسم الرابط وعنوانه معاً") + " • " + (index + 1), Toast.LENGTH_LONG).show()
+                    return null
+                }
+                if (!url.startsWith("https://", ignoreCase = true)) {
+                    item.url.error = translate("يجب أن يبدأ الرابط بـ HTTPS")
+                    return null
+                }
+                result.put(JSONObject().put("label", label).put("url", url))
+            }
+            return result.toString()
+        }
+
+        previewButton.setOnClickListener {
+                    val linksJson = collectLinks() ?: return@setOnClickListener
+                    val firstUrl = try { JSONArray(linksJson).optJSONObject(0)?.optString("url").orEmpty() } catch (_: Exception) { "" }
+                    if (firstUrl.isBlank()) {
+                        Toast.makeText(activity, translate("أضف رابط تحميل واحداً على الأقل قبل المعاينة"), Toast.LENGTH_LONG).show()
+                        return@setOnClickListener
+                    }
+                    val web = previewFactory.create(
+                        title = title.text.toString(),
+                        labels = selectedLabels.joinToString("، "),
+                        genre = "",
+                        releaseYear = "",
+                        body = "",
+                        coverUrl = coverUrl.text.toString(),
+                        relatedLink = firstUrl,
+                        packageSize = size.text.toString(),
+                        version = version.text.toString(),
+                        fileFormat = format.text.toString(),
+                        language = language.text.toString(),
+                        password = password.text.toString(),
+                        rights = rights.text.toString(),
+                        downloadLinksJson = linksJson
+                    ).apply {
+                        contentDescription = translate("معاينة كاملة لمقال Blogger قبل النشر")
+                        layoutParams = LinearLayout.LayoutParams(-1, dp(520))
+                    }
+                    val previewDialog = AlertDialog.Builder(activity)
+                        .setTitle(translate("معاينة قبل النشر"))
+                        .setView(web)
+                        .setPositiveButton(translate("إغلاق"), null)
+                        .create()
+                    previewDialog.show()
+                    styleAlertDialog(previewDialog)
+                    previewDialog.getButton(AlertDialog.BUTTON_POSITIVE).minHeight = dp(48)
+                }
+        publishButton.setOnClickListener {
+                    val postTitle = title.text.toString().trim()
+                    val coverLink = coverUrl.text.toString().trim()
+                    val linksJson = collectLinks() ?: return@setOnClickListener
+                    val firstUrl = try { JSONArray(linksJson).optJSONObject(0)?.optString("url").orEmpty() } catch (_: Exception) { "" }
+                    if (firstUrl.isBlank()) {
+                        Toast.makeText(activity, translate("أضف رابط تحميل واحداً على الأقل قبل النشر"), Toast.LENGTH_LONG).show()
+                        return@setOnClickListener
+                    }
+                    val pendingLocalPath = pendingCoverLocalPath()
+                    val validationFailure = BloggerPostInputValidator.validate(
+                        coverUploadInProgress = coverUploadInProgress(),
+                        pendingCoverLocalPath = pendingLocalPath,
+                        selectedLabels = selectedLabels,
+                        title = postTitle,
+                        coverUrl = coverLink,
+                        relatedLink = firstUrl,
+                        content = ""
+                    )
+                    if (validationFailure != null) {
+                        when (validationFailure.field) {
+                            BloggerPostInputValidator.Field.TITLE -> title.error = translate(validationFailure.message)
+                            BloggerPostInputValidator.Field.COVER_URL -> coverUrl.error = translate(validationFailure.message)
+                            BloggerPostInputValidator.Field.RELATED_LINK -> Toast.makeText(activity, translate(validationFailure.message), Toast.LENGTH_LONG).show()
+                            BloggerPostInputValidator.Field.BODY, null -> Toast.makeText(
+                                activity, translate(validationFailure.message),
+                                if (validationFailure.longMessage) Toast.LENGTH_LONG else Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                        return@setOnClickListener
+                    }
+                    val post = postFactory.create(
+                        existing = existing,
+                        title = postTitle,
+                        labels = selectedLabels.toList(),
+                        description = "",
+                        coverLink = coverLink,
+                        relatedLink = firstUrl,
+                        genre = "",
+                        releaseYear = "",
+                        pendingCoverLocalPath = pendingLocalPath,
+                        pendingCoverPublicUrl = pendingCoverPublicUrl(),
+                        packageSize = size.text.toString(),
+                        version = version.text.toString(),
+                        fileFormat = format.text.toString(),
+                        language = language.text.toString(),
+                        password = password.text.toString(),
+                        rights = rights.text.toString(),
+                        downloadLinksJson = linksJson
+                    )
+                    publishButton.isEnabled = false
+                    saveController.save(
+                        post = post,
+                        labels = selectedLabels.toList(),
+                        existing = existing,
+                        onSuccess = { saved ->
+                            upsertGame(saved, existing)
+                            // Only clean up an old local cover after the replacement is committed.
+                            deleteCoverFileIfUnused(existing?.coverLocalPath.orEmpty())
+                            setPendingCoverLocalPath("")
+                            setPendingCoverPublicUrl("")
+                            resetCoverUploadFailed()
+                            saveGames()
+                            renderGames()
+                            Toast.makeText(activity, translate("تم نشر المقال على Blogger"), Toast.LENGTH_LONG).show()
+                            onBack()
+                        },
+                        onError = { message ->
+                            publishButton.isEnabled = true
+                            Toast.makeText(activity, translate(message), Toast.LENGTH_LONG).show()
+                        }
+                    )
+        }
+
+        setContentView(page)
+        applyUnifiedSkin(page)
+        page.alpha = 0f
+        page.translationY = dp(14).toFloat()
+        page.animate().alpha(1f).translationY(0f).setDuration(280L)
+            .setInterpolator(android.view.animation.DecelerateInterpolator()).start()
     }
 }

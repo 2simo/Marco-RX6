@@ -30,6 +30,8 @@ internal class BloggerPostFeature(
     postToUi: (() -> Unit) -> Unit,
     styleAlertDialog: (android.app.AlertDialog) -> Unit,
     applyUnifiedSkin: (android.view.View) -> Unit,
+    setContentView: (android.view.View) -> Unit,
+    onBack: () -> Unit,
     setCoverFields: (EditText, ImageView) -> Unit,
     pendingCoverLocalPath: () -> String,
     setPendingCoverLocalPath: (String) -> Unit,
@@ -110,6 +112,8 @@ internal class BloggerPostFeature(
         saveGames = saveGames,
         renderGames = renderGames,
         applyUnifiedSkin = applyUnifiedSkin,
+        setContentView = setContentView,
+        onBack = onBack,
         translate = translate
     )
 

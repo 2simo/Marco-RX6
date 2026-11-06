@@ -18,6 +18,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  serverTimestamp,
   setDoc,
   updateDoc,
 } from "firebase/firestore";
@@ -46,7 +47,7 @@ after(async () => {
 });
 
 describe("Firestore user isolation rules", () => {
-  it("denies unauthenticated reads and writes", async () => {
+  it("denies unauthenticated reads and writes to private user profiles", async () => {
     const db = testEnv.unauthenticatedContext().firestore();
     const profile = doc(db, "users/user-a");
 
@@ -92,25 +93,24 @@ describe("Firestore user isolation rules", () => {
 
     await testEnv.withSecurityRulesDisabled(async (context) => {
       const adminDb = context.firestore();
-      await setDoc(doc(adminDb, `users/${uid}`), {
+      await setDoc(doc(adminDb, "users/" + uid), {
         uid,
         isAnonymous: true,
         updatedAt: new Date(),
       });
-      await setDoc(doc(adminDb, `users/${uid}/settings/preferences`), {
+      await setDoc(doc(adminDb, "users/" + uid + "/settings/preferences"), {
         values: { theme: "dark" },
         updatedAt: new Date(),
       });
     });
 
-    const preferences = doc(db, `users/${uid}/settings/preferences`);
+    const preferences = doc(db, "users/" + uid + "/settings/preferences");
     await assertSucceeds(deleteDoc(preferences));
-    // Firestore evaluates delete rules even when the target document is already absent.
     await assertSucceeds(deleteDoc(preferences));
-    await assertSucceeds(deleteDoc(doc(db, `users/${uid}`)));
+    await assertSucceeds(deleteDoc(doc(db, "users/" + uid)));
   });
 
-  it("allows a registered user to update bounded profile fields and photo data", async () => {
+  it("allows a registered account to update bounded profile fields and photo data", async () => {
     const db = testEnv.authenticatedContext("profile-editor").firestore();
     const profile = doc(db, "users/profile-editor");
 
@@ -165,6 +165,106 @@ describe("Firestore user isolation rules", () => {
       getDoc(doc(dbA, "users/user-b/settings/preferences")),
     );
     await assertSucceeds(getDoc(doc(dbB, "users/user-b")));
+  });
+
+  it("allows one immutable game view per authenticated guest installation", async () => {
+    const uid = "guest-viewer";
+    const db = testEnv.authenticatedContext(uid, {
+      firebase: { sign_in_provider: "anonymous" },
+    }).firestore();
+    const gameId = "a".repeat(64);
+    const view = doc(db, "gameMetrics/" + gameId + "/views/" + uid);
+
+    await assertSucceeds(setDoc(view, { uid, createdAt: serverTimestamp() }));
+    // A second write targets the existing UID document and is denied as update.
+    await assertFails(setDoc(view, { uid, createdAt: serverTimestamp() }));
+    await assertFails(updateDoc(view, { createdAt: serverTimestamp() }));
+    await assertFails(deleteDoc(view));
+    await assertFails(
+      setDoc(doc(db, "gameMetrics/" + gameId + "/views/another-user"), {
+        uid,
+        createdAt: serverTimestamp(),
+      }),
+    );
+    await assertFails(
+      setDoc(doc(db, "gameMetrics/not-a-sha256-id/views/" + uid), {
+        uid,
+        createdAt: serverTimestamp(),
+      }),
+    );
+  });
+
+  it("allows registered users to create and update only their own 1-to-5-star rating", async () => {
+    const uid = "registered-rater";
+    const db = testEnv.authenticatedContext(uid).firestore();
+    const gameId = "b".repeat(64);
+    const rating = doc(db, "gameMetrics/" + gameId + "/ratings/" + uid);
+
+    await assertSucceeds(setDoc(rating, {
+      uid,
+      rating: 4,
+      updatedAt: serverTimestamp(),
+    }));
+    await assertSucceeds(
+      updateDoc(rating, { rating: 5, updatedAt: serverTimestamp() }),
+    );
+    await assertFails(
+      updateDoc(rating, { rating: 6, updatedAt: serverTimestamp() }),
+    );
+    await assertFails(
+      updateDoc(rating, { rating: 4, updatedAt: new Date() }),
+    );
+    await assertFails(
+      setDoc(doc(db, "gameMetrics/" + gameId + "/ratings/someone-else"), {
+        uid: "somebody-else",
+        rating: 5,
+        updatedAt: serverTimestamp(),
+      }),
+    );
+    await assertFails(
+      setDoc(doc(db, "gameMetrics/not-a-sha256-id/ratings/" + uid), {
+        uid,
+        rating: 5,
+        updatedAt: serverTimestamp(),
+      }),
+    );
+    // The rating document remains publicly readable for the game summary.
+    await assertSucceeds(getDoc(rating));
+  });
+
+  it("denies ratings from anonymous visitors", async () => {
+    const uid = "anonymous-rater";
+    const db = testEnv.authenticatedContext(uid, {
+      firebase: { sign_in_provider: "anonymous" },
+    }).firestore();
+
+    await assertFails(
+      setDoc(doc(db, "gameMetrics/" + "c".repeat(64) + "/ratings/" + uid), {
+        uid,
+        rating: 5,
+        updatedAt: serverTimestamp(),
+      }),
+    );
+  });
+
+  it("denies unauthenticated metric writes while allowing public summary reads", async () => {
+    const db = testEnv.unauthenticatedContext().firestore();
+    const gameId = "d".repeat(64);
+
+    await assertSucceeds(getDoc(doc(db, "gameMetrics/" + gameId + "/ratings/any-user")));
+    await assertFails(
+      setDoc(doc(db, "gameMetrics/" + gameId + "/views/guest"), {
+        uid: "guest",
+        createdAt: serverTimestamp(),
+      }),
+    );
+    await assertFails(
+      setDoc(doc(db, "gameMetrics/" + gameId + "/ratings/guest"), {
+        uid: "guest",
+        rating: 5,
+        updatedAt: serverTimestamp(),
+      }),
+    );
   });
 
   it("denies authenticated users access outside their /users/{uid} tree", async () => {

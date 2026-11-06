@@ -61,6 +61,44 @@ service cloud.firestore {
       // No other nested collections/documents are writable.
     }
 
-    // Everything outside /users/{uid} stays denied by default.
+    // Game IDs are SHA-256 hashes generated from stable game identity fields.
+    function validGameMetricId(gameId) {
+      return gameId.size() == 64 && gameId.matches('[0-9a-f]{64}');
+    }
+
+    match /gameMetrics/{gameId}/views/{userId} {
+      // Public summaries; writes are restricted to the matching Firebase UID.
+      allow read: if validGameMetricId(gameId);
+      // The UID document path enforces one immutable view per account/guest install.
+      // Requiring request.time ensures createdAt is a Firestore server timestamp.
+      allow create: if validGameMetricId(gameId)
+        && signedInAs(userId)
+        && request.resource.data.keys().hasOnly(['uid', 'createdAt'])
+        && request.resource.data.keys().hasAll(['uid', 'createdAt'])
+        && request.resource.data.uid == userId
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+
+    match /gameMetrics/{gameId}/ratings/{userId} {
+      allow read: if validGameMetricId(gameId);
+      // Registered users own one rating per game and may update its value.
+      // Anonymous visitors are explicitly denied.
+      allow create, update: if validGameMetricId(gameId)
+        && signedInAs(userId)
+        && !isAnonymous()
+        && request.resource.data.keys().hasOnly(['uid', 'rating', 'updatedAt'])
+        && request.resource.data.keys().hasAll(['uid', 'rating', 'updatedAt'])
+        && request.resource.data.uid == userId
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if validGameMetricId(gameId)
+        && signedInAs(userId)
+        && !isAnonymous();
+    }
+
+    // Everything else stays denied by default.
   }
 }
