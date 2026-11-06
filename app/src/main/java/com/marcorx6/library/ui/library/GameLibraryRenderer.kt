@@ -79,7 +79,7 @@ internal class GameLibraryRenderer(
                 }
                 val sectioned = selected == "ALL" || selected == "BLOG" || selected == "FAVORITES"
                 val sections = if (sectioned) {
-                    val priority = listOf("PS5", "PS4", "PS3", "PS2")
+                    val priority = listOf("PS4", "PS3", "PS2")
                     val grouped = sorted.groupBy { it.platform.trim().uppercase() }
                     priority.filter { grouped[it].orEmpty().isNotEmpty() }.map { it to grouped.getValue(it) } +
                         grouped.keys.filter { it !in priority }.sorted().map { it to grouped.getValue(it) }
@@ -93,7 +93,6 @@ internal class GameLibraryRenderer(
                             setPadding(dp(3), dp(12), dp(3), dp(7))
                         }
                         heading.addView(makeText(platform, 16f, white, true), LinearLayout.LayoutParams(0, -2, 1f))
-                        heading.addView(makeText(sectionGames.size.toString() + " " + tr("لعبة"), 10f, gray, true))
                         gameList.addView(heading, LinearLayout.LayoutParams(-1, -2))
                     }
                 for (index in sectionGames.indices step 2) {
