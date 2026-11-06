@@ -34,7 +34,7 @@ internal class AppearanceSettingsController(
         fun dp(value: Int) = (value * activity.resources.displayMetrics.density).toInt()
         val dark = preferences.getBoolean("dark_mode", true)
         val bg = if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247)
-        val blue = Color.rgb(190, 198, 210)
+        val silverAccent = Color.rgb(190, 198, 210)
         val ink = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
         val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
         fun addGlassTouch(view: View) {
@@ -63,7 +63,7 @@ internal class AppearanceSettingsController(
             text = "MARCO RX6  /  PERSONALIZATION"
             textSize = 9f
             letterSpacing = 0.12f
-            setTextColor(blue)
+            setTextColor(silverAccent)
         })
         heading.addView(TextView(activity).apply {
             text = translate("الإعدادات والمظهر")
@@ -115,11 +115,11 @@ internal class AppearanceSettingsController(
             text = translate("●   فضي")
             textSize = 14f
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(Color.WHITE)
+            setTextColor(Color.rgb(20, 23, 29))
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(15), dp(14), dp(15), dp(14))
             background = GradientDrawable().apply {
-                setColor(blue); cornerRadius = dp(14).toFloat()
+                setColor(silverAccent); cornerRadius = dp(14).toFloat()
             }
         })
         root.addView(colorCard, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
@@ -148,12 +148,12 @@ internal class AppearanceSettingsController(
             }
             textSize = 13f
             gravity = Gravity.CENTER
-            setTextColor(if (preferences.getBoolean("animations", true)) Color.WHITE else blue)
+            setTextColor(if (preferences.getBoolean("animations", true)) Color.rgb(20, 23, 29) else silverAccent)
             setPadding(dp(14), dp(13), dp(14), dp(13))
             background = GradientDrawable().apply {
                 setColor(if (preferences.getBoolean("animations", true)) Color.argb(218, 190, 198, 210) else if (dark) Color.argb(190, 25, 28, 34) else Color.argb(210, 255, 255, 255))
                 cornerRadius = dp(14).toFloat()
-                if (!preferences.getBoolean("animations", true)) setStroke(dp(1), blue)
+                if (!preferences.getBoolean("animations", true)) setStroke(dp(1), silverAccent)
             }
             addGlassTouch(this)
             setOnClickListener {
@@ -180,7 +180,7 @@ internal class AppearanceSettingsController(
                 orientation = LinearLayout.VERTICAL
                 setPadding(dp(16), dp(14), dp(16), dp(14))
                 background = GradientDrawable().apply {
-                    setColors(if (dark) intArrayOf(Color.argb(220, 21, 63, 102), Color.argb(207, 8, 27, 47)) else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(216, 222, 226, 232)))
+                    setColors(if (dark) intArrayOf(Color.argb(220, 35, 38, 45), Color.argb(207, 15, 17, 22)) else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(216, 222, 226, 232)))
                     cornerRadius = dp(18).toFloat()
                     setStroke(dp(1), if (dark) Color.argb(165, 130, 138, 151) else Color.argb(175, 160, 168, 181))
                 }
