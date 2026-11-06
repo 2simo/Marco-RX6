@@ -226,7 +226,7 @@ internal class MainLibraryInterfaceController(
         // MARCO RX6 visual system: charcoal surfaces with brushed-silver accents.
         val silver = if (isDarkMode()) Color.rgb(225, 228, 234) else Color.rgb(43, 47, 55)
         val muted = gray
-        val accentBlue = red
+        val silverAccent = red
         val ink = bg
         val glass = panel
         val root = LinearLayout(context).apply {
@@ -371,7 +371,7 @@ internal class MainLibraryInterfaceController(
             gravity = Gravity.CENTER_VERTICAL
         }
         val titles = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
-        titles.addView(makeText("MARCO RX6  /  GAMES", 8f, accentBlue, true).apply { letterSpacing = 0.14f })
+        titles.addView(makeText("MARCO RX6  /  GAMES", 8f, silverAccent, true).apply { letterSpacing = 0.14f })
         titles.addView(makeText(tr("اكتشف الألعاب"), 21f, silver, true))
         section.addView(titles, LinearLayout.LayoutParams(0, -2, 1f))
         countText = makeText("0 " + tr("لعبة"), 10f, muted, true)
