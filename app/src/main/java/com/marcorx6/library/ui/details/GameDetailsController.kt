@@ -8,6 +8,7 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import com.marcorx6.library.data.Game
+import com.marcorx6.library.ui.details.GameRatingViewFactory
 
 internal class GameDetailsController(
     private val activity: Activity,
