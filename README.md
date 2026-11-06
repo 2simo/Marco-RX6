@@ -1,4 +1,4 @@
-# MARCO RX6 — 8.17
+# MARCO RX6 — 8.18
 
 [العربية](#العربية) | [English](#english)
 
@@ -35,8 +35,8 @@
 
 ## إصدار التطبيق
 
-- Version name: `8.17`
-- Version code: `34`
+- Version name: `8.18`
+- Version code: `35`
 - Android application ID: `com.marcorx6.library`
 
 ## البناء محلياً
@@ -111,8 +111,8 @@ Kotlin · Android SDK (minSdk 24 / targetSdk 36) · AndroidX · WorkManager · F
 
 ## App version
 
-- Version name: `8.17`
-- Version code: `34`
+- Version name: `8.18`
+- Version code: `35`
 - Application ID: `com.marcorx6.library`
 
 ## Local build
