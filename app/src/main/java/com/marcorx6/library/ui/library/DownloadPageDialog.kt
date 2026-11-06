@@ -56,7 +56,7 @@ internal class DownloadPageDialog(
             android.content.res.Configuration.UI_MODE_NIGHT_YES
         val background = if (dark) Color.rgb(7, 17, 31) else Color.rgb(242, 247, 253)
         val surface = if (dark) Color.rgb(15, 35, 58) else Color.WHITE
-        val primary = Color.rgb(42, 145, 255)
+        val primary = Color.rgb(190, 198, 210)
         val heading = if (dark) Color.WHITE else Color.rgb(22, 43, 65)
         val muted = if (dark) Color.rgb(164, 184, 207) else Color.rgb(91, 112, 137)
 
