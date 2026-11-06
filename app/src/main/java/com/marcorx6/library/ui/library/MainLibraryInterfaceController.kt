@@ -598,12 +598,16 @@ internal class MainLibraryInterfaceController(
         // including the floating navigation dock, has been assembled.
         applyUnifiedSkin(shell)
         ViewCompat.setOnApplyWindowInsetsListener(shell) { _, insets ->
-            val safeAreas = insets.getInsets(
-                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
-            )
-            dockParams.bottomMargin = dp(12) + safeAreas.bottom
+            val safeTop = insets.getInsets(
+                WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.displayCutout()
+            ).top
+            val safeBottom = insets.getInsets(
+                WindowInsetsCompat.Type.navigationBars() or
+                    WindowInsetsCompat.Type.mandatorySystemGestures()
+            ).bottom
+            dockParams.bottomMargin = dp(12) + safeBottom
             dock.layoutParams = dockParams
-            pageScroll.setPadding(0, safeAreas.top, 0, dp(84) + safeAreas.bottom)
+            pageScroll.setPadding(0, safeTop, 0, dp(84) + safeBottom)
             insets
         }
         setContentView(shell)
