@@ -5,7 +5,6 @@ import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import java.security.MessageDigest
 
 /**
@@ -29,7 +28,7 @@ internal class GameEngagementRepository(
             ?: game.name.trim().lowercase()
         val identity = listOf(game.platform.trim().uppercase(), stableGameKey).joinToString("|")
         val digest = MessageDigest.getInstance("SHA-256").digest(identity.toByteArray(Charsets.UTF_8))
-        return digest.joinToString("") { "%02x".format(it) }
+        return digest.joinToString("") { "%02x".format(it.toInt() and 0xff) }
     }
 
     private fun gameDocument(game: Game) =
