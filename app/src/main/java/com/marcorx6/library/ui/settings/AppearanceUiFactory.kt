@@ -76,7 +76,7 @@ internal class AppearanceUiFactory(
 
     fun stylePrimaryButton(button: Button, primary: Boolean = false) {
         button.background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-            if (primary) intArrayOf(Color.argb(232, 42, 145, 255), Color.argb(218, 24, 91, 205))
+            if (primary) intArrayOf(Color.argb(232, 190, 198, 210), Color.argb(218, 112, 120, 133))
             else if (isDarkMode()) intArrayOf(Color.argb(205, 24, 58, 91), Color.argb(190, 10, 29, 49))
             else intArrayOf(Color.argb(218, 255, 255, 255), Color.argb(205, 225, 239, 253))).apply {
             cornerRadius = dp(16).toFloat()
