@@ -384,7 +384,8 @@ internal class GameLibraryRenderer(
             if (normalized.isBlank()) continue
             if (normalized.contains("arab") || normalized.contains("عرب")) return "Arabic"
             if (normalized.contains("english") || normalized.contains("انجليز") ||
-                Regex("(^|\\\s)en($|\\\s)").containsMatchIn(normalized)
+                normalized == "en" || normalized.startsWith("en ") ||
+                normalized.endsWith(" en") || normalized.contains(" en ")
             ) return "English"
         }
         return ""
