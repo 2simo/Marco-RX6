@@ -23,6 +23,7 @@ import org.json.JSONObject
 internal class BloggerPostComposerController(
     private val activity: ComponentActivity,
     private val isAdminSession: () -> Boolean,
+    private val isDarkMode: () -> Boolean,
     private val dp: (Int) -> Int,
     private val bg: () -> Int,
     private val panel: () -> Int,
@@ -65,18 +66,17 @@ internal class BloggerPostComposerController(
         }
         if (existing != null) setPendingCoverLocalPath(existing.coverLocalPath)
 
-        val isNight = (activity.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
-        val studioTextColor = if (isNight) white() else android.graphics.Color.rgb(32, 48, 68)
+        // Follow the app's saved appearance preference, not the device's system theme.
+        // The app supports an in-app dark/light choice that can differ from uiMode.
+        val isNight = isDarkMode()
+        val studioTextColor = white()
         val box = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(12), dp(16), dp(12))
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
-                if (android.os.Build.VERSION.SDK_INT >= 23 && activity.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK == android.content.res.Configuration.UI_MODE_NIGHT_YES)
-                    intArrayOf(android.graphics.Color.rgb(9, 31, 54), android.graphics.Color.rgb(6, 17, 32))
-                else if (activity.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK == android.content.res.Configuration.UI_MODE_NIGHT_NO)
-                    intArrayOf(android.graphics.Color.WHITE, android.graphics.Color.rgb(235, 243, 253))
-                else intArrayOf(bg(), panel())
+                if (isNight) intArrayOf(android.graphics.Color.rgb(9, 31, 54), android.graphics.Color.rgb(6, 17, 32))
+                else intArrayOf(android.graphics.Color.WHITE, android.graphics.Color.rgb(235, 243, 253))
             ).apply {
                 cornerRadius = dp(22).toFloat()
                 setStroke(dp(1), android.graphics.Color.argb(115, 74, 153, 222))
