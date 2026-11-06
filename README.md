@@ -58,7 +58,7 @@ gradle --no-daemon assembleDebug
 
 ## البناء عبر GitHub Actions
 
-ملف `.github/workflows/build-apk.yml` يشغّل اختبارات Kotlin، وAndroid Lint، ويبني نسختي Release وDebug. ملف Release الناتج يُرفع كـ artifact باسم:
+ملف `.github/workflows/build-apk.yml` يشغّل اختبارات Kotlin، وAndroid Lint، ويبني نسختي Release وDebug. لا يحتاج هذا المسار إلى Node.js. أما مسارا اختبار ونشر قواعد Firestore فيستخدمان Node.js 24 وJava 17. ملف Release الناتج يُرفع كـ artifact باسم:
 
 `marco-rx6-release-apk`
 
@@ -129,7 +129,7 @@ For a signed Release build, provide these environment variables before running `
 
 ## GitHub Actions
 
-`.github/workflows/build-apk.yml` runs Kotlin unit tests and Android Lint, then builds Release and Debug APKs. The Release APK is uploaded as the `marco-rx6-release-apk` artifact.
+`.github/workflows/build-apk.yml` runs Kotlin unit tests and Android Lint, then builds Release and Debug APKs; this Android build workflow does not require Node.js. The Firestore rules test and deployment workflows use Node.js 24 and Java 17. The Release APK is uploaded as the `marco-rx6-release-apk` artifact.
 
 The workflow requires repository secrets `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, and `KEY_PASSWORD`.
 

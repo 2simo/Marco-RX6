@@ -6,6 +6,7 @@ on:
       - main
       - feature/publishing-studio-redesign
       - maintenance/audit-8.16
+      - maintenance/node24-firestore
     paths:
       - "firestore.rules"
       - "firebase.json"
@@ -34,10 +35,10 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: "24"
 
       - name: Set up Java for the Firestore emulator
         uses: actions/setup-java@v4
