@@ -218,6 +218,38 @@ internal class GameLibraryRenderer(
                         topMargin = dp(7)
                     }
                 )
+
+                // Show the game's own language on the cover, independent of the app UI language.
+                val languageLabel = when (game.language.trim().lowercase(Locale.ROOT)) {
+                    "العربية", "عربي", "arabic", "ar", "arab" -> "Arabic"
+                    "الإنجليزية", "الانجليزية", "إنجليزي", "انجليزي", "english", "en" -> "English"
+                    else -> ""
+                }
+                if (languageLabel.isNotEmpty()) {
+                    val languageBadge = TextView(activity).apply {
+                        text = languageLabel
+                        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+                        textSize = 9f
+                        setTextColor(Color.WHITE)
+                        typeface = android.graphics.Typeface.create(
+                            "sans-serif-medium", android.graphics.Typeface.BOLD
+                        )
+                        gravity = Gravity.CENTER
+                        setPadding(dp(8), dp(4), dp(8), dp(4))
+                        background = GradientDrawable().apply {
+                            setColor(Color.argb(220, 12, 34, 58))
+                            cornerRadius = dp(9).toFloat()
+                            setStroke(dp(1), Color.argb(210, 100, 177, 245))
+                        }
+                    }
+                    imageFrame.addView(
+                        languageBadge,
+                        FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.END).apply {
+                            rightMargin = dp(7)
+                            topMargin = dp(7)
+                        }
+                    )
+                }
                 if (game.isFavorite) {
                     val favoriteBadge = ImageView(activity).apply {
                         setImageResource(com.marcorx6.library.R.drawable.ic_nav_favorites)
