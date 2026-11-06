@@ -23,8 +23,7 @@ internal class GameLibraryRenderer(
     private val tr: (String) -> String,
     private val loadCover: (ImageView, String, String) -> Unit,
     private val showDetails: (Game) -> Unit,
-    private val loadEngagementSummary: (Game, (Long, Double, Long) -> Unit) -> Unit,
-    private val recordViewOnce: (Game, () -> Unit) -> Unit
+    private val loadEngagementSummary: (Game, (Long, Double, Long) -> Unit) -> Unit
 ) {
     fun render(
         gameList: LinearLayout,
@@ -125,14 +124,7 @@ internal class GameLibraryRenderer(
                     isClickable = true
                     isFocusable = true
                     contentDescription = game.name + ", " + tr("عرض التفاصيل")
-                    setOnClickListener {
-                        recordViewOnce(game) { loadEngagementSummary(game) { views, average, ratings ->
-                            activity.runOnUiThread {
-                                engagementBadge.text = "★ ${if (ratings == 0L) "—" else String.format(java.util.Locale.US, "%.1f", average)} ($ratings)   •   $views"
-                            }
-                        } }
-                        showDetails(game)
-                    }
+                    setOnClickListener { showDetails(game) }
                 }
                 val imageFrame = FrameLayout(activity).apply {
                     clipToOutline = true
