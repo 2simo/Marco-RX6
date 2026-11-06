@@ -110,7 +110,7 @@ internal class GameLibraryRenderer(
                 layoutDirection = activity.resources.configuration.layoutDirection
                 setPadding(dp(3), dp(15), dp(3), dp(9))
             }
-            val platformTitle = makeText("\\u2066" + platform + "\\u2069", 16f, white, true).apply {
+            val platformTitle = makeText(platform, 16f, white, true).apply {
                 textDirection = View.TEXT_DIRECTION_LTR
                 gravity = Gravity.CENTER_VERTICAL
             }
@@ -119,7 +119,7 @@ internal class GameLibraryRenderer(
                 LinearLayout.LayoutParams(0, -2, 1f)
             )
             val sectionCount = makeText(
-                "\\u2067" + sectionGames.size + " " + tr("لعبة") + "\\u2069",
+                sectionGames.size.toString() + " " + tr("لعبة"),
                 11f,
                 gray,
                 true
