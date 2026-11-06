@@ -37,7 +37,7 @@ internal class GameSimilarGamesViewFactory(
             makeText(
                 translate("اكتشف المزيد  •  قد يعجبك أيضاً"),
                 12f,
-                if (dark) Color.rgb(111, 194, 255) else Color.rgb(30, 139, 235),
+                if (dark) Color.rgb(190, 198, 210) else Color.rgb(130, 138, 151),
                 true
             ).apply { setPadding(0, 0, 0, dp(9)) }
         )
@@ -48,11 +48,11 @@ internal class GameSimilarGamesViewFactory(
                 setPadding(dp(7), dp(7), dp(7), dp(8))
                 background = GradientDrawable(
                     GradientDrawable.Orientation.TOP_BOTTOM,
-                    if (dark) intArrayOf(Color.rgb(22, 43, 67), Color.rgb(12, 27, 45))
-                    else intArrayOf(Color.WHITE, Color.rgb(232, 243, 255))
+                    if (dark) intArrayOf(Color.rgb(35, 38, 45), Color.rgb(15, 17, 22))
+                    else intArrayOf(Color.WHITE, Color.rgb(242, 244, 247))
                 ).apply {
                     cornerRadius = dp(14).toFloat()
-                    setStroke(dp(1), if (dark) Color.argb(145, 76, 145, 207) else Color.rgb(196, 220, 246))
+                    setStroke(dp(1), if (dark) Color.argb(145, 130, 138, 151) else Color.rgb(160, 168, 181))
                 }
                 isClickable = true
                 isFocusable = true
@@ -62,7 +62,7 @@ internal class GameSimilarGamesViewFactory(
             val cover = ImageView(activity).apply {
                 scaleType = ImageView.ScaleType.CENTER_CROP
                 background = GradientDrawable().apply {
-                    setColor(if (dark) Color.rgb(12, 31, 51) else Color.rgb(222, 237, 253))
+                    setColor(if (dark) Color.rgb(35, 38, 45) else Color.rgb(222, 226, 232))
                     cornerRadius = dp(10).toFloat()
                 }
                 clipToOutline = true
@@ -81,7 +81,7 @@ internal class GameSimilarGamesViewFactory(
                 maxLines = 2
                 ellipsize = TextUtils.TruncateAt.END
                 gravity = android.view.Gravity.CENTER
-                setTextColor(if (dark) white() else Color.rgb(48, 57, 77))
+                setTextColor(if (dark) white() else Color.rgb(25, 29, 36))
                 setPadding(dp(3), dp(7), dp(3), dp(2))
             }, LinearLayout.LayoutParams(-1, -2))
             similarRow.addView(card, LinearLayout.LayoutParams(dp(126), -2).apply {
