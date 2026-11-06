@@ -81,7 +81,7 @@ internal class CommunityChannelsController(
             textSize = 14f
             setTextColor(Color.WHITE)
             background = GradientDrawable().apply {
-                setColor(Color.rgb(42, 145, 255))
+                setColor(Color.rgb(190, 198, 210))
                 cornerRadius = dp(16).toFloat()
             }
             minHeight = dp(52)
