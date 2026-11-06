@@ -55,7 +55,7 @@ internal class GameDetailsIdentityViewFactory(
             gravity = android.view.Gravity.CENTER_HORIZONTAL
         })
 
-        val details = extractGameDetails(game.bloggerHtml)
+        val details = extractGameDetails(game)
         if (details.isNotEmpty()) {
             val infoCard = LinearLayout(activity).apply {
                 orientation = LinearLayout.VERTICAL
@@ -106,15 +106,28 @@ internal class GameDetailsIdentityViewFactory(
         return root
     }
 
-    private fun extractGameDetails(html: String): List<Pair<String, String>> {
-        if (html.isBlank()) return emptyList()
+    private fun extractGameDetails(game: Game): List<Pair<String, String>> {
+        val html = game.bloggerHtml
+        val stored = linkedMapOf(
+            "الحجم" to game.packageSize,
+            "النسخة" to game.version,
+            "الصيغة" to game.fileFormat,
+            "اللغة" to game.language,
+            "كلمة السر" to game.password,
+            "الحقوق" to game.rights,
+            "النوع" to game.genre,
+            "سنة الإصدار" to game.releaseYear
+        ).filterValues { it.isNotBlank() }.toMutableMap()
+        if (html.isBlank()) return stored.map { it.key to it.value }
         val fields = listOf(
             "الحجم" to listOf("الحجم", "حجم", "size"),
             "النسخة" to listOf("النسخة", "version", "title id", "cusa"),
             "الصيغة" to listOf("الصيغة", "format"),
             "اللغة" to listOf("اللغة", "language", "languages"),
             "كلمة السر" to listOf("كلمة السر", "كلمه السر", "password", "pass"),
-            "الحقوق" to listOf("الحقوق", "credits", "rights")
+            "الحقوق" to listOf("الحقوق", "credits", "rights"),
+            "النوع" to listOf("النوع", "genre", "category"),
+            "سنة الإصدار" to listOf("سنة الإصدار", "سنة الاصدار", "release year", "year")
         )
         fun plainText(value: String): String = Html.fromHtml(
             value, Html.FROM_HTML_MODE_LEGACY
@@ -122,7 +135,7 @@ internal class GameDetailsIdentityViewFactory(
 
         // Blogger commonly puts every field in its own <li>. Parse each item
         // independently so a missing newline cannot merge the next field into it.
-        val entries = linkedMapOf<String, String>()
+        val entries = linkedMapOf<String, String>().apply { putAll(stored) }
         Regex("(?is)<li\\b[^>]*>(.*?)</li\\s*>").findAll(html).forEach { item ->
             val text = plainText(item.groupValues[1]).trim(' ', ':', '：', '-', '•')
             fields.forEach { (label, aliases) ->
