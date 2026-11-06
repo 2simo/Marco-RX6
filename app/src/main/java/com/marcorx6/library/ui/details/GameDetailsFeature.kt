@@ -95,7 +95,6 @@ internal class GameDetailsFeature(
         gray = gray,
         translate = tr,
         isRegisteredUser = isRegisteredUser,
-        loadSummary = loadEngagementSummary,
         loadMyRating = loadMyRating,
         submitRating = submitRating
     )
