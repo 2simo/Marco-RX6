@@ -223,12 +223,7 @@ internal class GameLibraryRenderer(
 
                 // Resolve the game's language from its stored field, with the original
                 // Blogger article as a fallback for older/imported entries.
-                val articleLanguage = Regex(
-                    "(?is)<strong[^>]*>\\s*(?:اللغة|language)\\s*:?\\s*</strong>\\s*(.*?)(?:</li>|</p>|<br\\s*/?>)"
-                ).find(game.bloggerHtml)?.groupValues?.getOrNull(1)
-                    ?.replace(Regex("(?is)<[^>]*>"), " ")
-                    ?.let { android.text.Html.fromHtml(it, android.text.Html.FROM_HTML_MODE_LEGACY).toString() }
-                    .orEmpty()
+                val articleLanguage = BloggerFeedParser.extractLanguage(game.bloggerHtml)
                 val languageLabel = resolveLanguageLabel(game.language, articleLanguage)
                 if (languageLabel.isNotEmpty()) {
                     val languageBadge = TextView(activity).apply {
