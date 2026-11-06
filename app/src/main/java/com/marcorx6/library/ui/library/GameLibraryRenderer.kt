@@ -88,7 +88,9 @@ internal class GameLibraryRenderer(
                 .replace(Regex("[\\u200B-\\u200F\\u202A-\\u202E\\u2066-\\u2069]"), "")
                 .trim()
                 .uppercase(Locale.ROOT)
-            return clean.replace(Regex("^PS\\s*([0-9]+)$"), "PS$1")
+            return GameLibraryManager.normalizePlatform(clean) ?: clean.replace(
+                Regex("^PS\\s*([0-9]+)$"), "PS$1"
+            )
         }
 
         val sections = if (sectioned) {
