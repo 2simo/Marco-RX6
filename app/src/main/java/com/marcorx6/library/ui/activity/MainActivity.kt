@@ -532,9 +532,14 @@ class MainActivity : ComponentActivity() {
                 gameEngagementRepository.loadSummary(
                     game,
                     callback = { summary ->
-                        callback(summary.views, summary.ratingAverage, summary.ratingCount)
+                        callback(summary.views, summary.ratingAverage, summary.ratingCount, summary.downloads)
                     }
                 )
+            },
+            recordDownload = { game ->
+                gameEngagementRepository.recordDownload(game).addOnFailureListener { error ->
+                    android.util.Log.w("MarcoGameDownloads", "Could not record game download", error)
+                }
             },
             loadMyRating = gameEngagementRepository::loadMyRating,
             submitRating = { game, rating, callback ->
