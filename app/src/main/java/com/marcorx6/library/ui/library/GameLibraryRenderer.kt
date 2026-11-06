@@ -219,12 +219,15 @@ internal class GameLibraryRenderer(
                     }
                 )
 
-                // Show the game's own language on the cover, independent of the app UI language.
-                val languageLabel = when (game.language.trim().lowercase(Locale.ROOT)) {
-                    "العربية", "عربي", "arabic", "ar", "arab" -> "Arabic"
-                    "الإنجليزية", "الانجليزية", "إنجليزي", "انجليزي", "english", "en" -> "English"
-                    else -> ""
-                }
+                // Resolve the game's language from its stored field, with the original
+                // Blogger article as a fallback for older/imported entries.
+                val articleLanguage = Regex(
+                    "(?is)<strong[^>]*>\\s*(?:اللغة|language)\\s*:?\\s*</strong>\\s*(.*?)(?:</li>|</p>|<br\\s*/?>)"
+                ).find(game.bloggerHtml)?.groupValues?.getOrNull(1)
+                    ?.replace(Regex("(?is)<[^>]*>"), " ")
+                    ?.let { android.text.Html.fromHtml(it, android.text.Html.FROM_HTML_MODE_LEGACY).toString() }
+                    .orEmpty()
+                val languageLabel = resolveLanguageLabel(game.language, articleLanguage)
                 if (languageLabel.isNotEmpty()) {
                     val languageBadge = TextView(activity).apply {
                         text = languageLabel
@@ -364,6 +367,27 @@ internal class GameLibraryRenderer(
             horizontal.addView(carousel, FrameLayout.LayoutParams(-2, -2))
             gameList.addView(horizontal, LinearLayout.LayoutParams(-1, -2))
         }
+    }
+
+    private fun resolveLanguageLabel(vararg candidates: String): String {
+        for (candidate in candidates) {
+            val normalized = java.text.Normalizer.normalize(
+                candidate.lowercase(Locale.ROOT)
+                    .replace(Regex("[\\u200B-\\u200F\\u202A-\\u202E\\u2066-\\u2069]"), "")
+                    .replace('ـ', ' ')
+                    .trim(),
+                java.text.Normalizer.Form.NFD
+            ).replace(Regex("\\p{Mn}+"), "")
+                .replace(Regex("[^\\p{L}\\p{N}]+"), " ")
+                .trim()
+
+            if (normalized.isBlank()) continue
+            if (normalized.contains("arab") || normalized.contains("عرب")) return "Arabic"
+            if (normalized.contains("english") || normalized.contains("انجليز") ||
+                Regex("(^|\\\s)en($|\\\s)").containsMatchIn(normalized)
+            ) return "English"
+        }
+        return ""
     }
 
     private fun compactCount(value: Long): String = when {
