@@ -76,16 +76,16 @@ internal class DownloadUiController(
     fun showDownloadManager() {
         fun dp(value: Int): Int = (value * activity.resources.displayMetrics.density).toInt()
         val dark = isDarkMode()
-        val background = if (dark) Color.rgb(7, 17, 31) else Color.rgb(242, 247, 253)
+        val background = if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247)
         val surface = if (dark) Color.rgb(25, 28, 34) else Color.WHITE
         val primary = Color.rgb(190, 198, 210)
-        val heading = if (dark) Color.WHITE else Color.rgb(22, 43, 65)
-        val muted = if (dark) Color.rgb(164, 184, 207) else Color.rgb(91, 112, 137)
+        val heading = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
+        val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
         fun addGlassTouch(view: View) {
             if (android.os.Build.VERSION.SDK_INT >= 23) {
                 view.foreground = android.graphics.drawable.RippleDrawable(
                     android.content.res.ColorStateList.valueOf(
-                        if (dark) Color.argb(82, 76, 169, 255) else Color.argb(55, 35, 126, 224)
+                        if (dark) Color.argb(82, 190, 198, 210) else Color.argb(55, 140, 148, 160)
                     ),
                     null,
                     android.graphics.drawable.ColorDrawable(Color.WHITE)
@@ -156,10 +156,10 @@ internal class DownloadUiController(
             setPadding(dp(24), dp(42), dp(24), dp(42))
             this.background = GradientDrawable().apply {
                 setColors(if (dark)
-                    intArrayOf(Color.argb(220, 23, 67, 108), Color.argb(208, 8, 27, 47))
-                else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(218, 224, 240, 255)))
+                    intArrayOf(Color.argb(220, 35, 38, 45), Color.argb(208, 15, 17, 22))
+                else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(218, 222, 226, 232)))
                 cornerRadius = dp(22).toFloat()
-                setStroke(dp(1), if (dark) Color.argb(165, 80, 151, 215) else Color.argb(175, 153, 195, 236))
+                setStroke(dp(1), if (dark) Color.argb(165, 130, 138, 151) else Color.argb(175, 160, 168, 181))
             }
             addView(android.widget.ImageView(activity).apply {
                 setImageResource(com.marcorx6.library.R.drawable.ic_action_download)
@@ -249,10 +249,10 @@ internal class DownloadUiController(
             TextView(activity).apply {
                 text = label; textSize = 11f; gravity = Gravity.CENTER
                 minimumHeight = dp(42); setPadding(dp(13), dp(9), dp(13), dp(9))
-                setTextColor(if (filled) Color.WHITE else primary)
+                setTextColor(if (filled) Color.rgb(20, 23, 29) else primary)
                 this.background = GradientDrawable().apply {
                     setColor(if (filled) Color.argb(225, 190, 198, 210)
-                        else if (dark) Color.argb(190, 15, 43, 70) else Color.WHITE)
+                        else if (dark) Color.argb(190, 35, 38, 45) else Color.WHITE)
                     cornerRadius = dp(12).toFloat(); setStroke(dp(1), primary)
                 }
                 isClickable = true; isFocusable = true; addGlassTouch(this)
@@ -340,10 +340,10 @@ internal class DownloadUiController(
                 setPadding(dp(15), dp(14), dp(15), dp(14))
                 this.background = GradientDrawable().apply {
                     setColors(if (dark)
-                        intArrayOf(Color.argb(221, 22, 65, 105), Color.argb(209, 8, 27, 47))
-                    else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(218, 224, 240, 255)))
+                        intArrayOf(Color.argb(221, 35, 38, 45), Color.argb(209, 15, 17, 22))
+                    else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(218, 222, 226, 232)))
                     cornerRadius = dp(17).toFloat()
-                    setStroke(dp(1), if (dark) Color.argb(165, 80, 151, 215) else Color.argb(175, 153, 195, 236))
+                    setStroke(dp(1), if (dark) Color.argb(165, 130, 138, 151) else Color.argb(175, 160, 168, 181))
                 }
             }
             val titleView = TextView(activity).apply {
@@ -357,7 +357,7 @@ internal class DownloadUiController(
                 max = 100
                 progressTintList = android.content.res.ColorStateList.valueOf(primary)
                 progressBackgroundTintList = android.content.res.ColorStateList.valueOf(
-                    if (dark) Color.argb(90, 110, 150, 190) else Color.argb(70, 70, 120, 180))
+                    if (dark) Color.argb(90, 130, 138, 151) else Color.argb(70, 160, 168, 181))
             }
             val actions = LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
