@@ -123,7 +123,7 @@ internal class BloggerPostComposerController(
             }
         }
         intro.addView(makeText(
-            translate(if (existing == null) "استوديو النشر • MARCO RX6" else "استوديو التحرير • MARCO RX6"),
+            translate(if (existing == null) "استوديو النشر • MARCO" else "استوديو التحرير • MARCO"),
             18f, studioTextColor, true
         ))
         intro.addView(makeText(
