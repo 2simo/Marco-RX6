@@ -478,6 +478,13 @@ class MainActivity : ComponentActivity() {
                 gameEngagementRepository.loadSummary(game, { summary ->
                     callback(summary.views, summary.ratingAverage, summary.ratingCount)
                 })
+            },
+            recordViewOnce = { game, onRecorded ->
+                gameEngagementRepository.recordViewOnce(game)
+                    .addOnSuccessListener { if (it) onRecorded() }
+                    .addOnFailureListener { error ->
+                        android.util.Log.w("MarcoGameViews", "Could not record game view", error)
+                    }
             }
         )
     }
