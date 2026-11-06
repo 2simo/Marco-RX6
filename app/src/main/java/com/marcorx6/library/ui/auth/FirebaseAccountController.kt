@@ -150,13 +150,13 @@ internal class FirebaseAccountController(
                 maxLines = 5
                 gravity = Gravity.TOP or Gravity.START
                 textSize = 14f
-                setTextColor(if (dark) Color.WHITE else Color.rgb(20, 45, 70))
-                setHintTextColor(if (dark) Color.rgb(133, 164, 195) else Color.rgb(112, 139, 166))
+                setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+                setHintTextColor(if (dark) Color.rgb(170, 176, 186) else Color.rgb(91, 98, 110))
                 setPadding(dp(16), dp(12), dp(16), dp(12))
                 background = GradientDrawable().apply {
                     cornerRadius = dp(14).toFloat()
-                    setColor(if (dark) Color.argb(155, 20, 45, 72) else Color.argb(220, 255, 255, 255))
-                    setStroke(dp(1), if (dark) Color.argb(120, 103, 164, 222) else Color.argb(160, 151, 190, 226))
+                    setColor(if (dark) Color.argb(155, 25, 28, 34) else Color.argb(220, 255, 255, 255))
+                    setStroke(dp(1), if (dark) Color.argb(120, 130, 138, 151) else Color.argb(160, 160, 168, 181))
                 }
             }
             page.addView(bioInput, LinearLayout.LayoutParams(-1, dp(112)).apply { bottomMargin = dp(8) })
@@ -536,13 +536,13 @@ internal class FirebaseAccountController(
             textDirection = View.TEXT_DIRECTION_LTR
             gravity = Gravity.CENTER_VERTICAL or Gravity.LEFT
             textSize = 14f
-            setTextColor(if (dark) Color.WHITE else Color.rgb(20, 45, 70))
-            setHintTextColor(if (dark) Color.rgb(133, 164, 195) else Color.rgb(112, 139, 166))
+            setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+            setHintTextColor(if (dark) Color.rgb(170, 176, 186) else Color.rgb(91, 98, 110))
             setPadding(dp(16), dp(12), dp(16), dp(12))
             background = GradientDrawable().apply {
                 cornerRadius = dp(14).toFloat()
-                setColor(if (dark) Color.argb(155, 20, 45, 72) else Color.argb(220, 255, 255, 255))
-                setStroke(dp(1), if (dark) Color.argb(120, 103, 164, 222) else Color.argb(160, 151, 190, 226))
+                setColor(if (dark) Color.argb(155, 25, 28, 34) else Color.argb(220, 255, 255, 255))
+                setStroke(dp(1), if (dark) Color.argb(120, 130, 138, 151) else Color.argb(160, 160, 168, 181))
             }
         }
     }
@@ -553,16 +553,16 @@ internal class FirebaseAccountController(
             textSize = 14f
             gravity = Gravity.CENTER
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(Color.WHITE)
+            setTextColor(Color.rgb(20, 23, 29))
             minHeight = dp(52)
             contentDescription = label
             setPadding(dp(18), dp(15), dp(18), dp(15))
             background = GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(Color.rgb(43, 151, 255), Color.rgb(22, 94, 190))
+                intArrayOf(Color.rgb(190, 198, 210), Color.rgb(105, 113, 126))
             ).apply {
                 cornerRadius = dp(15).toFloat()
-                setStroke(dp(1), Color.argb(190, 135, 202, 255))
+                setStroke(dp(1), Color.argb(190, 145, 153, 166))
             }
             isClickable = true
             isFocusable = true
