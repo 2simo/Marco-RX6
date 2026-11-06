@@ -37,7 +37,7 @@ internal class GameFavoriteToggleFactory(
                     text = ""
                     setCompoundDrawablesRelativeWithIntrinsicBounds(0, if (games[index].isFavorite) com.marcorx6.library.R.drawable.ic_action_favorite else com.marcorx6.library.R.drawable.ic_action_favorite_outline, 0, 0)
                     contentDescription = games[index].name + ", " + if (games[index].isFavorite) "إزالة من المفضلة" else "إضافة إلى المفضلة"
-                    setTextColor(if (games[index].isFavorite) android.graphics.Color.rgb(92, 183, 255) else white())
+                    setTextColor(if (games[index].isFavorite) android.graphics.Color.rgb(190, 198, 210) else white())
                     renderGames()
                 }
             }
