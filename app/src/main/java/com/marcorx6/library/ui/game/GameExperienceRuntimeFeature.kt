@@ -43,7 +43,8 @@ internal class GameExperienceRuntimeFeature(
     private val isRegisteredUser: () -> Boolean,
     private val loadEngagementSummary: (Game, (Long, Double, Long) -> Unit) -> Unit,
     private val loadMyRating: (Game, (Int?) -> Unit) -> Unit,
-    private val submitRating: (Game, Int, (Boolean, String?) -> Unit) -> Unit
+    private val submitRating: (Game, Int, (Boolean, String?) -> Unit) -> Unit,
+    private val recordViewOnce: (Game) -> Unit
 ) {
     private val gameDetailsFeature by lazy {
         GameDetailsFeature(
@@ -78,7 +79,8 @@ internal class GameExperienceRuntimeFeature(
             isRegisteredUser = isRegisteredUser,
             loadEngagementSummary = loadEngagementSummary,
             loadMyRating = loadMyRating,
-            submitRating = submitRating
+            submitRating = submitRating,
+            recordViewOnce = recordViewOnce
         )
     }
 
