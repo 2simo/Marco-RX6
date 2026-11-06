@@ -244,9 +244,9 @@ internal class GameLibraryRenderer(
                     }
                     imageFrame.addView(
                         languageBadge,
-                        FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.END).apply {
+                        FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.END).apply {
                             rightMargin = dp(7)
-                            topMargin = dp(7)
+                            bottomMargin = dp(7)
                         }
                     )
                 }
