@@ -65,6 +65,8 @@ internal class BloggerPostComposerController(
         }
         if (existing != null) setPendingCoverLocalPath(existing.coverLocalPath)
 
+        val isNight = (activity.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
+        val studioTextColor = if (isNight) white() else android.graphics.Color.rgb(32, 48, 68)
         val box = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(12), dp(16), dp(12))
@@ -80,7 +82,7 @@ internal class BloggerPostComposerController(
                 setStroke(dp(1), android.graphics.Color.argb(115, 74, 153, 222))
             }
         }
-        fun section(text: String) = makeText(text, 13f, white(), true).apply {
+        fun section(text: String) = makeText(text, 13f, studioTextColor, true).apply {
             setPadding(0, dp(12), 0, dp(7))
         }
         fun addField(target: LinearLayout, view: View) {
@@ -90,7 +92,7 @@ internal class BloggerPostComposerController(
             this.text = translate(text)
             isAllCaps = false
             minHeight = dp(48)
-            setTextColor(if (primary) accentForeground() else white())
+            setTextColor(if (primary) accentForeground() else studioTextColor)
             background = if (primary) android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
                 intArrayOf(android.graphics.Color.rgb(37, 132, 222), android.graphics.Color.rgb(15, 73, 145))
@@ -197,7 +199,7 @@ internal class BloggerPostComposerController(
                 setText(initialUrl)
                 setPadding(dp(12), dp(10), dp(12), dp(10))
             }
-            row.addView(makeText(translate("رابط تحميل"), 12f, white(), true))
+            row.addView(makeText(translate("رابط تحميل"), 12f, studioTextColor, true))
             addField(row, label)
             addField(row, url)
             val remove = makeAction("إزالة هذا الرابط").apply {
@@ -258,7 +260,7 @@ internal class BloggerPostComposerController(
             setOnClickListener { onBack() }
         }
         toolbar.addView(back, LinearLayout.LayoutParams(dp(48), dp(48)))
-        toolbar.addView(makeText(translate(if (existing == null) "استوديو النشر" else "تحرير المقال"), 19f, white(), true),
+        toolbar.addView(makeText(translate(if (existing == null) "استوديو النشر" else "تحرير المقال"), 19f, studioTextColor, true),
             LinearLayout.LayoutParams(0, -2, 1f))
         page.addView(toolbar, LinearLayout.LayoutParams(-1, -2))
         page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
