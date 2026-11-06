@@ -54,12 +54,13 @@ internal class DownloadPageDialog(
         }
 
         fun dp(value: Int): Int = (value * activity.resources.displayMetrics.density).toInt()
-        val dark = activity.resources.configuration.uiMode and
-            android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
-            android.content.res.Configuration.UI_MODE_NIGHT_YES
+        val appPreferences = activity.getSharedPreferences("app_settings", Activity.MODE_PRIVATE)
+        // The in-app appearance setting is authoritative; do not follow the device theme.
+        val dark = appPreferences.getBoolean("dark_mode", true)
         val background = if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247)
         val surface = if (dark) Color.rgb(25, 28, 34) else Color.WHITE
-        val primary = Color.rgb(190, 198, 210)
+        val primary = if (dark) Color.rgb(205, 212, 222) else Color.rgb(105, 116, 132)
+        val border = if (dark) Color.rgb(70, 77, 89) else Color.rgb(205, 211, 220)
         val heading = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
         val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
 
@@ -102,8 +103,22 @@ internal class DownloadPageDialog(
                 textSize = 11f
                 gravity = Gravity.CENTER
                 setTextColor(primary)
-                minWidth = dp(42)
+                minWidth = dp(44)
                 minHeight = dp(44)
+                setPadding(dp(5), dp(5), dp(5), dp(5))
+                background = GradientDrawable().apply {
+                    setColor(surface)
+                    cornerRadius = dp(13).toFloat()
+                    setStroke(dp(1), border)
+                }
+                if (android.os.Build.VERSION.SDK_INT >= 23) {
+                    compoundDrawableTintList = android.content.res.ColorStateList.valueOf(primary)
+                    foreground = android.graphics.drawable.RippleDrawable(
+                        android.content.res.ColorStateList.valueOf(
+                            if (dark) Color.argb(70, 205, 212, 222) else Color.argb(45, 105, 116, 132)
+                        ), null, android.graphics.drawable.ColorDrawable(Color.WHITE)
+                    )
+                }
                 isClickable = true
                 isFocusable = true
                 setOnClickListener { onClick() }
@@ -121,9 +136,6 @@ internal class DownloadPageDialog(
         addressRow.addView(toolbarAction("", {
             if (webView.canGoBack()) webView.goBack()
         }, com.marcorx6.library.R.drawable.ic_action_back))
-        addressRow.addView(toolbarAction("", {
-            if (webView.canGoForward()) webView.goForward()
-        }, com.marcorx6.library.R.drawable.ic_action_forward))
         val addressInput = EditText(activity).apply {
             setSingleLine(true)
             textSize = 12f
@@ -150,15 +162,6 @@ internal class DownloadPageDialog(
                 webView.loadUrl(currentUrl)
             }
         }, com.marcorx6.library.R.drawable.ic_action_refresh))
-        addressRow.addView(toolbarAction("", {
-            try {
-                val currentUrl = SecureUrlPolicy.toHttpsUrl(webView.url ?: safeStartUrl)
-                if (currentUrl == null) throw IllegalArgumentException("Unsafe page URL")
-                activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(currentUrl)))
-            } catch (_: Exception) {
-                Toast.makeText(activity, translate("تعذر فتح المتصفح الخارجي"), Toast.LENGTH_SHORT).show()
-            }
-        }, com.marcorx6.library.R.drawable.ic_action_external))
         addressInput.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE) {
                 val entered = addressInput.text.toString().trim()
@@ -240,12 +243,13 @@ internal class DownloadPageDialog(
                 setCompoundDrawablesRelativeWithIntrinsicBounds(com.marcorx6.library.R.drawable.ic_action_external, 0, 0, 0)
                 compoundDrawablePadding = dp(7)
                 textSize = 12f
-                setTextColor(Color.rgb(20, 23, 29))
+                setTextColor(heading)
                 gravity = Gravity.CENTER_VERTICAL
                 setPadding(dp(12), dp(10), dp(12), dp(10))
                 this.background = GradientDrawable().apply {
-                    setColor(if (dark) Color.rgb(105, 113, 126) else Color.rgb(190, 198, 210))
+                    setColor(surface)
                     cornerRadius = dp(11).toFloat()
+                    setStroke(dp(1), border)
                 }
                 isClickable = true
                 isFocusable = true
@@ -287,15 +291,16 @@ internal class DownloadPageDialog(
         }
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, false)
-        val adPreferences = activity.getSharedPreferences("app_settings", Activity.MODE_PRIVATE)
+        val adPreferences = appPreferences
         var adBlockerEnabled = adPreferences.getBoolean("download_page_ad_blocker", true)
         val allowedHosts = adPreferences.getString("download_page_ad_allowlist", "").orEmpty()
             .split(',', ';').map { it.trim().lowercase() }.filter { it.isNotBlank() }.toSet()
-        val adToggle = toolbarAction("حجب الإعلانات", {
+        lateinit var adToggle: TextView
+        adToggle = toolbarAction(translate("حجب الإعلانات"), {
             adBlockerEnabled = !adBlockerEnabled
             adPreferences.edit().putBoolean("download_page_ad_blocker", adBlockerEnabled).apply()
-            (toolbar.getChildAt(toolbar.childCount - 1) as? TextView)?.apply {
-                text = "حجب الإعلانات"
+            adToggle.apply {
+                text = translate("حجب الإعلانات")
                 setCompoundDrawablesRelativeWithIntrinsicBounds(
                     if (adBlockerEnabled) com.marcorx6.library.R.drawable.ic_action_check
                     else com.marcorx6.library.R.drawable.ic_action_close, 0, 0, 0
@@ -304,7 +309,27 @@ internal class DownloadPageDialog(
             blockedStats.text = translate(if (adBlockerEnabled) "تم تفعيل حجب الإعلانات" else "تم إيقاف حجب الإعلانات")
             webView.reload()
         }, if (adBlockerEnabled) com.marcorx6.library.R.drawable.ic_action_check else com.marcorx6.library.R.drawable.ic_action_close)
-        toolbar.addView(adToggle)
+        val browserActions = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            setPadding(0, dp(3), 0, dp(7))
+        }
+        browserActions.addView(toolbarAction(translate("تقدم"), {
+            if (webView.canGoForward()) webView.goForward()
+        }, com.marcorx6.library.R.drawable.ic_action_forward),
+            LinearLayout.LayoutParams(0, dp(42), 1f).apply { marginEnd = dp(6) })
+        browserActions.addView(toolbarAction(translate("فتح خارجياً"), {
+            try {
+                val currentUrl = SecureUrlPolicy.toHttpsUrl(webView.url ?: safeStartUrl)
+                if (currentUrl == null) throw IllegalArgumentException("Unsafe page URL")
+                activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(currentUrl)))
+            } catch (_: Exception) {
+                Toast.makeText(activity, translate("تعذر فتح المتصفح الخارجي"), Toast.LENGTH_SHORT).show()
+            }
+        }, com.marcorx6.library.R.drawable.ic_action_external),
+            LinearLayout.LayoutParams(0, dp(42), 1f).apply { marginEnd = dp(6) })
+        browserActions.addView(adToggle, LinearLayout.LayoutParams(0, dp(42), 1f))
+        root.addView(browserActions, LinearLayout.LayoutParams(-1, -2))
         val blockedRequests = AtomicInteger(0)
         val blockedAdHosts = setOf(
             "doubleclick.net", "googlesyndication.com", "googleadservices.com",
