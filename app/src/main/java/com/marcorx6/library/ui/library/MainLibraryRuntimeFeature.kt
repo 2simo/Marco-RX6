@@ -120,6 +120,8 @@ internal class MainLibraryRuntimeFeature(
             showGameDialog = showGameDialog,
             showProfile = showProfile,
             showDownloads = showDownloads,
+            loadCover = loadCover,
+            showDetails = showDetails,
             applyTypography = applyTypography,
             applyUnifiedSkin = applyUnifiedSkin,
             applyMotionPreferences = applyMotionPreferences
