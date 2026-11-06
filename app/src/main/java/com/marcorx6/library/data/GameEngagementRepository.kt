@@ -5,7 +5,6 @@ import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
 import java.security.MessageDigest
 
 /**
@@ -54,10 +53,23 @@ internal class GameEngagementRepository(
         }
     }
 
-    fun recordDownload(game: Game): Task<Void> = gameDocument(game).set(
-        mapOf("downloadCount" to FieldValue.increment(1)),
-        SetOptions.merge()
-    )
+    fun recordDownload(game: Game): Task<Boolean> {
+        val user = auth.currentUser
+            ?: return Tasks.forException(IllegalStateException("لا توجد جلسة مستخدم"))
+        val download = gameDocument(game).collection("downloads").document(user.uid)
+        return firestore.runTransaction { transaction ->
+            val snapshot = transaction.get(download)
+            if (snapshot.exists()) {
+                false
+            } else {
+                transaction.set(download, mapOf(
+                    "uid" to user.uid,
+                    "createdAt" to FieldValue.serverTimestamp()
+                ))
+                true
+            }
+        }
+    }
 
     fun submitRating(game: Game, rating: Int): Task<Void> {
         val user = auth.currentUser
@@ -79,26 +91,29 @@ internal class GameEngagementRepository(
 
     fun loadSummary(game: Game, callback: (Summary) -> Unit, onError: (Exception) -> Unit = {}) {
         val root = gameDocument(game)
-        root.get().addOnSuccessListener { metrics ->
-            root.collection("views").count().get(com.google.firebase.firestore.AggregateSource.SERVER)
-                .addOnSuccessListener { views ->
-                    root.collection("ratings").get()
-                        .addOnSuccessListener { ratings ->
-                            val values = ratings.documents.mapNotNull { document ->
-                                document.getLong("rating")?.takeIf { it in 1L..5L }
+        root.collection("views").count().get(com.google.firebase.firestore.AggregateSource.SERVER)
+            .addOnSuccessListener { views ->
+                root.collection("ratings").get()
+                    .addOnSuccessListener { ratings ->
+                        root.collection("downloads").count()
+                            .get(com.google.firebase.firestore.AggregateSource.SERVER)
+                            .addOnSuccessListener { downloads ->
+                                val values = ratings.documents.mapNotNull { document ->
+                                    document.getLong("rating")?.takeIf { it in 1L..5L }
+                                }
+                                val average = if (values.isEmpty()) 0.0 else values.average()
+                                callback(Summary(
+                                    views = views.count,
+                                    ratingAverage = average,
+                                    ratingCount = values.size.toLong(),
+                                    downloads = downloads.count
+                                ))
                             }
-                            val average = if (values.isEmpty()) 0.0 else values.average()
-                            callback(Summary(
-                                views = views.count,
-                                ratingAverage = average,
-                                ratingCount = values.size.toLong(),
-                                downloads = metrics.getLong("downloadCount") ?: 0L
-                            ))
-                        }
-                        .addOnFailureListener(onError)
-                }
-                .addOnFailureListener(onError)
-        }.addOnFailureListener(onError)
+                            .addOnFailureListener(onError)
+                    }
+                    .addOnFailureListener(onError)
+            }
+            .addOnFailureListener(onError)
     }
 
     fun loadMyRating(game: Game, callback: (Int?) -> Unit) {
