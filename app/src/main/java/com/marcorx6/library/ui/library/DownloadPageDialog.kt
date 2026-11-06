@@ -54,11 +54,11 @@ internal class DownloadPageDialog(
         val dark = activity.resources.configuration.uiMode and
             android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
             android.content.res.Configuration.UI_MODE_NIGHT_YES
-        val background = if (dark) Color.rgb(7, 17, 31) else Color.rgb(242, 247, 253)
+        val background = if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247)
         val surface = if (dark) Color.rgb(25, 28, 34) else Color.WHITE
         val primary = Color.rgb(190, 198, 210)
-        val heading = if (dark) Color.WHITE else Color.rgb(22, 43, 65)
-        val muted = if (dark) Color.rgb(164, 184, 207) else Color.rgb(91, 112, 137)
+        val heading = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
+        val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
 
         val dialog = Dialog(activity)
         val root = LinearLayout(activity).apply {
@@ -155,7 +155,7 @@ internal class DownloadPageDialog(
             this.background = GradientDrawable().apply {
                 setColor(surface)
                 cornerRadius = dp(16).toFloat()
-                setStroke(dp(1), if (dark) Color.argb(120, 80, 151, 215) else Color.argb(150, 153, 195, 236))
+                setStroke(dp(1), if (dark) Color.argb(120, 130, 138, 151) else Color.argb(150, 160, 168, 181))
             }
             clipToOutline = true
         }
