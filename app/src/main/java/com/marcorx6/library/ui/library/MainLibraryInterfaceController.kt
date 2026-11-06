@@ -100,7 +100,7 @@ internal class MainLibraryInterfaceController(
             gravity = Gravity.CENTER_VERTICAL
         }
         val titleBlock = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
-        titleBlock.addView(makeText("MARCO RX6  /  SMART SEARCH", 9f, accent, true))
+        titleBlock.addView(makeText("MARCO  /  SMART SEARCH", 9f, accent, true))
         titleBlock.addView(makeText(tr("البحث الذكي"), 24f, white, true))
         header.addView(titleBlock, LinearLayout.LayoutParams(0, -2, 1f))
         val back = TextView(context).apply {
@@ -223,7 +223,7 @@ internal class MainLibraryInterfaceController(
 
     fun create() {
         activeDockTab = "HOME"
-        // MARCO RX6 visual system: charcoal surfaces with brushed-silver accents.
+        // MARCO visual system: charcoal surfaces with brushed-silver accents.
         val silver = if (isDarkMode()) Color.rgb(225, 228, 234) else Color.rgb(43, 47, 55)
         val muted = gray
         val silverAccent = red
@@ -254,7 +254,7 @@ internal class MainLibraryInterfaceController(
             setPadding(dp(2), dp(3), dp(2), dp(17))
         }
         val brand = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
-        brand.addView(makeText("MARCO RX6  /  OFFICIAL GAME HUB", 9f, if (isDarkMode()) Color.rgb(190, 198, 210) else Color.rgb(130, 138, 151), true).apply { letterSpacing = 0.08f })
+        brand.addView(makeText("MARCO  /  OFFICIAL GAME HUB", 9f, if (isDarkMode()) Color.rgb(190, 198, 210) else Color.rgb(130, 138, 151), true).apply { letterSpacing = 0.08f })
         brand.addView(makeText("مكتبة الألعاب", 21f, silver, true).apply {
             typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
             letterSpacing = 0.01f
@@ -371,7 +371,7 @@ internal class MainLibraryInterfaceController(
             gravity = Gravity.CENTER_VERTICAL
         }
         val titles = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
-        titles.addView(makeText("MARCO RX6  /  GAMES", 8f, silverAccent, true).apply { letterSpacing = 0.14f })
+        titles.addView(makeText("MARCO  /  GAMES", 8f, silverAccent, true).apply { letterSpacing = 0.14f })
         titles.addView(makeText(tr("اكتشف الألعاب"), 21f, silver, true))
         section.addView(titles, LinearLayout.LayoutParams(0, -2, 1f))
         countText = makeText("0 " + tr("لعبة"), 10f, muted, true)
