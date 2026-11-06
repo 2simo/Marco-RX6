@@ -47,8 +47,7 @@ internal class GameDetailsController(
         contentScroll.addView(content, android.widget.FrameLayout.LayoutParams(-1, -2))
         root.addView(contentScroll, LinearLayout.LayoutParams(-1, 0, 1f))
 
-        // The details page intentionally contains only the identity card,
-        // available game metadata, and the original download actions.
+        // Game identity and information, followed by the original download actions.
         content.addView(identityViewFactory.create(game), LinearLayout.LayoutParams(-1, -2))
 
         val sourceUrl = game.sourcePostUrl.ifBlank { game.url }
@@ -57,6 +56,19 @@ internal class GameDetailsController(
         ) ?: downloadLinksViewFactory.create(game.downloadLinks, game.name, sourceUrl)
         downloadButtons?.let { buttons ->
             content.addView(buttons, LinearLayout.LayoutParams(-1, -2).apply {
+                topMargin = dp(10)
+            })
+        }
+
+        // Keep user ratings and related games available in the details page.
+        content.addView(ratingViewFactory.create(game), LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(10)
+        })
+        similarGamesViewFactory.create(game, games()) { selected ->
+            reader.dismiss()
+            show(selected)
+        }?.let { similar ->
+            content.addView(similar, LinearLayout.LayoutParams(-1, -2).apply {
                 topMargin = dp(10)
             })
         }
