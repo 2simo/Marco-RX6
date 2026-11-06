@@ -42,7 +42,6 @@ internal class MainLibraryInterfaceController(
     private val setSelected: (String) -> Unit,
     private val getSortMode: () -> String,
     private val setSortMode: (String) -> Unit,
-    private val setSearch: (EditText) -> Unit,
     private val setFilters: (LinearLayout) -> Unit,
     private val setCountText: (TextView) -> Unit,
     private val setGameList: (LinearLayout) -> Unit,
@@ -61,7 +60,6 @@ internal class MainLibraryInterfaceController(
 ) {
     private val mainHandler = Handler(Looper.getMainLooper())
     private var searchRenderRunnable: Runnable? = null
-    private lateinit var search: AutoCompleteTextView
     private lateinit var filters: LinearLayout
     private lateinit var countText: TextView
     private lateinit var gameList: LinearLayout
@@ -316,53 +314,6 @@ internal class MainLibraryInterfaceController(
         })
 
 
-        val searchWrap = LinearLayout(context).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                if (isDarkMode()) intArrayOf(Color.argb(205, 23, 58, 91), Color.argb(185, 8, 24, 43))
-                else intArrayOf(Color.argb(225, 255, 255, 255), Color.argb(195, 224, 239, 255))).apply {
-                cornerRadius = dp(17).toFloat()
-                setStroke(dp(1), if (isDarkMode()) Color.rgb(58, 111, 169) else Color.rgb(174, 205, 239))
-            }
-            setPadding(dp(14), 0, dp(14), 0)
-            elevation = if (isDarkMode()) 0f else dp(2).toFloat()
-        }
-        searchWrap.addView(ImageView(context).apply {
-            setImageResource(R.drawable.ic_action_search)
-            imageTintList = android.content.res.ColorStateList.valueOf(if (isDarkMode()) silver else Color.rgb(73, 84, 105))
-            scaleType = ImageView.ScaleType.CENTER_INSIDE
-            contentDescription = tr("بحث")
-        }, LinearLayout.LayoutParams(dp(24), dp(24)))
-        search = AutoCompleteTextView(context).apply {
-            hint = tr("ابحث عن الألعاب والمقالات...")
-            textSize = 14f
-            typeface = Typeface.create("sans-serif", Typeface.NORMAL)
-            setSingleLine(true)
-            threshold = 1
-            setTextColor(white)
-            setHintTextColor(if (isDarkMode()) gray else Color.rgb(105, 115, 134))
-            background = null
-            setPadding(dp(10), 0, dp(6), 0)
-            setAdapter(ArrayAdapter(context, android.R.layout.simple_dropdown_item_1line,
-                games().flatMap { game ->
-                    listOf(game.name, game.platform, game.genre, game.releaseYear)
-                }.map { it.trim() }.filter { it.isNotBlank() }.distinct().take(100)))
-            // Keep autocomplete suggestions aligned with the active glass theme instead
-            // of Android's default opaque grey popup.
-            setDropDownBackgroundDrawable(GradientDrawable().apply {
-                setColor(if (isDarkMode()) Color.rgb(13, 34, 56) else Color.rgb(248, 251, 255))
-                cornerRadius = dp(14).toFloat()
-                setStroke(dp(1), if (isDarkMode()) Color.rgb(58, 111, 169) else Color.rgb(174, 205, 239))
-            })
-            dropDownVerticalOffset = dp(5)
-            setOnFocusChangeListener { _, focused ->
-                if (focused && text.isNotEmpty()) showDropDown()
-            }
-        }
-        searchWrap.addView(search, LinearLayout.LayoutParams(0, dp(52), 1f))
-        root.addView(searchWrap, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(13) })
-
         val filterScroll = HorizontalScrollView(context).apply {
             isHorizontalScrollBarEnabled = false
             clipToPadding = false
@@ -499,7 +450,6 @@ internal class MainLibraryInterfaceController(
 
         // Publish the newly created views to the host before the first render.
         // renderGames() reads these fields, so leaving them unwired causes a lateinit crash.
-        setSearch(search)
         setFilters(filters)
         setCountText(countText)
         setGameList(gameList)
@@ -670,16 +620,6 @@ internal class MainLibraryInterfaceController(
         setContentView(shell)
         applyMotionPreferences(shell)
         ViewCompat.requestApplyInsets(shell)
-        search.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                searchRenderRunnable?.let { mainHandler.removeCallbacks(it) }
-                searchRenderRunnable = Runnable { renderGames() }.also {
-                    mainHandler.postDelayed(it, 180L)
-                }
-            }
-            override fun afterTextChanged(s: Editable?) {}
-        })
         renderGames()
     }
 }
