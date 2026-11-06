@@ -12,6 +12,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.marcorx6.library.data.Game
 import com.marcorx6.library.data.GameLibraryManager
+import java.util.Locale
 
 internal class GameLibraryRenderer(
     private val activity: Activity,
@@ -87,7 +88,7 @@ internal class GameLibraryRenderer(
             val heading = LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(3), dp(10), dp(3), dp(7))
+                setPadding(dp(3), dp(12), dp(3), dp(7))
             }
             heading.addView(makeText(platform, 16f, white, true), LinearLayout.LayoutParams(0, -2, 1f))
             heading.addView(makeText(sectionGames.size.toString() + " " + tr("لعبة"), 10f, gray, true))
@@ -102,26 +103,27 @@ internal class GameLibraryRenderer(
             }
             val row = LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(2), dp(3), dp(2), dp(12))
+                gravity = Gravity.TOP
+                setPadding(dp(2), dp(3), dp(2), dp(13))
             }
 
             sectionGames.forEach { game ->
-                lateinit var engagementBadge: TextView
+                lateinit var ratingValue: TextView
+                lateinit var viewsValue: TextView
                 val card = LinearLayout(activity).apply {
-                    orientation = LinearLayout.HORIZONTAL
-                    gravity = Gravity.CENTER_VERTICAL
+                    orientation = LinearLayout.VERTICAL
+                    gravity = Gravity.TOP
                     val surface = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                        if (isDarkMode()) intArrayOf(Color.argb(224, 20, 52, 84), Color.argb(210, 7, 24, 43))
-                        else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(218, 225, 241, 255))).apply {
-                        cornerRadius = dp(17).toFloat()
+                        if (isDarkMode()) intArrayOf(Color.argb(230, 20, 52, 84), Color.argb(218, 7, 24, 43))
+                        else intArrayOf(Color.argb(245, 255, 255, 255), Color.argb(232, 225, 241, 255))).apply {
+                        cornerRadius = dp(15).toFloat()
                         setStroke(dp(1), if (isDarkMode()) Color.argb(175, 78, 157, 224) else Color.argb(185, 153, 198, 239))
                     }
                     background = android.graphics.drawable.RippleDrawable(
                         android.content.res.ColorStateList.valueOf(Color.argb(75, 82, 175, 255)),
                         surface, null
                     )
-                    setPadding(dp(7), dp(7), dp(10), dp(7))
+                    setPadding(dp(6), dp(6), dp(6), dp(8))
                     isClickable = true
                     isFocusable = true
                     contentDescription = game.name + ", " + tr("عرض التفاصيل")
@@ -129,48 +131,24 @@ internal class GameLibraryRenderer(
                         recordViewOnce(game) {
                             loadEngagementSummary(game) { views, average, ratings ->
                                 activity.runOnUiThread {
-                                    engagementBadge.text = "★ ${if (ratings == 0L) "—" else String.format(java.util.Locale.US, "%.1f", average)} ($ratings) • ${tr("مشاهدة")}: $views"
+                                    ratingValue.text = if (ratings == 0L) "—" else String.format(Locale.US, "%.1f", average)
+                                    viewsValue.text = compactCount(views)
                                 }
                             }
                         }
                         showDetails(game)
                     }
                 }
+
                 val imageFrame = FrameLayout(activity).apply {
                     clipToOutline = true
-                    background = rounded(bg, 12)
+                    background = rounded(bg, 11)
                 }
                 val image = ImageView(activity).apply {
                     scaleType = ImageView.ScaleType.CENTER_CROP
-                    contentDescription = null
-                    importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+                    contentDescription = tr("غلاف") + " " + game.name
                 }
                 imageFrame.addView(image, FrameLayout.LayoutParams(-1, -1))
-                engagementBadge = TextView(activity).apply {
-                    text = "★ —   •   ${tr("مشاهدة")}: —"
-                    textSize = 9f
-                    setTextColor(Color.WHITE)
-                    gravity = Gravity.CENTER
-                    setPadding(dp(6), dp(4), dp(6), dp(4))
-                    background = GradientDrawable().apply {
-                        setColor(Color.argb(220, 8, 30, 55))
-                        cornerRadius = dp(9).toFloat()
-                    }
-                }
-                imageFrame.addView(engagementBadge, FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.START).apply {
-                    leftMargin = dp(5); bottomMargin = dp(5)
-                })
-                loadEngagementSummary(game) { views, average, ratings ->
-                    activity.runOnUiThread {
-                        engagementBadge.text = "★ ${if (ratings == 0L) "—" else String.format(java.util.Locale.US, "%.1f", average)} ($ratings) • ${tr("مشاهدة")}: $views"
-                    }
-                }
-                if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) {
-                    loadCover(image, game.coverLocalPath, game.coverUrl)
-                } else {
-                    image.setImageResource(android.R.drawable.ic_menu_gallery)
-                    image.scaleType = ImageView.ScaleType.CENTER_INSIDE
-                }
                 val platformBadge = TextView(activity).apply {
                     text = game.platform
                     textSize = 8f
@@ -198,28 +176,85 @@ internal class GameLibraryRenderer(
                         rightMargin = dp(5); topMargin = dp(5)
                     })
                 }
-                card.addView(imageFrame, LinearLayout.LayoutParams(dp(94), dp(124)))
-                val info = LinearLayout(activity).apply {
-                    orientation = LinearLayout.VERTICAL
-                    gravity = Gravity.CENTER_VERTICAL
-                    setPadding(dp(10), dp(2), dp(2), dp(2))
+                card.addView(imageFrame, LinearLayout.LayoutParams(dp(132), dp(164)))
+                if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) {
+                    loadCover(image, game.coverLocalPath, game.coverUrl)
+                } else {
+                    image.setImageResource(android.R.drawable.ic_menu_gallery)
+                    image.scaleType = ImageView.ScaleType.CENTER_INSIDE
                 }
-                info.addView(makeText(game.name, 12f, white, true).apply {
+
+                card.addView(makeText(game.name, 11f, white, true).apply {
                     maxLines = 2
+                    minLines = 2
+                    gravity = Gravity.START
                     ellipsize = android.text.TextUtils.TruncateAt.END
-                }, LinearLayout.LayoutParams(dp(112), -2))
+                    setPadding(dp(2), dp(7), dp(2), dp(2))
+                }, LinearLayout.LayoutParams(dp(132), -2))
+
                 val meta = listOf(game.genre, game.releaseYear).map { it.trim() }
                     .filter { it.isNotBlank() }.joinToString(" • ")
-                if (meta.isNotBlank()) info.addView(makeText(meta, 9f, red, true).apply {
-                    maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END
-                }, LinearLayout.LayoutParams(dp(112), -2).apply { topMargin = dp(5) })
-                card.addView(info)
-                row.addView(card, LinearLayout.LayoutParams(dp(238), dp(138)).apply {
+                if (meta.isNotBlank()) {
+                    card.addView(makeText(meta, 9f, gray, false).apply {
+                        maxLines = 1
+                        ellipsize = android.text.TextUtils.TruncateAt.END
+                        setPadding(dp(2), 0, dp(2), dp(5))
+                    }, LinearLayout.LayoutParams(dp(132), -2))
+                }
+
+                val stats = LinearLayout(activity).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                    setPadding(dp(2), dp(3), dp(2), 0)
+                }
+                fun stat(iconRes: Int, initial: String, tint: Int): Pair<LinearLayout, TextView> {
+                    val item = LinearLayout(activity).apply {
+                        orientation = LinearLayout.HORIZONTAL
+                        gravity = Gravity.CENTER_VERTICAL
+                        background = GradientDrawable().apply {
+                            setColor(if (isDarkMode()) Color.argb(150, 5, 19, 34) else Color.argb(180, 235, 244, 255))
+                            cornerRadius = dp(8).toFloat()
+                        }
+                        setPadding(dp(5), dp(4), dp(5), dp(4))
+                    }
+                    val icon = ImageView(activity).apply {
+                        setImageResource(iconRes)
+                        imageTintList = android.content.res.ColorStateList.valueOf(tint)
+                        contentDescription = null
+                    }
+                    item.addView(icon, LinearLayout.LayoutParams(dp(13), dp(13)))
+                    val value = makeText(initial, 9f, white, true).apply {
+                        setPadding(dp(3), 0, 0, 0)
+                    }
+                    item.addView(value)
+                    return item to value
+                }
+                val (ratingChip, ratingText) = stat(com.marcorx6.library.R.drawable.ic_engagement_rating, "—", Color.rgb(255, 190, 55))
+                val (viewsChip, viewsText) = stat(com.marcorx6.library.R.drawable.ic_engagement_views, "—", Color.rgb(72, 174, 255))
+                ratingValue = ratingText
+                viewsValue = viewsText
+                stats.addView(ratingChip, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(4) })
+                stats.addView(viewsChip, LinearLayout.LayoutParams(0, -2, 1f))
+                card.addView(stats, LinearLayout.LayoutParams(dp(132), -2))
+
+                loadEngagementSummary(game) { views, average, ratings ->
+                    activity.runOnUiThread {
+                        ratingValue.text = if (ratings == 0L) "—" else String.format(Locale.US, "%.1f", average)
+                        viewsValue.text = compactCount(views)
+                    }
+                }
+                row.addView(card, LinearLayout.LayoutParams(dp(144), -2).apply {
                     marginEnd = dp(9)
                 })
             }
-            horizontal.addView(row, android.widget.FrameLayout.LayoutParams(-2, -2))
+            horizontal.addView(row, FrameLayout.LayoutParams(-2, -2))
             gameList.addView(horizontal, LinearLayout.LayoutParams(-1, -2))
         }
+    }
+
+    private fun compactCount(value: Long): String = when {
+        value >= 1_000_000 -> String.format(Locale.US, "%.1fM", value / 1_000_000.0)
+        value >= 1_000 -> String.format(Locale.US, "%.1fK", value / 1_000.0)
+        else -> value.toString()
     }
 }
