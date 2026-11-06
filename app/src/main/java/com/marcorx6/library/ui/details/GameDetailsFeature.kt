@@ -5,6 +5,7 @@ import android.graphics.drawable.GradientDrawable
 import android.widget.TextView
 import android.view.View
 import com.marcorx6.library.data.Game
+import com.marcorx6.library.ui.details.GameRatingViewFactory
 import java.io.File
 
 /** Composition root for the game reader, detail controls, and related view factories. */
@@ -36,7 +37,11 @@ internal class GameDetailsFeature(
     showGameDialog: (Game) -> Unit,
     deleteGame: (Game) -> Unit,
     applyMotionPreferences: (View) -> Unit,
-    applyUnifiedSkin: (View) -> Unit
+    applyUnifiedSkin: (View) -> Unit,
+    isRegisteredUser: () -> Boolean,
+    loadEngagementSummary: (Game, (Long, Double, Long) -> Unit) -> Unit,
+    loadMyRating: (Game, (Int?) -> Unit) -> Unit,
+    submitRating: (Game, Int, (Boolean, String?) -> Unit) -> Unit
 ) {
     private val favoriteToggleFactory = GameFavoriteToggleFactory(
         activity = activity,
@@ -80,6 +85,20 @@ internal class GameDetailsFeature(
         translate = tr
     )
 
+    private val ratingViewFactory = GameRatingViewFactory(
+        activity = activity,
+        dp = dp,
+        makeText = makeText,
+        isDarkMode = isDarkMode,
+        white = white,
+        gray = gray,
+        translate = tr,
+        isRegisteredUser = isRegisteredUser,
+        loadSummary = loadEngagementSummary,
+        loadMyRating = loadMyRating,
+        submitRating = submitRating
+    )
+
     private val similarGamesViewFactory = GameSimilarGamesViewFactory(
         activity = activity,
         dp = dp,
@@ -98,6 +117,7 @@ internal class GameDetailsFeature(
         dp = dp,
         topBarFactory = topBarFactory,
         identityViewFactory = identityViewFactory,
+        ratingViewFactory = ratingViewFactory,
         similarGamesViewFactory = similarGamesViewFactory,
         downloadLinksViewFactory = downloadLinksViewFactory,
         isAdmin = isAdmin,
