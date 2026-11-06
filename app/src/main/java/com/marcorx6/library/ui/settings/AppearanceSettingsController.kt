@@ -60,7 +60,7 @@ internal class AppearanceSettingsController(
         }
         val heading = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
         heading.addView(TextView(activity).apply {
-            text = "MARCO RX6  /  PERSONALIZATION"
+            text = "MARCO  /  PERSONALIZATION"
             textSize = 9f
             letterSpacing = 0.12f
             setTextColor(silverAccent)
@@ -85,7 +85,7 @@ internal class AppearanceSettingsController(
         }, LinearLayout.LayoutParams(dp(48), dp(48)))
         root.addView(header)
         root.addView(TextView(activity).apply {
-            text = translate("خصص تجربة MARCO RX6 بالطريقة التي تناسبك")
+            text = translate("خصص تجربة MARCO بالطريقة التي تناسبك")
             textSize = 12f
             setTextColor(muted)
             setPadding(0, dp(8), 0, dp(22))
@@ -225,7 +225,7 @@ internal class AppearanceSettingsController(
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         root.addView(settingRow(
             translate("قناة Telegram الرسمية"),
-            translate("تابع أخبار وإعلانات MARCO RX6 على Telegram")
+            translate("تابع أخبار وإعلانات MARCO على Telegram")
         ) {
             runCatching {
                 activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(CommunityChannelsController.TELEGRAM_URL)))
@@ -235,7 +235,7 @@ internal class AppearanceSettingsController(
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         root.addView(settingRow(
             translate("قناة YouTube الرسمية"),
-            translate("شاهد فيديوهات وشروحات MARCO RX6 على YouTube")
+            translate("شاهد فيديوهات وشروحات MARCO على YouTube")
         ) {
             runCatching {
                 activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(CommunityChannelsController.YOUTUBE_URL)))
@@ -245,7 +245,7 @@ internal class AppearanceSettingsController(
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         root.addView(settingRow(
             translate("التحقق من تحديث التطبيق"),
-            translate("تحقق من وجود إصدار أحدث من MARCO RX6 على GitHub")
+            translate("تحقق من وجود إصدار أحدث من MARCO على GitHub")
         ) {
             AppUpdateChecker(activity, translate).check()
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
@@ -293,7 +293,7 @@ internal class AppearanceSettingsController(
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
 
         root.addView(TextView(activity).apply {
-            text = "MARCO RX6  •  SILVER EXPERIENCE"
+            text = "MARCO  •  SILVER EXPERIENCE"
             textSize = 9f
             gravity = Gravity.CENTER
             setTextColor(muted)
