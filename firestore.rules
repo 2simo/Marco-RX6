@@ -80,6 +80,19 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    match /gameMetrics/{gameId}/downloads/{userId} {
+      allow read: if validGameMetricId(gameId);
+      // Count one confirmed download action per Firebase account or guest install.
+      // The UID document path prevents duplicate counting for the same user/game.
+      allow create: if validGameMetricId(gameId)
+        && signedInAs(userId)
+        && request.resource.data.keys().hasOnly(['uid', 'createdAt'])
+        && request.resource.data.keys().hasAll(['uid', 'createdAt'])
+        && request.resource.data.uid == userId
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+
     match /gameMetrics/{gameId}/ratings/{userId} {
       allow read: if validGameMetricId(gameId);
       // Registered users own one rating per game and may update its value.
