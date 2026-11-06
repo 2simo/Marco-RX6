@@ -124,7 +124,7 @@ class MainActivity : ComponentActivity() {
                 googleAccountRuntimeFeature.signOut { }
             },
             styleDialog = ::styleAlertDialog,
-            setContentView = ::showRootScreen,
+            setContentView = { view -> secondaryScreenBackCallback.isEnabled = true; setContentView(view) },
             onBack = ::createInterface,
             dp = ::dp,
             isDarkMode = ::isDarkMode,
