@@ -54,7 +54,7 @@ internal class BloggerGamePostFactory {
         )
         return Game(
             name = title,
-            platform = labels.firstOrNull() ?: "",
+            platform = labels.firstOrNull()?.let { BloggerFeedParser.normalizePlatform(it) ?: it.trim() } ?: "",
             description = "",
             url = primaryUrl.ifBlank { relatedLink.ifBlank { existing?.url.orEmpty() } },
             coverUrl = publishedCoverLink,
