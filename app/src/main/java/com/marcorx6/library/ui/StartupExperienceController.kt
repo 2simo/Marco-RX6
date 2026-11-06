@@ -85,7 +85,7 @@ internal class StartupExperienceController(
             max = 100
             this.progress = 1
             progressTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
-            progressBackgroundTintList = android.content.res.ColorStateList.valueOf(Color.rgb(29, 48, 70))
+            progressBackgroundTintList = android.content.res.ColorStateList.valueOf(Color.rgb(57, 61, 70))
             progressDrawable = progressDrawable.mutate().apply {
                 if (this is android.graphics.drawable.LayerDrawable) {
                     findDrawableByLayerId(android.R.id.background)?.let { it.setTint(Color.rgb(29, 48, 70)) }
@@ -94,7 +94,7 @@ internal class StartupExperienceController(
             }
         }
         center.addView(progress, LinearLayout.LayoutParams(dp(238), dp(7)).apply { topMargin = dp(18) })
-        val percent = makeText("1%", 12f, Color.rgb(105, 190, 255), true).apply {
+        val percent = makeText("1%", 12f, Color.rgb(190, 198, 210), true).apply {
             gravity = Gravity.CENTER
             setPadding(0, dp(9), 0, 0)
         }
