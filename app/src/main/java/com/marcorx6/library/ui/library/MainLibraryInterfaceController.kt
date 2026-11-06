@@ -221,10 +221,11 @@ internal class MainLibraryInterfaceController(
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        listOf("ALL", "PS2", "PS3", "PS4", "BLOG", "FAVORITES").forEach { category ->
+        listOf("ALL", "PS5", "PS4", "PS3", "PS2", "BLOG", "FAVORITES").forEach { category ->
             val chip = TextView(context).apply {
                 text = when (category) {
                     "ALL" -> tr("الكل")
+                    "PS5" -> "PS5"
                     "PS4" -> "PS4"
                     "PS3" -> "PS3"
                     "PS2" -> "PS2"
