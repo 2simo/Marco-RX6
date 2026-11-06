@@ -92,7 +92,9 @@ internal class GameLibraryRenderer(
                             gravity = Gravity.CENTER_VERTICAL
                             setPadding(dp(3), dp(12), dp(3), dp(7))
                         }
+                        heading.layoutDirection = activity.resources.configuration.layoutDirection
                         heading.addView(makeText(platform, 16f, white, true), LinearLayout.LayoutParams(0, -2, 1f))
+                        heading.addView(makeText(sectionGames.size.toString() + " " + tr("لعبة"), 10f, gray, true))
                         gameList.addView(heading, LinearLayout.LayoutParams(-1, -2))
                     }
                 for (index in sectionGames.indices step 2) {
