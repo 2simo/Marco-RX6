@@ -80,8 +80,8 @@ internal class FirebaseAccountController(
             setOnClickListener { onBack() }
         }, LinearLayout.LayoutParams(dp(48), dp(48)))
         header.addView(TextView(activity).apply {
-            text = if (user == null || user.isAnonymous) translate("حساب MARCO RX6")
-                else translate("حسابك في MARCO RX6")
+            text = if (user == null || user.isAnonymous) translate("حساب MARCO")
+                else translate("حسابك في MARCO")
             textSize = 25f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
@@ -98,7 +98,7 @@ internal class FirebaseAccountController(
             action(page, translate("المتابعة كزائر"), translate("العودة إلى المكتبة دون إنشاء ملف شخصي"), dark, run = onBack)
             action(page, translate("إنشاء حساب باستخدام Google"), translate("إنشاء حساب جديد أو استخدام حساب Google موجود"), dark, primary = true, run = ::startFreshGoogleAccountSelection)
             action(page, translate("إنشاء حساب بالبريد الإلكتروني"), translate("استعمل بريدك الإلكتروني وكلمة مرور"), dark, run = { showEmailForm(createAccount = true) })
-            action(page, translate("تسجيل الدخول بالبريد الإلكتروني"), translate("لديك حساب MARCO RX6 بالفعل؟"), dark, run = { showEmailForm(createAccount = false) })
+            action(page, translate("تسجيل الدخول بالبريد الإلكتروني"), translate("لديك حساب MARCO بالفعل؟"), dark, run = { showEmailForm(createAccount = false) })
             action(page, translate("نسيت كلمة المرور؟"), translate("استرجاع الوصول إلى حسابك"), dark, run = ::showPasswordResetForm)
         } else {
             val photoView = ImageView(activity).apply {
@@ -237,7 +237,7 @@ internal class FirebaseAccountController(
                     setPadding(0, 0, 0, dp(16))
                 })
             }
-            action(page, translate("تسجيل الخروج"), translate("الخروج من حساب MARCO RX6"), dark, run = {
+            action(page, translate("تسجيل الخروج"), translate("الخروج من حساب MARCO"), dark, run = {
                 authRepository.signOut()
                 signOutAdmin()
                 onAccountChanged()
@@ -246,7 +246,7 @@ internal class FirebaseAccountController(
             action(page, translate("مسح الحساب"), translate("حذف حسابك وبياناته السحابية نهائياً"), dark, run = { confirmAccountDeletion(user) })
         }
         page.addView(TextView(activity).apply {
-            text = "MARCO RX6  •  SECURE ACCOUNT"
+            text = "MARCO  •  SECURE ACCOUNT"
             textSize = 9f
             gravity = Gravity.CENTER
             setTextColor(if (dark) Color.rgb(145, 153, 166) else Color.rgb(91, 98, 110))
@@ -445,7 +445,7 @@ internal class FirebaseAccountController(
         val dark = isDarkMode()
         val page = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            layoutDirection = if (translate("حساب MARCO RX6") == "حساب MARCO RX6") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
+            layoutDirection = if (translate("حساب MARCO") == "حساب MARCO") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
             setPadding(dp(22), dp(20), dp(22), dp(28))
             setBackgroundColor(if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247))
         }
@@ -603,8 +603,8 @@ internal class FirebaseAccountController(
     private fun showEmailForm(createAccount: Boolean) {
         val page = createAccountFormPage(
             if (createAccount) translate("إنشاء حساب جديد") else translate("تسجيل الدخول"),
-            if (createAccount) translate("أنشئ حساب MARCO RX6 لحفظ ملفك ومزامنة بياناتك.")
-            else translate("سجّل الدخول للعودة إلى حساب MARCO RX6.")
+            if (createAccount) translate("أنشئ حساب MARCO لحفظ ملفك ومزامنة بياناتك.")
+            else translate("سجّل الدخول للعودة إلى حساب MARCO.")
         )
         val email = accountInput(
             translate("البريد الإلكتروني"),
@@ -722,7 +722,7 @@ internal class FirebaseAccountController(
             return
         }
         AlertDialog.Builder(activity)
-            .setTitle(translate("حذف حساب MARCO RX6؟"))
+            .setTitle(translate("حذف حساب MARCO؟"))
             .setMessage(
                 translate("هذه العملية نهائية: سنحذف ملف الحساب والإعدادات المحفوظة في Firebase، ثم حساب Firebase نفسه. لن نحذف مكتبة الألعاب أو الملفات المحلية على الهاتف أو حساب Google المسؤول أو محتوى Blogger وDrive.")
             )
@@ -809,7 +809,7 @@ internal class FirebaseAccountController(
                         authRepository.signOut()
                         signOutAdmin()
                         onAccountChanged()
-                        toast("تم حذف حساب MARCO RX6 وبياناته السحابية بنجاح")
+                        toast("تم حذف حساب MARCO وبياناته السحابية بنجاح")
                     }
                     .addOnFailureListener { error ->
                         toast("تم حذف بيانات الحساب، لكن تعذر حذف حساب الدخول. تواصل مع الدعم.")
