@@ -413,12 +413,17 @@ internal class BloggerPostComposerController(
         }
 
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(page) { view, insets ->
-            val safe = insets.getInsets(
+            val safeTop = insets.getInsets(
                 androidx.core.view.WindowInsetsCompat.Type.statusBars() or
-                    androidx.core.view.WindowInsetsCompat.Type.displayCutout() or
-                    androidx.core.view.WindowInsetsCompat.Type.navigationBars()
-            )
-            view.setPadding(dp(14), baseTop + safe.top, dp(14), baseBottom + safe.bottom)
+                    androidx.core.view.WindowInsetsCompat.Type.displayCutout()
+            ).top
+            // Gesture navigation can reserve a bottom swipe area even when the
+            // navigation-bar inset is smaller or zero on some Android versions.
+            val safeBottom = insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.navigationBars() or
+                    androidx.core.view.WindowInsetsCompat.Type.mandatorySystemGestures()
+            ).bottom
+            view.setPadding(dp(14), baseTop + safeTop, dp(14), baseBottom + safeBottom)
             insets
         }
         setContentView(page)
