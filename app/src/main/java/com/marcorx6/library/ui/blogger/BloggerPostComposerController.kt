@@ -65,20 +65,24 @@ internal class BloggerPostComposerController(
         }
         if (existing != null) setPendingCoverLocalPath(existing.coverLocalPath)
 
+        val isNight = (activity.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
+        val studioTextColor = if (isNight) white() else android.graphics.Color.rgb(32, 48, 68)
         val box = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(12), dp(16), dp(12))
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
-                if (android.os.Build.VERSION.SDK_INT >= 23)
+                if (android.os.Build.VERSION.SDK_INT >= 23 && activity.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK == android.content.res.Configuration.UI_MODE_NIGHT_YES)
                     intArrayOf(android.graphics.Color.rgb(9, 31, 54), android.graphics.Color.rgb(6, 17, 32))
+                else if (activity.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK == android.content.res.Configuration.UI_MODE_NIGHT_NO)
+                    intArrayOf(android.graphics.Color.WHITE, android.graphics.Color.rgb(235, 243, 253))
                 else intArrayOf(bg(), panel())
             ).apply {
                 cornerRadius = dp(22).toFloat()
                 setStroke(dp(1), android.graphics.Color.argb(115, 74, 153, 222))
             }
         }
-        fun section(text: String) = makeText(text, 13f, white(), true).apply {
+        fun section(text: String) = makeText(text, 13f, studioTextColor, true).apply {
             setPadding(0, dp(12), 0, dp(7))
         }
         fun addField(target: LinearLayout, view: View) {
@@ -87,8 +91,9 @@ internal class BloggerPostComposerController(
         fun makeAction(text: String, primary: Boolean = false) = Button(activity).apply {
             this.text = translate(text)
             isAllCaps = false
+            if (primary) tag = "marco_primary_action"
             minHeight = dp(48)
-            setTextColor(if (primary) accentForeground() else white())
+            setTextColor(if (primary) accentForeground() else studioTextColor)
             background = if (primary) android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
                 intArrayOf(android.graphics.Color.rgb(37, 132, 222), android.graphics.Color.rgb(15, 73, 145))
@@ -101,15 +106,25 @@ internal class BloggerPostComposerController(
             setPadding(dp(14), dp(13), dp(14), dp(13))
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
-                intArrayOf(android.graphics.Color.argb(225, 25, 91, 151), android.graphics.Color.argb(205, 11, 39, 69))
+                if (isNight) intArrayOf(
+                    android.graphics.Color.rgb(25, 91, 151),
+                    android.graphics.Color.rgb(11, 39, 69)
+                ) else intArrayOf(
+                    android.graphics.Color.rgb(229, 242, 255),
+                    android.graphics.Color.rgb(207, 228, 250)
+                )
             ).apply {
                 cornerRadius = dp(17).toFloat()
-                setStroke(dp(1), android.graphics.Color.argb(130, 103, 177, 239))
+                setStroke(
+                    dp(1),
+                    if (isNight) android.graphics.Color.argb(130, 103, 177, 239)
+                    else android.graphics.Color.rgb(160, 199, 238)
+                )
             }
         }
         intro.addView(makeText(
             translate(if (existing == null) "استوديو النشر • MARCO RX6" else "استوديو التحرير • MARCO RX6"),
-            18f, white(), true
+            18f, studioTextColor, true
         ))
         intro.addView(makeText(
             translate("أدخل معلومات اللعبة وروابطها، ثم راجع شكل المقال قبل النشر."),
@@ -126,7 +141,25 @@ internal class BloggerPostComposerController(
         val language = form.language
         val password = form.password
         val rights = form.rights
-        val coverPreview = form.coverPreview
+        val coverPreview = form.coverPreview.apply {
+            background = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
+                if (isNight) intArrayOf(
+                    android.graphics.Color.rgb(20, 57, 91),
+                    android.graphics.Color.rgb(7, 25, 45)
+                ) else intArrayOf(
+                    android.graphics.Color.rgb(239, 247, 255),
+                    android.graphics.Color.rgb(218, 235, 253)
+                )
+            ).apply {
+                cornerRadius = dp(15).toFloat()
+                setStroke(
+                    dp(1),
+                    if (isNight) android.graphics.Color.rgb(76, 153, 222)
+                    else android.graphics.Color.rgb(164, 201, 238)
+                )
+            }
+        }
         setCoverFields(coverUrl, coverPreview)
 
         if (existing != null) {
@@ -195,7 +228,7 @@ internal class BloggerPostComposerController(
                 setText(initialUrl)
                 setPadding(dp(12), dp(10), dp(12), dp(10))
             }
-            row.addView(makeText(translate("رابط تحميل"), 12f, white(), true))
+            row.addView(makeText(translate("رابط تحميل"), 12f, studioTextColor, true))
             addField(row, label)
             addField(row, url)
             val remove = makeAction("إزالة هذا الرابط").apply {
@@ -236,9 +269,11 @@ internal class BloggerPostComposerController(
             setPadding(0, dp(3), 0, dp(8))
             addView(box)
         }
+        val baseTop = dp(10)
+        val baseBottom = dp(12)
         val page = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(14), dp(10), dp(14), dp(12))
+            setPadding(dp(14), baseTop, dp(14), baseBottom)
             setBackgroundColor(bg())
         }
         val toolbar = LinearLayout(activity).apply {
@@ -254,7 +289,7 @@ internal class BloggerPostComposerController(
             setOnClickListener { onBack() }
         }
         toolbar.addView(back, LinearLayout.LayoutParams(dp(48), dp(48)))
-        toolbar.addView(makeText(translate(if (existing == null) "استوديو النشر" else "تحرير المقال"), 19f, white(), true),
+        toolbar.addView(makeText(translate(if (existing == null) "استوديو النشر" else "تحرير المقال"), 19f, studioTextColor, true),
             LinearLayout.LayoutParams(0, -2, 1f))
         page.addView(toolbar, LinearLayout.LayoutParams(-1, -2))
         page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
@@ -406,7 +441,22 @@ internal class BloggerPostComposerController(
                     )
         }
 
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(page) { view, insets ->
+            val safeTop = insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.statusBars() or
+                    androidx.core.view.WindowInsetsCompat.Type.displayCutout()
+            ).top
+            // Gesture navigation can reserve a bottom swipe area even when the
+            // navigation-bar inset is smaller or zero on some Android versions.
+            val safeBottom = insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.navigationBars() or
+                    androidx.core.view.WindowInsetsCompat.Type.mandatorySystemGestures()
+            ).bottom
+            view.setPadding(dp(14), baseTop + safeTop, dp(14), baseBottom + safeBottom)
+            insets
+        }
         setContentView(page)
+        androidx.core.view.ViewCompat.requestApplyInsets(page)
         applyUnifiedSkin(page)
         page.alpha = 0f
         page.translationY = dp(14).toFloat()

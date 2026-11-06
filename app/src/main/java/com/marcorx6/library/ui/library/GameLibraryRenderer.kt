@@ -5,7 +5,6 @@ import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
 import android.view.View
-import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.ImageView
@@ -32,7 +31,6 @@ internal class GameLibraryRenderer(
         gameList: LinearLayout,
         filters: LinearLayout,
         countText: TextView,
-        search: EditText,
         games: List<Game>,
         selected: String,
         selectedGenre: String,
@@ -69,7 +67,7 @@ internal class GameLibraryRenderer(
         }
 
         val sorted = GameLibraryManager.filterAndSort(
-            games, selected, search.text.toString().trim(), selectedGenre, selectedYear, sortMode
+            games, selected, "", selectedGenre, selectedYear, sortMode
         )
         countText.text = sorted.size.toString() + " " + tr("لعبة")
         if (sorted.isEmpty()) {

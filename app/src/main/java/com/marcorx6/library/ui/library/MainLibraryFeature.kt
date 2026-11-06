@@ -5,7 +5,6 @@ import com.marcorx6.library.ui.*
 import android.content.Context
 import android.view.View
 
-import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.marcorx6.library.data.Game
@@ -31,7 +30,6 @@ internal class MainLibraryFeature(
     setSelected: (String) -> Unit,
     getSortMode: () -> String,
     setSortMode: (String) -> Unit,
-    setSearch: (EditText) -> Unit,
     setFilters: (LinearLayout) -> Unit,
     setCountText: (TextView) -> Unit,
     setGameList: (LinearLayout) -> Unit,
@@ -42,6 +40,8 @@ internal class MainLibraryFeature(
     showGameDialog: () -> Unit,
     showProfile: () -> Unit,
     showDownloads: () -> Unit,
+    loadCover: (android.widget.ImageView, String, String) -> Unit,
+    showDetails: (Game) -> Unit,
     applyTypography: (android.view.View) -> Unit,
     applyUnifiedSkin: (android.view.View) -> Unit,
     applyMotionPreferences: (android.view.View) -> Unit
@@ -66,7 +66,6 @@ internal class MainLibraryFeature(
         setSelected = setSelected,
         getSortMode = getSortMode,
         setSortMode = setSortMode,
-        setSearch = setSearch,
         setFilters = setFilters,
         setCountText = setCountText,
         setGameList = setGameList,
@@ -77,6 +76,8 @@ internal class MainLibraryFeature(
         showGameDialog = showGameDialog,
         showProfile = showProfile,
         showDownloads = showDownloads,
+        loadCover = loadCover,
+        showDetails = showDetails,
         applyTypography = applyTypography,
         applyUnifiedSkin = applyUnifiedSkin,
         applyMotionPreferences = applyMotionPreferences

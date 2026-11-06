@@ -1,6 +1,5 @@
 package com.marcorx6.library.ui.library
 
-import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 
@@ -10,7 +9,6 @@ import android.widget.TextView
  */
 internal class MainLibraryViewState {
     lateinit var gameList: LinearLayout
-    lateinit var search: EditText
     lateinit var filters: LinearLayout
     lateinit var countText: TextView
 

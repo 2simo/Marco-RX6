@@ -1,6 +1,8 @@
 package com.marcorx6.library.ui.library
 
 import com.marcorx6.library.R
+import com.marcorx6.library.data.Game
+import com.marcorx6.library.data.GameLibraryManager
 
 import com.marcorx6.library.ui.*
 
@@ -40,7 +42,6 @@ internal class MainLibraryInterfaceController(
     private val setSelected: (String) -> Unit,
     private val getSortMode: () -> String,
     private val setSortMode: (String) -> Unit,
-    private val setSearch: (EditText) -> Unit,
     private val setFilters: (LinearLayout) -> Unit,
     private val setCountText: (TextView) -> Unit,
     private val setGameList: (LinearLayout) -> Unit,
@@ -51,13 +52,14 @@ internal class MainLibraryInterfaceController(
     private val showGameDialog: () -> Unit,
     private val showProfile: () -> Unit,
     private val showDownloads: () -> Unit,
+    private val loadCover: (ImageView, String, String) -> Unit,
+    private val showDetails: (Game) -> Unit,
     private val applyTypography: (View) -> Unit,
     private val applyUnifiedSkin: (View) -> Unit,
     private val applyMotionPreferences: (View) -> Unit
 ) {
     private val mainHandler = Handler(Looper.getMainLooper())
     private var searchRenderRunnable: Runnable? = null
-    private lateinit var search: AutoCompleteTextView
     private lateinit var filters: LinearLayout
     private lateinit var countText: TextView
     private lateinit var gameList: LinearLayout
@@ -80,7 +82,147 @@ internal class MainLibraryInterfaceController(
         mainHandler.removeCallbacksAndMessages(null)
     }
 
+
+    private fun showSmartSearch() {
+        val ink = bg
+        val accent = Color.rgb(45, 145, 255)
+        val searchBaseTop = dp(18)
+        val searchBaseBottom = dp(18)
+        val root = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutDirection = if (currentLanguage() == "ar") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
+            textDirection = if (currentLanguage() == "ar") View.TEXT_DIRECTION_RTL else View.TEXT_DIRECTION_LTR
+            setPadding(dp(16), searchBaseTop, dp(16), searchBaseBottom)
+            setBackgroundColor(ink)
+        }
+        val header = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val titleBlock = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
+        titleBlock.addView(makeText("MARCO RX6  /  SMART SEARCH", 9f, accent, true))
+        titleBlock.addView(makeText(tr("البحث الذكي"), 24f, white, true))
+        header.addView(titleBlock, LinearLayout.LayoutParams(0, -2, 1f))
+        val back = TextView(context).apply {
+            text = tr("رجوع")
+            textSize = 12f
+            setTextColor(white)
+            gravity = Gravity.CENTER
+            setPadding(dp(15), dp(10), dp(15), dp(10))
+            background = rounded(panel, 16)
+            setOnClickListener { create() }
+        }
+        header.addView(back)
+        root.addView(header, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(18) })
+
+        val searchBox = EditText(context).apply {
+            hint = tr("اكتب اسم اللعبة أو المنصة أو النوع أو السنة...")
+            textSize = 14f
+            setSingleLine(true)
+            setTextColor(white)
+            setHintTextColor(gray)
+            setPadding(dp(14), dp(12), dp(14), dp(12))
+            setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.ic_action_search, 0, 0, 0)
+            compoundDrawableTintList = android.content.res.ColorStateList.valueOf(accent)
+            compoundDrawablePadding = dp(10)
+            imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH
+        }
+        root.addView(searchBox, LinearLayout.LayoutParams(-1, dp(58)).apply { bottomMargin = dp(12) })
+        val count = makeText(tr("ابدأ بكتابة اسم اللعبة للبحث"), 11f, gray, false)
+        root.addView(count, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
+        val results = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
+        root.addView(results, LinearLayout.LayoutParams(-1, -2))
+
+        fun renderResults(query: String) {
+            results.removeAllViews()
+            val matches = GameLibraryManager.filterAndSort(games(), "ALL", query, "", "", "LATEST")
+            count.text = if (query.isBlank()) tr("جميع الألعاب") + " • " + matches.size
+                else matches.size.toString() + " " + tr("نتيجة")
+            if (matches.isEmpty()) {
+                results.addView(makeText(tr("لم يتم العثور على ألعاب مطابقة"), 14f, gray, true).apply {
+                    gravity = Gravity.CENTER
+                    setPadding(dp(12), dp(48), dp(12), dp(48))
+                })
+                return
+            }
+            matches.forEach { game ->
+                val card = LinearLayout(context).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                    setPadding(dp(10), dp(10), dp(10), dp(10))
+                    background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                        if (isDarkMode()) intArrayOf(Color.argb(225, 24, 59, 92), Color.argb(210, 8, 27, 48))
+                        else intArrayOf(Color.argb(245, 255, 255, 255), Color.argb(230, 220, 239, 255))).apply {
+                        cornerRadius = dp(17).toFloat()
+                        setStroke(dp(1), if (isDarkMode()) Color.argb(150, 75, 151, 218) else Color.argb(160, 156, 198, 239))
+                    }
+                    isClickable = true
+                    isFocusable = true
+                    setOnClickListener { showDetails(game) }
+                }
+                val cover = ImageView(context).apply {
+                    scaleType = ImageView.ScaleType.CENTER_CROP
+                    background = rounded(ink, 12)
+                }
+                if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) {
+                    loadCover(cover, game.coverLocalPath, game.coverUrl)
+                } else {
+                    cover.setImageResource(android.R.drawable.ic_menu_gallery)
+                    cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                }
+                card.addView(cover, LinearLayout.LayoutParams(dp(68), dp(88)))
+                val details = LinearLayout(context).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(dp(12), 0, dp(6), 0)
+                }
+                details.addView(makeText(game.name, 14f, white, true).apply { maxLines = 2 })
+                val metadata = listOf(game.platform, game.genre, game.releaseYear)
+                    .filter { it.isNotBlank() }.joinToString("  •  ")
+                details.addView(makeText(metadata, 10f, gray, false).apply {
+                    maxLines = 2
+                    setPadding(0, dp(5), 0, 0)
+                })
+                card.addView(details, LinearLayout.LayoutParams(0, -2, 1f))
+                results.addView(card, LinearLayout.LayoutParams(-1, -2).apply {
+                    bottomMargin = dp(9)
+                })
+            }
+        }
+        searchBox.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                renderResults(s?.toString().orEmpty())
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
+        renderResults("")
+        val scroll = ScrollView(context).apply {
+            isFillViewport = true
+            isVerticalScrollBarEnabled = false
+            addView(root, ViewGroup.LayoutParams(-1, -2))
+        }
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(scroll) { _, insets ->
+            val safeTop = insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.statusBars() or
+                    androidx.core.view.WindowInsetsCompat.Type.displayCutout()
+            ).top
+            val safeBottom = insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.navigationBars() or
+                    androidx.core.view.WindowInsetsCompat.Type.mandatorySystemGestures()
+            ).bottom
+            root.setPadding(dp(16), searchBaseTop + safeTop, dp(16), searchBaseBottom + safeBottom)
+            insets
+        }
+        applyTypography(scroll)
+        setContentView(scroll)
+        androidx.core.view.ViewCompat.requestApplyInsets(scroll)
+        applyUnifiedSkin(scroll)
+        applyMotionPreferences(scroll)
+        searchBox.requestFocus()
+    }
+
     fun create() {
+        activeDockTab = "HOME"
         // MARCO RX6 visual system: midnight-blue surfaces with electric-blue accents.
         val silver = if (isDarkMode()) Color.rgb(226, 232, 242) else Color.rgb(43, 52, 68)
         val muted = gray
@@ -95,10 +237,14 @@ internal class MainLibraryInterfaceController(
             setBackgroundColor(ink)
         }
         ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
-            val safeAreas = insets.getInsets(
-                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
-            )
-            view.setPadding(dp(12), dp(8) + safeAreas.top, dp(12), dp(104) + safeAreas.bottom)
+            val safeTop = insets.getInsets(
+                WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.displayCutout()
+            ).top
+            val safeBottom = insets.getInsets(
+                WindowInsetsCompat.Type.navigationBars() or
+                    WindowInsetsCompat.Type.mandatorySystemGestures()
+            ).bottom
+            view.setPadding(dp(12), dp(8) + safeTop, dp(12), dp(104) + safeBottom)
             insets
         }
 
@@ -164,53 +310,6 @@ internal class MainLibraryInterfaceController(
             bottomMargin = dp(15)
         })
 
-
-        val searchWrap = LinearLayout(context).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                if (isDarkMode()) intArrayOf(Color.argb(205, 23, 58, 91), Color.argb(185, 8, 24, 43))
-                else intArrayOf(Color.argb(225, 255, 255, 255), Color.argb(195, 224, 239, 255))).apply {
-                cornerRadius = dp(17).toFloat()
-                setStroke(dp(1), if (isDarkMode()) Color.rgb(58, 111, 169) else Color.rgb(174, 205, 239))
-            }
-            setPadding(dp(14), 0, dp(14), 0)
-            elevation = if (isDarkMode()) 0f else dp(2).toFloat()
-        }
-        searchWrap.addView(ImageView(context).apply {
-            setImageResource(R.drawable.ic_action_search)
-            imageTintList = android.content.res.ColorStateList.valueOf(if (isDarkMode()) silver else Color.rgb(73, 84, 105))
-            scaleType = ImageView.ScaleType.CENTER_INSIDE
-            contentDescription = tr("بحث")
-        }, LinearLayout.LayoutParams(dp(24), dp(24)))
-        search = AutoCompleteTextView(context).apply {
-            hint = tr("ابحث عن الألعاب والمقالات...")
-            textSize = 14f
-            typeface = Typeface.create("sans-serif", Typeface.NORMAL)
-            setSingleLine(true)
-            threshold = 1
-            setTextColor(white)
-            setHintTextColor(if (isDarkMode()) gray else Color.rgb(105, 115, 134))
-            background = null
-            setPadding(dp(10), 0, dp(6), 0)
-            setAdapter(ArrayAdapter(context, android.R.layout.simple_dropdown_item_1line,
-                games().flatMap { game ->
-                    listOf(game.name, game.platform, game.genre, game.releaseYear)
-                }.map { it.trim() }.filter { it.isNotBlank() }.distinct().take(100)))
-            // Keep autocomplete suggestions aligned with the active glass theme instead
-            // of Android's default opaque grey popup.
-            setDropDownBackgroundDrawable(GradientDrawable().apply {
-                setColor(if (isDarkMode()) Color.rgb(13, 34, 56) else Color.rgb(248, 251, 255))
-                cornerRadius = dp(14).toFloat()
-                setStroke(dp(1), if (isDarkMode()) Color.rgb(58, 111, 169) else Color.rgb(174, 205, 239))
-            })
-            dropDownVerticalOffset = dp(5)
-            setOnFocusChangeListener { _, focused ->
-                if (focused && text.isNotEmpty()) showDropDown()
-            }
-        }
-        searchWrap.addView(search, LinearLayout.LayoutParams(0, dp(52), 1f))
-        root.addView(searchWrap, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(13) })
 
         val filterScroll = HorizontalScrollView(context).apply {
             isHorizontalScrollBarEnabled = false
@@ -348,7 +447,6 @@ internal class MainLibraryInterfaceController(
 
         // Publish the newly created views to the host before the first render.
         // renderGames() reads these fields, so leaving them unwired causes a lateinit crash.
-        setSearch(search)
         setFilters(filters)
         setCountText(countText)
         setGameList(gameList)
@@ -414,7 +512,7 @@ internal class MainLibraryInterfaceController(
             elevation = dp(14).toFloat()
             setPadding(dp(7), dp(7), dp(7), dp(7))
         }
-        if (activeDockTab !in setOf("HOME", "FAVORITES", "DOWNLOADS", "PROFILE")) activeDockTab = "HOME"
+        if (activeDockTab !in setOf("HOME", "SEARCH", "FAVORITES", "DOWNLOADS", "PROFILE")) activeDockTab = "HOME"
         val dockItems = linkedMapOf<String, LinearLayout>()
         val dockLabels = linkedMapOf<String, String>()
         fun renderDockSelection() {
@@ -492,6 +590,7 @@ internal class MainLibraryInterfaceController(
         dockItem("HOME", R.drawable.ic_nav_home, tr("الرئيسية")) {
             selected = "ALL"; renderGames(); pageScroll.smoothScrollTo(0, 0)
         }
+        dockItem("SEARCH", R.drawable.ic_action_search, tr("بحث")) { showSmartSearch() }
         dockItem("FAVORITES", R.drawable.ic_nav_favorites, tr("المفضلة")) {
             selected = "FAVORITES"; renderGames(); pageScroll.smoothScrollTo(0, 0)
         }
@@ -507,27 +606,21 @@ internal class MainLibraryInterfaceController(
         // including the floating navigation dock, has been assembled.
         applyUnifiedSkin(shell)
         ViewCompat.setOnApplyWindowInsetsListener(shell) { _, insets ->
-            val safeAreas = insets.getInsets(
-                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
-            )
-            dockParams.bottomMargin = dp(12) + safeAreas.bottom
+            val safeTop = insets.getInsets(
+                WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.displayCutout()
+            ).top
+            val safeBottom = insets.getInsets(
+                WindowInsetsCompat.Type.navigationBars() or
+                    WindowInsetsCompat.Type.mandatorySystemGestures()
+            ).bottom
+            dockParams.bottomMargin = dp(12) + safeBottom
             dock.layoutParams = dockParams
-            pageScroll.setPadding(0, safeAreas.top, 0, dp(84) + safeAreas.bottom)
+            pageScroll.setPadding(0, safeTop, 0, dp(84) + safeBottom)
             insets
         }
         setContentView(shell)
         applyMotionPreferences(shell)
         ViewCompat.requestApplyInsets(shell)
-        search.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                searchRenderRunnable?.let { mainHandler.removeCallbacks(it) }
-                searchRenderRunnable = Runnable { renderGames() }.also {
-                    mainHandler.postDelayed(it, 180L)
-                }
-            }
-            override fun afterTextChanged(s: Editable?) {}
-        })
         renderGames()
     }
 }
