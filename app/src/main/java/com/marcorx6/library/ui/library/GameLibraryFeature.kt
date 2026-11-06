@@ -42,7 +42,8 @@ internal class GameLibraryFeature(
         tr = translate,
         loadCover = loadCover,
         showDetails = showDetails,
-        loadEngagementSummary = loadEngagementSummary
+        loadEngagementSummary = loadEngagementSummary,
+        recordViewOnce = recordViewOnce
     )
 
     fun render() = renderer.render(
