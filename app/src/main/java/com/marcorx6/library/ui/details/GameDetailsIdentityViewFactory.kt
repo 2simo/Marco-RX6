@@ -15,20 +15,25 @@ internal class GameDetailsIdentityViewFactory(
     private val makeText: (String, Float, Int, Boolean) -> TextView,
     private val isDarkMode: () -> Boolean,
     private val loadCover: (ImageView, String, String) -> Unit,
+    private val loadDownloads: (Game, (Long) -> Unit) -> Unit,
     private val translate: (String) -> String
 ) {
     fun create(game: Game): LinearLayout {
         val dark = isDarkMode()
         val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
         val primary = if (dark) Color.rgb(244, 247, 252) else Color.rgb(25, 29, 36)
+        val cardColor = if (dark) Color.rgb(25, 28, 34) else Color.rgb(242, 244, 247)
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
+            layoutDirection = android.view.View.LAYOUT_DIRECTION_LOCALE
         }
 
-        // A dedicated identity card: cover first, then the game title.
+        // Compact identity header: cover and title side by side, with a real download counter.
         val gameCard = LinearLayout(activity).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(14), dp(14), dp(14), dp(14))
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            layoutDirection = android.view.View.LAYOUT_DIRECTION_LOCALE
+            setPadding(dp(12), dp(12), dp(12), dp(12))
             background = GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
                 if (dark) intArrayOf(Color.rgb(25, 28, 34), Color.rgb(8, 9, 12))
@@ -41,11 +46,10 @@ internal class GameDetailsIdentityViewFactory(
         }
 
         val cover = ImageView(activity).apply {
-            scaleType = ImageView.ScaleType.FIT_CENTER
-            adjustViewBounds = true
+            scaleType = ImageView.ScaleType.CENTER_CROP
             background = GradientDrawable().apply {
                 setColor(if (dark) Color.rgb(35, 38, 45) else Color.rgb(222, 226, 232))
-                cornerRadius = dp(15).toFloat()
+                cornerRadius = dp(13).toFloat()
             }
             clipToOutline = true
             contentDescription = "${translate("غلاف اللعبة")} ${game.name}"
@@ -55,19 +59,52 @@ internal class GameDetailsIdentityViewFactory(
         } else {
             cover.setImageResource(android.R.drawable.ic_menu_gallery)
         }
-        gameCard.addView(cover, LinearLayout.LayoutParams(dp(180), dp(270)).apply {
-            gravity = android.view.Gravity.CENTER_HORIZONTAL
-        })
-        gameCard.addView(makeText(game.name, 19f, primary, true).apply {
-            gravity = android.view.Gravity.CENTER
-            textAlignment = android.view.View.TEXT_ALIGNMENT_CENTER
-            maxLines = 3
-            setPadding(dp(4), dp(13), dp(4), dp(2))
+        gameCard.addView(cover, LinearLayout.LayoutParams(dp(112), dp(168)))
+
+        val identityInfo = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(dp(13), dp(3), dp(3), dp(3))
+        }
+        identityInfo.addView(makeText(game.name, 18f, primary, true).apply {
+            gravity = android.view.Gravity.START
+            textAlignment = android.view.View.TEXT_ALIGNMENT_VIEW_START
+            maxLines = 4
+            setPadding(0, 0, 0, dp(14))
             contentDescription = game.name
         }, LinearLayout.LayoutParams(-1, -2))
+
+        val downloadRow = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(dp(9), dp(8), dp(10), dp(8))
+            background = GradientDrawable().apply {
+                setColor(if (dark) Color.rgb(43, 47, 55) else Color.WHITE)
+                cornerRadius = dp(12).toFloat()
+                setStroke(dp(1), if (dark) Color.rgb(75, 80, 90) else Color.rgb(211, 215, 222))
+            }
+            contentDescription = translate("عدد التنزيلات")
+        }
+        val downloadIcon = ImageView(activity).apply {
+            setImageResource(com.marcorx6.library.R.drawable.ic_action_download)
+            contentDescription = null
+        }
+        downloadRow.addView(downloadIcon, LinearLayout.LayoutParams(dp(19), dp(19)))
+        val downloadCount = makeText(translate("التنزيلات: 0"), 13f, primary, true).apply {
+            setPadding(dp(7), 0, 0, 0)
+            maxLines = 1
+        }
+        downloadRow.addView(downloadCount, LinearLayout.LayoutParams(-2, -2))
+        identityInfo.addView(downloadRow, LinearLayout.LayoutParams(-2, -2))
+        gameCard.addView(identityInfo, LinearLayout.LayoutParams(0, -2, 1f))
         root.addView(gameCard, LinearLayout.LayoutParams(-1, -2).apply {
             bottomMargin = dp(12)
         })
+        loadDownloads(game) { count ->
+            activity.runOnUiThread {
+                downloadCount.text = "${translate("التنزيلات")}: ${count.coerceAtLeast(0)}"
+            }
+        }
 
         val details = extractGameDetails(game)
         if (details.isNotEmpty()) {
@@ -75,7 +112,7 @@ internal class GameDetailsIdentityViewFactory(
                 orientation = LinearLayout.VERTICAL
                 setPadding(dp(13), dp(12), dp(13), dp(12))
                 background = GradientDrawable().apply {
-                    setColor(if (dark) Color.rgb(25, 28, 34) else Color.rgb(242, 244, 247))
+                    setColor(cardColor)
                     cornerRadius = dp(18).toFloat()
                     setStroke(dp(1), if (dark) Color.rgb(75, 80, 90) else Color.rgb(211, 215, 222))
                 }
