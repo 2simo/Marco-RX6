@@ -23,8 +23,11 @@ internal class GameEngagementRepository(
     )
 
     private fun gameId(game: Game): String {
-        val identity = listOf(game.platform.trim().uppercase(), game.name.trim().lowercase(),
-            game.url.trim()).joinToString("|")
+        val stableGameKey = game.bloggerPostId.trim().takeIf { it.isNotBlank() }
+            ?: game.sourcePostUrl.trim().takeIf { it.isNotBlank() }
+            ?: game.url.trim().takeIf { it.isNotBlank() }
+            ?: game.name.trim().lowercase()
+        val identity = listOf(game.platform.trim().uppercase(), stableGameKey).joinToString("|")
         val digest = MessageDigest.getInstance("SHA-256").digest(identity.toByteArray(Charsets.UTF_8))
         return digest.joinToString("") { "%02x".format(it) }
     }
