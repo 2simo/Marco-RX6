@@ -207,7 +207,7 @@ internal class ResumableDownloadWorker(
         if (Build.VERSION.SDK_INT >= 26) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                localize("تنزيلات MARCO RX6"),
+                localize("تنزيلات MARCO"),
                 NotificationManager.IMPORTANCE_LOW
             )
             channel.description = localize("تتبع تقدم تنزيلات الألعاب")
@@ -215,7 +215,7 @@ internal class ResumableDownloadWorker(
         }
         val notification: Notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher)
-            .setContentTitle(title.ifBlank { "MARCO RX6" })
+            .setContentTitle(title.ifBlank { "MARCO" })
             .setContentText(localize("قيد التنزيل"))
             .setOngoing(true)
             .setOnlyAlertOnce(true)

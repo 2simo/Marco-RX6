@@ -301,7 +301,7 @@ class MainActivity : ComponentActivity() {
                         googleAccountRuntimeFeature.signOut {
                             googleAccountRuntimeFeature.isAdminSession = false
                             createInterface()
-                            Toast.makeText(this, tr("حساب Google المختار مختلف عن حساب MARCO RX6. سجّل بنفس البريد الإلكتروني."), Toast.LENGTH_LONG).show()
+                            Toast.makeText(this, tr("حساب Google المختار مختلف عن حساب MARCO. سجّل بنفس البريد الإلكتروني."), Toast.LENGTH_LONG).show()
                         }
                     } else {
                         createInterface()
@@ -409,7 +409,7 @@ class MainActivity : ComponentActivity() {
                         createInterface()
                     }
                 } else if (firebaseAuthRepository.currentUser?.email.isNullOrBlank()) {
-                    Toast.makeText(this, tr("سجّل الدخول إلى حساب MARCO RX6 أولاً"), Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, tr("سجّل الدخول إلى حساب MARCO أولاً"), Toast.LENGTH_LONG).show()
                 } else {
                     firebaseAccountController.connectAdminAccount()
                 }

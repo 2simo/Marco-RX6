@@ -52,15 +52,15 @@ internal class GameLibraryRenderer(
             chip.background = GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
                 if (active) intArrayOf(red, red)
-                else if (isDarkMode()) intArrayOf(Color.argb(205, 21, 62, 101), Color.argb(188, 8, 27, 47))
-                else intArrayOf(Color.argb(228, 255, 255, 255), Color.argb(210, 222, 239, 255))
+                else if (isDarkMode()) intArrayOf(Color.argb(205, 35, 38, 45), Color.argb(188, 15, 17, 22))
+                else intArrayOf(Color.argb(228, 255, 255, 255), Color.argb(210, 222, 226, 232))
             ).apply {
                 cornerRadius = dp(18).toFloat()
                 setStroke(
                     dp(1),
                     if (active) red
-                    else if (isDarkMode()) Color.argb(145, 78, 151, 216)
-                    else Color.argb(155, 151, 195, 237)
+                    else if (isDarkMode()) Color.argb(145, 130, 138, 151)
+                    else Color.argb(155, 160, 168, 181)
                 )
             }
             chip.setTextColor(if (active) accentForeground() else gray)
@@ -128,9 +128,9 @@ internal class GameLibraryRenderer(
                 gravity = Gravity.CENTER
                 setPadding(dp(10), dp(5), dp(10), dp(5))
                 background = GradientDrawable().apply {
-                    setColor(if (isDarkMode()) Color.argb(105, 52, 111, 170) else Color.argb(115, 210, 232, 255))
+                    setColor(if (isDarkMode()) Color.argb(105, 35, 38, 45) else Color.argb(115, 222, 226, 232))
                     cornerRadius = dp(12).toFloat()
-                    setStroke(dp(1), if (isDarkMode()) Color.argb(120, 92, 165, 225) else Color.argb(130, 145, 190, 232))
+                    setStroke(dp(1), if (isDarkMode()) Color.argb(120, 130, 138, 151) else Color.argb(130, 160, 168, 181))
                 }
             }
             heading.addView(sectionCount)
@@ -155,20 +155,20 @@ internal class GameLibraryRenderer(
                     orientation = LinearLayout.VERTICAL
                     val surface = GradientDrawable(
                         GradientDrawable.Orientation.TL_BR,
-                        if (isDarkMode()) intArrayOf(Color.argb(232, 20, 52, 84), Color.argb(220, 7, 24, 43))
-                        else intArrayOf(Color.argb(240, 255, 255, 255), Color.argb(228, 225, 241, 255))
+                        if (isDarkMode()) intArrayOf(Color.argb(232, 35, 38, 45), Color.argb(220, 15, 17, 22))
+                        else intArrayOf(Color.argb(240, 255, 255, 255), Color.argb(228, 222, 226, 232))
                     ).apply {
                         cornerRadius = dp(18).toFloat()
                         setStroke(
                             dp(1),
-                            if (isDarkMode()) Color.argb(175, 78, 157, 224)
-                            else Color.argb(185, 153, 198, 239)
+                            if (isDarkMode()) Color.argb(175, 130, 138, 151)
+                            else Color.argb(185, 160, 168, 181)
                         )
                     }
                     background = android.graphics.drawable.RippleDrawable(
                         android.content.res.ColorStateList.valueOf(
-                            if (isDarkMode()) Color.argb(86, 83, 177, 255)
-                            else Color.argb(62, 35, 126, 224)
+                            if (isDarkMode()) Color.argb(86, 190, 198, 210)
+                            else Color.argb(62, 140, 148, 160)
                         ),
                         surface,
                         GradientDrawable().apply {
@@ -201,14 +201,14 @@ internal class GameLibraryRenderer(
                     text = game.platform
                     importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
                     textSize = 9f
-                    setTextColor(Color.WHITE)
+                    setTextColor(Color.rgb(20, 23, 29))
                     typeface = android.graphics.Typeface.create(
                         "sans-serif-medium", android.graphics.Typeface.BOLD
                     )
                     gravity = Gravity.CENTER
                     setPadding(dp(8), dp(4), dp(8), dp(4))
                     background = GradientDrawable().apply {
-                        setColor(Color.rgb(24, 105, 196))
+                        setColor(Color.rgb(190, 198, 210))
                         cornerRadius = dp(9).toFloat()
                     }
                 }
@@ -236,9 +236,9 @@ internal class GameLibraryRenderer(
                         gravity = Gravity.CENTER
                         setPadding(dp(8), dp(4), dp(8), dp(4))
                         background = GradientDrawable().apply {
-                            setColor(Color.argb(220, 12, 34, 58))
+                            setColor(Color.argb(220, 35, 38, 45))
                             cornerRadius = dp(9).toFloat()
-                            setStroke(dp(1), Color.argb(210, 100, 177, 245))
+                            setStroke(dp(1), Color.argb(210, 145, 153, 166))
                         }
                     }
                     imageFrame.addView(
@@ -252,12 +252,12 @@ internal class GameLibraryRenderer(
                 if (game.isFavorite) {
                     val favoriteBadge = ImageView(activity).apply {
                         setImageResource(com.marcorx6.library.R.drawable.ic_nav_favorites)
-                        imageTintList = android.content.res.ColorStateList.valueOf(Color.WHITE)
+                        imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(20, 23, 29))
                         scaleType = ImageView.ScaleType.CENTER_INSIDE
                         importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
                         setPadding(dp(6), dp(6), dp(6), dp(6))
                         background = GradientDrawable().apply {
-                            setColor(Color.rgb(24, 105, 196))
+                            setColor(Color.rgb(190, 198, 210))
                             cornerRadius = dp(17).toFloat()
                         }
                     }
@@ -276,12 +276,12 @@ internal class GameLibraryRenderer(
                     image.scaleType = ImageView.ScaleType.CENTER_INSIDE
                 }
                 imageFrame.background = GradientDrawable().apply {
-                    setColor(if (isDarkMode()) Color.rgb(7, 18, 34) else Color.rgb(225, 240, 255))
+                    setColor(if (isDarkMode()) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247))
                     cornerRadius = dp(13).toFloat()
                     setStroke(
                         dp(1),
-                        if (isDarkMode()) Color.argb(125, 81, 157, 224)
-                        else Color.argb(135, 150, 197, 241)
+                        if (isDarkMode()) Color.argb(125, 130, 138, 151)
+                        else Color.argb(135, 160, 168, 181)
                     )
                 }
                 card.addView(imageFrame, LinearLayout.LayoutParams(-1, dp(164)))
@@ -339,7 +339,7 @@ internal class GameLibraryRenderer(
                         com.marcorx6.library.R.drawable.ic_engagement_views,
                         tr("المشاهدات"),
                         viewsValue,
-                        Color.rgb(72, 174, 255)
+                        Color.rgb(190, 198, 210)
                     ),
                     LinearLayout.LayoutParams(0, -2, 1f)
                 )

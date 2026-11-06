@@ -2,9 +2,9 @@ package com.marcorx6.library.ui
 
 import android.graphics.Color
 
-/** MARCO RX6 primary accent: electric blue across the application. */
+/** MARCO RX6 primary accent: brushed silver across the application. */
 internal object AccentPalette {
-    fun color(name: String?): Int = Color.rgb(42, 145, 255)
+    fun color(name: String?): Int = Color.rgb(190, 198, 210)
 
-    fun foreground(): Int = Color.WHITE
+    fun foreground(): Int = Color.rgb(20, 23, 29)
 }

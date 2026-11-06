@@ -19,18 +19,18 @@ internal class FirstRunSetupViewFactory(
             background = GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
                 if (selected) intArrayOf(
-                    android.graphics.Color.argb(232, 31, 112, 190),
-                    android.graphics.Color.argb(215, 10, 48, 91)
+                    android.graphics.Color.argb(238, 92, 98, 109),
+                    android.graphics.Color.argb(225, 43, 47, 55)
                 ) else intArrayOf(
-                    android.graphics.Color.argb(205, 20, 57, 91),
-                    android.graphics.Color.argb(188, 8, 27, 48)
+                    android.graphics.Color.argb(218, 34, 37, 44),
+                    android.graphics.Color.argb(205, 17, 19, 24)
                 )
             ).apply {
                 cornerRadius = dp(17).toFloat()
                 setStroke(
                     dp(if (selected) 2 else 1),
-                    if (selected) android.graphics.Color.argb(220, 103, 186, 255)
-                    else android.graphics.Color.argb(145, 77, 132, 186)
+                    if (selected) android.graphics.Color.argb(235, 190, 198, 210)
+                    else android.graphics.Color.argb(125, 130, 138, 151)
                 )
             }
             elevation = dp(if (selected) 4 else 1).toFloat()
@@ -41,7 +41,7 @@ internal class FirstRunSetupViewFactory(
             optionHeader.addView(makeText(
                 label,
                 16f,
-                if (selected) android.graphics.Color.WHITE else android.graphics.Color.rgb(222, 232, 245),
+                if (selected) android.graphics.Color.WHITE else android.graphics.Color.rgb(230, 233, 239),
                 true
             ), LinearLayout.LayoutParams(0, -2, 1f))
             if (selected) {
@@ -54,7 +54,7 @@ internal class FirstRunSetupViewFactory(
             }
             addView(optionHeader)
             if (detail.isNotBlank()) {
-                addView(makeText(detail, 10f, android.graphics.Color.rgb(153, 174, 199), false).apply {
+                addView(makeText(detail, 10f, android.graphics.Color.rgb(166, 173, 184), false).apply {
                     setPadding(0, dp(5), 0, 0)
                 })
             }
@@ -62,7 +62,7 @@ internal class FirstRunSetupViewFactory(
             isFocusable = true
             if (android.os.Build.VERSION.SDK_INT >= 23) {
                 foreground = android.graphics.drawable.RippleDrawable(
-                    android.content.res.ColorStateList.valueOf(android.graphics.Color.argb(82, 76, 169, 255)),
+                    android.content.res.ColorStateList.valueOf(android.graphics.Color.argb(70, 190, 198, 210)),
                     null,
                     android.graphics.drawable.ColorDrawable(android.graphics.Color.WHITE)
                 )

@@ -8,6 +8,7 @@ import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.view.Gravity
+import android.view.inputmethod.EditorInfo
 import android.view.KeyEvent
 import android.view.View
 import android.webkit.CookieManager
@@ -19,8 +20,10 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.net.http.SslError
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.text.InputType
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
@@ -51,14 +54,15 @@ internal class DownloadPageDialog(
         }
 
         fun dp(value: Int): Int = (value * activity.resources.displayMetrics.density).toInt()
-        val dark = activity.resources.configuration.uiMode and
-            android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
-            android.content.res.Configuration.UI_MODE_NIGHT_YES
-        val background = if (dark) Color.rgb(7, 17, 31) else Color.rgb(242, 247, 253)
-        val surface = if (dark) Color.rgb(15, 35, 58) else Color.WHITE
-        val primary = Color.rgb(42, 145, 255)
-        val heading = if (dark) Color.WHITE else Color.rgb(22, 43, 65)
-        val muted = if (dark) Color.rgb(164, 184, 207) else Color.rgb(91, 112, 137)
+        val appPreferences = activity.getSharedPreferences("app_settings", Activity.MODE_PRIVATE)
+        // The in-app appearance setting is authoritative; do not follow the device theme.
+        val dark = appPreferences.getBoolean("dark_mode", true)
+        val background = if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247)
+        val surface = if (dark) Color.rgb(25, 28, 34) else Color.WHITE
+        val primary = if (dark) Color.rgb(205, 212, 222) else Color.rgb(105, 116, 132)
+        val border = if (dark) Color.rgb(70, 77, 89) else Color.rgb(205, 211, 220)
+        val heading = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
+        val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
 
         val dialog = Dialog(activity)
         val root = LinearLayout(activity).apply {
@@ -66,23 +70,26 @@ internal class DownloadPageDialog(
             setBackgroundColor(background)
             setPadding(dp(12), dp(10), dp(12), dp(10))
         }
+        val webView = WebView(activity)
         val toolbar = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        val titleBox = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
+        val titleBox = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(2), dp(2), 0, dp(2))
+        }
         titleBox.addView(TextView(activity).apply {
-            text = "MARCO RX6  /  ${translate("صفحة التحميل").uppercase()}"
-            textSize = 9f
-            letterSpacing = 0.1f
-            setTextColor(primary)
-        })
-        titleBox.addView(TextView(activity).apply {
-            text = translate("صفحة التحميل")
-            textSize = 19f
+            text = "MARCO"
+            textSize = 17f
+            letterSpacing = 0.12f
             setTypeface(null, Typeface.BOLD)
             setTextColor(heading)
-            setPadding(0, dp(3), 0, 0)
+        })
+        titleBox.addView(TextView(activity).apply {
+            text = translate("متصفح التحميل")
+            textSize = 10f
+            setTextColor(muted)
         })
         toolbar.addView(titleBox, LinearLayout.LayoutParams(0, -2, 1f))
 
@@ -93,37 +100,86 @@ internal class DownloadPageDialog(
                     setCompoundDrawablesRelativeWithIntrinsicBounds(iconRes, 0, 0, 0)
                     compoundDrawablePadding = dp(5)
                 }
-                textSize = 12f
+                textSize = 11f
                 gravity = Gravity.CENTER
                 setTextColor(primary)
                 minWidth = dp(44)
                 minHeight = dp(44)
+                setPadding(dp(5), dp(5), dp(5), dp(5))
+                setBackground(GradientDrawable().apply {
+                    setColor(surface)
+                    cornerRadius = dp(13).toFloat()
+                    setStroke(dp(1), border)
+                })
+                if (android.os.Build.VERSION.SDK_INT >= 23) {
+                    compoundDrawableTintList = android.content.res.ColorStateList.valueOf(primary)
+                    foreground = android.graphics.drawable.RippleDrawable(
+                        android.content.res.ColorStateList.valueOf(
+                            if (dark) Color.argb(70, 205, 212, 222) else Color.argb(45, 105, 116, 132)
+                        ), null, android.graphics.drawable.ColorDrawable(Color.WHITE)
+                    )
+                }
                 isClickable = true
                 isFocusable = true
                 setOnClickListener { onClick() }
             }
 
-        val webView = WebView(activity)
-        toolbar.addView(toolbarAction("", {
+        toolbar.addView(toolbarAction("", { dialog.dismiss() }, com.marcorx6.library.R.drawable.ic_action_close))
+        root.addView(toolbar, LinearLayout.LayoutParams(-1, -2))
+
+        // Opera-inspired compact navigation row: history, editable address, reload and external open.
+        val addressRow = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, dp(8), 0, dp(8))
+        }
+        addressRow.addView(toolbarAction("", {
+            if (webView.canGoBack()) webView.goBack()
+        }, com.marcorx6.library.R.drawable.ic_action_back))
+        val addressInput = EditText(activity).apply {
+            setSingleLine(true)
+            textSize = 12f
+            setTextColor(heading)
+            setHintTextColor(muted)
+            hint = translate("ابحث أو أدخل عنوان الموقع")
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
+            imeOptions = EditorInfo.IME_ACTION_GO
+            setPadding(dp(12), 0, dp(10), 0)
+            setBackground(GradientDrawable().apply {
+                setColor(surface)
+                cornerRadius = dp(18).toFloat()
+                setStroke(dp(1), if (dark) Color.rgb(65, 71, 82) else Color.rgb(205, 211, 220))
+            })
+        }
+        addressRow.addView(addressInput, LinearLayout.LayoutParams(0, dp(44), 1f).apply {
+            marginStart = dp(4)
+            marginEnd = dp(4)
+        })
+        addressRow.addView(toolbarAction("", {
             val currentUrl = SecureUrlPolicy.toHttpsUrl(webView.url ?: safeStartUrl)
             if (currentUrl != null) {
                 webView.stopLoading()
                 webView.loadUrl(currentUrl)
-            } else {
-                Toast.makeText(activity, translate("رابط الصفحة غير صالح"), Toast.LENGTH_SHORT).show()
             }
         }, com.marcorx6.library.R.drawable.ic_action_refresh))
-        toolbar.addView(toolbarAction(translate("خارجي"), {
-            try {
-                val currentUrl = SecureUrlPolicy.toHttpsUrl(webView.url ?: safeStartUrl)
-                if (currentUrl == null) throw IllegalArgumentException("Unsafe page URL")
-                activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(currentUrl)))
-            } catch (_: Exception) {
-                Toast.makeText(activity, translate("تعذر فتح المتصفح الخارجي"), Toast.LENGTH_SHORT).show()
-            }
-        }, com.marcorx6.library.R.drawable.ic_action_external))
-        toolbar.addView(toolbarAction("", { dialog.dismiss() }, com.marcorx6.library.R.drawable.ic_action_close))
-        root.addView(toolbar, LinearLayout.LayoutParams(-1, -2))
+        addressInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE) {
+                val entered = addressInput.text.toString().trim()
+                val candidate = if (entered.contains("://")) entered else "https://$entered"
+                val safeUrl = SecureUrlPolicy.toHttpsUrl(candidate)
+                if (safeUrl != null) {
+                    webView.loadUrl(safeUrl)
+                    val imm = activity.getSystemService(Activity.INPUT_METHOD_SERVICE) as? android.view.inputmethod.InputMethodManager
+                    imm?.hideSoftInputFromWindow(addressInput.windowToken, 0)
+                    true
+                } else {
+                    addressInput.error = translate("رابط الصفحة غير صالح أو غير آمن")
+                    true
+                }
+            } else false
+        }
+        root.addView(addressRow, LinearLayout.LayoutParams(-1, -2))
+
 
         val progress = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
             max = 100
@@ -155,7 +211,7 @@ internal class DownloadPageDialog(
             this.background = GradientDrawable().apply {
                 setColor(surface)
                 cornerRadius = dp(16).toFloat()
-                setStroke(dp(1), if (dark) Color.argb(120, 80, 151, 215) else Color.argb(150, 153, 195, 236))
+                setStroke(dp(1), if (dark) Color.argb(120, 130, 138, 151) else Color.argb(150, 160, 168, 181))
             }
             clipToOutline = true
         }
@@ -187,12 +243,13 @@ internal class DownloadPageDialog(
                 setCompoundDrawablesRelativeWithIntrinsicBounds(com.marcorx6.library.R.drawable.ic_action_external, 0, 0, 0)
                 compoundDrawablePadding = dp(7)
                 textSize = 12f
-                setTextColor(Color.WHITE)
+                setTextColor(heading)
                 gravity = Gravity.CENTER_VERTICAL
                 setPadding(dp(12), dp(10), dp(12), dp(10))
                 this.background = GradientDrawable().apply {
-                    setColor(if (dark) Color.rgb(24, 76, 126) else Color.rgb(35, 119, 207))
+                    setColor(surface)
                     cornerRadius = dp(11).toFloat()
+                    setStroke(dp(1), border)
                 }
                 isClickable = true
                 isFocusable = true
@@ -234,15 +291,16 @@ internal class DownloadPageDialog(
         }
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, false)
-        val adPreferences = activity.getSharedPreferences("app_settings", Activity.MODE_PRIVATE)
+        val adPreferences = appPreferences
         var adBlockerEnabled = adPreferences.getBoolean("download_page_ad_blocker", true)
         val allowedHosts = adPreferences.getString("download_page_ad_allowlist", "").orEmpty()
             .split(',', ';').map { it.trim().lowercase() }.filter { it.isNotBlank() }.toSet()
-        val adToggle = toolbarAction("حجب الإعلانات", {
+        lateinit var adToggle: TextView
+        adToggle = toolbarAction(translate("حجب الإعلانات"), {
             adBlockerEnabled = !adBlockerEnabled
             adPreferences.edit().putBoolean("download_page_ad_blocker", adBlockerEnabled).apply()
-            (toolbar.getChildAt(toolbar.childCount - 1) as? TextView)?.apply {
-                text = "حجب الإعلانات"
+            adToggle.apply {
+                text = translate("حجب الإعلانات")
                 setCompoundDrawablesRelativeWithIntrinsicBounds(
                     if (adBlockerEnabled) com.marcorx6.library.R.drawable.ic_action_check
                     else com.marcorx6.library.R.drawable.ic_action_close, 0, 0, 0
@@ -251,7 +309,27 @@ internal class DownloadPageDialog(
             blockedStats.text = translate(if (adBlockerEnabled) "تم تفعيل حجب الإعلانات" else "تم إيقاف حجب الإعلانات")
             webView.reload()
         }, if (adBlockerEnabled) com.marcorx6.library.R.drawable.ic_action_check else com.marcorx6.library.R.drawable.ic_action_close)
-        toolbar.addView(adToggle)
+        val browserActions = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            setPadding(0, dp(3), 0, dp(7))
+        }
+        browserActions.addView(toolbarAction(translate("تقدم"), {
+            if (webView.canGoForward()) webView.goForward()
+        }, com.marcorx6.library.R.drawable.ic_action_forward),
+            LinearLayout.LayoutParams(0, dp(42), 1f).apply { marginEnd = dp(6) })
+        browserActions.addView(toolbarAction(translate("فتح خارجياً"), {
+            try {
+                val currentUrl = SecureUrlPolicy.toHttpsUrl(webView.url ?: safeStartUrl)
+                if (currentUrl == null) throw IllegalArgumentException("Unsafe page URL")
+                activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(currentUrl)))
+            } catch (_: Exception) {
+                Toast.makeText(activity, translate("تعذر فتح المتصفح الخارجي"), Toast.LENGTH_SHORT).show()
+            }
+        }, com.marcorx6.library.R.drawable.ic_action_external),
+            LinearLayout.LayoutParams(0, dp(42), 1f).apply { marginEnd = dp(6) })
+        browserActions.addView(adToggle, LinearLayout.LayoutParams(0, dp(42), 1f))
+        root.addView(browserActions, LinearLayout.LayoutParams(-1, -2))
         val blockedRequests = AtomicInteger(0)
         val blockedAdHosts = setOf(
             "doubleclick.net", "googlesyndication.com", "googleadservices.com",
@@ -351,6 +429,7 @@ internal class DownloadPageDialog(
                 progress.visibility = View.VISIBLE
                 progress.progress = 0
                 status.text = Uri.parse(url).host ?: translate("جارٍ فتح صفحة التحميل…")
+                addressInput.setText(url)
                 candidates.removeAllViews()
                 candidateTitle.visibility = View.GONE
                 candidateScroll.visibility = View.GONE
@@ -407,8 +486,22 @@ internal class DownloadPageDialog(
             webView.destroy()
         }
         dialog.show()
-        dialog.window?.setLayout(-1, -1)
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dialog.window?.apply {
+            setLayout(-1, -1)
+            setGravity(Gravity.FILL)
+            setBackgroundDrawableResource(android.R.color.transparent)
+            // Make the full-screen download workspace visually own both system bars.
+            statusBarColor = background
+            navigationBarColor = background
+            setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+            clearFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            decorView.systemUiVisibility = if (!dark) {
+                View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+            } else {
+                0
+            }
+        }
+        addressInput.setText(safeStartUrl)
         webView.loadUrl(safeStartUrl)
     }
 }

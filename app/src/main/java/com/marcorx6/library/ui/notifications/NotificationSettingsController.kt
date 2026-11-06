@@ -28,7 +28,7 @@ internal class NotificationSettingsController(
                 if (enabled && !systemPermissionEnabled)
                     translate("جدولة الإشعارات مفعّلة، لكن إشعارات التطبيق محظورة من إعدادات Android. اسمح بها من إعدادات التطبيق لتصلك التنبيهات.")
                 else if (enabled)
-                    translate("الإشعارات مفعّلة. يتحقق تطبيق MARCO RX6 من مدونتك دورياً وينبهك عند نشر مقال جديد.")
+                    translate("الإشعارات مفعّلة. يتحقق تطبيق MARCO من مدونتك دورياً وينبهك عند نشر مقال جديد.")
                 else
                     translate("الإشعارات متوقفة. فعّلها ليصلك تنبيه عند نشر مقال جديد.")
             )

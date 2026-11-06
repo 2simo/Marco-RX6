@@ -33,15 +33,15 @@ internal class AppearanceSettingsController(
     fun show() {
         fun dp(value: Int) = (value * activity.resources.displayMetrics.density).toInt()
         val dark = preferences.getBoolean("dark_mode", true)
-        val bg = if (dark) Color.rgb(7, 17, 31) else Color.rgb(242, 247, 253)
-        val blue = Color.rgb(42, 145, 255)
-        val ink = if (dark) Color.WHITE else Color.rgb(22, 43, 65)
-        val muted = if (dark) Color.rgb(164, 184, 207) else Color.rgb(91, 112, 137)
+        val bg = if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247)
+        val silverAccent = Color.rgb(190, 198, 210)
+        val ink = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
+        val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
         fun addGlassTouch(view: View) {
             if (android.os.Build.VERSION.SDK_INT >= 23) {
                 view.foreground = android.graphics.drawable.RippleDrawable(
                     android.content.res.ColorStateList.valueOf(
-                        if (dark) Color.argb(82, 76, 169, 255) else Color.argb(55, 35, 126, 224)
+                        if (dark) Color.argb(72, 190, 198, 210) else Color.argb(55, 130, 138, 151)
                     ),
                     null,
                     android.graphics.drawable.ColorDrawable(Color.WHITE)
@@ -60,10 +60,10 @@ internal class AppearanceSettingsController(
         }
         val heading = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
         heading.addView(TextView(activity).apply {
-            text = "MARCO RX6  /  PERSONALIZATION"
+            text = "MARCO  /  PERSONALIZATION"
             textSize = 9f
             letterSpacing = 0.12f
-            setTextColor(blue)
+            setTextColor(silverAccent)
         })
         heading.addView(TextView(activity).apply {
             text = translate("الإعدادات والمظهر")
@@ -75,7 +75,7 @@ internal class AppearanceSettingsController(
         header.addView(heading, LinearLayout.LayoutParams(0, -2, 1f))
         header.addView(android.widget.ImageView(activity).apply {
             setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
-            imageTintList = android.content.res.ColorStateList.valueOf(blue)
+            imageTintList = android.content.res.ColorStateList.valueOf(silverAccent)
             scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
             contentDescription = translate("رجوع")
             minimumWidth = dp(48)
@@ -85,7 +85,7 @@ internal class AppearanceSettingsController(
         }, LinearLayout.LayoutParams(dp(48), dp(48)))
         root.addView(header)
         root.addView(TextView(activity).apply {
-            text = translate("خصص تجربة MARCO RX6 بالطريقة التي تناسبك")
+            text = translate("خصص تجربة MARCO بالطريقة التي تناسبك")
             textSize = 12f
             setTextColor(muted)
             setPadding(0, dp(8), 0, dp(22))
@@ -94,9 +94,9 @@ internal class AppearanceSettingsController(
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(16), dp(16), dp(16))
             background = GradientDrawable().apply {
-                setColors(if (dark) intArrayOf(Color.argb(222, 23, 68, 110), Color.argb(208, 8, 27, 47)) else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(216, 224, 240, 255)))
+                setColors(if (dark) intArrayOf(Color.argb(225, 35, 38, 45), Color.argb(215, 15, 17, 22)) else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(216, 222, 226, 232)))
                 cornerRadius = dp(20).toFloat()
-                setStroke(dp(1), if (dark) Color.argb(165, 80, 151, 215) else Color.argb(175, 153, 195, 236))
+                setStroke(dp(1), if (dark) Color.argb(165, 130, 138, 151) else Color.argb(175, 160, 168, 181))
             }
         }
         colorCard.addView(TextView(activity).apply {
@@ -106,20 +106,20 @@ internal class AppearanceSettingsController(
             setTextColor(ink)
         })
         colorCard.addView(TextView(activity).apply {
-            text = translate("أزرق كهربائي  •  اللون الرسمي للتطبيق")
+            text = translate("فضي معدني  •  اللون الرسمي للتطبيق")
             textSize = 12f
             setTextColor(muted)
             setPadding(0, dp(8), 0, dp(12))
         })
         colorCard.addView(TextView(activity).apply {
-            text = translate("●   أزرق")
+            text = translate("●   فضي")
             textSize = 14f
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(Color.WHITE)
+            setTextColor(Color.rgb(20, 23, 29))
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(15), dp(14), dp(15), dp(14))
             background = GradientDrawable().apply {
-                setColor(blue); cornerRadius = dp(14).toFloat()
+                setColor(silverAccent); cornerRadius = dp(14).toFloat()
             }
         })
         root.addView(colorCard, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
@@ -127,9 +127,9 @@ internal class AppearanceSettingsController(
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(16), dp(16), dp(16))
             background = GradientDrawable().apply {
-                setColors(if (dark) intArrayOf(Color.argb(222, 23, 68, 110), Color.argb(208, 8, 27, 47)) else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(216, 224, 240, 255)))
+                setColors(if (dark) intArrayOf(Color.argb(225, 35, 38, 45), Color.argb(215, 15, 17, 22)) else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(216, 222, 226, 232)))
                 cornerRadius = dp(20).toFloat()
-                setStroke(dp(1), if (dark) Color.argb(165, 80, 151, 215) else Color.argb(175, 153, 195, 236))
+                setStroke(dp(1), if (dark) Color.argb(165, 130, 138, 151) else Color.argb(175, 160, 168, 181))
             }
         }
         animations.addView(TextView(activity).apply {
@@ -148,12 +148,12 @@ internal class AppearanceSettingsController(
             }
             textSize = 13f
             gravity = Gravity.CENTER
-            setTextColor(if (preferences.getBoolean("animations", true)) Color.WHITE else blue)
+            setTextColor(if (preferences.getBoolean("animations", true)) Color.rgb(20, 23, 29) else silverAccent)
             setPadding(dp(14), dp(13), dp(14), dp(13))
             background = GradientDrawable().apply {
-                setColor(if (preferences.getBoolean("animations", true)) Color.argb(218, 42, 145, 255) else if (dark) Color.argb(190, 15, 35, 58) else Color.argb(210, 255, 255, 255))
+                setColor(if (preferences.getBoolean("animations", true)) Color.argb(218, 190, 198, 210) else if (dark) Color.argb(190, 25, 28, 34) else Color.argb(210, 255, 255, 255))
                 cornerRadius = dp(14).toFloat()
-                if (!preferences.getBoolean("animations", true)) setStroke(dp(1), blue)
+                if (!preferences.getBoolean("animations", true)) setStroke(dp(1), silverAccent)
             }
             addGlassTouch(this)
             setOnClickListener {
@@ -163,11 +163,11 @@ internal class AppearanceSettingsController(
                 text = translate(if (enabled) "الحركات مفعّلة  ✓" else "الحركات متوقفة").replace("✓", "").trim()
                 setCompoundDrawablesRelativeWithIntrinsicBounds(if (enabled) com.marcorx6.library.R.drawable.ic_action_check else 0, 0, 0, 0)
                 contentDescription = translate(if (enabled) "إيقاف حركات وانتقالات الواجهة" else "تفعيل حركات وانتقالات الواجهة")
-                setTextColor(if (enabled) Color.WHITE else blue)
+                setTextColor(if (enabled) Color.rgb(20, 23, 29) else silverAccent)
                 background = GradientDrawable().apply {
-                    setColor(if (enabled) Color.argb(218, 42, 145, 255) else if (dark) Color.argb(190, 15, 35, 58) else Color.argb(210, 255, 255, 255))
+                    setColor(if (enabled) Color.argb(218, 190, 198, 210) else if (dark) Color.argb(190, 25, 28, 34) else Color.argb(210, 255, 255, 255))
                     cornerRadius = dp(14).toFloat()
-                    if (!enabled) setStroke(dp(1), blue)
+                    if (!enabled) setStroke(dp(1), silverAccent)
                 }
                 Toast.makeText(activity, translate(if (enabled) "تم تفعيل انتقالات الواجهة" else "تم إيقاف انتقالات الواجهة"), Toast.LENGTH_SHORT).show()
             }
@@ -180,9 +180,9 @@ internal class AppearanceSettingsController(
                 orientation = LinearLayout.VERTICAL
                 setPadding(dp(16), dp(14), dp(16), dp(14))
                 background = GradientDrawable().apply {
-                    setColors(if (dark) intArrayOf(Color.argb(220, 21, 63, 102), Color.argb(207, 8, 27, 47)) else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(216, 224, 240, 255)))
+                    setColors(if (dark) intArrayOf(Color.argb(220, 35, 38, 45), Color.argb(207, 15, 17, 22)) else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(216, 222, 226, 232)))
                     cornerRadius = dp(18).toFloat()
-                    setStroke(dp(1), if (dark) Color.argb(165, 80, 151, 215) else Color.argb(175, 153, 195, 236))
+                    setStroke(dp(1), if (dark) Color.argb(165, 130, 138, 151) else Color.argb(175, 160, 168, 181))
                 }
                 isClickable = true
                 isFocusable = true
@@ -225,7 +225,7 @@ internal class AppearanceSettingsController(
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         root.addView(settingRow(
             translate("قناة Telegram الرسمية"),
-            translate("تابع أخبار وإعلانات MARCO RX6 على Telegram")
+            translate("تابع أخبار وإعلانات MARCO على Telegram")
         ) {
             runCatching {
                 activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(CommunityChannelsController.TELEGRAM_URL)))
@@ -235,7 +235,7 @@ internal class AppearanceSettingsController(
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         root.addView(settingRow(
             translate("قناة YouTube الرسمية"),
-            translate("شاهد فيديوهات وشروحات MARCO RX6 على YouTube")
+            translate("شاهد فيديوهات وشروحات MARCO على YouTube")
         ) {
             runCatching {
                 activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(CommunityChannelsController.YOUTUBE_URL)))
@@ -245,7 +245,7 @@ internal class AppearanceSettingsController(
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         root.addView(settingRow(
             translate("التحقق من تحديث التطبيق"),
-            translate("تحقق من وجود إصدار أحدث من MARCO RX6 على GitHub")
+            translate("تحقق من وجود إصدار أحدث من MARCO على GitHub")
         ) {
             AppUpdateChecker(activity, translate).check()
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
@@ -293,7 +293,7 @@ internal class AppearanceSettingsController(
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
 
         root.addView(TextView(activity).apply {
-            text = "MARCO RX6  •  BLUE EXPERIENCE"
+            text = "MARCO  •  SILVER EXPERIENCE"
             textSize = 9f
             gravity = Gravity.CENTER
             setTextColor(muted)

@@ -85,7 +85,7 @@ internal class MainLibraryInterfaceController(
 
     private fun showSmartSearch() {
         val ink = bg
-        val accent = Color.rgb(45, 145, 255)
+        val accent = Color.rgb(190, 198, 210)
         val searchBaseTop = dp(18)
         val searchBaseBottom = dp(18)
         val root = LinearLayout(context).apply {
@@ -100,7 +100,7 @@ internal class MainLibraryInterfaceController(
             gravity = Gravity.CENTER_VERTICAL
         }
         val titleBlock = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
-        titleBlock.addView(makeText("MARCO RX6  /  SMART SEARCH", 9f, accent, true))
+        titleBlock.addView(makeText("MARCO  /  SMART SEARCH", 9f, accent, true))
         titleBlock.addView(makeText(tr("البحث الذكي"), 24f, white, true))
         header.addView(titleBlock, LinearLayout.LayoutParams(0, -2, 1f))
         val back = TextView(context).apply {
@@ -151,10 +151,10 @@ internal class MainLibraryInterfaceController(
                     gravity = Gravity.CENTER_VERTICAL
                     setPadding(dp(10), dp(10), dp(10), dp(10))
                     background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                        if (isDarkMode()) intArrayOf(Color.argb(225, 24, 59, 92), Color.argb(210, 8, 27, 48))
-                        else intArrayOf(Color.argb(245, 255, 255, 255), Color.argb(230, 220, 239, 255))).apply {
+                        if (isDarkMode()) intArrayOf(Color.argb(225, 35, 38, 45), Color.argb(210, 15, 17, 22))
+                        else intArrayOf(Color.argb(245, 255, 255, 255), Color.argb(230, 222, 226, 232))).apply {
                         cornerRadius = dp(17).toFloat()
-                        setStroke(dp(1), if (isDarkMode()) Color.argb(150, 75, 151, 218) else Color.argb(160, 156, 198, 239))
+                        setStroke(dp(1), if (isDarkMode()) Color.argb(150, 130, 138, 151) else Color.argb(160, 160, 168, 181))
                     }
                     isClickable = true
                     isFocusable = true
@@ -223,10 +223,10 @@ internal class MainLibraryInterfaceController(
 
     fun create() {
         activeDockTab = "HOME"
-        // MARCO RX6 visual system: midnight-blue surfaces with electric-blue accents.
-        val silver = if (isDarkMode()) Color.rgb(226, 232, 242) else Color.rgb(43, 52, 68)
+        // MARCO visual system: charcoal surfaces with brushed-silver accents.
+        val silver = if (isDarkMode()) Color.rgb(225, 228, 234) else Color.rgb(43, 47, 55)
         val muted = gray
-        val accentBlue = red
+        val silverAccent = red
         val ink = bg
         val glass = panel
         val root = LinearLayout(context).apply {
@@ -254,7 +254,7 @@ internal class MainLibraryInterfaceController(
             setPadding(dp(2), dp(3), dp(2), dp(17))
         }
         val brand = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
-        brand.addView(makeText("MARCO RX6  /  OFFICIAL GAME HUB", 9f, if (isDarkMode()) Color.rgb(92, 174, 255) else Color.rgb(35, 126, 224), true).apply { letterSpacing = 0.08f })
+        brand.addView(makeText("MARCO  /  OFFICIAL GAME HUB", 9f, if (isDarkMode()) Color.rgb(190, 198, 210) else Color.rgb(130, 138, 151), true).apply { letterSpacing = 0.08f })
         brand.addView(makeText("مكتبة الألعاب", 21f, silver, true).apply {
             typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
             letterSpacing = 0.01f
@@ -263,20 +263,20 @@ internal class MainLibraryInterfaceController(
         fun headerAction(iconRes: Int, label: String, action: () -> Unit) = ImageView(context).apply {
             setImageResource(iconRes)
             scaleType = ImageView.ScaleType.CENTER_INSIDE
-            imageTintList = android.content.res.ColorStateList.valueOf(if (isDarkMode()) Color.rgb(190, 222, 255) else Color.rgb(35, 126, 224))
+            imageTintList = android.content.res.ColorStateList.valueOf(if (isDarkMode()) Color.rgb(225, 228, 234) else Color.rgb(130, 138, 151))
             setPadding(dp(13), dp(13), dp(13), dp(13))
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                if (isDarkMode()) intArrayOf(Color.argb(205, 20, 58, 96), Color.argb(180, 9, 28, 52))
-                else intArrayOf(Color.argb(220, 255, 255, 255), Color.argb(190, 218, 237, 255))).apply {
+                if (isDarkMode()) intArrayOf(Color.argb(205, 34, 37, 44), Color.argb(180, 15, 17, 22))
+                else intArrayOf(Color.argb(220, 255, 255, 255), Color.argb(190, 222, 226, 232))).apply {
                 cornerRadius = dp(14).toFloat()
-                setStroke(dp(1), if (isDarkMode()) Color.rgb(48, 119, 190) else Color.rgb(173, 207, 239))
+                setStroke(dp(1), if (isDarkMode()) Color.rgb(130, 138, 151) else Color.rgb(160, 168, 181))
             }
             minimumWidth = dp(48); minimumHeight = dp(48)
             contentDescription = label
             isClickable = true
             isFocusable = true
             if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                android.content.res.ColorStateList.valueOf(Color.argb(92, 92, 181, 255)),
+                android.content.res.ColorStateList.valueOf(Color.argb(92, 190, 198, 210)),
                 null,
                 GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(14).toFloat() }
             )
@@ -293,19 +293,19 @@ internal class MainLibraryInterfaceController(
         val welcomePanel = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(35, 126, 224), Color.rgb(13, 61, 132))).apply {
+                intArrayOf(Color.rgb(130, 138, 151), Color.rgb(35, 38, 45))).apply {
                 cornerRadius = dp(22).toFloat()
             }
             setPadding(dp(18), dp(17), dp(18), dp(17))
             elevation = dp(3).toFloat()
         }
-        welcomePanel.addView(makeText(tr("YOUR NEXT GAME STARTS HERE"), 9f, Color.rgb(215, 235, 255), true).apply {
+        welcomePanel.addView(makeText(tr("YOUR NEXT GAME STARTS HERE"), 9f, Color.rgb(235, 238, 243), true).apply {
             letterSpacing = 0.12f
         })
         welcomePanel.addView(makeText(tr("اكتشف عالم الألعاب"), 21f, Color.WHITE, true).apply {
             setPadding(0, dp(5), 0, dp(3))
         })
-        welcomePanel.addView(makeText(tr("تصفح مكتبتك واختر مغامرتك القادمة"), 11f, Color.rgb(224, 239, 255), false))
+        welcomePanel.addView(makeText(tr("تصفح مكتبتك واختر مغامرتك القادمة"), 11f, Color.rgb(218, 222, 229), false))
         root.addView(welcomePanel, LinearLayout.LayoutParams(-1, -2).apply {
             bottomMargin = dp(15)
         })
@@ -340,11 +340,11 @@ internal class MainLibraryInterfaceController(
                 setPadding(dp(16), dp(10), dp(16), dp(10))
                 background = GradientDrawable(
                     GradientDrawable.Orientation.LEFT_RIGHT,
-                    if (isDarkMode()) intArrayOf(Color.argb(210, 21, 62, 101), Color.argb(192, 8, 27, 47))
-                    else intArrayOf(Color.argb(228, 255, 255, 255), Color.argb(211, 222, 239, 255))
+                    if (isDarkMode()) intArrayOf(Color.argb(210, 35, 38, 45), Color.argb(192, 15, 17, 22))
+                    else intArrayOf(Color.argb(228, 255, 255, 255), Color.argb(211, 222, 226, 232))
                 ).apply {
                     cornerRadius = dp(18).toFloat()
-                    setStroke(dp(1), if (isDarkMode()) Color.argb(145, 78, 151, 216) else Color.argb(155, 151, 195, 237))
+                    setStroke(dp(1), if (isDarkMode()) Color.argb(145, 130, 138, 151) else Color.argb(155, 160, 168, 181))
                 }
                 setTextColor(muted)
                 isClickable = true
@@ -352,7 +352,7 @@ internal class MainLibraryInterfaceController(
                 minimumHeight = dp(56)
                 contentDescription = text.toString()
                 if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                    android.content.res.ColorStateList.valueOf(Color.argb(75, 82, 175, 255)),
+                    android.content.res.ColorStateList.valueOf(Color.argb(75, 190, 198, 210)),
                     null,
                     GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(18).toFloat() }
                 )
@@ -371,7 +371,7 @@ internal class MainLibraryInterfaceController(
             gravity = Gravity.CENTER_VERTICAL
         }
         val titles = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
-        titles.addView(makeText("MARCO RX6  /  GAMES", 8f, accentBlue, true).apply { letterSpacing = 0.14f })
+        titles.addView(makeText("MARCO  /  GAMES", 8f, silverAccent, true).apply { letterSpacing = 0.14f })
         titles.addView(makeText(tr("اكتشف الألعاب"), 21f, silver, true))
         section.addView(titles, LinearLayout.LayoutParams(0, -2, 1f))
         countText = makeText("0 " + tr("لعبة"), 10f, muted, true)
@@ -383,16 +383,16 @@ internal class MainLibraryInterfaceController(
             setPadding(dp(12), dp(12), dp(12), dp(12))
             background = GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
-                if (isDarkMode()) intArrayOf(Color.argb(210, 21, 62, 101), Color.argb(192, 8, 27, 47))
-                else intArrayOf(Color.argb(228, 255, 255, 255), Color.argb(211, 222, 239, 255))
+                if (isDarkMode()) intArrayOf(Color.argb(210, 35, 38, 45), Color.argb(192, 15, 17, 22))
+                else intArrayOf(Color.argb(228, 255, 255, 255), Color.argb(211, 222, 226, 232))
             ).apply {
                 cornerRadius = dp(13).toFloat()
-                setStroke(dp(1), if (isDarkMode()) Color.argb(145, 78, 151, 216) else Color.argb(155, 151, 195, 237))
+                setStroke(dp(1), if (isDarkMode()) Color.argb(145, 130, 138, 151) else Color.argb(155, 160, 168, 181))
             }
             isClickable = true
             isFocusable = true
             if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                android.content.res.ColorStateList.valueOf(Color.argb(78, 82, 175, 255)),
+                android.content.res.ColorStateList.valueOf(Color.argb(78, 190, 198, 210)),
                 null,
                 GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(13).toFloat() }
             )
@@ -418,16 +418,16 @@ internal class MainLibraryInterfaceController(
             setPadding(dp(12), dp(12), dp(12), dp(12))
             background = GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
-                if (isDarkMode()) intArrayOf(Color.argb(210, 21, 62, 101), Color.argb(192, 8, 27, 47))
-                else intArrayOf(Color.argb(228, 255, 255, 255), Color.argb(211, 222, 239, 255))
+                if (isDarkMode()) intArrayOf(Color.argb(210, 35, 38, 45), Color.argb(192, 15, 17, 22))
+                else intArrayOf(Color.argb(228, 255, 255, 255), Color.argb(211, 222, 226, 232))
             ).apply {
                 cornerRadius = dp(13).toFloat()
-                setStroke(dp(1), if (isDarkMode()) Color.argb(145, 78, 151, 216) else Color.argb(155, 151, 195, 237))
+                setStroke(dp(1), if (isDarkMode()) Color.argb(145, 130, 138, 151) else Color.argb(155, 160, 168, 181))
             }
             isClickable = true
             isFocusable = true
             if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                android.content.res.ColorStateList.valueOf(Color.argb(78, 82, 175, 255)),
+                android.content.res.ColorStateList.valueOf(Color.argb(78, 190, 198, 210)),
                 null,
                 GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(13).toFloat() }
             )
@@ -461,18 +461,18 @@ internal class MainLibraryInterfaceController(
                 if (android.os.Build.VERSION.SDK_INT >= 23) compoundDrawableTintList =
                     android.content.res.ColorStateList.valueOf(Color.WHITE)
                 textSize = 11f
-                setTextColor(Color.WHITE)
+                setTextColor(Color.rgb(20, 23, 29))
                 typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
                 gravity = Gravity.CENTER
                 background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-                    intArrayOf(Color.rgb(46, 145, 255), Color.rgb(20, 91, 190))).apply {
+                    intArrayOf(Color.rgb(190, 198, 210), Color.rgb(105, 113, 126))).apply {
                     cornerRadius = dp(15).toFloat()
-                    setStroke(dp(1), Color.argb(190, 135, 202, 255))
+                    setStroke(dp(1), Color.argb(190, 210, 216, 225))
                 }
                 isClickable = true
                 isFocusable = true
                 if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                    android.content.res.ColorStateList.valueOf(Color.argb(100, 205, 235, 255)),
+                    android.content.res.ColorStateList.valueOf(Color.argb(100, 225, 230, 237)),
                     null,
                     GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(15).toFloat() }
                 )
@@ -501,13 +501,13 @@ internal class MainLibraryInterfaceController(
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
             background = if (isDarkMode()) GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.argb(218, 18, 55, 94), Color.argb(205, 10, 34, 61), Color.argb(190, 7, 20, 38))).apply {
+                intArrayOf(Color.argb(232, 35, 38, 45), Color.argb(220, 18, 20, 25), Color.argb(210, 8, 9, 12))).apply {
                 cornerRadius = dp(23).toFloat()
-                setStroke(dp(1), Color.rgb(47, 117, 188))
+                setStroke(dp(1), Color.rgb(130, 138, 151))
             } else GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.argb(225, 255, 255, 255), Color.argb(205, 226, 240, 255))).apply {
+                intArrayOf(Color.argb(245, 245, 247, 250), Color.argb(230, 215, 220, 228), Color.argb(220, 190, 198, 210))).apply {
                 cornerRadius = dp(23).toFloat()
-                setStroke(dp(1), Color.rgb(173, 207, 239))
+                setStroke(dp(1), Color.rgb(160, 168, 181))
             }
             elevation = dp(14).toFloat()
             setPadding(dp(7), dp(7), dp(7), dp(7))
@@ -523,19 +523,19 @@ internal class MainLibraryInterfaceController(
                 item.background = GradientDrawable(
                     GradientDrawable.Orientation.TL_BR,
                     if (active) {
-                        if (isDarkMode()) intArrayOf(Color.rgb(39, 139, 231), Color.rgb(19, 83, 157))
-                        else intArrayOf(Color.rgb(56, 150, 244), Color.rgb(31, 111, 205))
+                        if (isDarkMode()) intArrayOf(Color.rgb(190, 198, 210), Color.rgb(105, 113, 126))
+                        else intArrayOf(Color.rgb(190, 198, 210), Color.rgb(105, 113, 126))
                     } else {
-                        if (isDarkMode()) intArrayOf(Color.argb(70, 22, 65, 106), Color.argb(45, 8, 27, 47))
-                        else intArrayOf(Color.argb(75, 255, 255, 255), Color.argb(45, 220, 238, 255))
+                        if (isDarkMode()) intArrayOf(Color.argb(70, 34, 37, 44), Color.argb(45, 15, 17, 22))
+                        else intArrayOf(Color.argb(75, 255, 255, 255), Color.argb(45, 222, 226, 232))
                     }
                 ).apply {
                     cornerRadius = dp(16).toFloat()
-                    setStroke(dp(1), if (active) Color.argb(185, 135, 204, 255)
+                    setStroke(dp(1), if (active) Color.argb(185, 145, 153, 166)
                     else Color.TRANSPARENT)
                 }
                 val iconTint = if (active) Color.WHITE
-                    else if (isDarkMode()) Color.rgb(190, 211, 235) else Color.rgb(62, 91, 130)
+                    else if (isDarkMode()) Color.rgb(225, 228, 234) else Color.rgb(91, 98, 110)
                 (item.getChildAt(0) as? ImageView)?.imageTintList =
                     android.content.res.ColorStateList.valueOf(iconTint)
                 (item.getChildAt(1) as? TextView)?.setTextColor(iconTint)
@@ -554,7 +554,7 @@ internal class MainLibraryInterfaceController(
                 isClickable = true
                 isFocusable = true
                 if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                    android.content.res.ColorStateList.valueOf(Color.argb(88, 93, 184, 255)),
+                    android.content.res.ColorStateList.valueOf(Color.argb(88, 190, 198, 210)),
                     null,
                     GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(15).toFloat() }
                 )
@@ -567,7 +567,7 @@ internal class MainLibraryInterfaceController(
             item.addView(ImageView(context).apply {
                 setImageResource(iconRes)
                 imageTintList = android.content.res.ColorStateList.valueOf(
-                    if (isDarkMode()) silver else Color.rgb(62, 91, 130)
+                    if (isDarkMode()) silver else Color.rgb(91, 98, 110)
                 )
                 scaleType = ImageView.ScaleType.FIT_CENTER
                 importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
@@ -578,7 +578,7 @@ internal class MainLibraryInterfaceController(
                 maxLines = 1
                 gravity = Gravity.CENTER
                 typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
-                setTextColor(if (isDarkMode()) silver else Color.rgb(62, 91, 130))
+                setTextColor(if (isDarkMode()) silver else Color.rgb(91, 98, 110))
                 importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
             }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(2) })
             dockItems[key] = item
@@ -615,7 +615,9 @@ internal class MainLibraryInterfaceController(
             ).bottom
             dockParams.bottomMargin = dp(12) + safeBottom
             dock.layoutParams = dockParams
-            pageScroll.setPadding(0, safeTop, 0, dp(84) + safeBottom)
+            // Keep content below Android's status bar on edge-to-edge devices.
+            val effectiveSafeTop = safeTop.coerceAtLeast(dp(24))
+            pageScroll.setPadding(0, effectiveSafeTop, 0, dp(84) + safeBottom)
             insets
         }
         setContentView(shell)

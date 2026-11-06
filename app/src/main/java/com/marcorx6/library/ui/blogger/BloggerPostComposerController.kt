@@ -75,11 +75,11 @@ internal class BloggerPostComposerController(
             setPadding(dp(16), dp(12), dp(16), dp(12))
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
-                if (isNight) intArrayOf(android.graphics.Color.rgb(9, 31, 54), android.graphics.Color.rgb(6, 17, 32))
-                else intArrayOf(android.graphics.Color.WHITE, android.graphics.Color.rgb(235, 243, 253))
+                if (isNight) intArrayOf(android.graphics.Color.rgb(8, 9, 12), android.graphics.Color.rgb(17, 19, 24))
+                else intArrayOf(android.graphics.Color.WHITE, android.graphics.Color.rgb(242, 244, 247))
             ).apply {
                 cornerRadius = dp(22).toFloat()
-                setStroke(dp(1), android.graphics.Color.argb(115, 74, 153, 222))
+                setStroke(dp(1), android.graphics.Color.argb(150, 130, 138, 151))
             }
         }
         fun section(text: String) = makeText(text, 13f, studioTextColor, true).apply {
@@ -96,7 +96,7 @@ internal class BloggerPostComposerController(
             setTextColor(if (primary) accentForeground() else studioTextColor)
             background = if (primary) android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(android.graphics.Color.rgb(37, 132, 222), android.graphics.Color.rgb(15, 73, 145))
+                intArrayOf(android.graphics.Color.rgb(190, 198, 210), android.graphics.Color.rgb(105, 113, 126))
             ).apply { cornerRadius = dp(13).toFloat() }
             else rounded(panel(), 13)
         }
@@ -107,23 +107,23 @@ internal class BloggerPostComposerController(
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
                 if (isNight) intArrayOf(
-                    android.graphics.Color.rgb(25, 91, 151),
-                    android.graphics.Color.rgb(11, 39, 69)
+                    android.graphics.Color.rgb(65, 70, 80),
+                    android.graphics.Color.rgb(28, 31, 38)
                 ) else intArrayOf(
-                    android.graphics.Color.rgb(229, 242, 255),
-                    android.graphics.Color.rgb(207, 228, 250)
+                    android.graphics.Color.rgb(239, 241, 245),
+                    android.graphics.Color.rgb(220, 224, 231)
                 )
             ).apply {
                 cornerRadius = dp(17).toFloat()
                 setStroke(
                     dp(1),
-                    if (isNight) android.graphics.Color.argb(130, 103, 177, 239)
-                    else android.graphics.Color.rgb(160, 199, 238)
+                    if (isNight) android.graphics.Color.argb(150, 145, 153, 166)
+                    else android.graphics.Color.rgb(160, 168, 181)
                 )
             }
         }
         intro.addView(makeText(
-            translate(if (existing == null) "استوديو النشر • MARCO RX6" else "استوديو التحرير • MARCO RX6"),
+            translate(if (existing == null) "استوديو النشر • MARCO" else "استوديو التحرير • MARCO"),
             18f, studioTextColor, true
         ))
         intro.addView(makeText(
@@ -145,18 +145,18 @@ internal class BloggerPostComposerController(
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
                 if (isNight) intArrayOf(
-                    android.graphics.Color.rgb(20, 57, 91),
-                    android.graphics.Color.rgb(7, 25, 45)
+                    android.graphics.Color.rgb(39, 42, 50),
+                    android.graphics.Color.rgb(17, 19, 24)
                 ) else intArrayOf(
-                    android.graphics.Color.rgb(239, 247, 255),
-                    android.graphics.Color.rgb(218, 235, 253)
+                    android.graphics.Color.rgb(239, 241, 245),
+                    android.graphics.Color.rgb(220, 224, 231)
                 )
             ).apply {
                 cornerRadius = dp(15).toFloat()
                 setStroke(
                     dp(1),
-                    if (isNight) android.graphics.Color.rgb(76, 153, 222)
-                    else android.graphics.Color.rgb(164, 201, 238)
+                    if (isNight) android.graphics.Color.rgb(130, 138, 151)
+                    else android.graphics.Color.rgb(160, 168, 181)
                 )
             }
         }

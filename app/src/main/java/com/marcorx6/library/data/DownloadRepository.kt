@@ -64,7 +64,7 @@ internal class DownloadRepository(context: Context) {
                     if (!probe.finalUrl.startsWith("https://", ignoreCase = true)) {
                         throw SecurityException("رابط التحويل النهائي لا يستخدم HTTPS؛ تم إيقاف التنزيل لحماية بياناتك")
                     }
-                    val finalTitle = probe.fileName ?: title.ifBlank { "MARCO RX6" }
+                    val finalTitle = probe.fileName ?: title.ifBlank { "MARCO" }
                     val cookie = CookieManager.getInstance().getCookie(probe.finalUrl).orEmpty()
                     val previous = database.findFailedBySource(sourcePostUrl)
                     if (previous != null) {

@@ -41,8 +41,8 @@ internal class FirstRunSetupController(
             ?.takeIf { it in listOf("PS2", "PS3", "PS4") } ?: "PS3"
         var languageCode = currentLanguage()
         var darkMode = isDarkMode()
-        var accentKey = appearance.getString("accent", "blue")
-            ?.takeIf { it == "blue" } ?: "blue"
+        var accentKey = appearance.getString("accent", "silver")
+            ?.takeIf { it == "silver" } ?: "silver"
         var notificationsEnabled = isNotificationsEnabled()
 
         val steps = listOf(
@@ -55,25 +55,25 @@ internal class FirstRunSetupController(
             orientation = LinearLayout.VERTICAL
             setPadding(dp(22), dp(24), dp(22), dp(18))
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(3, 10, 22), Color.rgb(8, 22, 42), Color.rgb(4, 11, 24)))
+                intArrayOf(Color.rgb(7, 8, 11), Color.rgb(16, 18, 23), Color.rgb(5, 6, 9)))
         }
         val top = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        val brand = makeText("MARCO RX6", 13f, Color.WHITE, true).apply { letterSpacing = 0.12f }
-        val stepCount = makeText("1 / ${steps.size}", 11f, Color.rgb(126, 190, 245), true)
+        val brand = makeText("MARCO", 13f, Color.WHITE, true).apply { letterSpacing = 0.12f }
+        val stepCount = makeText("1 / ${steps.size}", 11f, Color.rgb(190, 198, 210), true)
         top.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
         top.addView(stepCount)
         root.addView(top)
 
         val progressTrack = FrameLayout(activity).apply {
-            background = rounded(Color.rgb(24, 43, 65), 8)
+            background = rounded(Color.rgb(57, 61, 70), 8)
             clipToOutline = true
         }
         val progressFill = View(activity).apply {
             background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(Color.rgb(42, 145, 255), Color.rgb(23, 194, 224))).apply {
+                intArrayOf(Color.rgb(190, 198, 210), Color.rgb(137, 145, 158))).apply {
                 cornerRadius = dp(8).toFloat()
             }
         }
@@ -119,20 +119,20 @@ internal class FirstRunSetupController(
                 gravity = Gravity.TOP
                 setPadding(0, dp(8), 0, dp(8))
             }
-            page.addView(makeText(tr("خطوة ${step + 1}"), 10f, Color.rgb(92, 180, 255), true))
+            page.addView(makeText(tr("خطوة ${step + 1}"), 10f, Color.rgb(190, 198, 210), true))
             page.addView(makeText(tr(steps[step]), 27f, Color.WHITE, true).apply {
                 setPadding(0, dp(8), 0, dp(8))
             })
             val description = when (step) {
                 0 -> "اختر المنصة التي تريد أن تبدأ بها مكتبتك. يمكنك تغييرها في أي وقت."
-                1 -> "اختر اللغة التي تناسبك لعرض واجهة MARCO RX6."
+                1 -> "اختر اللغة التي تناسبك لعرض واجهة MARCO."
                 2 -> "اختر المظهر الذي يريح عينيك أثناء التصفح."
                 3 -> "اختر اللون الذي سيظهر في الأزرار والعناصر التفاعلية."
                 4 -> "هل ترغب في تلقي إشعار عند نشر مقالات جديدة في المدونة؟"
                 5 -> "اختر المجلد الذي تريد حفظ الملفات التي تنزّلها فيه. هذه الخطوة اختيارية ويمكنك تخطيها."
                 else -> "تم إعداد مكتبتك. اختياراتك محفوظة ويمكنك تغييرها لاحقاً من الإعدادات."
             }
-            page.addView(makeText(tr(description), 13f, Color.rgb(164, 184, 207), false).apply {
+            page.addView(makeText(tr(description), 13f, Color.rgb(170, 176, 186), false).apply {
                 setPadding(0, 0, 0, dp(24))
             })
 
@@ -169,9 +169,9 @@ internal class FirstRunSetupController(
                 2 -> listOf(true to "الوضع الليلي", false to "الوضع النهاري")
                     .forEach { (dark, label) -> addChoice(tr(label), "", darkMode == dark) { darkMode = dark } }
                 3 -> {
-                    val card = viewFactory.optionCard(tr("أزرق"), true, tr("اللون الرسمي المعتمد في MARCO RX6"))
+                    val card = viewFactory.optionCard(tr("فضي"), true, tr("اللون الرسمي المعتمد في MARCO"))
                     val dot = View(activity).apply {
-                        background = rounded(Color.rgb(42, 145, 255), 20)
+                        background = rounded(Color.rgb(190, 198, 210), 20)
                     }
                     card.addView(dot, LinearLayout.LayoutParams(dp(24), dp(24)).apply { topMargin = dp(9) })
                     choices.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(9) })
@@ -195,7 +195,7 @@ internal class FirstRunSetupController(
                     choices.addView(makeText(
                         tr("يمكنك تخطي هذه الخطوة والمتابعة بالتخزين الافتراضي."),
                         11f,
-                        Color.rgb(164, 184, 207),
+                        Color.rgb(170, 176, 186),
                         false
                     ).apply {
                         setPadding(dp(4), dp(12), dp(4), dp(4))

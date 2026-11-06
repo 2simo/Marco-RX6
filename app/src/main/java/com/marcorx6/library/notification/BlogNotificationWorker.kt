@@ -112,7 +112,7 @@ open class BlogNotificationWorker(context: Context, params: WorkerParameters) : 
         )
         val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle(localize("مقال جديد على MARCO RX6"))
+            .setContentTitle(localize("مقال جديد على MARCO"))
             .setContentText(postTitle)
             .setStyle(NotificationCompat.BigTextStyle().bigText(postTitle))
             .setContentIntent(pendingIntent)

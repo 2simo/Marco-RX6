@@ -30,10 +30,10 @@ internal class BlogNotificationScheduler(context: Context) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 BlogNotificationWorker.CHANNEL_ID,
-                "New MARCO RX6 posts",
+                "New MARCO posts",
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = "Alerts when a new post is published on the MARCO RX6 blog"
+                description = "Alerts when a new post is published on the MARCO blog"
             }
             appContext.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         }

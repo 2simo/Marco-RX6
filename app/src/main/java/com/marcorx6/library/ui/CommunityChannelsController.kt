@@ -16,7 +16,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 
-/** One-time welcome screen linking new users to the official MARCO RX6 communities. */
+/** One-time welcome screen linking new users to the official MARCO communities. */
 internal class CommunityChannelsController(
     private val activity: Activity,
     private val dp: (Int) -> Int,
@@ -32,20 +32,20 @@ internal class CommunityChannelsController(
             setPadding(dp(24), dp(28), dp(24), dp(24))
             background = GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(3, 10, 22), Color.rgb(8, 28, 52), Color.rgb(3, 10, 22))
+                intArrayOf(Color.rgb(7, 8, 11), Color.rgb(15, 17, 22), Color.rgb(7, 8, 11))
             )
         }
-        root.addView(makeText("MARCO RX6", 12f, Color.rgb(105, 190, 255), true).apply {
+        root.addView(makeText("MARCO", 12f, Color.rgb(190, 198, 210), true).apply {
             gravity = Gravity.CENTER
             letterSpacing = 0.16f
         })
-        root.addView(makeText(translate("مرحباً بك في MARCO RX6"), 25f, Color.WHITE, true).apply {
+        root.addView(makeText(translate("مرحباً بك في MARCO"), 25f, Color.WHITE, true).apply {
             gravity = Gravity.CENTER
             setPadding(0, dp(14), 0, dp(8))
         })
         root.addView(makeText(
             translate("تابع قنواتنا الرسمية لتصلك أخبار التطبيق والتحديثات الجديدة."),
-            13f, Color.rgb(177, 197, 220), false
+            13f, Color.rgb(178, 184, 194), false
         ).apply {
             gravity = Gravity.CENTER
             setPadding(0, 0, 0, dp(28))
@@ -60,7 +60,7 @@ internal class CommunityChannelsController(
                 background = GradientDrawable().apply {
                     setColor(color)
                     cornerRadius = dp(16).toFloat()
-                    setStroke(dp(1), Color.argb(100, 210, 235, 255))
+                    setStroke(dp(1), Color.argb(100, 145, 153, 166))
                 }
                 minHeight = dp(62)
                 setOnClickListener {
@@ -79,9 +79,9 @@ internal class CommunityChannelsController(
             text = translate("متابعة إلى التطبيق")
             isAllCaps = false
             textSize = 14f
-            setTextColor(Color.WHITE)
+            setTextColor(Color.rgb(20, 23, 29))
             background = GradientDrawable().apply {
-                setColor(Color.rgb(42, 145, 255))
+                setColor(Color.rgb(190, 198, 210))
                 cornerRadius = dp(16).toFloat()
             }
             minHeight = dp(52)

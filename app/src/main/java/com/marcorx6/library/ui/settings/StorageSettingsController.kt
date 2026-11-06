@@ -48,10 +48,10 @@ internal class StorageSettingsController(
     fun show() {
         val dark = activity.getSharedPreferences("appearance_settings", Activity.MODE_PRIVATE)
             .getBoolean("dark_mode", true)
-        val bg = if (dark) Color.rgb(7, 17, 31) else Color.rgb(242, 247, 253)
-        val ink = if (dark) Color.WHITE else Color.rgb(22, 43, 65)
-        val muted = if (dark) Color.rgb(164, 184, 207) else Color.rgb(91, 112, 137)
-        val blue = Color.rgb(42, 145, 255)
+        val bg = if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247)
+        val ink = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
+        val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
+        val silverAccent = Color.rgb(190, 198, 210)
 
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
@@ -64,10 +64,10 @@ internal class StorageSettingsController(
         }
         val heading = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
         heading.addView(TextView(activity).apply {
-            text = "MARCO RX6  /  STORAGE"
+            text = "MARCO  /  STORAGE"
             textSize = 9f
             letterSpacing = 0.12f
-            setTextColor(blue)
+            setTextColor(silverAccent)
         })
         heading.addView(TextView(activity).apply {
             text = translate("التخزين")
@@ -78,7 +78,7 @@ internal class StorageSettingsController(
         header.addView(heading, LinearLayout.LayoutParams(0, -2, 1f))
         header.addView(android.widget.ImageView(activity).apply {
             setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
-            imageTintList = android.content.res.ColorStateList.valueOf(blue)
+            imageTintList = android.content.res.ColorStateList.valueOf(silverAccent)
             scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
             contentDescription = translate("رجوع")
             isClickable = true
@@ -97,9 +97,9 @@ internal class StorageSettingsController(
             orientation = LinearLayout.VERTICAL
             setPadding(dp(17), dp(17), dp(17), dp(17))
             background = GradientDrawable().apply {
-                setColor(if (dark) Color.rgb(15, 39, 64) else Color.WHITE)
+                setColor(if (dark) Color.rgb(25, 28, 34) else Color.WHITE)
                 cornerRadius = dp(20).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(53, 105, 158) else Color.rgb(175, 207, 239))
+                setStroke(dp(1), if (dark) Color.rgb(130, 138, 151) else Color.rgb(160, 168, 181))
             }
         }
         val total = TextView(activity).apply {
@@ -127,9 +127,9 @@ internal class StorageSettingsController(
             orientation = LinearLayout.VERTICAL
             setPadding(dp(17), dp(16), dp(17), dp(16))
             background = GradientDrawable().apply {
-                setColor(if (dark) Color.rgb(15, 39, 64) else Color.WHITE)
+                setColor(if (dark) Color.rgb(25, 28, 34) else Color.WHITE)
                 cornerRadius = dp(20).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(53, 105, 158) else Color.rgb(175, 207, 239))
+                setStroke(dp(1), if (dark) Color.rgb(130, 138, 151) else Color.rgb(160, 168, 181))
             }
         }
         downloadLocationCard.addView(TextView(activity).apply {
@@ -149,9 +149,9 @@ internal class StorageSettingsController(
             textSize = 13f
             gravity = Gravity.CENTER
             minHeight = dp(48)
-            setTextColor(Color.WHITE)
+            setTextColor(Color.rgb(20, 23, 29))
             background = GradientDrawable().apply {
-                setColor(blue)
+                setColor(silverAccent)
                 cornerRadius = dp(14).toFloat()
             }
             setOnClickListener { launchDownloadFolderPicker() }
@@ -164,9 +164,9 @@ internal class StorageSettingsController(
             orientation = LinearLayout.VERTICAL
             setPadding(dp(17), dp(16), dp(17), dp(16))
             background = GradientDrawable().apply {
-                setColor(if (dark) Color.rgb(15, 39, 64) else Color.WHITE)
+                setColor(if (dark) Color.rgb(25, 28, 34) else Color.WHITE)
                 cornerRadius = dp(20).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(53, 105, 158) else Color.rgb(175, 207, 239))
+                setStroke(dp(1), if (dark) Color.rgb(130, 138, 151) else Color.rgb(160, 168, 181))
             }
         }
         cacheCard.addView(TextView(activity).apply {
@@ -186,9 +186,9 @@ internal class StorageSettingsController(
             textSize = 13f
             gravity = Gravity.CENTER
             minHeight = dp(48)
-            setTextColor(Color.WHITE)
+            setTextColor(Color.rgb(20, 23, 29))
             background = GradientDrawable().apply {
-                setColor(blue)
+                setColor(silverAccent)
                 cornerRadius = dp(14).toFloat()
             }
             setOnClickListener {

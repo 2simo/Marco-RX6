@@ -63,7 +63,7 @@ internal class FirebaseAccountController(
             orientation = LinearLayout.VERTICAL
             layoutDirection = View.LAYOUT_DIRECTION_RTL
             setPadding(dp(22), dp(24), dp(22), dp(28))
-            setBackgroundColor(if (dark) Color.rgb(6, 16, 30) else Color.rgb(240, 247, 255))
+            setBackgroundColor(if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247))
         }
         val user = authRepository.currentUser
         val header = LinearLayout(activity).apply {
@@ -72,7 +72,7 @@ internal class FirebaseAccountController(
         }
         header.addView(ImageView(activity).apply {
             setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
-            imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(42, 145, 255))
+            imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
             scaleType = ImageView.ScaleType.CENTER_INSIDE
             contentDescription = translate("رجوع")
             isClickable = true
@@ -80,11 +80,11 @@ internal class FirebaseAccountController(
             setOnClickListener { onBack() }
         }, LinearLayout.LayoutParams(dp(48), dp(48)))
         header.addView(TextView(activity).apply {
-            text = if (user == null || user.isAnonymous) translate("حساب MARCO RX6")
-                else translate("حسابك في MARCO RX6")
+            text = if (user == null || user.isAnonymous) translate("حساب MARCO")
+                else translate("حسابك في MARCO")
             textSize = 25f
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(if (dark) Color.WHITE else Color.rgb(18, 42, 68))
+            setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
             setPadding(dp(8), 0, 0, dp(8))
         }, LinearLayout.LayoutParams(0, -2, 1f))
         page.addView(header)
@@ -92,26 +92,26 @@ internal class FirebaseAccountController(
             page.addView(TextView(activity).apply {
                 text = translate("استعمل التطبيق كزائر، أو سجّل الدخول لحفظ حسابك ومزامنة بياناتك.")
                 textSize = 13f
-                setTextColor(if (dark) Color.rgb(183, 207, 231) else Color.rgb(75, 105, 136))
+                setTextColor(if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110))
                 setPadding(0, 0, 0, dp(18))
             })
             action(page, translate("المتابعة كزائر"), translate("العودة إلى المكتبة دون إنشاء ملف شخصي"), dark, run = onBack)
             action(page, translate("إنشاء حساب باستخدام Google"), translate("إنشاء حساب جديد أو استخدام حساب Google موجود"), dark, primary = true, run = ::startFreshGoogleAccountSelection)
             action(page, translate("إنشاء حساب بالبريد الإلكتروني"), translate("استعمل بريدك الإلكتروني وكلمة مرور"), dark, run = { showEmailForm(createAccount = true) })
-            action(page, translate("تسجيل الدخول بالبريد الإلكتروني"), translate("لديك حساب MARCO RX6 بالفعل؟"), dark, run = { showEmailForm(createAccount = false) })
+            action(page, translate("تسجيل الدخول بالبريد الإلكتروني"), translate("لديك حساب MARCO بالفعل؟"), dark, run = { showEmailForm(createAccount = false) })
             action(page, translate("نسيت كلمة المرور؟"), translate("استرجاع الوصول إلى حسابك"), dark, run = ::showPasswordResetForm)
         } else {
             val photoView = ImageView(activity).apply {
                 scaleType = ImageView.ScaleType.CENTER_CROP
                 background = GradientDrawable().apply {
                     shape = GradientDrawable.OVAL
-                    setColor(if (dark) Color.rgb(25, 53, 82) else Color.rgb(218, 235, 252))
-                    setStroke(dp(2), Color.rgb(75, 165, 255))
+                    setColor(if (dark) Color.rgb(35, 38, 45) else Color.rgb(222, 226, 232))
+                    setStroke(dp(2), Color.rgb(190, 198, 210))
                 }
                 clipToOutline = true
                 contentDescription = translate("صورة الحساب")
                 setImageResource(com.marcorx6.library.R.drawable.ic_nav_profile)
-                imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(75, 165, 255))
+                imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
             }
             page.addView(photoView, LinearLayout.LayoutParams(dp(104), dp(104)).apply {
                 gravity = Gravity.CENTER
@@ -123,7 +123,7 @@ internal class FirebaseAccountController(
                 text = translate("الاسم")
                 textSize = 13f
                 setTypeface(null, android.graphics.Typeface.BOLD)
-                setTextColor(if (dark) Color.WHITE else Color.rgb(18, 42, 68))
+                setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
                 setPadding(0, dp(8), 0, dp(6))
             })
             val nameInput = accountInput(
@@ -139,7 +139,7 @@ internal class FirebaseAccountController(
                 text = translate("نبذة عنك")
                 textSize = 13f
                 setTypeface(null, android.graphics.Typeface.BOLD)
-                setTextColor(if (dark) Color.WHITE else Color.rgb(18, 42, 68))
+                setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
                 setPadding(0, dp(4), 0, dp(6))
             })
             val bioInput = EditText(activity).apply {
@@ -150,13 +150,13 @@ internal class FirebaseAccountController(
                 maxLines = 5
                 gravity = Gravity.TOP or Gravity.START
                 textSize = 14f
-                setTextColor(if (dark) Color.WHITE else Color.rgb(20, 45, 70))
-                setHintTextColor(if (dark) Color.rgb(133, 164, 195) else Color.rgb(112, 139, 166))
+                setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+                setHintTextColor(if (dark) Color.rgb(170, 176, 186) else Color.rgb(91, 98, 110))
                 setPadding(dp(16), dp(12), dp(16), dp(12))
                 background = GradientDrawable().apply {
                     cornerRadius = dp(14).toFloat()
-                    setColor(if (dark) Color.argb(155, 20, 45, 72) else Color.argb(220, 255, 255, 255))
-                    setStroke(dp(1), if (dark) Color.argb(120, 103, 164, 222) else Color.argb(160, 151, 190, 226))
+                    setColor(if (dark) Color.argb(155, 25, 28, 34) else Color.argb(220, 255, 255, 255))
+                    setStroke(dp(1), if (dark) Color.argb(120, 130, 138, 151) else Color.argb(160, 160, 168, 181))
                 }
             }
             page.addView(bioInput, LinearLayout.LayoutParams(-1, dp(112)).apply { bottomMargin = dp(8) })
@@ -220,7 +220,7 @@ internal class FirebaseAccountController(
                     if (profilePhotoData.isNullOrBlank() && user.photoUrl != null) {
                         // The provider photo remains available as the account's fallback identity.
                         photoView.setImageResource(com.marcorx6.library.R.drawable.ic_nav_profile)
-                        photoView.imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(75, 165, 255))
+                        photoView.imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
                     }
                     profileLoaded = true
                     saveButton.isEnabled = true
@@ -233,11 +233,11 @@ internal class FirebaseAccountController(
                 page.addView(TextView(activity).apply {
                     text = email
                     textSize = 12f
-                    setTextColor(if (dark) Color.rgb(160, 190, 218) else Color.rgb(75, 105, 136))
+                    setTextColor(if (dark) Color.rgb(160, 168, 181) else Color.rgb(91, 98, 110))
                     setPadding(0, 0, 0, dp(16))
                 })
             }
-            action(page, translate("تسجيل الخروج"), translate("الخروج من حساب MARCO RX6"), dark, run = {
+            action(page, translate("تسجيل الخروج"), translate("الخروج من حساب MARCO"), dark, run = {
                 authRepository.signOut()
                 signOutAdmin()
                 onAccountChanged()
@@ -246,10 +246,10 @@ internal class FirebaseAccountController(
             action(page, translate("مسح الحساب"), translate("حذف حسابك وبياناته السحابية نهائياً"), dark, run = { confirmAccountDeletion(user) })
         }
         page.addView(TextView(activity).apply {
-            text = "MARCO RX6  •  SECURE ACCOUNT"
+            text = "MARCO  •  SECURE ACCOUNT"
             textSize = 9f
             gravity = Gravity.CENTER
-            setTextColor(if (dark) Color.rgb(119, 157, 194) else Color.rgb(103, 133, 163))
+            setTextColor(if (dark) Color.rgb(145, 153, 166) else Color.rgb(91, 98, 110))
             setPadding(0, dp(18), 0, dp(8))
         })
         showAccountPage(page)
@@ -334,8 +334,8 @@ internal class FirebaseAccountController(
             setPadding(dp(17), dp(14), dp(17), dp(14))
             background = GradientDrawable().apply {
                 cornerRadius = dp(16).toFloat()
-                setColor(if (primary) Color.rgb(24, 111, 205) else if (dark) Color.rgb(19, 39, 61) else Color.WHITE)
-                setStroke(dp(1), if (primary) Color.rgb(87, 174, 255) else if (dark) Color.rgb(49, 79, 109) else Color.rgb(205, 224, 243))
+                setColor(if (primary) Color.rgb(190, 198, 210) else if (dark) Color.rgb(25, 28, 34) else Color.WHITE)
+                setStroke(dp(1), if (primary) Color.rgb(145, 153, 166) else if (dark) Color.rgb(75, 80, 90) else Color.rgb(160, 168, 181))
             }
             setOnClickListener { run() }
         }
@@ -343,12 +343,12 @@ internal class FirebaseAccountController(
             text = title
             textSize = 15f
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(if (primary || dark) Color.WHITE else Color.rgb(18, 42, 68))
+            setTextColor(if (primary) Color.rgb(20, 23, 29) else if (dark) Color.WHITE else Color.rgb(25, 29, 36))
         })
         card.addView(TextView(activity).apply {
             text = detail
             textSize = 11f
-            setTextColor(if (primary) Color.rgb(225, 240, 255) else if (dark) Color.rgb(160, 190, 218) else Color.rgb(87, 116, 145))
+            setTextColor(if (primary) Color.rgb(20, 23, 29) else if (dark) Color.rgb(160, 168, 181) else Color.rgb(91, 98, 110))
             setPadding(0, dp(5), 0, 0)
         })
         page.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
@@ -445,9 +445,9 @@ internal class FirebaseAccountController(
         val dark = isDarkMode()
         val page = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            layoutDirection = if (translate("حساب MARCO RX6") == "حساب MARCO RX6") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
+            layoutDirection = if (translate("حساب MARCO") == "حساب MARCO") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
             setPadding(dp(22), dp(20), dp(22), dp(28))
-            setBackgroundColor(if (dark) Color.rgb(6, 16, 30) else Color.rgb(240, 247, 255))
+            setBackgroundColor(if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247))
         }
         val header = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -457,19 +457,19 @@ internal class FirebaseAccountController(
             text = title
             textSize = 22f
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(if (dark) Color.WHITE else Color.rgb(18, 42, 68))
+            setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
         }
         header.addView(heading, LinearLayout.LayoutParams(0, dp(52), 1f))
         header.addView(ImageView(activity).apply {
             setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
-            imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(75, 165, 255))
+            imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
             scaleType = ImageView.ScaleType.CENTER_INSIDE
             contentDescription = translate("رجوع")
             setPadding(dp(12), dp(12), dp(12), dp(12))
             isClickable = true
             isFocusable = true
             if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                android.content.res.ColorStateList.valueOf(Color.argb(72, 75, 165, 255)),
+                android.content.res.ColorStateList.valueOf(Color.argb(72, 190, 198, 210)),
                 null,
                 android.graphics.drawable.ColorDrawable(Color.WHITE)
             )
@@ -479,7 +479,7 @@ internal class FirebaseAccountController(
         page.addView(TextView(activity).apply {
             text = detail
             textSize = 12f
-            setTextColor(if (dark) Color.rgb(183, 207, 231) else Color.rgb(75, 105, 136))
+            setTextColor(if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110))
             setPadding(0, dp(4), 0, dp(22))
         })
         return page
@@ -536,13 +536,13 @@ internal class FirebaseAccountController(
             textDirection = View.TEXT_DIRECTION_LTR
             gravity = Gravity.CENTER_VERTICAL or Gravity.LEFT
             textSize = 14f
-            setTextColor(if (dark) Color.WHITE else Color.rgb(20, 45, 70))
-            setHintTextColor(if (dark) Color.rgb(133, 164, 195) else Color.rgb(112, 139, 166))
+            setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+            setHintTextColor(if (dark) Color.rgb(170, 176, 186) else Color.rgb(91, 98, 110))
             setPadding(dp(16), dp(12), dp(16), dp(12))
             background = GradientDrawable().apply {
                 cornerRadius = dp(14).toFloat()
-                setColor(if (dark) Color.argb(155, 20, 45, 72) else Color.argb(220, 255, 255, 255))
-                setStroke(dp(1), if (dark) Color.argb(120, 103, 164, 222) else Color.argb(160, 151, 190, 226))
+                setColor(if (dark) Color.argb(155, 25, 28, 34) else Color.argb(220, 255, 255, 255))
+                setStroke(dp(1), if (dark) Color.argb(120, 130, 138, 151) else Color.argb(160, 160, 168, 181))
             }
         }
     }
@@ -553,16 +553,16 @@ internal class FirebaseAccountController(
             textSize = 14f
             gravity = Gravity.CENTER
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(Color.WHITE)
+            setTextColor(Color.rgb(20, 23, 29))
             minHeight = dp(52)
             contentDescription = label
             setPadding(dp(18), dp(15), dp(18), dp(15))
             background = GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(Color.rgb(43, 151, 255), Color.rgb(22, 94, 190))
+                intArrayOf(Color.rgb(190, 198, 210), Color.rgb(105, 113, 126))
             ).apply {
                 cornerRadius = dp(15).toFloat()
-                setStroke(dp(1), Color.argb(190, 135, 202, 255))
+                setStroke(dp(1), Color.argb(190, 145, 153, 166))
             }
             isClickable = true
             isFocusable = true
@@ -603,8 +603,8 @@ internal class FirebaseAccountController(
     private fun showEmailForm(createAccount: Boolean) {
         val page = createAccountFormPage(
             if (createAccount) translate("إنشاء حساب جديد") else translate("تسجيل الدخول"),
-            if (createAccount) translate("أنشئ حساب MARCO RX6 لحفظ ملفك ومزامنة بياناتك.")
-            else translate("سجّل الدخول للعودة إلى حساب MARCO RX6.")
+            if (createAccount) translate("أنشئ حساب MARCO لحفظ ملفك ومزامنة بياناتك.")
+            else translate("سجّل الدخول للعودة إلى حساب MARCO.")
         )
         val email = accountInput(
             translate("البريد الإلكتروني"),
@@ -629,14 +629,14 @@ internal class FirebaseAccountController(
             text = translate("إظهار كلمة المرور")
             textSize = 12f
             gravity = Gravity.END
-            setTextColor(Color.rgb(75, 165, 255))
+            setTextColor(Color.rgb(190, 198, 210))
             minHeight = dp(48)
             minWidth = dp(48)
             contentDescription = translate("إظهار كلمة المرور")
             isClickable = true
             isFocusable = true
             if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                android.content.res.ColorStateList.valueOf(Color.argb(72, 75, 165, 255)),
+                android.content.res.ColorStateList.valueOf(Color.argb(72, 190, 198, 210)),
                 null,
                 android.graphics.drawable.ColorDrawable(Color.WHITE)
             )
@@ -660,14 +660,14 @@ internal class FirebaseAccountController(
                 text = translate("نسيت كلمة المرور؟")
                 textSize = 12f
                 gravity = Gravity.END
-                setTextColor(Color.rgb(75, 165, 255))
+                setTextColor(Color.rgb(190, 198, 210))
                 minHeight = dp(48)
                 minWidth = dp(48)
                 contentDescription = translate("نسيت كلمة المرور؟")
                 isClickable = true
                 isFocusable = true
                 if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                    android.content.res.ColorStateList.valueOf(Color.argb(72, 75, 165, 255)),
+                    android.content.res.ColorStateList.valueOf(Color.argb(72, 190, 198, 210)),
                     null,
                     android.graphics.drawable.ColorDrawable(Color.WHITE)
                 )
@@ -722,7 +722,7 @@ internal class FirebaseAccountController(
             return
         }
         AlertDialog.Builder(activity)
-            .setTitle(translate("حذف حساب MARCO RX6؟"))
+            .setTitle(translate("حذف حساب MARCO؟"))
             .setMessage(
                 translate("هذه العملية نهائية: سنحذف ملف الحساب والإعدادات المحفوظة في Firebase، ثم حساب Firebase نفسه. لن نحذف مكتبة الألعاب أو الملفات المحلية على الهاتف أو حساب Google المسؤول أو محتوى Blogger وDrive.")
             )
@@ -809,7 +809,7 @@ internal class FirebaseAccountController(
                         authRepository.signOut()
                         signOutAdmin()
                         onAccountChanged()
-                        toast("تم حذف حساب MARCO RX6 وبياناته السحابية بنجاح")
+                        toast("تم حذف حساب MARCO وبياناته السحابية بنجاح")
                     }
                     .addOnFailureListener { error ->
                         toast("تم حذف بيانات الحساب، لكن تعذر حذف حساب الدخول. تواصل مع الدعم.")

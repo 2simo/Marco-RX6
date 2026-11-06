@@ -19,18 +19,18 @@ internal class GameDetailsIdentityViewFactory(
 ) {
     fun create(game: Game): LinearLayout {
         val dark = isDarkMode()
-        val muted = if (dark) Color.rgb(170, 190, 214) else Color.rgb(91, 108, 130)
-        val primary = if (dark) Color.rgb(244, 247, 252) else Color.rgb(32, 38, 56)
+        val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
+        val primary = if (dark) Color.rgb(244, 247, 252) else Color.rgb(25, 29, 36)
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(13), dp(13), dp(13), dp(13))
             background = GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
-                if (dark) intArrayOf(Color.rgb(16, 28, 45), Color.rgb(12, 21, 35))
-                else intArrayOf(Color.WHITE, Color.rgb(235, 244, 255))
+                if (dark) intArrayOf(Color.rgb(25, 28, 34), Color.rgb(8, 9, 12))
+                else intArrayOf(Color.WHITE, Color.rgb(242, 244, 247))
             ).apply {
                 cornerRadius = dp(22).toFloat()
-                setStroke(dp(1), if (dark) Color.argb(170, 72, 145, 211) else Color.rgb(190, 215, 243))
+                setStroke(dp(1), if (dark) Color.argb(170, 130, 138, 151) else Color.rgb(160, 168, 181))
             }
             elevation = dp(4).toFloat()
         }
@@ -40,7 +40,7 @@ internal class GameDetailsIdentityViewFactory(
             adjustViewBounds = true
             maxHeight = dp(270)
             background = GradientDrawable().apply {
-                setColor(if (dark) Color.rgb(13, 34, 57) else Color.rgb(225, 240, 255))
+                setColor(if (dark) Color.rgb(35, 38, 45) else Color.rgb(222, 226, 232))
                 cornerRadius = dp(15).toFloat()
             }
             clipToOutline = true
@@ -55,15 +55,15 @@ internal class GameDetailsIdentityViewFactory(
             gravity = android.view.Gravity.CENTER_HORIZONTAL
         })
 
-        val details = extractGameDetails(game.bloggerHtml)
+        val details = extractGameDetails(game)
         if (details.isNotEmpty()) {
             val infoCard = LinearLayout(activity).apply {
                 orientation = LinearLayout.VERTICAL
                 setPadding(dp(13), dp(12), dp(13), dp(12))
                 background = GradientDrawable().apply {
-                    setColor(if (dark) Color.rgb(27, 43, 63) else Color.rgb(244, 248, 253))
+                    setColor(if (dark) Color.rgb(25, 28, 34) else Color.rgb(242, 244, 247))
                     cornerRadius = dp(16).toFloat()
-                    setStroke(dp(1), if (dark) Color.rgb(57, 83, 112) else Color.rgb(213, 226, 241))
+                    setStroke(dp(1), if (dark) Color.rgb(75, 80, 90) else Color.rgb(211, 215, 222))
                 }
             }
             infoCard.addView(makeText(translate("معلومات اللعبة"), 16f, primary, true).apply {
@@ -74,7 +74,7 @@ internal class GameDetailsIdentityViewFactory(
                     orientation = LinearLayout.VERTICAL
                     setPadding(dp(12), dp(10), dp(12), dp(10))
                     background = GradientDrawable().apply {
-                        setColor(if (dark) Color.rgb(35, 54, 77) else Color.WHITE)
+                        setColor(if (dark) Color.rgb(43, 47, 55) else Color.WHITE)
                         cornerRadius = dp(11).toFloat()
                     }
                 }
@@ -106,15 +106,28 @@ internal class GameDetailsIdentityViewFactory(
         return root
     }
 
-    private fun extractGameDetails(html: String): List<Pair<String, String>> {
-        if (html.isBlank()) return emptyList()
+    private fun extractGameDetails(game: Game): List<Pair<String, String>> {
+        val html = game.bloggerHtml
+        val stored = linkedMapOf(
+            "الحجم" to game.packageSize,
+            "النسخة" to game.version,
+            "الصيغة" to game.fileFormat,
+            "اللغة" to game.language,
+            "كلمة السر" to game.password,
+            "الحقوق" to game.rights,
+            "النوع" to game.genre,
+            "سنة الإصدار" to game.releaseYear
+        ).filterValues { it.isNotBlank() }.toMutableMap()
+        if (html.isBlank()) return stored.map { it.key to it.value }
         val fields = listOf(
             "الحجم" to listOf("الحجم", "حجم", "size"),
             "النسخة" to listOf("النسخة", "version", "title id", "cusa"),
             "الصيغة" to listOf("الصيغة", "format"),
             "اللغة" to listOf("اللغة", "language", "languages"),
             "كلمة السر" to listOf("كلمة السر", "كلمه السر", "password", "pass"),
-            "الحقوق" to listOf("الحقوق", "credits", "rights")
+            "الحقوق" to listOf("الحقوق", "credits", "rights"),
+            "النوع" to listOf("النوع", "genre", "category"),
+            "سنة الإصدار" to listOf("سنة الإصدار", "سنة الاصدار", "release year", "year")
         )
         fun plainText(value: String): String = Html.fromHtml(
             value, Html.FROM_HTML_MODE_LEGACY
@@ -122,7 +135,7 @@ internal class GameDetailsIdentityViewFactory(
 
         // Blogger commonly puts every field in its own <li>. Parse each item
         // independently so a missing newline cannot merge the next field into it.
-        val entries = linkedMapOf<String, String>()
+        val entries = linkedMapOf<String, String>().apply { putAll(stored) }
         Regex("(?is)<li\\b[^>]*>(.*?)</li\\s*>").findAll(html).forEach { item ->
             val text = plainText(item.groupValues[1]).trim(' ', ':', '：', '-', '•')
             fields.forEach { (label, aliases) ->

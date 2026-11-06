@@ -43,7 +43,7 @@ internal class AppearanceUiFactory(
     private fun glassRipple(): android.graphics.drawable.Drawable =
         android.graphics.drawable.RippleDrawable(
             android.content.res.ColorStateList.valueOf(
-                if (isDarkMode()) Color.argb(78, 83, 177, 255) else Color.argb(58, 35, 126, 224)
+                if (isDarkMode()) Color.argb(78, 190, 198, 210) else Color.argb(58, 140, 148, 160)
             ),
             null,
             android.graphics.drawable.ColorDrawable(Color.WHITE)
@@ -66,7 +66,7 @@ internal class AppearanceUiFactory(
             val base = view.background.constantState?.newDrawable()?.mutate() ?: view.background.mutate()
             view.background = android.graphics.drawable.RippleDrawable(
                 android.content.res.ColorStateList.valueOf(
-                    if (isDarkMode()) Color.argb(78, 83, 177, 255) else Color.argb(58, 35, 126, 224)
+                    if (isDarkMode()) Color.argb(78, 190, 198, 210) else Color.argb(58, 140, 148, 160)
                 ),
                 base,
                 android.graphics.drawable.ColorDrawable(Color.WHITE)
@@ -76,12 +76,12 @@ internal class AppearanceUiFactory(
 
     fun stylePrimaryButton(button: Button, primary: Boolean = false) {
         button.background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-            if (primary) intArrayOf(Color.argb(232, 42, 145, 255), Color.argb(218, 24, 91, 205))
-            else if (isDarkMode()) intArrayOf(Color.argb(205, 24, 58, 91), Color.argb(190, 10, 29, 49))
-            else intArrayOf(Color.argb(218, 255, 255, 255), Color.argb(205, 225, 239, 253))).apply {
+            if (primary) intArrayOf(Color.argb(232, 190, 198, 210), Color.argb(218, 112, 120, 133))
+            else if (isDarkMode()) intArrayOf(Color.argb(205, 34, 37, 44), Color.argb(190, 15, 17, 22))
+            else intArrayOf(Color.argb(218, 255, 255, 255), Color.argb(205, 225, 228, 234))).apply {
             cornerRadius = dp(16).toFloat()
-            setStroke(dp(1), if (primary) Color.argb(170, 119, 194, 255)
-                else if (isDarkMode()) Color.argb(165, 84, 157, 220) else Color.argb(175, 154, 198, 239))
+            setStroke(dp(1), if (primary) Color.argb(170, 190, 198, 210)
+                else if (isDarkMode()) Color.argb(165, 130, 138, 151) else Color.argb(175, 160, 168, 181))
         }
         button.setTextColor(if (primary) accentForeground() else white())
         button.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
@@ -128,10 +128,10 @@ internal class AppearanceUiFactory(
 
     fun styleAlertDialog(dialog: AlertDialog) {
         dialog.window?.setBackgroundDrawable(GradientDrawable(GradientDrawable.Orientation.TL_BR,
-            if (isDarkMode()) intArrayOf(Color.rgb(17, 48, 80), Color.rgb(7, 21, 38))
-            else intArrayOf(Color.WHITE, Color.rgb(239, 243, 251))).apply {
+            if (isDarkMode()) intArrayOf(Color.rgb(25, 28, 34), Color.rgb(8, 9, 12))
+            else intArrayOf(Color.WHITE, Color.rgb(242, 244, 247))).apply {
             cornerRadius = dp(24).toFloat()
-            setStroke(dp(1), if (isDarkMode()) Color.rgb(47, 117, 188) else Color.rgb(211, 219, 234))
+            setStroke(dp(1), if (isDarkMode()) Color.rgb(130, 138, 151) else Color.rgb(211, 215, 222))
         })
         dialog.window?.let { window ->
             // Alert dialogs use their own window: keep system bars visible and let
@@ -164,8 +164,8 @@ internal class AppearanceUiFactory(
         dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.let { stylePrimaryButton(it) }
         dialog.getButton(AlertDialog.BUTTON_NEUTRAL)?.let { stylePrimaryButton(it) }
         dialog.listView?.let { list ->
-            list.setBackgroundColor(if (isDarkMode()) Color.rgb(12, 31, 52) else Color.WHITE)
-            list.divider = android.graphics.drawable.ColorDrawable(if (isDarkMode()) Color.rgb(39, 68, 99) else Color.rgb(226, 231, 241))
+            list.setBackgroundColor(if (isDarkMode()) Color.rgb(17, 19, 24) else Color.WHITE)
+            list.divider = android.graphics.drawable.ColorDrawable(if (isDarkMode()) Color.rgb(57, 61, 70) else Color.rgb(211, 215, 222))
             list.dividerHeight = dp(1)
             list.post {
                 for (index in 0 until list.childCount) {
@@ -210,12 +210,12 @@ internal class AppearanceUiFactory(
     private fun inputBackground(): android.graphics.drawable.StateListDrawable =
         android.graphics.drawable.StateListDrawable().apply {
             val fill = if (isDarkMode()) {
-                intArrayOf(Color.rgb(22, 57, 91), Color.rgb(9, 27, 48))
+                intArrayOf(Color.rgb(35, 38, 45), Color.rgb(15, 17, 22))
             } else {
-                intArrayOf(Color.WHITE, Color.rgb(222, 239, 255))
+                intArrayOf(Color.WHITE, Color.rgb(225, 228, 234))
             }
-            val normalStroke = if (isDarkMode()) Color.rgb(62, 133, 198) else Color.rgb(164, 205, 245)
-            val focusedStroke = Color.rgb(45, 145, 255)
+            val normalStroke = if (isDarkMode()) Color.rgb(130, 138, 151) else Color.rgb(160, 168, 181)
+            val focusedStroke = Color.rgb(190, 198, 210)
             addState(intArrayOf(android.R.attr.state_focused), GradientDrawable(
                 GradientDrawable.Orientation.TL_BR, fill
             ).apply {
