@@ -548,6 +548,9 @@ class MainActivity : ComponentActivity() {
             },
             recordViewOnce = { game ->
                 gameEngagementRepository.recordViewOnce(game)
+                    .addOnSuccessListener { recorded ->
+                        if (recorded) renderGames()
+                    }
                     .addOnFailureListener { error ->
                         android.util.Log.w("MarcoGameViews", "Could not record game view", error)
                     }
