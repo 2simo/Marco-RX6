@@ -218,7 +218,7 @@ internal class GameLibraryRenderer(
                     marginEnd = dp(9)
                 })
             }
-            horizontal.addView(row, android.widget.HorizontalScrollView.LayoutParams(-2, -2))
+            horizontal.addView(row, android.widget.FrameLayout.LayoutParams(-2, -2))
             gameList.addView(horizontal, LinearLayout.LayoutParams(-1, -2))
         }
     }
