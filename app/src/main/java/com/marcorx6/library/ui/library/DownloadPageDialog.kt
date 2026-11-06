@@ -8,6 +8,7 @@ import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.view.Gravity
+import android.view.inputmethod.EditorInfo
 import android.view.KeyEvent
 import android.view.View
 import android.webkit.CookieManager
@@ -19,8 +20,10 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.net.http.SslError
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.text.InputType
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
@@ -66,23 +69,26 @@ internal class DownloadPageDialog(
             setBackgroundColor(background)
             setPadding(dp(12), dp(10), dp(12), dp(10))
         }
+        val webView = WebView(activity)
         val toolbar = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        val titleBox = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
+        val titleBox = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(2), dp(2), 0, dp(2))
+        }
         titleBox.addView(TextView(activity).apply {
-            text = "MARCO  /  ${translate("صفحة التحميل").uppercase()}"
-            textSize = 9f
-            letterSpacing = 0.1f
-            setTextColor(primary)
-        })
-        titleBox.addView(TextView(activity).apply {
-            text = translate("صفحة التحميل")
-            textSize = 19f
+            text = "MARCO"
+            textSize = 17f
+            letterSpacing = 0.12f
             setTypeface(null, Typeface.BOLD)
             setTextColor(heading)
-            setPadding(0, dp(3), 0, 0)
+        })
+        titleBox.addView(TextView(activity).apply {
+            text = translate("متصفح التحميل")
+            textSize = 10f
+            setTextColor(muted)
         })
         toolbar.addView(titleBox, LinearLayout.LayoutParams(0, -2, 1f))
 
@@ -93,30 +99,58 @@ internal class DownloadPageDialog(
                     setCompoundDrawablesRelativeWithIntrinsicBounds(iconRes, 0, 0, 0)
                     compoundDrawablePadding = dp(5)
                 }
-                textSize = 12f
+                textSize = 11f
                 gravity = Gravity.CENTER
                 setTextColor(primary)
-                minWidth = dp(44)
+                minWidth = dp(42)
                 minHeight = dp(44)
                 isClickable = true
                 isFocusable = true
                 setOnClickListener { onClick() }
             }
 
-        val webView = WebView(activity)
-        toolbar.addView(toolbarAction("", {
-            if (webView.canGoBack()) webView.goBack() else dialog.dismiss()
+        toolbar.addView(toolbarAction("", { dialog.dismiss() }, com.marcorx6.library.R.drawable.ic_action_close))
+        root.addView(toolbar, LinearLayout.LayoutParams(-1, -2))
+
+        // Opera-inspired compact navigation row: history, editable address, reload and external open.
+        val addressRow = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, dp(8), 0, dp(8))
+        }
+        addressRow.addView(toolbarAction("", {
+            if (webView.canGoBack()) webView.goBack()
         }, com.marcorx6.library.R.drawable.ic_action_back))
-        toolbar.addView(toolbarAction("", {
+        addressRow.addView(toolbarAction("", {
+            if (webView.canGoForward()) webView.goForward()
+        }, com.marcorx6.library.R.drawable.ic_action_forward))
+        val addressInput = EditText(activity).apply {
+            singleLine = true
+            textSize = 12f
+            setTextColor(heading)
+            setHintTextColor(muted)
+            hint = translate("ابحث أو أدخل عنوان الموقع")
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
+            imeOptions = EditorInfo.IME_ACTION_GO
+            setPadding(dp(12), 0, dp(10), 0)
+            background = GradientDrawable().apply {
+                setColor(surface)
+                cornerRadius = dp(18).toFloat()
+                setStroke(dp(1), if (dark) Color.rgb(65, 71, 82) else Color.rgb(205, 211, 220))
+            }
+        }
+        addressRow.addView(addressInput, LinearLayout.LayoutParams(0, dp(44), 1f).apply {
+            marginStart = dp(4)
+            marginEnd = dp(4)
+        })
+        addressRow.addView(toolbarAction("", {
             val currentUrl = SecureUrlPolicy.toHttpsUrl(webView.url ?: safeStartUrl)
             if (currentUrl != null) {
                 webView.stopLoading()
                 webView.loadUrl(currentUrl)
-            } else {
-                Toast.makeText(activity, translate("رابط الصفحة غير صالح"), Toast.LENGTH_SHORT).show()
             }
         }, com.marcorx6.library.R.drawable.ic_action_refresh))
-        toolbar.addView(toolbarAction(translate("خارجي"), {
+        addressRow.addView(toolbarAction("", {
             try {
                 val currentUrl = SecureUrlPolicy.toHttpsUrl(webView.url ?: safeStartUrl)
                 if (currentUrl == null) throw IllegalArgumentException("Unsafe page URL")
@@ -125,8 +159,24 @@ internal class DownloadPageDialog(
                 Toast.makeText(activity, translate("تعذر فتح المتصفح الخارجي"), Toast.LENGTH_SHORT).show()
             }
         }, com.marcorx6.library.R.drawable.ic_action_external))
-        toolbar.addView(toolbarAction("", { dialog.dismiss() }, com.marcorx6.library.R.drawable.ic_action_close))
-        root.addView(toolbar, LinearLayout.LayoutParams(-1, -2))
+        addressInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE) {
+                val entered = addressInput.text.toString().trim()
+                val candidate = if (entered.contains("://")) entered else "https://$entered"
+                val safeUrl = SecureUrlPolicy.toHttpsUrl(candidate)
+                if (safeUrl != null) {
+                    webView.loadUrl(safeUrl)
+                    val imm = activity.getSystemService(Activity.INPUT_METHOD_SERVICE) as? android.view.inputmethod.InputMethodManager
+                    imm?.hideSoftInputFromWindow(addressInput.windowToken, 0)
+                    true
+                } else {
+                    addressInput.error = translate("رابط الصفحة غير صالح أو غير آمن")
+                    true
+                }
+            } else false
+        }
+        root.addView(addressRow, LinearLayout.LayoutParams(-1, -2))
+
 
         val progress = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
             max = 100
@@ -354,6 +404,7 @@ internal class DownloadPageDialog(
                 progress.visibility = View.VISIBLE
                 progress.progress = 0
                 status.text = Uri.parse(url).host ?: translate("جارٍ فتح صفحة التحميل…")
+                addressInput.setText(url)
                 candidates.removeAllViews()
                 candidateTitle.visibility = View.GONE
                 candidateScroll.visibility = View.GONE
@@ -425,6 +476,7 @@ internal class DownloadPageDialog(
                 0
             }
         }
+        addressInput.setText(safeStartUrl)
         webView.loadUrl(safeStartUrl)
     }
 }
