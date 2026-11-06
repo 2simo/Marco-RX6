@@ -18,7 +18,6 @@ internal class GameLibraryFeature(
     loadCover: (android.widget.ImageView, String, String) -> Unit,
     showDetails: (Game) -> Unit,
     loadEngagementSummary: (Game, (Long, Double, Long) -> Unit) -> Unit,
-    recordViewOnce: (Game, () -> Unit) -> Unit,
     private val gameList: () -> LinearLayout,
     private val filters: () -> LinearLayout,
     private val countText: () -> TextView,
@@ -45,7 +44,6 @@ internal class GameLibraryFeature(
         loadCover = loadCover,
         showDetails = showDetails,
         loadEngagementSummary = loadEngagementSummary,
-        recordViewOnce = recordViewOnce
     )
 
     fun render() = renderer.render(
