@@ -254,22 +254,6 @@ internal class GameLibraryRenderer(
                     layoutDirection = activity.resources.configuration.layoutDirection
                     setPadding(dp(2), dp(4), dp(2), 0)
                 }
-                fun addMetric(iconRes: Int, description: String, value: String, tint: Int) {
-                    val item = LinearLayout(activity).apply {
-                        orientation = LinearLayout.HORIZONTAL
-                        gravity = Gravity.CENTER_VERTICAL
-                        contentDescription = description + ": " + value
-                    }
-                    item.addView(ImageView(activity).apply {
-                        setImageResource(iconRes)
-                        imageTintList = android.content.res.ColorStateList.valueOf(tint)
-                        contentDescription = null
-                    }, LinearLayout.LayoutParams(dp(13), dp(13)))
-                    item.addView(makeText(value, 9f, gray, true).apply {
-                        setPadding(dp(4), 0, 0, 0)
-                    })
-                    engagement.addView(item, LinearLayout.LayoutParams(0, -2, 1f))
-                }
                 val ratingValue = makeText("—", 9f, gray, true)
                 val viewsValue = makeText("0", 9f, gray, true)
                 fun metricItem(iconRes: Int, description: String, valueView: TextView, tint: Int): LinearLayout =
@@ -319,7 +303,7 @@ internal class GameLibraryRenderer(
                     }
                 )
             }
-            horizontal.addView(carousel, HorizontalScrollView.LayoutParams(-2, -2))
+            horizontal.addView(carousel, FrameLayout.LayoutParams(-2, -2))
             gameList.addView(horizontal, LinearLayout.LayoutParams(-1, -2))
         }
     }
