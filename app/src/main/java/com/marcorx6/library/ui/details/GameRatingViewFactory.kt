@@ -4,15 +4,13 @@ import android.app.Activity
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RatingBar
 import android.widget.TextView
 import android.widget.Toast
 import com.marcorx6.library.data.Game
-import java.util.Locale
 
-/** Public engagement summary plus an editable rating for authenticated, non-anonymous users. */
+/** Lets a registered user rate the game; engagement summaries are shown on library cards only. */
 internal class GameRatingViewFactory(
     private val activity: Activity,
     private val dp: (Int) -> Int,
@@ -22,7 +20,6 @@ internal class GameRatingViewFactory(
     private val gray: () -> Int,
     private val translate: (String) -> String,
     private val isRegisteredUser: () -> Boolean,
-    private val loadSummary: (Game, (Long, Double, Long) -> Unit) -> Unit,
     private val loadMyRating: (Game, (Int?) -> Unit) -> Unit,
     private val submitRating: (Game, Int, (Boolean, String?) -> Unit) -> Unit
 ) {
@@ -38,58 +35,17 @@ internal class GameRatingViewFactory(
                 setStroke(dp(1), if (dark) Color.rgb(62, 116, 166) else Color.rgb(198, 220, 245))
             }
         }
-        card.addView(makeText(translate("تقييمات اللاعبين"), 15f, white(), true))
-
-        val metrics = LinearLayout(activity).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, dp(10), 0, dp(10))
-        }
-        fun metric(iconRes: Int, label: String, tint: Int): Pair<LinearLayout, TextView> {
-            val chip = LinearLayout(activity).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                background = GradientDrawable().apply {
-                    setColor(if (dark) Color.rgb(10, 27, 45) else Color.rgb(232, 242, 254))
-                    cornerRadius = dp(11).toFloat()
-                    setStroke(dp(1), if (dark) Color.rgb(48, 86, 125) else Color.rgb(207, 225, 246))
-                }
-                setPadding(dp(9), dp(8), dp(9), dp(8))
-            }
-            val icon = ImageView(activity).apply {
-                setImageResource(iconRes)
-                imageTintList = android.content.res.ColorStateList.valueOf(tint)
-                contentDescription = label
-            }
-            chip.addView(icon, LinearLayout.LayoutParams(dp(17), dp(17)))
-            val value = makeText("—", 12f, white(), true).apply {
-                setPadding(dp(7), 0, 0, 0)
-            }
-            chip.addView(value)
-            return chip to value
-        }
-        val (ratingMetric, ratingValue) = metric(
-            com.marcorx6.library.R.drawable.ic_engagement_rating,
-            translate("متوسط التقييم"), Color.rgb(255, 190, 55)
-        )
-        val (viewsMetric, viewsValue) = metric(
-            com.marcorx6.library.R.drawable.ic_engagement_views,
-            translate("المشاهدات"), Color.rgb(72, 174, 255)
-        )
-        metrics.addView(ratingMetric, LinearLayout.LayoutParams(0, -2, 1f).apply {
-            marginEnd = dp(6)
-        })
-        metrics.addView(viewsMetric, LinearLayout.LayoutParams(0, -2, 1f))
-        card.addView(metrics)
-
-        val ratingCount = makeText(translate("لا توجد تقييمات بعد"), 11f, muted, false)
-        card.addView(ratingCount)
-
+        card.addView(makeText(translate("قيّم هذه اللعبة"), 15f, white(), true))
         val registered = isRegisteredUser()
         card.addView(makeText(
-            translate(if (registered) "قيّم اللعبة" else "سجّل الدخول لتتمكن من تقييم اللعبة"),
-            12f, muted, true
-        ).apply { setPadding(0, dp(12), 0, dp(4)) })
+            translate(
+                if (registered) "اختر تقييماً من نجمة إلى خمس نجوم"
+                else "سجّل الدخول لتتمكن من تقييم اللعبة"
+            ),
+            12f,
+            muted,
+            true
+        ).apply { setPadding(0, dp(8), 0, dp(5)) })
 
         val ratingBar = RatingBar(activity, null, android.R.attr.ratingBarStyle).apply {
             numStars = 5
@@ -113,8 +69,11 @@ internal class GameRatingViewFactory(
                         activity.runOnUiThread {
                             ratingBar.isEnabled = true
                             if (success) {
-                                Toast.makeText(activity, translate("تم حفظ تقييمك"), Toast.LENGTH_SHORT).show()
-                                refreshSummary(game, ratingValue, viewsValue, ratingCount)
+                                Toast.makeText(
+                                    activity,
+                                    translate("تم حفظ تقييمك"),
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             } else {
                                 Toast.makeText(
                                     activity,
@@ -127,33 +86,6 @@ internal class GameRatingViewFactory(
                 }
             }
         }
-
-        refreshSummary(game, ratingValue, viewsValue, ratingCount)
         return card
-    }
-
-    private fun refreshSummary(
-        game: Game,
-        ratingValue: TextView,
-        viewsValue: TextView,
-        ratingCount: TextView
-    ) {
-        loadSummary(game) { views, average, count ->
-            activity.runOnUiThread {
-                ratingValue.text = if (count == 0L) "—" else String.format(Locale.US, "%.1f/5", average)
-                viewsValue.text = compactCount(views)
-                ratingCount.text = if (count == 0L) {
-                    translate("لا توجد تقييمات بعد")
-                } else {
-                    count.toString() + " " + translate("تقييم")
-                }
-            }
-        }
-    }
-
-    private fun compactCount(value: Long): String = when {
-        value >= 1_000_000 -> String.format(Locale.US, "%.1fM", value / 1_000_000.0)
-        value >= 1_000 -> String.format(Locale.US, "%.1fK", value / 1_000.0)
-        else -> value.toString()
     }
 }
