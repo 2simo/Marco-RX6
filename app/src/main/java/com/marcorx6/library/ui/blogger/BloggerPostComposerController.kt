@@ -76,7 +76,7 @@ internal class BloggerPostComposerController(
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
                 if (isNight) intArrayOf(android.graphics.Color.rgb(8, 9, 12), android.graphics.Color.rgb(17, 19, 24))
-                else intArrayOf(android.graphics.Color.WHITE, android.graphics.Color.rgb(235, 243, 253))
+                else intArrayOf(android.graphics.Color.WHITE, android.graphics.Color.rgb(242, 244, 247))
             ).apply {
                 cornerRadius = dp(22).toFloat()
                 setStroke(dp(1), android.graphics.Color.argb(150, 130, 138, 151))
