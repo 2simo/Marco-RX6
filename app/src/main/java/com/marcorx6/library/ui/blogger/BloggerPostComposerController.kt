@@ -70,8 +70,10 @@ internal class BloggerPostComposerController(
             setPadding(dp(16), dp(12), dp(16), dp(12))
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
-                if (android.os.Build.VERSION.SDK_INT >= 23)
+                if (android.os.Build.VERSION.SDK_INT >= 23 && activity.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK == android.content.res.Configuration.UI_MODE_NIGHT_YES)
                     intArrayOf(android.graphics.Color.rgb(9, 31, 54), android.graphics.Color.rgb(6, 17, 32))
+                else if (activity.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK == android.content.res.Configuration.UI_MODE_NIGHT_NO)
+                    intArrayOf(android.graphics.Color.WHITE, android.graphics.Color.rgb(235, 243, 253))
                 else intArrayOf(bg(), panel())
             ).apply {
                 cornerRadius = dp(22).toFloat()
@@ -236,9 +238,11 @@ internal class BloggerPostComposerController(
             setPadding(0, dp(3), 0, dp(8))
             addView(box)
         }
+        val baseTop = dp(10)
+        val baseBottom = dp(12)
         val page = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(14), dp(10), dp(14), dp(12))
+            setPadding(dp(14), baseTop, dp(14), baseBottom)
             setBackgroundColor(bg())
         }
         val toolbar = LinearLayout(activity).apply {
@@ -406,7 +410,17 @@ internal class BloggerPostComposerController(
                     )
         }
 
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(page) { view, insets ->
+            val safe = insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.statusBars() or
+                    androidx.core.view.WindowInsetsCompat.Type.displayCutout() or
+                    androidx.core.view.WindowInsetsCompat.Type.navigationBars()
+            )
+            view.setPadding(dp(14), baseTop + safe.top, dp(14), baseBottom + safe.bottom)
+            insets
+        }
         setContentView(page)
+        androidx.core.view.ViewCompat.requestApplyInsets(page)
         applyUnifiedSkin(page)
         page.alpha = 0f
         page.translationY = dp(14).toFloat()
