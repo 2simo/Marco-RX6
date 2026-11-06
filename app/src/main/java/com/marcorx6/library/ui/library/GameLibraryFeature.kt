@@ -17,6 +17,8 @@ internal class GameLibraryFeature(
     translate: (String) -> String,
     loadCover: (android.widget.ImageView, String, String) -> Unit,
     showDetails: (Game) -> Unit,
+    loadEngagementSummary: (Game, (Long, Double, Long) -> Unit) -> Unit,
+    recordViewOnce: (Game, () -> Unit) -> Unit,
     private val gameList: () -> LinearLayout,
     private val filters: () -> LinearLayout,
     private val countText: () -> TextView,
