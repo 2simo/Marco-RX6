@@ -78,7 +78,7 @@ internal class DownloadUiController(
         val dark = isDarkMode()
         val background = if (dark) Color.rgb(7, 17, 31) else Color.rgb(242, 247, 253)
         val surface = if (dark) Color.rgb(15, 35, 58) else Color.WHITE
-        val primary = Color.rgb(42, 145, 255)
+        val primary = Color.rgb(190, 198, 210)
         val heading = if (dark) Color.WHITE else Color.rgb(22, 43, 65)
         val muted = if (dark) Color.rgb(164, 184, 207) else Color.rgb(91, 112, 137)
         fun addGlassTouch(view: View) {
@@ -251,7 +251,7 @@ internal class DownloadUiController(
                 minimumHeight = dp(42); setPadding(dp(13), dp(9), dp(13), dp(9))
                 setTextColor(if (filled) Color.WHITE else primary)
                 this.background = GradientDrawable().apply {
-                    setColor(if (filled) Color.argb(225, 42, 145, 255)
+                    setColor(if (filled) Color.argb(225, 190, 198, 210)
                         else if (dark) Color.argb(190, 15, 43, 70) else Color.WHITE)
                     cornerRadius = dp(12).toFloat(); setStroke(dp(1), primary)
                 }
