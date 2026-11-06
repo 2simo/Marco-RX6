@@ -23,7 +23,8 @@ internal class GameLibraryRenderer(
     private val tr: (String) -> String,
     private val loadCover: (ImageView, String, String) -> Unit,
     private val showDetails: (Game) -> Unit,
-    private val loadEngagementSummary: (Game, (Long, Double, Long) -> Unit) -> Unit
+    private val loadEngagementSummary: (Game, (Long, Double, Long) -> Unit) -> Unit,
+    private val recordViewOnce: (Game, () -> Unit) -> Unit
 ) {
     fun render(
         gameList: LinearLayout,
@@ -124,7 +125,16 @@ internal class GameLibraryRenderer(
                     isClickable = true
                     isFocusable = true
                     contentDescription = game.name + ", " + tr("عرض التفاصيل")
-                    setOnClickListener { showDetails(game) }
+                    setOnClickListener {
+                        recordViewOnce(game) {
+                            loadEngagementSummary(game) { views, average, ratings ->
+                                activity.runOnUiThread {
+                                    engagementBadge.text = "★ ${if (ratings == 0L) "—" else String.format(java.util.Locale.US, "%.1f", average)} ($ratings) • ${tr("مشاهدة")}: $views"
+                                }
+                            }
+                        }
+                        showDetails(game)
+                    }
                 }
                 val imageFrame = FrameLayout(activity).apply {
                     clipToOutline = true
@@ -137,7 +147,7 @@ internal class GameLibraryRenderer(
                 }
                 imageFrame.addView(image, FrameLayout.LayoutParams(-1, -1))
                 engagementBadge = TextView(activity).apply {
-                    text = "★ —   •   Views —"
+                    text = "★ —   •   ${tr("مشاهدة")}: —"
                     textSize = 9f
                     setTextColor(Color.WHITE)
                     gravity = Gravity.CENTER
@@ -152,7 +162,7 @@ internal class GameLibraryRenderer(
                 })
                 loadEngagementSummary(game) { views, average, ratings ->
                     activity.runOnUiThread {
-                        engagementBadge.text = "★ ${if (ratings == 0L) "—" else String.format(java.util.Locale.US, "%.1f", average)} ($ratings)   •   $views"
+                        engagementBadge.text = "★ ${if (ratings == 0L) "—" else String.format(java.util.Locale.US, "%.1f", average)} ($ratings) • ${tr("مشاهدة")}: $views"
                     }
                 }
                 if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) {
