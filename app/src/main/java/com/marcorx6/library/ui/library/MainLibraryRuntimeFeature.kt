@@ -39,7 +39,9 @@ internal class MainLibraryRuntimeFeature(
     private val showDownloads: () -> Unit,
     private val applyTypography: (View) -> Unit,
     private val applyUnifiedSkin: (View) -> Unit,
-    private val applyMotionPreferences: (View) -> Unit
+    private val applyMotionPreferences: (View) -> Unit,
+    private val loadEngagementSummary: (Game, (Long, Double, Long) -> Unit) -> Unit,
+    private val recordViewOnce: (Game, () -> Unit) -> Unit
 ) {
     val viewState = MainLibraryViewState()
     val filterState = LibraryFilterState()
@@ -68,7 +70,9 @@ internal class MainLibraryRuntimeFeature(
             panel = { panel },
             red = { red },
             white = { white },
-            gray = { gray }
+            gray = { gray },
+            loadEngagementSummary = loadEngagementSummary,
+            recordViewOnce = recordViewOnce
         )
     }
 
