@@ -83,6 +83,7 @@ internal class BloggerPostFeature(
     private val composer = BloggerPostComposerController(
         activity = activity,
         isAdminSession = isAdminSession,
+        isDarkMode = isDarkMode,
         dp = dp,
         bg = bg,
         panel = panel,
