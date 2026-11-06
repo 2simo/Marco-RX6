@@ -536,9 +536,12 @@ class MainActivity : ComponentActivity() {
             showDetailsForDay = { game -> gameExperienceFeature.showDetails(game) },
             isRegisteredUser = gameEngagementRepository::isRegisteredUser,
             loadEngagementSummary = { game, callback ->
-                gameEngagementRepository.loadSummary(game) { summary ->
-                    callback(summary.views, summary.ratingAverage, summary.ratingCount)
-                }
+                gameEngagementRepository.loadSummary(
+                    game,
+                    callback = { summary ->
+                        callback(summary.views, summary.ratingAverage, summary.ratingCount)
+                    }
+                )
             },
             loadMyRating = gameEngagementRepository::loadMyRating,
             submitRating = { game, rating, callback ->
