@@ -39,7 +39,8 @@ internal class GameDetailsFeature(
     applyMotionPreferences: (View) -> Unit,
     applyUnifiedSkin: (View) -> Unit,
     isRegisteredUser: () -> Boolean,
-    loadEngagementSummary: (Game, (Long, Double, Long) -> Unit) -> Unit,
+    loadEngagementSummary: (Game, (Long, Double, Long, Long) -> Unit) -> Unit,
+    recordDownload: (Game) -> Unit,
     loadMyRating: (Game, (Int?) -> Unit) -> Unit,
     submitRating: (Game, Int, (Boolean, String?) -> Unit) -> Unit,
     recordViewOnce: (Game) -> Unit
@@ -70,6 +71,9 @@ internal class GameDetailsFeature(
         makeText = makeText,
         isDarkMode = isDarkMode,
         loadCover = loadCover,
+        loadDownloads = { target, callback ->
+            loadEngagementSummary(target) { _, _, _, downloads -> callback(downloads) }
+        },
         translate = tr
     )
 
@@ -81,6 +85,7 @@ internal class GameDetailsFeature(
         red = red,
         white = white,
         enqueueDownload = { url, label, sourcePostUrl ->
+            recordDownload(game)
             enqueueGameDownload(url, label, "", "", "", "", sourcePostUrl)
         },
         translate = tr
