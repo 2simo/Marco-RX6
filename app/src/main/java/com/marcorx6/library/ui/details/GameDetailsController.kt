@@ -91,7 +91,7 @@ internal class GameDetailsController(
                     setOnClickListener { action() }
                 }
             adminActions.addView(
-                adminButton("تعديل", { reader.dismiss(); showGameDialog(game) }, Color.rgb(35, 126, 218)),
+                adminButton("تعديل", { reader.dismiss(); showGameDialog(game) }, Color.rgb(190, 198, 210)),
                 LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) }
             )
             adminActions.addView(
