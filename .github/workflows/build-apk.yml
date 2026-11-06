@@ -1,11 +1,14 @@
 name: Build Marco RX6 APK
 
 on:
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
   push:
     branches:
       - main
-      - feature/publishing-studio-redesign
+      - maintenance/audit-8.16
 
 permissions:
   contents: read
@@ -96,4 +99,3 @@ jobs:
           if-no-files-found: error
           retention-days: 3
 
-# Feature branch build: validate the publishing studio and its updated unit tests.

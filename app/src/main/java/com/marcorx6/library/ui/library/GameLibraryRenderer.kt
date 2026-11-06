@@ -26,7 +26,6 @@ internal class GameLibraryRenderer(
     private val loadCover: (ImageView, String, String) -> Unit,
     private val showDetails: (Game) -> Unit,
     private val loadEngagementSummary: (Game, (Long, Double, Long) -> Unit) -> Unit,
-    @Suppress("UNUSED_PARAMETER") private val recordViewOnce: (Game, () -> Unit) -> Unit
 ) {
     fun render(
         gameList: LinearLayout,

@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - feature/publishing-studio-redesign
+      - maintenance/audit-8.16
     paths:
       - "firestore.rules"
       - "firebase.json"
