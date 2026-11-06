@@ -9,7 +9,6 @@ on:
       - "firebase.json"
       - ".firebaserc"
       - "tests/firestore.rules.test.mjs"
-      - ".github/workflows/deploy-firestore-rules.yml"
   workflow_dispatch:
 
 permissions:
