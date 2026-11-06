@@ -443,7 +443,7 @@ class MainActivity : ComponentActivity() {
         MainLibraryRuntimeFeature(
             activity = this,
             context = this,
-            setContentView = { view -> setContentView(view) },
+            setContentView = ::showRootScreen,
             games = games,
             darkMode = ::isDarkMode,
             currentLanguage = appearanceRuntimeFeature::currentLanguage,
