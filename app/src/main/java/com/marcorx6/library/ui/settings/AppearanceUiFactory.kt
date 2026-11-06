@@ -98,18 +98,7 @@ internal class AppearanceUiFactory(
     fun applyUnifiedSkin(view: View) {
         installGlassInteraction(view)
         when (view) {
-            is EditText -> {
-                view.background = GradientDrawable().apply {
-                    setColor(if (isDarkMode()) Color.rgb(25, 30, 47) else Color.rgb(248, 250, 254))
-                    cornerRadius = dp(14).toFloat()
-                    setStroke(dp(1), if (isDarkMode()) Color.rgb(55, 83, 113) else Color.rgb(211, 219, 232))
-                }
-                view.setPadding(dp(14), dp(12), dp(14), dp(12))
-                view.minHeight = dp(52)
-                view.textSize = 14f
-                view.setTextColor(white())
-                view.setHintTextColor(gray())
-            }
+            is EditText -> styleInput(view)
             // CompoundButton subclasses Button, so handle them first to avoid
             // applying the generic button background to checkboxes and radio buttons.
             is CheckBox -> {
@@ -218,17 +207,42 @@ internal class AppearanceUiFactory(
         return spinner
     }
 
+    private fun inputBackground(): android.graphics.drawable.StateListDrawable =
+        android.graphics.drawable.StateListDrawable().apply {
+            val fill = if (isDarkMode()) {
+                intArrayOf(Color.rgb(22, 57, 91), Color.rgb(9, 27, 48))
+            } else {
+                intArrayOf(Color.WHITE, Color.rgb(222, 239, 255))
+            }
+            val normalStroke = if (isDarkMode()) Color.rgb(62, 133, 198) else Color.rgb(164, 205, 245)
+            val focusedStroke = Color.rgb(45, 145, 255)
+            addState(intArrayOf(android.R.attr.state_focused), GradientDrawable(
+                GradientDrawable.Orientation.TL_BR, fill
+            ).apply {
+                cornerRadius = dp(16).toFloat()
+                setStroke(dp(2), focusedStroke)
+            })
+            addState(intArrayOf(), GradientDrawable(
+                GradientDrawable.Orientation.TL_BR, fill
+            ).apply {
+                cornerRadius = dp(16).toFloat()
+                setStroke(dp(1), normalStroke)
+            })
+        }
+
+    private fun styleInput(input: EditText) {
+        input.background = inputBackground()
+        input.setPadding(dp(14), dp(12), dp(14), dp(12))
+        input.minHeight = dp(54)
+        input.textSize = 14f
+        input.setTextColor(white())
+        input.setHintTextColor(gray())
+        input.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
+    }
+
     fun makeInput(hintText: String): EditText =
         EditText(activity).apply {
             hint = hintText
-            textSize = 14f
-            minHeight = dp(52)
-            setTextColor(white())
-            setHintTextColor(gray())
-            background = GradientDrawable().apply {
-                setColor(panel())
-                cornerRadius = dp(12).toFloat()
-            }
-            setPadding(dp(13), dp(10), dp(13), dp(10))
+            styleInput(this)
         }
 }
