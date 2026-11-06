@@ -533,7 +533,19 @@ class MainActivity : ComponentActivity() {
             deleteGame = { game -> bloggerRuntimeFeature.delete(game) },
             applyMotionPreferences = ::applyMotionPreferences,
             applyUnifiedSkin = ::applyUnifiedSkin,
-            showDetailsForDay = { game -> gameExperienceFeature.showDetails(game) }
+            showDetailsForDay = { game -> gameExperienceFeature.showDetails(game) },
+            isRegisteredUser = gameEngagementRepository::isRegisteredUser,
+            loadEngagementSummary = { game, callback ->
+                gameEngagementRepository.loadSummary(game) { summary ->
+                    callback(summary.views, summary.ratingAverage, summary.ratingCount)
+                }
+            },
+            loadMyRating = gameEngagementRepository::loadMyRating,
+            submitRating = { game, rating, callback ->
+                gameEngagementRepository.submitRating(game, rating)
+                    .addOnSuccessListener { callback(true, null) }
+                    .addOnFailureListener { callback(false, it.message) }
+            }
         )
     }
 
