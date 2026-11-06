@@ -27,7 +27,7 @@ internal class BloggerArticlePreviewFactory(
     ): WebView {
         val previewTitle = title.trim().ifBlank { "معاينة المقال" }
         val previewHtml =
-            "<html><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><body style=\"background:${if (isDarkMode()) "#0a0b11" else "#f5f7fb"};color:${if (isDarkMode()) "#f4f4f8" else "#202638"};padding:12px;\">" +
+            "<html><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><body style=\"background:${if (isDarkMode()) "#08090c" else "#f2f4f7"};color:${if (isDarkMode()) "#f4f5f7" else "#191d24"};padding:12px;\">" +
                 BloggerArticleBuilder.build(
                     title = previewTitle,
                     categories = labels,
