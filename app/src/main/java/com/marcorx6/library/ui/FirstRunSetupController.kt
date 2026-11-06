@@ -68,7 +68,7 @@ internal class FirstRunSetupController(
         root.addView(top)
 
         val progressTrack = FrameLayout(activity).apply {
-            background = rounded(Color.rgb(24, 43, 65), 8)
+            background = rounded(Color.rgb(57, 61, 70), 8)
             clipToOutline = true
         }
         val progressFill = View(activity).apply {
@@ -195,7 +195,7 @@ internal class FirstRunSetupController(
                     choices.addView(makeText(
                         tr("يمكنك تخطي هذه الخطوة والمتابعة بالتخزين الافتراضي."),
                         11f,
-                        Color.rgb(164, 184, 207),
+                        Color.rgb(170, 176, 186),
                         false
                     ).apply {
                         setPadding(dp(4), dp(12), dp(4), dp(4))
