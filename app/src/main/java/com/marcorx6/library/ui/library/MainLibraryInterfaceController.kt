@@ -117,7 +117,7 @@ internal class MainLibraryInterfaceController(
         val searchBox = EditText(context).apply {
             hint = tr("اكتب اسم اللعبة أو المنصة أو النوع أو السنة...")
             textSize = 14f
-            singleLine = true
+            setSingleLine(true)
             setTextColor(white)
             setHintTextColor(gray)
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
@@ -129,7 +129,27 @@ internal class MainLibraryInterfaceController(
             setPadding(dp(16), dp(14), dp(16), dp(14))
             imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH
         }
-        root.addView(searchBox, LinearLayout.LayoutParams(-1, dp(54)).apply { bottomMargin = dp(12) })
+        val searchField = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(14), 0, dp(14), 0)
+            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                if (isDarkMode()) intArrayOf(Color.rgb(22, 57, 91), Color.rgb(9, 27, 48))
+                else intArrayOf(Color.WHITE, Color.rgb(222, 239, 255))).apply {
+                cornerRadius = dp(17).toFloat()
+                setStroke(dp(1), if (isDarkMode()) Color.rgb(62, 133, 198) else Color.rgb(164, 205, 245))
+            }
+        }
+        searchField.addView(ImageView(context).apply {
+            setImageResource(R.drawable.ic_action_search)
+            imageTintList = android.content.res.ColorStateList.valueOf(accent)
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
+            contentDescription = tr("بحث")
+        }, LinearLayout.LayoutParams(dp(22), dp(22)))
+        searchBox.background = null
+        searchBox.setPadding(dp(10), dp(12), dp(6), dp(12))
+        searchField.addView(searchBox, LinearLayout.LayoutParams(0, dp(54), 1f))
+        root.addView(searchField, LinearLayout.LayoutParams(-1, dp(58)).apply { bottomMargin = dp(12) })
         val count = makeText(tr("ابدأ بكتابة اسم اللعبة للبحث"), 11f, gray, false)
         root.addView(count, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
         val results = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
