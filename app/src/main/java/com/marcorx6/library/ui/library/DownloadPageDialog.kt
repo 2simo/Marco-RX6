@@ -187,11 +187,11 @@ internal class DownloadPageDialog(
                 setCompoundDrawablesRelativeWithIntrinsicBounds(com.marcorx6.library.R.drawable.ic_action_external, 0, 0, 0)
                 compoundDrawablePadding = dp(7)
                 textSize = 12f
-                setTextColor(Color.WHITE)
+                setTextColor(Color.rgb(20, 23, 29))
                 gravity = Gravity.CENTER_VERTICAL
                 setPadding(dp(12), dp(10), dp(12), dp(10))
                 this.background = GradientDrawable().apply {
-                    setColor(if (dark) Color.rgb(24, 76, 126) else Color.rgb(35, 119, 207))
+                    setColor(if (dark) Color.rgb(105, 113, 126) else Color.rgb(190, 198, 210))
                     cornerRadius = dp(11).toFloat()
                 }
                 isClickable = true
