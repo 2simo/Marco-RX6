@@ -167,6 +167,47 @@ describe("Firestore user isolation rules", () => {
     await assertSucceeds(getDoc(doc(dbB, "users/user-b")));
   });
 
+
+  it("allows each authenticated installation to create one immutable game view", async () => {
+    const uid = "guest-viewer";
+    const db = testEnv.authenticatedContext(uid, {
+      firebase: { sign_in_provider: "anonymous" },
+    }).firestore();
+    const view = doc(db, "gameMetrics/game-abc/views/guest-viewer");
+
+    await assertSucceeds(setDoc(view, { uid, createdAt: new Date() }));
+    await assertFails(updateDoc(view, { createdAt: new Date() }));
+    await assertFails(deleteDoc(view));
+  });
+
+  it("allows registered users to create and update their own 1-to-5-star rating only", async () => {
+    const uid = "registered-rater";
+    const db = testEnv.authenticatedContext(uid).firestore();
+    const rating = doc(db, "gameMetrics/game-abc/ratings/registered-rater");
+
+    await assertSucceeds(setDoc(rating, {
+      uid, rating: 4, updatedAt: new Date(),
+    }));
+    await assertSucceeds(updateDoc(rating, { rating: 5, updatedAt: new Date() }));
+    await assertFails(updateDoc(rating, { rating: 6 }));
+    await assertFails(setDoc(
+      doc(db, "gameMetrics/game-abc/ratings/someone-else"),
+      { uid: "somebody-else", rating: 5, updatedAt: new Date() },
+    ));
+  });
+
+  it("denies ratings from anonymous visitors", async () => {
+    const uid = "anonymous-rater";
+    const db = testEnv.authenticatedContext(uid, {
+      firebase: { sign_in_provider: "anonymous" },
+    }).firestore();
+
+    await assertFails(setDoc(
+      doc(db, "gameMetrics/game-abc/ratings/anonymous-rater"),
+      { uid, rating: 5, updatedAt: new Date() },
+    ));
+  });
+
   it("denies authenticated users access outside their /users/{uid} tree", async () => {
     const db = testEnv.authenticatedContext("user-a").firestore();
 
