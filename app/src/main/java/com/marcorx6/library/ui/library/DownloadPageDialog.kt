@@ -105,6 +105,9 @@ internal class DownloadPageDialog(
 
         val webView = WebView(activity)
         toolbar.addView(toolbarAction("", {
+            if (webView.canGoBack()) webView.goBack() else dialog.dismiss()
+        }, com.marcorx6.library.R.drawable.ic_action_back))
+        toolbar.addView(toolbarAction("", {
             val currentUrl = SecureUrlPolicy.toHttpsUrl(webView.url ?: safeStartUrl)
             if (currentUrl != null) {
                 webView.stopLoading()
@@ -407,8 +410,21 @@ internal class DownloadPageDialog(
             webView.destroy()
         }
         dialog.show()
-        dialog.window?.setLayout(-1, -1)
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dialog.window?.apply {
+            setLayout(-1, -1)
+            setGravity(Gravity.FILL)
+            setBackgroundDrawableResource(android.R.color.transparent)
+            // Make the full-screen download workspace visually own both system bars.
+            statusBarColor = background
+            navigationBarColor = background
+            setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+            clearFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            decorView.systemUiVisibility = if (!dark) {
+                View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+            } else {
+                0
+            }
+        }
         webView.loadUrl(safeStartUrl)
     }
 }
