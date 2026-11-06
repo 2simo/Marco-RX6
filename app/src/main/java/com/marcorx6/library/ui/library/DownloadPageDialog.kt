@@ -125,7 +125,7 @@ internal class DownloadPageDialog(
             if (webView.canGoForward()) webView.goForward()
         }, com.marcorx6.library.R.drawable.ic_action_forward))
         val addressInput = EditText(activity).apply {
-            singleLine = true
+            setSingleLine(true)
             textSize = 12f
             setTextColor(heading)
             setHintTextColor(muted)
@@ -133,11 +133,11 @@ internal class DownloadPageDialog(
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
             imeOptions = EditorInfo.IME_ACTION_GO
             setPadding(dp(12), 0, dp(10), 0)
-            background = GradientDrawable().apply {
+            setBackground(GradientDrawable().apply {
                 setColor(surface)
                 cornerRadius = dp(18).toFloat()
                 setStroke(dp(1), if (dark) Color.rgb(65, 71, 82) else Color.rgb(205, 211, 220))
-            }
+            })
         }
         addressRow.addView(addressInput, LinearLayout.LayoutParams(0, dp(44), 1f).apply {
             marginStart = dp(4)
