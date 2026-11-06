@@ -84,12 +84,12 @@ internal class StartupExperienceController(
         val progress = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
             max = 100
             this.progress = 1
-            progressTintList = android.content.res.ColorStateList.valueOf(Color.rgb(42, 145, 255))
+            progressTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
             progressBackgroundTintList = android.content.res.ColorStateList.valueOf(Color.rgb(29, 48, 70))
             progressDrawable = progressDrawable.mutate().apply {
                 if (this is android.graphics.drawable.LayerDrawable) {
                     findDrawableByLayerId(android.R.id.background)?.let { it.setTint(Color.rgb(29, 48, 70)) }
-                    findDrawableByLayerId(android.R.id.progress)?.let { it.setTint(Color.rgb(42, 145, 255)) }
+                    findDrawableByLayerId(android.R.id.progress)?.let { it.setTint(Color.rgb(190, 198, 210)) }
                 }
             }
         }
