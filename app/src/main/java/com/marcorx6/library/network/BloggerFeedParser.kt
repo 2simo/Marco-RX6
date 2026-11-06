@@ -63,10 +63,16 @@ internal object BloggerFeedParser {
         return if (section.isBlank()) "" else htmlToText(section)
     }
 
+    fun extractLanguage(html: String): String = extractInfoValue(html, "اللغة")
+
     private fun extractInfoValue(html: String, label: String): String {
         val escapedLabel = Pattern.quote(label)
+        // Blogger posts do not all use the same markup: accept <strong>, <b>,
+        // and plain "اللغة:" labels, then stop at the current list/paragraph row.
+        val labelPattern =
+            "(?:<\\s*(?:strong|b)\\b[^>]*>\\s*$escapedLabel\\s*:?\\s*</\\s*(?:strong|b)\\s*>|$escapedLabel\\s*:)"
         val match = Regex(
-            "(?is)<li[^>]*>\\s*<strong[^>]*>\\s*$escapedLabel\\s*:?\\s*</strong>\\s*(.*?)\\s*</li>"
+            "(?is)$labelPattern\\s*(.*?)(?=</li>|</p>|<br\\s*/?>|<li\\b|<p\\b|$)"
         ).find(html) ?: return ""
         return decodeHtmlEntities(match.groupValues[1].replace(Regex("(?is)<[^>]*>"), " "))
             .replace(Regex("\\s+"), " ").trim()
