@@ -1,7 +1,6 @@
 package com.marcorx6.library.ui
 
 import androidx.activity.ComponentActivity
-import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.marcorx6.library.data.Game
@@ -21,7 +20,6 @@ internal class GameLibraryFeature(
     private val gameList: () -> LinearLayout,
     private val filters: () -> LinearLayout,
     private val countText: () -> TextView,
-    private val search: () -> EditText,
     private val games: () -> List<Game>,
     private val selected: () -> String,
     private val selectedGenre: () -> String,
@@ -50,7 +48,6 @@ internal class GameLibraryFeature(
         gameList = gameList(),
         filters = filters(),
         countText = countText(),
-        search = search(),
         games = games(),
         selected = selected(),
         selectedGenre = selectedGenre(),
