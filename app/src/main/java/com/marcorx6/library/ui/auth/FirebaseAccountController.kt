@@ -72,7 +72,7 @@ internal class FirebaseAccountController(
         }
         header.addView(ImageView(activity).apply {
             setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
-            imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(42, 145, 255))
+            imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
             scaleType = ImageView.ScaleType.CENTER_INSIDE
             contentDescription = translate("رجوع")
             isClickable = true
