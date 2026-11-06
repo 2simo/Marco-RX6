@@ -40,7 +40,7 @@ internal class StartupExperienceController(
         dialog = splash
         val content = FrameLayout(activity).apply {
             setBackground(GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(
-                Color.rgb(3, 10, 22), Color.rgb(5, 19, 39), Color.rgb(2, 8, 19)
+                Color.rgb(7, 8, 11), Color.rgb(15, 17, 22), Color.rgb(4, 5, 8)
             )))
         }
         val center = LinearLayout(activity).apply {
@@ -51,8 +51,8 @@ internal class StartupExperienceController(
         val logoHalo = FrameLayout(activity).apply {
             background = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
-                setColor(Color.rgb(7, 24, 45))
-                setStroke(dp(2), Color.rgb(39, 160, 255))
+                setColor(Color.rgb(25, 28, 34))
+                setStroke(dp(2), Color.rgb(190, 198, 210))
             }
             elevation = dp(18).toFloat()
         }
@@ -71,12 +71,12 @@ internal class StartupExperienceController(
             gravity = Gravity.CENTER
             letterSpacing = 0.16f
         })
-        center.addView(makeText("GAME LIBRARY", 10f, Color.rgb(105, 190, 255), true).apply {
+        center.addView(makeText("GAME LIBRARY", 10f, Color.rgb(190, 198, 210), true).apply {
             gravity = Gravity.CENTER
             letterSpacing = 0.28f
             setPadding(0, dp(9), 0, 0)
         })
-        val loading = makeText(translate("جارٍ تجهيز عالم الألعاب..."), 11f, Color.rgb(153, 174, 199), false).apply {
+        val loading = makeText(translate("جارٍ تجهيز عالم الألعاب..."), 11f, Color.rgb(170, 176, 186), false).apply {
             gravity = Gravity.CENTER
             setPadding(0, dp(34), 0, 0)
         }
