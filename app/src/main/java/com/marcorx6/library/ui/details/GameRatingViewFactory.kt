@@ -25,14 +25,14 @@ internal class GameRatingViewFactory(
 ) {
     fun create(game: Game): LinearLayout {
         val dark = isDarkMode()
-        val muted = if (dark) Color.rgb(170, 190, 214) else Color.rgb(91, 108, 130)
+        val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
         val card = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(14), dp(13), dp(14), dp(13))
             background = GradientDrawable().apply {
-                setColor(if (dark) Color.rgb(18, 36, 57) else Color.rgb(245, 249, 255))
+                setColor(if (dark) Color.rgb(35, 38, 45) else Color.rgb(242, 244, 247))
                 cornerRadius = dp(16).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(62, 116, 166) else Color.rgb(198, 220, 245))
+                setStroke(dp(1), if (dark) Color.rgb(130, 138, 151) else Color.rgb(160, 168, 181))
             }
         }
         card.addView(makeText(translate("قيّم هذه اللعبة"), 15f, white(), true))
