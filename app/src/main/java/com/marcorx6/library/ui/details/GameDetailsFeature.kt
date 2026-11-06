@@ -41,7 +41,8 @@ internal class GameDetailsFeature(
     isRegisteredUser: () -> Boolean,
     loadEngagementSummary: (Game, (Long, Double, Long) -> Unit) -> Unit,
     loadMyRating: (Game, (Int?) -> Unit) -> Unit,
-    submitRating: (Game, Int, (Boolean, String?) -> Unit) -> Unit
+    submitRating: (Game, Int, (Boolean, String?) -> Unit) -> Unit,
+    recordViewOnce: (Game) -> Unit
 ) {
     private val favoriteToggleFactory = GameFavoriteToggleFactory(
         activity = activity,
@@ -118,6 +119,7 @@ internal class GameDetailsFeature(
         topBarFactory = topBarFactory,
         identityViewFactory = identityViewFactory,
         ratingViewFactory = ratingViewFactory,
+        recordViewOnce = recordViewOnce,
         similarGamesViewFactory = similarGamesViewFactory,
         downloadLinksViewFactory = downloadLinksViewFactory,
         isAdmin = isAdmin,
