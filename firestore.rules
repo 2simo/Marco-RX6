@@ -64,26 +64,47 @@ service cloud.firestore {
     // Public game engagement: one view document per Firebase UID and one
     // rating document per registered UID. Ratings are publicly readable so
     // aggregate scores can be calculated by the client, but only owners write.
+    function validGameMetricId(gameId) {
+      // The Android client derives this stable path from SHA-256(game identity).
+      return gameId.matches('^[0-9a-f]{64}
+
+    // Everything else stays denied by default.
+  }
+}
+);
+    }
+
     match /gameMetrics/{gameId}/views/{userId} {
-      allow read: if true;
-      allow create: if signedInAs(userId)
+      // Aggregate counts and ratings are public; writes remain UID-owned.
+      allow read: if validGameMetricId(gameId);
+      // A document ID equal to the Firebase UID permits one immutable view
+      // per account/guest installation. Server timestamps prevent client dates.
+      allow create: if validGameMetricId(gameId)
+        && signedInAs(userId)
         && request.resource.data.keys().hasOnly(['uid', 'createdAt'])
         && request.resource.data.keys().hasAll(['uid', 'createdAt'])
-        && request.resource.data.uid == userId;
+        && request.resource.data.uid == userId
+        && request.resource.data.createdAt == request.time;
       allow update, delete: if false;
     }
 
     match /gameMetrics/{gameId}/ratings/{userId} {
-      allow read: if true;
-      allow create, update: if signedInAs(userId)
+      allow read: if validGameMetricId(gameId);
+      // Guests/anonymous Firebase sessions cannot rate. A registered user owns
+      // exactly one rating document per game and may change its 1..5 value.
+      allow create, update: if validGameMetricId(gameId)
+        && signedInAs(userId)
         && !isAnonymous()
         && request.resource.data.keys().hasOnly(['uid', 'rating', 'updatedAt'])
         && request.resource.data.keys().hasAll(['uid', 'rating', 'updatedAt'])
         && request.resource.data.uid == userId
         && request.resource.data.rating is int
         && request.resource.data.rating >= 1
-        && request.resource.data.rating <= 5;
-      allow delete: if signedInAs(userId) && !isAnonymous();
+        && request.resource.data.rating <= 5
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if validGameMetricId(gameId)
+        && signedInAs(userId)
+        && !isAnonymous();
     }
 
     // Everything else stays denied by default.
