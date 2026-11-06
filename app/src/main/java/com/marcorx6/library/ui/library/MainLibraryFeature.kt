@@ -42,6 +42,8 @@ internal class MainLibraryFeature(
     showGameDialog: () -> Unit,
     showProfile: () -> Unit,
     showDownloads: () -> Unit,
+    loadCover: (android.widget.ImageView, String, String) -> Unit,
+    showDetails: (Game) -> Unit,
     applyTypography: (android.view.View) -> Unit,
     applyUnifiedSkin: (android.view.View) -> Unit,
     applyMotionPreferences: (android.view.View) -> Unit
@@ -77,6 +79,8 @@ internal class MainLibraryFeature(
         showGameDialog = showGameDialog,
         showProfile = showProfile,
         showDownloads = showDownloads,
+        loadCover = loadCover,
+        showDetails = showDetails,
         applyTypography = applyTypography,
         applyUnifiedSkin = applyUnifiedSkin,
         applyMotionPreferences = applyMotionPreferences
