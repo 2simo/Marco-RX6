@@ -23,7 +23,12 @@ internal class GameDetailsIdentityViewFactory(
         val primary = if (dark) Color.rgb(244, 247, 252) else Color.rgb(25, 29, 36)
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(13), dp(13), dp(13), dp(13))
+        }
+
+        // A dedicated identity card: cover first, then the game title.
+        val gameCard = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(14), dp(14), dp(14), dp(14))
             background = GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
                 if (dark) intArrayOf(Color.rgb(25, 28, 34), Color.rgb(8, 9, 12))
@@ -32,27 +37,36 @@ internal class GameDetailsIdentityViewFactory(
                 cornerRadius = dp(22).toFloat()
                 setStroke(dp(1), if (dark) Color.argb(170, 130, 138, 151) else Color.rgb(160, 168, 181))
             }
-            elevation = dp(4).toFloat()
+            elevation = dp(3).toFloat()
         }
 
         val cover = ImageView(activity).apply {
             scaleType = ImageView.ScaleType.FIT_CENTER
             adjustViewBounds = true
-            maxHeight = dp(270)
             background = GradientDrawable().apply {
                 setColor(if (dark) Color.rgb(35, 38, 45) else Color.rgb(222, 226, 232))
                 cornerRadius = dp(15).toFloat()
             }
             clipToOutline = true
-            contentDescription = game.name
+            contentDescription = "${translate("غلاف اللعبة")} ${game.name}"
         }
         if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) {
             loadCover(cover, game.coverLocalPath, game.coverUrl)
         } else {
             cover.setImageResource(android.R.drawable.ic_menu_gallery)
         }
-        root.addView(cover, LinearLayout.LayoutParams(dp(180), dp(270)).apply {
+        gameCard.addView(cover, LinearLayout.LayoutParams(dp(180), dp(270)).apply {
             gravity = android.view.Gravity.CENTER_HORIZONTAL
+        })
+        gameCard.addView(makeText(game.name, 19f, primary, true).apply {
+            gravity = android.view.Gravity.CENTER
+            textAlignment = android.view.View.TEXT_ALIGNMENT_CENTER
+            maxLines = 3
+            setPadding(dp(4), dp(13), dp(4), dp(2))
+            contentDescription = game.name
+        }, LinearLayout.LayoutParams(-1, -2))
+        root.addView(gameCard, LinearLayout.LayoutParams(-1, -2).apply {
+            bottomMargin = dp(12)
         })
 
         val details = extractGameDetails(game)
@@ -62,9 +76,10 @@ internal class GameDetailsIdentityViewFactory(
                 setPadding(dp(13), dp(12), dp(13), dp(12))
                 background = GradientDrawable().apply {
                     setColor(if (dark) Color.rgb(25, 28, 34) else Color.rgb(242, 244, 247))
-                    cornerRadius = dp(16).toFloat()
+                    cornerRadius = dp(18).toFloat()
                     setStroke(dp(1), if (dark) Color.rgb(75, 80, 90) else Color.rgb(211, 215, 222))
                 }
+                elevation = dp(2).toFloat()
             }
             infoCard.addView(makeText(translate("معلومات اللعبة"), 16f, primary, true).apply {
                 setPadding(0, 0, 0, dp(10))
@@ -81,15 +96,12 @@ internal class GameDetailsIdentityViewFactory(
                 cell.addView(makeText(translate(item.first), 12f, muted, false).apply {
                     textDirection = android.view.View.TEXT_DIRECTION_FIRST_STRONG
                     gravity = android.view.Gravity.START
-                    includeFontPadding = true
                 }, LinearLayout.LayoutParams(-1, -2))
                 cell.addView(makeText(item.second, 15f, primary, true).apply {
                     textDirection = android.view.View.TEXT_DIRECTION_FIRST_STRONG
                     gravity = android.view.Gravity.START
                     textAlignment = android.view.View.TEXT_ALIGNMENT_VIEW_START
-                    includeFontPadding = true
                     setPadding(0, dp(4), 0, 0)
-                    // Keep the complete value visible, even when it needs several lines.
                     maxLines = Int.MAX_VALUE
                     ellipsize = null
                     setHorizontallyScrolling(false)
@@ -98,8 +110,16 @@ internal class GameDetailsIdentityViewFactory(
                     bottomMargin = dp(8)
                 })
             }
-            root.addView(infoCard, LinearLayout.LayoutParams(-1, -2).apply {
-                bottomMargin = dp(12)
+            root.addView(infoCard, LinearLayout.LayoutParams(-1, -2))
+        } else {
+            root.addView(makeText(
+                translate("لا تتوفر معلومات إضافية لهذه اللعبة"),
+                13f,
+                muted,
+                false
+            ).apply {
+                gravity = android.view.Gravity.CENTER
+                setPadding(dp(12), dp(12), dp(12), dp(12))
             })
         }
 
@@ -133,8 +153,6 @@ internal class GameDetailsIdentityViewFactory(
             value, Html.FROM_HTML_MODE_LEGACY
         ).toString().replace('\u00a0', ' ').replace(Regex("\\s+"), " ").trim()
 
-        // Blogger commonly puts every field in its own <li>. Parse each item
-        // independently so a missing newline cannot merge the next field into it.
         val entries = linkedMapOf<String, String>().apply { putAll(stored) }
         Regex("(?is)<li\\b[^>]*>(.*?)</li\\s*>").findAll(html).forEach { item ->
             val text = plainText(item.groupValues[1]).trim(' ', ':', '：', '-', '•')
@@ -146,7 +164,6 @@ internal class GameDetailsIdentityViewFactory(
             }
         }
 
-        // Fallback for articles that use paragraphs or plain text rather than list items.
         if (entries.size < fields.size) {
             val plain = plainText(
                 html.replace(Regex("(?i)<br\\s*/?>"), "\\n")
@@ -162,8 +179,6 @@ internal class GameDetailsIdentityViewFactory(
                 }
             }
         }
-        // Show only metadata that actually exists in the Blogger post. Placeholder
-        // rows made incomplete game records look like duplicated or fabricated data.
         return fields.mapNotNull { (label, _) ->
             entries[label]?.takeIf { it.isNotBlank() }?.let { value -> label to value }
         }
