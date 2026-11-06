@@ -160,7 +160,7 @@ internal class GameLibraryRenderer(
                 })
                 loadEngagementSummary(game) { views, average, ratings ->
                     activity.runOnUiThread {
-                        engagementBadge.text = "★ ${if (ratings == 0L) "—" else String.format(java.util.Locale.US, "%.1f", average)}   👁 $views"
+                        engagementBadge.text = "★ ${if (ratings == 0L) "—" else String.format(java.util.Locale.US, "%.1f", average)} ($ratings)   •   $views"
                     }
                 }
                 if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) {
