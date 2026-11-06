@@ -202,11 +202,15 @@ internal class MainLibraryInterfaceController(
             addView(root, ViewGroup.LayoutParams(-1, -2))
         }
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(scroll) { _, insets ->
-            val safe = insets.getInsets(
-                androidx.core.view.WindowInsetsCompat.Type.systemBars() or
+            val safeTop = insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.statusBars() or
                     androidx.core.view.WindowInsetsCompat.Type.displayCutout()
-            )
-            root.setPadding(dp(16), searchBaseTop + safe.top, dp(16), searchBaseBottom + safe.bottom)
+            ).top
+            val safeBottom = insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.navigationBars() or
+                    androidx.core.view.WindowInsetsCompat.Type.mandatorySystemGestures()
+            ).bottom
+            root.setPadding(dp(16), searchBaseTop + safeTop, dp(16), searchBaseBottom + safeBottom)
             insets
         }
         applyTypography(scroll)
@@ -233,10 +237,14 @@ internal class MainLibraryInterfaceController(
             setBackgroundColor(ink)
         }
         ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
-            val safeAreas = insets.getInsets(
-                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
-            )
-            view.setPadding(dp(12), dp(8) + safeAreas.top, dp(12), dp(104) + safeAreas.bottom)
+            val safeTop = insets.getInsets(
+                WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.displayCutout()
+            ).top
+            val safeBottom = insets.getInsets(
+                WindowInsetsCompat.Type.navigationBars() or
+                    WindowInsetsCompat.Type.mandatorySystemGestures()
+            ).bottom
+            view.setPadding(dp(12), dp(8) + safeTop, dp(12), dp(104) + safeBottom)
             insets
         }
 
