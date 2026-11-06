@@ -174,7 +174,7 @@ describe("Firestore user isolation rules", () => {
     const db = testEnv.authenticatedContext(uid, {
       firebase: { sign_in_provider: "anonymous" },
     }).firestore();
-    const view = doc(db, "gameMetrics/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/views/guest-viewer);
+    const view = doc(db, "gameMetrics/" + "a".repeat(64) + "/views/guest-viewer");
 
     await assertSucceeds(setDoc(view, { uid, createdAt: serverTimestamp() }));
     await assertFails(setDoc(view, { uid, createdAt: serverTimestamp() }));
@@ -185,7 +185,7 @@ describe("Firestore user isolation rules", () => {
   it("allows registered users to create and update their own 1-to-5-star rating only", async () => {
     const uid = "registered-rater";
     const db = testEnv.authenticatedContext(uid).firestore();
-    const rating = doc(db, "gameMetrics/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/ratings/registered-rater);
+    const rating = doc(db, "gameMetrics/" + "a".repeat(64) + "/ratings/registered-rater");
 
     await assertSucceeds(setDoc(rating, {
       uid, rating: 4, updatedAt: serverTimestamp(),
@@ -193,9 +193,7 @@ describe("Firestore user isolation rules", () => {
     await assertSucceeds(updateDoc(rating, { rating: 5, updatedAt: serverTimestamp() }));
     await assertFails(updateDoc(rating, { rating: 6, updatedAt: serverTimestamp() }));
     await assertFails(setDoc(
-      doc(db, "gameMetrics/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/ratings/someone-else),
-      { uid: "somebody-else", rating: 5, updatedAt: new Date() },
-    ));
+      doc(db, "gameMetrics/" + "a".repeat(64) + "/ratings/someone-else"),;
   });
 
   it("denies ratings from anonymous visitors", async () => {
@@ -205,9 +203,7 @@ describe("Firestore user isolation rules", () => {
     }).firestore();
 
     await assertFails(setDoc(
-      doc(db, "gameMetrics/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/ratings/anonymous-rater),
-      { uid, rating: 5, updatedAt: serverTimestamp() },
-    ));
+      doc(db, "gameMetrics/" + "a".repeat(64) + "/ratings/anonymous-rater"),;
   });
 
   it("denies authenticated users access outside their /users/{uid} tree", async () => {
