@@ -211,6 +211,7 @@ internal class MainLibraryInterfaceController(
     }
 
     fun create() {
+        activeDockTab = "HOME"
         // MARCO RX6 visual system: midnight-blue surfaces with electric-blue accents.
         val silver = if (isDarkMode()) Color.rgb(226, 232, 242) else Color.rgb(43, 52, 68)
         val muted = gray
