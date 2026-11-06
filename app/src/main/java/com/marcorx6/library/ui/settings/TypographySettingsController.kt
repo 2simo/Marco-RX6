@@ -27,7 +27,7 @@ internal class TypographySettingsController(
     private val translate: (String) -> String
 ) {
     fun show() {
-        val accentBlue = Color.rgb(190, 198, 210)
+        val silverAccent = Color.rgb(190, 198, 210)
         val box = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(22), dp(12), dp(22), dp(8))
@@ -36,7 +36,7 @@ internal class TypographySettingsController(
         preview.setPadding(dp(14), dp(14), dp(14), dp(14))
         preview.background = roundedBackground(panelColor(), 13)
         box.addView(preview, LinearLayout.LayoutParams(-1, -2))
-        box.addView(makeText(translate("حجم الخط"), 13f, accentBlue, true).apply {
+        box.addView(makeText(translate("حجم الخط"), 13f, silverAccent, true).apply {
             setPadding(0, dp(18), 0, dp(5))
         })
         val scale = TypographyPreferences.scale(preferences)
@@ -45,12 +45,12 @@ internal class TypographySettingsController(
             max = 8
             progress = ((scale - 0.85f) / 0.05f).toInt().coerceIn(0, 8)
         }
-        size.progressTintList = android.content.res.ColorStateList.valueOf(accentBlue)
-        size.thumbTintList = android.content.res.ColorStateList.valueOf(accentBlue)
+        size.progressTintList = android.content.res.ColorStateList.valueOf(silverAccent)
+        size.thumbTintList = android.content.res.ColorStateList.valueOf(silverAccent)
         box.addView(size)
         val sizeLabel = makeText(translate("حجم النص") + ": " + (scale * 100).toInt() + "%", 11f, grayColor(), false)
         box.addView(sizeLabel)
-        box.addView(makeText(translate("نوع الخط"), 13f, accentBlue, true).apply {
+        box.addView(makeText(translate("نوع الخط"), 13f, silverAccent, true).apply {
             setPadding(0, dp(16), 0, dp(5))
         })
         val family = themedSpinner(
