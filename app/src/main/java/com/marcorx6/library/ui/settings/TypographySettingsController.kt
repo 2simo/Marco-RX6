@@ -32,7 +32,7 @@ internal class TypographySettingsController(
             orientation = LinearLayout.VERTICAL
             setPadding(dp(22), dp(12), dp(22), dp(8))
         }
-        val preview = makeText(translate("MARCO RX6  •  معاينة شكل النص\nقراءة أوضح وتجربة مريحة"), 17f, whiteColor(), true)
+        val preview = makeText(translate("MARCO  •  معاينة شكل النص\nقراءة أوضح وتجربة مريحة"), 17f, whiteColor(), true)
         preview.setPadding(dp(14), dp(14), dp(14), dp(14))
         preview.background = roundedBackground(panelColor(), 13)
         box.addView(preview, LinearLayout.LayoutParams(-1, -2))
