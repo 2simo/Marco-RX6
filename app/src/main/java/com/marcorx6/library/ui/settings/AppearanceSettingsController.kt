@@ -75,7 +75,7 @@ internal class AppearanceSettingsController(
         header.addView(heading, LinearLayout.LayoutParams(0, -2, 1f))
         header.addView(android.widget.ImageView(activity).apply {
             setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
-            imageTintList = android.content.res.ColorStateList.valueOf(blue)
+            imageTintList = android.content.res.ColorStateList.valueOf(silverAccent)
             scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
             contentDescription = translate("رجوع")
             minimumWidth = dp(48)
@@ -163,11 +163,11 @@ internal class AppearanceSettingsController(
                 text = translate(if (enabled) "الحركات مفعّلة  ✓" else "الحركات متوقفة").replace("✓", "").trim()
                 setCompoundDrawablesRelativeWithIntrinsicBounds(if (enabled) com.marcorx6.library.R.drawable.ic_action_check else 0, 0, 0, 0)
                 contentDescription = translate(if (enabled) "إيقاف حركات وانتقالات الواجهة" else "تفعيل حركات وانتقالات الواجهة")
-                setTextColor(if (enabled) Color.WHITE else blue)
+                setTextColor(if (enabled) Color.rgb(20, 23, 29) else silverAccent)
                 background = GradientDrawable().apply {
                     setColor(if (enabled) Color.argb(218, 190, 198, 210) else if (dark) Color.argb(190, 25, 28, 34) else Color.argb(210, 255, 255, 255))
                     cornerRadius = dp(14).toFloat()
-                    if (!enabled) setStroke(dp(1), blue)
+                    if (!enabled) setStroke(dp(1), silverAccent)
                 }
                 Toast.makeText(activity, translate(if (enabled) "تم تفعيل انتقالات الواجهة" else "تم إيقاف انتقالات الواجهة"), Toast.LENGTH_SHORT).show()
             }
