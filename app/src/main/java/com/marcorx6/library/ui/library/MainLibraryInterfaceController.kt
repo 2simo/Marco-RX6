@@ -501,11 +501,11 @@ internal class MainLibraryInterfaceController(
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
             background = if (isDarkMode()) GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.argb(218, 18, 55, 94), Color.argb(205, 10, 34, 61), Color.argb(190, 7, 8, 11))).apply {
+                intArrayOf(Color.argb(232, 35, 38, 45), Color.argb(220, 18, 20, 25), Color.argb(210, 8, 9, 12))).apply {
                 cornerRadius = dp(23).toFloat()
                 setStroke(dp(1), Color.rgb(130, 138, 151))
             } else GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.argb(225, 255, 255, 255), Color.argb(205, 222, 226, 232))).apply {
+                intArrayOf(Color.argb(245, 245, 247, 250), Color.argb(230, 215, 220, 228), Color.argb(220, 190, 198, 210))).apply {
                 cornerRadius = dp(23).toFloat()
                 setStroke(dp(1), Color.rgb(160, 168, 181))
             }
@@ -615,7 +615,9 @@ internal class MainLibraryInterfaceController(
             ).bottom
             dockParams.bottomMargin = dp(12) + safeBottom
             dock.layoutParams = dockParams
-            pageScroll.setPadding(0, safeTop, 0, dp(84) + safeBottom)
+            // Keep content below Android's status bar on edge-to-edge devices.
+            val effectiveSafeTop = safeTop.coerceAtLeast(dp(24))
+            pageScroll.setPadding(0, effectiveSafeTop, 0, dp(84) + safeBottom)
             insets
         }
         setContentView(shell)
