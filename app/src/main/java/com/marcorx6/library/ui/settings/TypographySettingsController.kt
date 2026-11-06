@@ -27,7 +27,7 @@ internal class TypographySettingsController(
     private val translate: (String) -> String
 ) {
     fun show() {
-        val accentBlue = Color.rgb(42, 145, 255)
+        val accentBlue = Color.rgb(190, 198, 210)
         val box = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(22), dp(12), dp(22), dp(8))
