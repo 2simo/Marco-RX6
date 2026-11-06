@@ -176,7 +176,7 @@ internal class GameLibraryRenderer(
                         rightMargin = dp(5); topMargin = dp(5)
                     })
                 }
-                card.addView(imageFrame, LinearLayout.LayoutParams(dp(178), dp(112)))
+                card.addView(imageFrame, LinearLayout.LayoutParams(dp(132), dp(164)))
                 if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) {
                     loadCover(image, game.coverLocalPath, game.coverUrl)
                 } else {
@@ -190,7 +190,7 @@ internal class GameLibraryRenderer(
                     gravity = Gravity.START
                     ellipsize = android.text.TextUtils.TruncateAt.END
                     setPadding(dp(2), dp(7), dp(2), dp(2))
-                }, LinearLayout.LayoutParams(dp(178), -2))
+                }, LinearLayout.LayoutParams(dp(132), -2))
 
                 val meta = listOf(game.genre, game.releaseYear).map { it.trim() }
                     .filter { it.isNotBlank() }.joinToString(" • ")
@@ -235,7 +235,7 @@ internal class GameLibraryRenderer(
                 viewsValue = viewsText
                 stats.addView(ratingChip, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(4) })
                 stats.addView(viewsChip, LinearLayout.LayoutParams(0, -2, 1f))
-                card.addView(stats, LinearLayout.LayoutParams(dp(178), -2))
+                card.addView(stats, LinearLayout.LayoutParams(dp(132), -2))
 
                 loadEngagementSummary(game) { views, average, ratings ->
                     activity.runOnUiThread {
@@ -243,7 +243,7 @@ internal class GameLibraryRenderer(
                         viewsValue.text = compactCount(views)
                     }
                 }
-                row.addView(card, LinearLayout.LayoutParams(dp(190), -2).apply {
+                row.addView(card, LinearLayout.LayoutParams(dp(144), -2).apply {
                     marginEnd = dp(9)
                 })
             }
