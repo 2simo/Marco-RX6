@@ -218,6 +218,41 @@ internal class GameLibraryRenderer(
                         topMargin = dp(7)
                     }
                 )
+
+                // Resolve the game's language from its stored field, with the original
+                // Blogger article as a fallback for older/imported entries.
+                val articleLanguage = Regex(
+                    "(?is)<strong[^>]*>\\s*(?:اللغة|language)\\s*:?\\s*</strong>\\s*(.*?)(?:</li>|</p>|<br\\s*/?>)"
+                ).find(game.bloggerHtml)?.groupValues?.getOrNull(1)
+                    ?.replace(Regex("(?is)<[^>]*>"), " ")
+                    ?.let { android.text.Html.fromHtml(it, android.text.Html.FROM_HTML_MODE_LEGACY).toString() }
+                    .orEmpty()
+                val languageLabel = resolveLanguageLabel(game.language, articleLanguage)
+                if (languageLabel.isNotEmpty()) {
+                    val languageBadge = TextView(activity).apply {
+                        text = languageLabel
+                        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+                        textSize = 9f
+                        setTextColor(Color.WHITE)
+                        typeface = android.graphics.Typeface.create(
+                            "sans-serif-medium", android.graphics.Typeface.BOLD
+                        )
+                        gravity = Gravity.CENTER
+                        setPadding(dp(8), dp(4), dp(8), dp(4))
+                        background = GradientDrawable().apply {
+                            setColor(Color.argb(220, 12, 34, 58))
+                            cornerRadius = dp(9).toFloat()
+                            setStroke(dp(1), Color.argb(210, 100, 177, 245))
+                        }
+                    }
+                    imageFrame.addView(
+                        languageBadge,
+                        FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.END).apply {
+                            rightMargin = dp(7)
+                            bottomMargin = dp(7)
+                        }
+                    )
+                }
                 if (game.isFavorite) {
                     val favoriteBadge = ImageView(activity).apply {
                         setImageResource(com.marcorx6.library.R.drawable.ic_nav_favorites)
@@ -332,6 +367,28 @@ internal class GameLibraryRenderer(
             horizontal.addView(carousel, FrameLayout.LayoutParams(-2, -2))
             gameList.addView(horizontal, LinearLayout.LayoutParams(-1, -2))
         }
+    }
+
+    private fun resolveLanguageLabel(vararg candidates: String): String {
+        for (candidate in candidates) {
+            val normalized = java.text.Normalizer.normalize(
+                candidate.lowercase(Locale.ROOT)
+                    .replace(Regex("[\\u200B-\\u200F\\u202A-\\u202E\\u2066-\\u2069]"), "")
+                    .replace('ـ', ' ')
+                    .trim(),
+                java.text.Normalizer.Form.NFD
+            ).replace(Regex("\\p{Mn}+"), "")
+                .replace(Regex("[^\\p{L}\\p{N}]+"), " ")
+                .trim()
+
+            if (normalized.isBlank()) continue
+            if (normalized.contains("arab") || normalized.contains("عرب")) return "Arabic"
+            if (normalized.contains("english") || normalized.contains("انجليز") ||
+                normalized == "en" || normalized.startsWith("en ") ||
+                normalized.endsWith(" en") || normalized.contains(" en ")
+            ) return "English"
+        }
+        return ""
     }
 
     private fun compactCount(value: Long): String = when {
