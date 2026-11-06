@@ -59,7 +59,7 @@ internal class StartupExperienceController(
         val logo = ImageView(activity).apply {
             setImageResource(com.marcorx6.library.R.drawable.marco_rx6_dragon)
             scaleType = ImageView.ScaleType.FIT_CENTER
-            contentDescription = "MARCO RX6"
+            contentDescription = "MARCO"
             setPadding(dp(15), dp(15), dp(15), dp(15))
             alpha = 0f
             scaleX = 0.84f
@@ -67,7 +67,7 @@ internal class StartupExperienceController(
         }
         logoHalo.addView(logo, FrameLayout.LayoutParams(-1, -1))
         center.addView(logoHalo, LinearLayout.LayoutParams(dp(154), dp(154)).apply { bottomMargin = dp(25) })
-        center.addView(makeText("MARCO RX6", 25f, Color.WHITE, true).apply {
+        center.addView(makeText("MARCO", 25f, Color.WHITE, true).apply {
             gravity = Gravity.CENTER
             letterSpacing = 0.16f
         })
