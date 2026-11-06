@@ -16,6 +16,7 @@ internal class GameDetailsController(
     private val dp: (Int) -> Int,
     private val topBarFactory: GameDetailsTopBarFactory,
     private val identityViewFactory: GameDetailsIdentityViewFactory,
+    private val ratingViewFactory: GameRatingViewFactory,
     private val similarGamesViewFactory: GameSimilarGamesViewFactory,
     private val downloadLinksViewFactory: GameDownloadLinksViewFactory,
     private val isAdmin: () -> Boolean,
@@ -48,6 +49,9 @@ internal class GameDetailsController(
         val identity = identityViewFactory.create(game)
         content.addView(identity, LinearLayout.LayoutParams(-1, -2).apply {
             setMargins(dp(14), dp(12), dp(14), dp(8))
+        })
+        content.addView(ratingViewFactory.create(game), LinearLayout.LayoutParams(-1, -2).apply {
+            setMargins(dp(14), dp(0), dp(14), dp(12))
         })
 
         // Similar titles are displayed as image-cover cards immediately after
