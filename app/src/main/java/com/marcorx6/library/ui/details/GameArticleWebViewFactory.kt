@@ -146,15 +146,15 @@ internal class GameArticleWebViewFactory(
                 <style>
                 *{box-sizing:border-box}
                 html,body{margin:0;padding:0;width:100%;max-width:100%;overflow-x:hidden}
-                body{background:${if (darkMode) "#0a0b11" else "#f5f7fb"} !important;color:${if (darkMode) "#f4f4f8" else "#202638"} !important;font-family:$fontFamily,Arial,sans-serif;font-size:${fontSize}px;line-height:1.9;padding:20px 17px 0;overflow-wrap:anywhere;direction:rtl;text-align:right}
+                body{background:${if (darkMode) "#08090c" else "#f2f4f7"} !important;color:${if (darkMode) "#f4f4f8" else "#191d24"} !important;font-family:$fontFamily,Arial,sans-serif;font-size:${fontSize}px;line-height:1.9;padding:20px 17px 0;overflow-wrap:anywhere;direction:rtl;text-align:right}
                 body *{color:inherit !important;background-color:transparent !important}
-                body h1,body h2,body h3,body h4{color:${if (darkMode) "#59b7ff" else "#238de8"} !important;line-height:1.4;margin:25px 0 12px}
+                body h1,body h2,body h3,body h4{color:${if (darkMode) "#bec6d2" else "#828a97"} !important;line-height:1.4;margin:25px 0 12px}
                 p{margin:0 0 18px}
                 img{display:block;max-width:100%!important;height:auto!important;width:auto;margin:18px auto;border-radius:12px;object-fit:contain}
                 body a{color:inherit !important;text-decoration:none}
                 ul,ol{padding-left:25px;margin:10px 0 20px}
                 li{padding:4px 0}
-                body blockquote{border-right:3px solid ${if (darkMode) "#398fdf" else "#398fdf"};padding:8px 14px;margin:16px 0;background:${if (darkMode) "#102a46" else "#e8f3ff"} !important}
+                body blockquote{border-right:3px solid ${if (darkMode) "#828a97" else "#828a97"};padding:8px 14px;margin:16px 0;background:${if (darkMode) "#23262d" else "#e2e6ec"} !important}
                 table{display:block;max-width:100%;overflow-x:auto;border-collapse:collapse}
                 td,th{border:1px solid ${if (darkMode) "#596174" else "#cbd2df"};padding:8px}
                 iframe,video{max-width:100%!important}
