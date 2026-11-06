@@ -22,7 +22,9 @@ internal class GameLibraryRenderer(
     private val accentForeground: () -> Int,
     private val tr: (String) -> String,
     private val loadCover: (ImageView, String, String) -> Unit,
-    private val showDetails: (Game) -> Unit
+    private val showDetails: (Game) -> Unit,
+    private val loadEngagementSummary: (Game, (Long, Double, Long) -> Unit) -> Unit,
+    private val recordViewOnce: (Game, () -> Unit) -> Unit
 ) {
     fun render(
         gameList: LinearLayout,
@@ -122,8 +124,16 @@ internal class GameLibraryRenderer(
                     isClickable = true
                     isFocusable = true
                     contentDescription = game.name + ", " + tr("عرض التفاصيل")
-                    setOnClickListener { showDetails(game) }
+                    setOnClickListener {
+                        recordViewOnce(game) { loadEngagementSummary(game) { views, average, ratings ->
+                            activity.runOnUiThread {
+                                engagementBadge.text = "★ ${if (ratings == 0L) "—" else String.format(java.util.Locale.US, "%.1f", average)}   👁 $views"
+                            }
+                        } }
+                        showDetails(game)
+                    }
                 }
+                lateinit var engagementBadge: TextView
                 val imageFrame = FrameLayout(activity).apply {
                     clipToOutline = true
                     background = rounded(bg, 12)
@@ -134,6 +144,25 @@ internal class GameLibraryRenderer(
                     importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
                 }
                 imageFrame.addView(image, FrameLayout.LayoutParams(-1, -1))
+                engagementBadge = TextView(activity).apply {
+                    text = "★ —   👁 —"
+                    textSize = 9f
+                    setTextColor(Color.WHITE)
+                    gravity = Gravity.CENTER
+                    setPadding(dp(6), dp(4), dp(6), dp(4))
+                    background = GradientDrawable().apply {
+                        setColor(Color.argb(220, 8, 30, 55))
+                        cornerRadius = dp(9).toFloat()
+                    }
+                }
+                imageFrame.addView(engagementBadge, FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.START).apply {
+                    leftMargin = dp(5); bottomMargin = dp(5)
+                })
+                loadEngagementSummary(game) { views, average, ratings ->
+                    activity.runOnUiThread {
+                        engagementBadge.text = "★ ${if (ratings == 0L) "—" else String.format(java.util.Locale.US, "%.1f", average)}   👁 $views"
+                    }
+                }
                 if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) {
                     loadCover(image, game.coverLocalPath, game.coverUrl)
                 } else {
