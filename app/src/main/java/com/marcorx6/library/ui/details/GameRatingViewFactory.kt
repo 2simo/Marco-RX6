@@ -47,7 +47,7 @@ internal class GameRatingViewFactory(
         val ratingBar = RatingBar(activity, null, android.R.attr.ratingBarStyle).apply {
             numStars = 5
             stepSize = 1f
-            isIndicator = !registered
+            setIsIndicator(!registered)
             rating = 0f
             contentDescription = translate("قيّم هذه اللعبة من نجمة إلى خمس نجوم")
         }
