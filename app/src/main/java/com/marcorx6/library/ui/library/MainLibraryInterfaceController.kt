@@ -86,10 +86,13 @@ internal class MainLibraryInterfaceController(
     private fun showSmartSearch() {
         val ink = bg
         val accent = Color.rgb(45, 145, 255)
+        val searchBaseTop = dp(18)
+        val searchBaseBottom = dp(18)
         val root = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             layoutDirection = if (currentLanguage() == "ar") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
-            setPadding(dp(16), dp(18), dp(16), dp(18))
+            textDirection = if (currentLanguage() == "ar") View.TEXT_DIRECTION_RTL else View.TEXT_DIRECTION_LTR
+            setPadding(dp(16), searchBaseTop, dp(16), searchBaseBottom)
             setBackgroundColor(ink)
         }
         val header = LinearLayout(context).apply {
@@ -198,8 +201,17 @@ internal class MainLibraryInterfaceController(
             isVerticalScrollBarEnabled = false
             addView(root, ViewGroup.LayoutParams(-1, -2))
         }
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(scroll) { _, insets ->
+            val safe = insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.systemBars() or
+                    androidx.core.view.WindowInsetsCompat.Type.displayCutout()
+            )
+            root.setPadding(dp(16), searchBaseTop + safe.top, dp(16), searchBaseBottom + safe.bottom)
+            insets
+        }
         applyTypography(scroll)
         setContentView(scroll)
+        androidx.core.view.ViewCompat.requestApplyInsets(scroll)
         applyUnifiedSkin(scroll)
         applyMotionPreferences(scroll)
         searchBox.requestFocus()
