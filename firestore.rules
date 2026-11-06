@@ -61,6 +61,31 @@ service cloud.firestore {
       // No other nested collections/documents are writable.
     }
 
-    // Everything outside /users/{uid} stays denied by default.
+    // Public game engagement: one view document per Firebase UID and one
+    // rating document per registered UID. Ratings are publicly readable so
+    // aggregate scores can be calculated by the client, but only owners write.
+    match /gameMetrics/{gameId}/views/{userId} {
+      allow read: if true;
+      allow create: if signedInAs(userId)
+        && request.resource.data.keys().hasOnly(['uid', 'createdAt'])
+        && request.resource.data.keys().hasAll(['uid', 'createdAt'])
+        && request.resource.data.uid == userId;
+      allow update, delete: if false;
+    }
+
+    match /gameMetrics/{gameId}/ratings/{userId} {
+      allow read: if true;
+      allow create, update: if signedInAs(userId)
+        && !isAnonymous()
+        && request.resource.data.keys().hasOnly(['uid', 'rating', 'updatedAt'])
+        && request.resource.data.keys().hasAll(['uid', 'rating', 'updatedAt'])
+        && request.resource.data.uid == userId
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5;
+      allow delete: if signedInAs(userId) && !isAnonymous();
+    }
+
+    // Everything else stays denied by default.
   }
 }
