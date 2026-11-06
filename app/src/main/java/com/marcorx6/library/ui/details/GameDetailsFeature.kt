@@ -45,6 +45,9 @@ internal class GameDetailsFeature(
     submitRating: (Game, Int, (Boolean, String?) -> Unit) -> Unit,
     recordViewOnce: (Game) -> Unit
 ) {
+    // The download dialog is created once, while the selected game changes per details screen.
+    private var activeGameForDownload: Game? = null
+
     private val favoriteToggleFactory = GameFavoriteToggleFactory(
         activity = activity,
         games = games,
@@ -85,7 +88,7 @@ internal class GameDetailsFeature(
         red = red,
         white = white,
         enqueueDownload = { url, label, sourcePostUrl ->
-            recordDownload(game)
+            activeGameForDownload?.let(recordDownload)
             enqueueGameDownload(url, label, "", "", "", "", sourcePostUrl)
         },
         translate = tr
@@ -134,5 +137,8 @@ internal class GameDetailsFeature(
         translate = tr
     )
 
-    fun show(game: Game) = controller.show(game)
+    fun show(game: Game) {
+        activeGameForDownload = game
+        controller.show(game)
+    }
 }
