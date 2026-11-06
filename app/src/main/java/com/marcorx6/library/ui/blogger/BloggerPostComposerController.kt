@@ -91,6 +91,7 @@ internal class BloggerPostComposerController(
         fun makeAction(text: String, primary: Boolean = false) = Button(activity).apply {
             this.text = translate(text)
             isAllCaps = false
+            if (primary) tag = "marco_primary_action"
             minHeight = dp(48)
             setTextColor(if (primary) accentForeground() else studioTextColor)
             background = if (primary) android.graphics.drawable.GradientDrawable(
@@ -105,15 +106,25 @@ internal class BloggerPostComposerController(
             setPadding(dp(14), dp(13), dp(14), dp(13))
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
-                intArrayOf(android.graphics.Color.argb(225, 25, 91, 151), android.graphics.Color.argb(205, 11, 39, 69))
+                if (isNight) intArrayOf(
+                    android.graphics.Color.rgb(25, 91, 151),
+                    android.graphics.Color.rgb(11, 39, 69)
+                ) else intArrayOf(
+                    android.graphics.Color.rgb(229, 242, 255),
+                    android.graphics.Color.rgb(207, 228, 250)
+                )
             ).apply {
                 cornerRadius = dp(17).toFloat()
-                setStroke(dp(1), android.graphics.Color.argb(130, 103, 177, 239))
+                setStroke(
+                    dp(1),
+                    if (isNight) android.graphics.Color.argb(130, 103, 177, 239)
+                    else android.graphics.Color.rgb(160, 199, 238)
+                )
             }
         }
         intro.addView(makeText(
             translate(if (existing == null) "استوديو النشر • MARCO RX6" else "استوديو التحرير • MARCO RX6"),
-            18f, white(), true
+            18f, studioTextColor, true
         ))
         intro.addView(makeText(
             translate("أدخل معلومات اللعبة وروابطها، ثم راجع شكل المقال قبل النشر."),
