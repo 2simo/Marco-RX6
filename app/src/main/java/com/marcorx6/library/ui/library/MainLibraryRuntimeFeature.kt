@@ -41,7 +41,6 @@ internal class MainLibraryRuntimeFeature(
     private val applyUnifiedSkin: (View) -> Unit,
     private val applyMotionPreferences: (View) -> Unit,
     private val loadEngagementSummary: (Game, (Long, Double, Long) -> Unit) -> Unit,
-    private val recordViewOnce: (Game, () -> Unit) -> Unit
 ) {
     val viewState = MainLibraryViewState()
     val filterState = LibraryFilterState()
