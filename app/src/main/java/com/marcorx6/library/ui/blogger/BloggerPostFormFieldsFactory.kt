@@ -59,12 +59,12 @@ internal class BloggerPostFormFieldsFactory(
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
                 intArrayOf(
-                    android.graphics.Color.argb(220, 20, 57, 91),
-                    android.graphics.Color.argb(198, 7, 25, 45)
+                    android.graphics.Color.argb(220, 35, 38, 45),
+                    android.graphics.Color.argb(198, 15, 17, 22)
                 )
             ).apply {
                 cornerRadius = dp(15).toFloat()
-                setStroke(dp(1), android.graphics.Color.argb(175, 76, 153, 222))
+                setStroke(dp(1), android.graphics.Color.argb(175, 145, 153, 166))
             }
             clipToOutline = true
             elevation = dp(2).toFloat()
