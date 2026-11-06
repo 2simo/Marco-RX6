@@ -61,7 +61,7 @@ internal class FirstRunSetupController(
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        val brand = makeText("MARCO RX6", 13f, Color.WHITE, true).apply { letterSpacing = 0.12f }
+        val brand = makeText("MARCO", 13f, Color.WHITE, true).apply { letterSpacing = 0.12f }
         val stepCount = makeText("1 / ${steps.size}", 11f, Color.rgb(190, 198, 210), true)
         top.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
         top.addView(stepCount)
@@ -125,7 +125,7 @@ internal class FirstRunSetupController(
             })
             val description = when (step) {
                 0 -> "اختر المنصة التي تريد أن تبدأ بها مكتبتك. يمكنك تغييرها في أي وقت."
-                1 -> "اختر اللغة التي تناسبك لعرض واجهة MARCO RX6."
+                1 -> "اختر اللغة التي تناسبك لعرض واجهة MARCO."
                 2 -> "اختر المظهر الذي يريح عينيك أثناء التصفح."
                 3 -> "اختر اللون الذي سيظهر في الأزرار والعناصر التفاعلية."
                 4 -> "هل ترغب في تلقي إشعار عند نشر مقالات جديدة في المدونة؟"
@@ -169,7 +169,7 @@ internal class FirstRunSetupController(
                 2 -> listOf(true to "الوضع الليلي", false to "الوضع النهاري")
                     .forEach { (dark, label) -> addChoice(tr(label), "", darkMode == dark) { darkMode = dark } }
                 3 -> {
-                    val card = viewFactory.optionCard(tr("فضي"), true, tr("اللون الرسمي المعتمد في MARCO RX6"))
+                    val card = viewFactory.optionCard(tr("فضي"), true, tr("اللون الرسمي المعتمد في MARCO"))
                     val dot = View(activity).apply {
                         background = rounded(Color.rgb(190, 198, 210), 20)
                     }
