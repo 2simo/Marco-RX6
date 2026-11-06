@@ -16,6 +16,7 @@ import com.marcorx6.library.ui.GameImportMerger
 import com.marcorx6.library.ui.LanguageTranslator
 import com.marcorx6.library.ui.library.MainLibraryViewState
 import com.marcorx6.library.data.Game
+import com.marcorx6.library.data.GameEngagementRepository
 import com.marcorx6.library.data.DownloadStoragePreferences
 import com.marcorx6.library.data.auth.FirebaseSessionCoordinator
 import com.marcorx6.library.data.auth.FirebaseAuthRepository
@@ -77,6 +78,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private val downloadStoragePreferences by lazy { DownloadStoragePreferences(applicationContext) }
+
+    private val gameEngagementRepository by lazy { GameEngagementRepository() }
 
     private val firebaseSessionCoordinator: FirebaseSessionCoordinator by lazy {
         FirebaseSessionCoordinator()
@@ -470,7 +473,19 @@ class MainActivity : ComponentActivity() {
             showDownloads = activityServicesRuntimeFeature::showDownloadManager,
             applyTypography = ::applyTypography,
             applyUnifiedSkin = ::applyUnifiedSkin,
-            applyMotionPreferences = ::applyMotionPreferences
+            applyMotionPreferences = ::applyMotionPreferences,
+            loadEngagementSummary = { game, callback ->
+                gameEngagementRepository.loadSummary(game, { summary ->
+                    callback(summary.views, summary.ratingAverage, summary.ratingCount)
+                })
+            },
+            recordViewOnce = { game, onRecorded ->
+                gameEngagementRepository.recordViewOnce(game)
+                    .addOnSuccessListener { if (it) onRecorded() }
+                    .addOnFailureListener { error ->
+                        android.util.Log.w("MarcoGameViews", "Could not record game view", error)
+                    }
+            }
         )
     }
 
