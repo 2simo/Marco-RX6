@@ -639,6 +639,47 @@ internal class MainLibraryInterfaceController(
             leftMargin = dp(16); rightMargin = dp(16); bottomMargin = dp(12)
         }
         shell.addView(dock, dockParams)
+
+        // Hide the floating bottom dock while the user scrolls down and reveal it
+        // while scrolling up. Translation keeps the content layout stable (no jump).
+        var lastDockScrollY = 0
+        var dockHidden = false
+        fun setDockVisible(visible: Boolean) {
+            if (dockHidden == !visible) return
+            dockHidden = !visible
+            dock.animate().cancel()
+            if (visible) {
+                dock.isClickable = true
+                dock.isFocusable = true
+                dock.animate()
+                    .translationY(0f)
+                    .alpha(1f)
+                    .setDuration(190L)
+                    .setInterpolator(android.view.animation.DecelerateInterpolator())
+                    .start()
+            } else {
+                dock.isClickable = false
+                dock.isFocusable = false
+                dock.animate()
+                    .translationY((dock.height + dockParams.bottomMargin + dp(12)).toFloat())
+                    .alpha(0f)
+                    .setDuration(190L)
+                    .setInterpolator(android.view.animation.DecelerateInterpolator())
+                    .start()
+            }
+        }
+        ViewCompat.setOnScrollChangeListener(pageScroll) { _, _, scrollY, _, _ ->
+            val delta = scrollY - lastDockScrollY
+            if (scrollY <= dp(2)) {
+                setDockVisible(true)
+            } else if (delta >= dp(4)) {
+                setDockVisible(false)
+            } else if (delta <= -dp(4)) {
+                setDockVisible(true)
+            }
+            lastDockScrollY = scrollY
+        }
+
         // Apply the shared glass/ripple interaction layer after every screen control,
         // including the floating navigation dock, has been assembled.
         applyUnifiedSkin(shell)
