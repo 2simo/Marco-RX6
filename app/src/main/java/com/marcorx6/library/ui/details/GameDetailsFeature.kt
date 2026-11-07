@@ -25,6 +25,7 @@ internal class GameDetailsFeature(
     gray: () -> Int,
     panel: () -> Int,
     tr: (String) -> String,
+    targetLanguage: () -> String,
     loadCover: (android.widget.ImageView, String, String) -> Unit,
     saveGames: () -> Unit,
     renderGames: () -> Unit,
@@ -78,6 +79,7 @@ internal class GameDetailsFeature(
             loadEngagementSummary(target) { _, _, _, downloads -> callback(downloads) }
         },
         translate = tr,
+        targetLanguage = targetLanguage,
         favoriteToggleFactory = favoriteToggleFactory
     )
 
