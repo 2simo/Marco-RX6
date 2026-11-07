@@ -3,8 +3,10 @@ package com.marcorx6.library.data
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.AggregateQuerySnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QuerySnapshot
 import java.security.MessageDigest
 
 /**
@@ -22,6 +24,25 @@ internal class GameEngagementRepository(
         val downloads: Long = 0
     )
 
+    private data class CachedSummary(
+        val value: Summary,
+        val cachedAt: Long
+    )
+
+    private data class SummaryCallback(
+        val success: (Summary) -> Unit,
+        val failure: (Exception) -> Unit
+    )
+
+    private val summaryLock = Any()
+    private val summaryCache = LinkedHashMap<String, CachedSummary>()
+    private val pendingSummaryCallbacks = mutableMapOf<String, MutableList<SummaryCallback>>()
+
+    private companion object {
+        const val SUMMARY_CACHE_TTL_MS = 5L * 60L * 1000L
+        const val MAX_CACHED_SUMMARIES = 512
+    }
+
     private fun gameId(game: Game): String {
         val stableGameKey = game.bloggerPostId.trim().takeIf { it.isNotBlank() }
             ?: game.sourcePostUrl.trim().takeIf { it.isNotBlank() }
@@ -34,6 +55,12 @@ internal class GameEngagementRepository(
 
     private fun gameDocument(game: Game) =
         firestore.collection("gameMetrics").document(gameId(game))
+
+    private fun invalidateSummary(game: Game) {
+        synchronized(summaryLock) {
+            summaryCache.remove(gameId(game))
+        }
+    }
 
     fun recordViewOnce(game: Game): Task<Boolean> {
         val user = auth.currentUser
@@ -50,6 +77,8 @@ internal class GameEngagementRepository(
                 ))
                 true
             }
+        }.addOnSuccessListener { recorded ->
+            if (recorded) invalidateSummary(game)
         }
     }
 
@@ -68,6 +97,8 @@ internal class GameEngagementRepository(
                 ))
                 true
             }
+        }.addOnSuccessListener { recorded ->
+            if (recorded) invalidateSummary(game)
         }
     }
 
@@ -86,34 +117,80 @@ internal class GameEngagementRepository(
                 "rating" to rating,
                 "updatedAt" to FieldValue.serverTimestamp()
             )
-        )
+        ).addOnSuccessListener {
+            invalidateSummary(game)
+        }
     }
 
+    /**
+     * Reuses fresh summaries and coalesces simultaneous requests for the same game.
+     * The three Firestore reads run in parallel instead of waiting for one another.
+     */
     fun loadSummary(game: Game, callback: (Summary) -> Unit, onError: (Exception) -> Unit = {}) {
-        val root = gameDocument(game)
-        root.collection("views").count().get(com.google.firebase.firestore.AggregateSource.SERVER)
-            .addOnSuccessListener { views ->
-                root.collection("ratings").get()
-                    .addOnSuccessListener { ratings ->
-                        root.collection("downloads").count()
-                            .get(com.google.firebase.firestore.AggregateSource.SERVER)
-                            .addOnSuccessListener { downloads ->
-                                val values = ratings.documents.mapNotNull { document ->
-                                    document.getLong("rating")?.takeIf { it in 1L..5L }
-                                }
-                                val average = if (values.isEmpty()) 0.0 else values.average()
-                                callback(Summary(
-                                    views = views.count,
-                                    ratingAverage = average,
-                                    ratingCount = values.size.toLong(),
-                                    downloads = downloads.count
-                                ))
-                            }
-                            .addOnFailureListener(onError)
-                    }
-                    .addOnFailureListener(onError)
+        val id = gameId(game)
+        var cached: Summary? = null
+        var shouldStartRequest = false
+
+        synchronized(summaryLock) {
+            val entry = summaryCache[id]
+            if (entry != null && System.currentTimeMillis() - entry.cachedAt < SUMMARY_CACHE_TTL_MS) {
+                cached = entry.value
+            } else {
+                val waiting = pendingSummaryCallbacks[id]
+                if (waiting != null) {
+                    waiting.add(SummaryCallback(callback, onError))
+                } else {
+                    pendingSummaryCallbacks[id] = mutableListOf(SummaryCallback(callback, onError))
+                    shouldStartRequest = true
+                }
             }
-            .addOnFailureListener(onError)
+        }
+
+        cached?.let {
+            callback(it)
+            return
+        }
+        if (!shouldStartRequest) return
+
+        val root = gameDocument(game)
+        val viewsTask = root.collection("views").count()
+            .get(com.google.firebase.firestore.AggregateSource.SERVER)
+        val ratingsTask = root.collection("ratings").get()
+        val downloadsTask = root.collection("downloads").count()
+            .get(com.google.firebase.firestore.AggregateSource.SERVER)
+
+        Tasks.whenAllSuccess<Any>(viewsTask, ratingsTask, downloadsTask)
+            .addOnSuccessListener { results ->
+                val views = results[0] as AggregateQuerySnapshot
+                val ratings = results[1] as QuerySnapshot
+                val downloads = results[2] as AggregateQuerySnapshot
+                val values = ratings.documents.mapNotNull { document ->
+                    document.getLong("rating")?.takeIf { it in 1L..5L }
+                }
+                val summary = Summary(
+                    views = views.count,
+                    ratingAverage = if (values.isEmpty()) 0.0 else values.average(),
+                    ratingCount = values.size.toLong(),
+                    downloads = downloads.count
+                )
+
+                val callbacks = synchronized(summaryLock) {
+                    summaryCache[id] = CachedSummary(summary, System.currentTimeMillis())
+                    while (summaryCache.size > MAX_CACHED_SUMMARIES) {
+                        val oldestKey = summaryCache.entries.minByOrNull { it.value.cachedAt }?.key
+                            ?: break
+                        summaryCache.remove(oldestKey)
+                    }
+                    pendingSummaryCallbacks.remove(id).orEmpty()
+                }
+                callbacks.forEach { it.success(summary) }
+            }
+            .addOnFailureListener { error ->
+                val callbacks = synchronized(summaryLock) {
+                    pendingSummaryCallbacks.remove(id).orEmpty()
+                }
+                callbacks.forEach { it.failure(error) }
+            }
     }
 
     fun loadMyRating(game: Game, callback: (Int?) -> Unit) {
