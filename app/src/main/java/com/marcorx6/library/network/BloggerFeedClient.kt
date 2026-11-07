@@ -14,8 +14,8 @@ internal data class BloggerFeedResult(
 
 /**
  * Downloads the main Blogger feed and the dedicated OS-label feeds used by the
- * four independent MARCO RX6 sections. Label feeds are important because the
- * requested sections may contain posts outside the first page of the main feed.
+ * independent MARCO RX6 sections. Each feed is paginated so posts beyond the
+ * first 100 entries are not silently omitted.
  */
 internal class BloggerFeedClient(
     private val feedUrl: String
@@ -30,12 +30,12 @@ internal class BloggerFeedClient(
         SectionFeed(
             "بلايستيشن 3 معربة",
             "PS3_ARABIC",
-            listOf("ps3arabic", "PS3 Arabic")
+            listOf("بلايستيشن 3 معربة", "ps3arabic", "PS3 Arabic")
         ),
         SectionFeed(
-            "PlayStation 2 — PlayStation 2 معربة",
+            "بلاي ستيشن 2 معربة",
             "PS2_ARABIC",
-            listOf("ps2arabic", "PS2 ARABIC", "PS2 Arabic")
+            listOf("PlayStation 2 — PlayStation 2 معربة", "ps2arabic", "PS2 ARABIC", "PS2 Arabic")
         ),
         SectionFeed(
             "PlayStation 2 — PlayStation 2 PS3",
@@ -50,7 +50,7 @@ internal class BloggerFeedClient(
     )
 
     fun fetch(): BloggerFeedResult {
-        val main = fetchFeed(feedUrl)
+        val main = fetchAllPages(feedUrl)
         val merged = LinkedHashMap<String, Game>()
 
         main.games.forEach { game ->
@@ -59,12 +59,11 @@ internal class BloggerFeedClient(
         }
 
         dedicatedSections.forEach { section ->
-            // First try the exact OS label used by the Blogger section URL.
-            // If that label is not present, try the human-readable Blogger label.
-            val labelsToTry = listOf(section.label) + section.fallbackLabels
+            // Try the exact Blogger label first, then known alternate spellings.
+            val labelsToTry = (listOf(section.label) + section.fallbackLabels).distinct()
             var sectionGames = emptyList<Game>()
             for (label in labelsToTry) {
-                val result = runCatching { fetchFeed(labelFeedUrl(label)) }.getOrNull()
+                val result = runCatching { fetchAllPages(labelFeedUrl(label)) }.getOrNull()
                 if (result != null && result.games.isNotEmpty()) {
                     sectionGames = result.games
                     break
@@ -73,8 +72,8 @@ internal class BloggerFeedClient(
             sectionGames.forEach { game ->
                 val key = game.sourcePostUrl.ifBlank { game.url }
                 if (key.isNotBlank()) {
-                    // The dedicated feed itself is authoritative for this section,
-                    // even when a post also carries a broad PS2/PS3 category.
+                    // The dedicated feed is authoritative even when a post also
+                    // carries a broad PS2/PS3 category.
                     merged[key] = game.copy(platform = section.platform)
                 }
             }
@@ -90,6 +89,40 @@ internal class BloggerFeedClient(
         val base = feedUrl.substringBefore('?').trimEnd('/')
         val encodedLabel = URLEncoder.encode(label, "UTF-8").replace("+", "%20")
         return "$base/-/$encodedLabel?alt=json&max-results=100"
+    }
+
+    /**
+     * Blogger caps a response page. Walk start-index in batches so large labels
+     * and the main feed can return all available posts, not only the first page.
+     */
+    private fun fetchAllPages(url: String): BloggerFeedResult {
+        val base = url.substringBefore('?')
+        val query = url.substringAfter('?', "")
+        val allGames = LinkedHashMap<String, Game>()
+        var blogId = ""
+
+        for (page in 0 until 50) {
+            val startIndex = page * 100 + 1
+            val pageUrl = buildString {
+                append(base)
+                append('?')
+                if (query.isNotBlank()) {
+                    append(query)
+                    append('&')
+                }
+                append("start-index=")
+                append(startIndex)
+            }
+            val result = fetchFeed(pageUrl)
+            if (blogId.isBlank()) blogId = result.blogId
+            result.games.forEach { game ->
+                val key = game.sourcePostUrl.ifBlank { game.url }
+                if (key.isNotBlank()) allGames[key] = game
+            }
+            if (result.games.size < 100) break
+        }
+
+        return BloggerFeedResult(blogId = blogId, games = allGames.values.toList())
     }
 
     private fun fetchFeed(url: String): BloggerFeedResult {
