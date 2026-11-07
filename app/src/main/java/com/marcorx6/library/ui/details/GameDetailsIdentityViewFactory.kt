@@ -150,31 +150,41 @@ internal class GameDetailsIdentityViewFactory(
             infoCard.addView(makeText(translate("معلومات اللعبة"), 16f, primary, true).apply {
                 setPadding(0, 0, 0, dp(10))
             })
-            details.forEach { item ->
-                val cell = LinearLayout(activity).apply {
-                    orientation = LinearLayout.VERTICAL
-                    setPadding(dp(12), dp(10), dp(12), dp(10))
-                    background = GradientDrawable().apply {
-                        setColor(if (dark) Color.rgb(43, 47, 55) else Color.WHITE)
-                        cornerRadius = dp(11).toFloat()
-                    }
+            details.forEachIndexed { index, item ->
+                val row = LinearLayout(activity).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = android.view.Gravity.CENTER_VERTICAL
+                    layoutDirection = android.view.View.LAYOUT_DIRECTION_LOCALE
+                    setPadding(dp(8), dp(12), dp(8), dp(12))
                 }
-                cell.addView(makeText(translate(item.first), 12f, muted, false).apply {
-                    textDirection = android.view.View.TEXT_DIRECTION_FIRST_STRONG
-                    gravity = android.view.Gravity.START
-                }, LinearLayout.LayoutParams(-1, -2))
-                cell.addView(makeText(item.second, 15f, primary, true).apply {
-                    textDirection = android.view.View.TEXT_DIRECTION_FIRST_STRONG
-                    gravity = android.view.Gravity.START
+                row.addView(makeText(translate(item.first), 13f, muted, false).apply {
+                    gravity = android.view.Gravity.START or android.view.Gravity.CENTER_VERTICAL
                     textAlignment = android.view.View.TEXT_ALIGNMENT_VIEW_START
-                    setPadding(0, dp(4), 0, 0)
-                    maxLines = Int.MAX_VALUE
-                    ellipsize = null
+                    textDirection = android.view.View.TEXT_DIRECTION_FIRST_STRONG
+                }, LinearLayout.LayoutParams(0, -2, 0.42f))
+                val value = makeText(item.second, 14f, primary, true).apply {
+                    gravity = android.view.Gravity.END or android.view.Gravity.CENTER_VERTICAL
+                    textAlignment = android.view.View.TEXT_ALIGNMENT_VIEW_END
+                    textDirection = android.view.View.TEXT_DIRECTION_FIRST_STRONG
+                    maxLines = 4
                     setHorizontallyScrolling(false)
-                }, LinearLayout.LayoutParams(-1, -2))
-                infoCard.addView(cell, LinearLayout.LayoutParams(-1, -2).apply {
-                    bottomMargin = dp(8)
-                })
+                }
+                if (item.first == "كلمة السر") {
+                    value.setOnClickListener {
+                        val clipboard = activity.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("كلمة السر", item.second))
+                        android.widget.Toast.makeText(activity, translate("تم نسخ كلمة السر"), android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                    value.isClickable = true
+                    value.isFocusable = true
+                }
+                row.addView(value, LinearLayout.LayoutParams(0, -2, 0.58f))
+                infoCard.addView(row, LinearLayout.LayoutParams(-1, -2))
+                if (index < details.lastIndex) {
+                    infoCard.addView(android.view.View(activity).apply {
+                        setBackgroundColor(if (dark) Color.rgb(65, 70, 80) else Color.rgb(215, 219, 226))
+                    }, LinearLayout.LayoutParams(-1, dp(1)))
+                }
             }
             root.addView(infoCard, LinearLayout.LayoutParams(-1, -2))
         } else {
@@ -200,9 +210,7 @@ internal class GameDetailsIdentityViewFactory(
             "الصيغة" to game.fileFormat,
             "اللغة" to game.language,
             "كلمة السر" to game.password,
-            "الحقوق" to game.rights,
-            "النوع" to game.genre,
-            "سنة الإصدار" to game.releaseYear
+            "الحقوق" to game.rights
         ).filterValues { it.isNotBlank() }.toMutableMap()
         if (html.isBlank()) return stored
             .filterValues { !it.normalizedForDetails().equals(game.name.normalizedForDetails(), ignoreCase = true) }
@@ -213,9 +221,7 @@ internal class GameDetailsIdentityViewFactory(
             "الصيغة" to listOf("الصيغة", "format"),
             "اللغة" to listOf("اللغة", "language", "languages"),
             "كلمة السر" to listOf("كلمة السر", "كلمه السر", "password", "pass"),
-            "الحقوق" to listOf("الحقوق", "credits", "rights"),
-            "النوع" to listOf("النوع", "genre", "category"),
-            "سنة الإصدار" to listOf("سنة الإصدار", "سنة الاصدار", "release year", "year")
+            "الحقوق" to listOf("الحقوق", "credits", "rights")
         )
         fun plainText(value: String): String = Html.fromHtml(
             value, Html.FROM_HTML_MODE_LEGACY
