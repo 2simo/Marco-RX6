@@ -189,5 +189,9 @@ internal class CoverRepository(context: Context) : AutoCloseable {
 
     override fun close() {
         worker.shutdownNow()
+        synchronized(inFlightLock) {
+            inFlightCallbacks.clear()
+        }
+        bitmapCache.evictAll()
     }
 }
