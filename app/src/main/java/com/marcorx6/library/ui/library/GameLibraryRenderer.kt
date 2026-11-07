@@ -27,6 +27,7 @@ internal class GameLibraryRenderer(
     private val loadCover: (ImageView, String, String) -> Unit,
     private val showDetails: (Game) -> Unit,
     private val loadEngagementSummary: (Game, (Long, Double, Long) -> Unit) -> Unit,
+    private val openCategory: (String, String) -> Unit,
 ) {
     private data class RenderSignature(
         val selected: String,
@@ -227,6 +228,30 @@ internal class GameLibraryRenderer(
                     cornerRadius = dp(12).toFloat()
                     setStroke(dp(1), if (isDarkMode()) Color.argb(120, 130, 138, 151) else Color.argb(130, 160, 168, 181))
                 }
+            }
+            if (selected == "ALL") {
+                val openSection = TextView(activity).apply {
+                    text = tr("فتح")
+                    textSize = 10f
+                    typeface = android.graphics.Typeface.create(
+                        "sans-serif-medium", android.graphics.Typeface.BOLD
+                    )
+                    gravity = Gravity.CENTER
+                    setTextColor(if (isDarkMode()) Color.rgb(225, 228, 234) else Color.rgb(43, 47, 55))
+                    setPadding(dp(10), dp(6), dp(10), dp(6))
+                    background = GradientDrawable().apply {
+                        setColor(if (isDarkMode()) Color.argb(105, 35, 38, 45) else Color.argb(115, 222, 226, 232))
+                        cornerRadius = dp(11).toFloat()
+                        setStroke(dp(1), if (isDarkMode()) Color.argb(145, 130, 138, 151) else Color.argb(155, 160, 168, 181))
+                    }
+                    isClickable = true
+                    isFocusable = true
+                    contentDescription = tr("فتح قسم") + " " + platform
+                    setOnClickListener { openCategory(platform, platform) }
+                }
+                heading.addView(openSection, LinearLayout.LayoutParams(-2, -2).apply {
+                    marginEnd = dp(7)
+                })
             }
             heading.addView(sectionCount)
             if (!gridMode) gameList.addView(heading, LinearLayout.LayoutParams(-1, -2))
