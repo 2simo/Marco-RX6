@@ -9,6 +9,8 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.marcorx6.library.data.Game
 import com.marcorx6.library.ui.settings.LocalContentTranslator
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 
 internal class GameDetailsIdentityViewFactory(
     private val activity: Activity,
@@ -21,7 +23,17 @@ internal class GameDetailsIdentityViewFactory(
     private val targetLanguage: () -> String,
     private val favoriteToggleFactory: GameFavoriteToggleFactory
 ) {
-    private val contentTranslator by lazy { LocalContentTranslator(activity) }
+    private val contentTranslatorDelegate = lazy { LocalContentTranslator(activity) }
+    private val contentTranslator by contentTranslatorDelegate
+
+    init {
+        (activity as? LifecycleOwner)?.lifecycle?.addObserver(object : DefaultLifecycleObserver {
+            override fun onDestroy(owner: LifecycleOwner) {
+                if (contentTranslatorDelegate.isInitialized()) contentTranslator.close()
+                owner.lifecycle.removeObserver(this)
+            }
+        })
+    }
 
     fun create(game: Game): LinearLayout {
         val dark = isDarkMode()
