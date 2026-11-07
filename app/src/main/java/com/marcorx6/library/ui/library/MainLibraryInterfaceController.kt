@@ -350,6 +350,159 @@ internal class MainLibraryInterfaceController(
         searchBox.requestFocus()
     }
 
+    private fun showFullScreenSections() {
+        val ink = bg
+        val silver = if (isDarkMode()) Color.rgb(225, 228, 234) else Color.rgb(43, 47, 55)
+        val root = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutDirection = if (currentLanguage() == "ar") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
+            setPadding(dp(16), dp(12), dp(16), dp(20))
+            setBackgroundColor(ink)
+        }
+        val header = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val back = TextView(context).apply {
+            text = tr("رجوع")
+            textSize = 13f
+            setTextColor(silver)
+            gravity = Gravity.CENTER
+            setPadding(dp(16), dp(11), dp(16), dp(11))
+            background = rounded(panel, 14)
+            isClickable = true
+            isFocusable = true
+            setOnClickListener { create() }
+        }
+        header.addView(back)
+        header.addView(makeText(tr("الأقسام"), 23f, silver, true), LinearLayout.LayoutParams(0, -2, 1f).apply {
+            marginStart = dp(14)
+        })
+        root.addView(header, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(22) })
+        root.addView(makeText(tr("اختر القسم الذي تريد تصفحه"), 13f, gray, false),
+            LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(14) })
+
+        val available = listOf(
+            "PS4" to "PS4",
+            "PS3" to "PS3",
+            "PS2" to "PS2",
+            "PS3_ARABIC" to tr("PS3 Arabic"),
+            "FAVORITES" to tr("المفضلة")
+        ).mapNotNull { (key, label) ->
+            val count = GameLibraryManager.filterAndSort(games(), key, "", "", "", sortMode).size
+            if (count > 0) Triple(key, label, count) else null
+        }
+        val cards = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
+        available.forEach { (key, label, count) ->
+            val item = LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(17), dp(17), dp(17), dp(17))
+                background = rounded(panel, 18).apply {
+                    setStroke(dp(1), if (isDarkMode()) Color.argb(135, 130, 138, 151) else Color.argb(145, 160, 168, 181))
+                }
+                isClickable = true
+                isFocusable = true
+                setOnClickListener { showFullScreenCategory(key, label) }
+            }
+            val info = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
+            info.addView(makeText(label, 17f, silver, true))
+            info.addView(makeText("$count " + tr("لعبة"), 11f, gray, false).apply {
+                setPadding(0, dp(5), 0, 0)
+            })
+            item.addView(info, LinearLayout.LayoutParams(0, -2, 1f))
+            item.addView(makeText("‹", 27f, silver, true))
+            cards.addView(item, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(11) })
+        }
+        if (available.isEmpty()) {
+            cards.addView(makeText(tr("لا توجد أقسام تحتوي على ألعاب حالياً"), 14f, gray, false).apply {
+                gravity = Gravity.CENTER
+                setPadding(dp(12), dp(45), dp(12), dp(45))
+            })
+        }
+        root.addView(cards, LinearLayout.LayoutParams(-1, -2))
+        val scroll = ScrollView(context).apply {
+            isFillViewport = true
+            isVerticalScrollBarEnabled = false
+            addView(root, ViewGroup.LayoutParams(-1, -2))
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(scroll) { _, insets ->
+            val safeTop = insets.getInsets(WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.displayCutout()).top
+            val safeBottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars() or WindowInsetsCompat.Type.mandatorySystemGestures()).bottom
+            root.setPadding(dp(16), dp(12) + safeTop, dp(16), dp(20) + safeBottom)
+            insets
+        }
+        applyTypography(scroll)
+        setContentView(scroll)
+        ViewCompat.requestApplyInsets(scroll)
+        applyUnifiedSkin(scroll)
+        applyMotionPreferences(scroll)
+    }
+
+    private fun showFullScreenCategory(category: String, title: String) {
+        selected = category
+        val ink = bg
+        val silver = if (isDarkMode()) Color.rgb(225, 228, 234) else Color.rgb(43, 47, 55)
+        val root = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutDirection = if (currentLanguage() == "ar") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
+            setPadding(dp(14), dp(10), dp(14), dp(18))
+            setBackgroundColor(ink)
+        }
+        val header = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val back = TextView(context).apply {
+            text = tr("رجوع إلى الأقسام")
+            textSize = 12f
+            setTextColor(silver)
+            gravity = Gravity.CENTER
+            setPadding(dp(14), dp(11), dp(14), dp(11))
+            background = rounded(panel, 14)
+            isClickable = true
+            isFocusable = true
+            setOnClickListener { selected = "ALL"; showFullScreenSections() }
+        }
+        header.addView(back)
+        header.addView(makeText(title, 20f, silver, true), LinearLayout.LayoutParams(0, -2, 1f).apply {
+            marginStart = dp(12)
+        })
+        root.addView(header, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(13) })
+
+        val sectionFilters = LinearLayout(context).apply { visibility = View.GONE }
+        val sectionCount = makeText("0 " + tr("لعبة"), 11f, gray, true)
+        val sectionGames = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(0, dp(4), 0, dp(18))
+        }
+        setFilters(sectionFilters)
+        setCountText(sectionCount)
+        setGameList(sectionGames)
+        renderGames()
+        root.addView(sectionCount, LinearLayout.LayoutParams(-1, -2).apply {
+            bottomMargin = dp(8)
+        })
+        root.addView(sectionGames, LinearLayout.LayoutParams(-1, -2))
+        val scroll = ScrollView(context).apply {
+            isFillViewport = true
+            isVerticalScrollBarEnabled = false
+            clipToPadding = false
+            addView(root, ViewGroup.LayoutParams(-1, -2))
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(scroll) { _, insets ->
+            val safeTop = insets.getInsets(WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.displayCutout()).top
+            val safeBottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars() or WindowInsetsCompat.Type.mandatorySystemGestures()).bottom
+            root.setPadding(dp(14), dp(10) + safeTop, dp(14), dp(18) + safeBottom)
+            insets
+        }
+        applyTypography(scroll)
+        setContentView(scroll)
+        ViewCompat.requestApplyInsets(scroll)
+        applyUnifiedSkin(scroll)
+        applyMotionPreferences(scroll)
+    }
+
     fun create() {
         // Blog posts are included in ALL; normalize any previously saved Blog filter.
         if (selected in setOf("BLOG", "PS2_ARABIC", "PS2_PORT_PS4", "PS2_PORT_PS3")) selected = "ALL"
@@ -577,6 +730,26 @@ internal class MainLibraryInterfaceController(
                 popularScroll.scrollTo(initialTarget.coerceIn(0, maxScroll), 0)
                 updatePopularFocus()
             }
+        }
+
+        if (selected == "ALL") {
+            val openSections = TextView(context).apply {
+                text = tr("عرض جميع الأقسام") + "  ›"
+                textSize = 13f
+                typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
+                gravity = Gravity.CENTER
+                setTextColor(silver)
+                setPadding(dp(16), dp(13), dp(16), dp(13))
+                background = rounded(glass, 16).apply {
+                    setStroke(dp(1), if (isDarkMode()) Color.argb(155, 130, 138, 151) else Color.argb(165, 160, 168, 181))
+                }
+                isClickable = true
+                isFocusable = true
+                setOnClickListener { showFullScreenSections() }
+            }
+            root.addView(openSections, LinearLayout.LayoutParams(-1, -2).apply {
+                bottomMargin = dp(14)
+            })
         }
 
         val filterScroll = HorizontalScrollView(context).apply {
