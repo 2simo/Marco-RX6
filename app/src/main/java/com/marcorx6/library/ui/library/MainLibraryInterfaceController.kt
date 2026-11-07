@@ -732,26 +732,6 @@ internal class MainLibraryInterfaceController(
             }
         }
 
-        if (selected == "ALL") {
-            val openSections = TextView(context).apply {
-                text = tr("عرض جميع الأقسام") + "  ›"
-                textSize = 13f
-                typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
-                gravity = Gravity.CENTER
-                setTextColor(silver)
-                setPadding(dp(16), dp(13), dp(16), dp(13))
-                background = rounded(glass, 16).apply {
-                    setStroke(dp(1), if (isDarkMode()) Color.argb(155, 130, 138, 151) else Color.argb(165, 160, 168, 181))
-                }
-                isClickable = true
-                isFocusable = true
-                setOnClickListener { showFullScreenSections() }
-            }
-            root.addView(openSections, LinearLayout.LayoutParams(-1, -2).apply {
-                bottomMargin = dp(14)
-            })
-        }
-
         val filterScroll = HorizontalScrollView(context).apply {
             isHorizontalScrollBarEnabled = false
             clipToPadding = false
@@ -817,6 +797,26 @@ internal class MainLibraryInterfaceController(
         section.addView(titles, LinearLayout.LayoutParams(0, -2, 1f))
         countText = makeText("0 " + tr("لعبة"), 10f, muted, true)
         section.addView(countText)
+        if (selected == "ALL") {
+            val openSections = TextView(context).apply {
+                text = "▦  " + tr("الأقسام")
+                textSize = 11f
+                typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
+                gravity = Gravity.CENTER
+                setTextColor(silver)
+                setPadding(dp(11), dp(9), dp(11), dp(9))
+                background = rounded(glass, 13).apply {
+                    setStroke(dp(1), if (isDarkMode()) Color.argb(155, 130, 138, 151) else Color.argb(165, 160, 168, 181))
+                }
+                isClickable = true
+                isFocusable = true
+                contentDescription = tr("عرض جميع الأقسام بملء الشاشة")
+                setOnClickListener { showFullScreenSections() }
+            }
+            section.addView(openSections, LinearLayout.LayoutParams(-2, dp(44)).apply {
+                marginStart = dp(8)
+            })
+        }
         val sort = ImageView(context).apply {
             setImageResource(R.drawable.ic_action_sort)
             imageTintList = android.content.res.ColorStateList.valueOf(silver)
