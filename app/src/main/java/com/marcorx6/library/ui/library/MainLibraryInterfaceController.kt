@@ -425,7 +425,7 @@ internal class MainLibraryInterfaceController(
             fun updatePopularFocus() {
                 val viewportCenter = popularScroll.scrollX +
                     (popularScroll.width / 2f) - popularScroll.paddingLeft
-                val focusRange = (popularScroll.width * 0.72f).coerceAtLeast(1).toFloat()
+                val focusRange = (popularScroll.width * 0.72f).coerceAtLeast(1f)
                 popularCards.forEach { card ->
                     val cardCenter = card.left + card.width / 2f
                     val distance = kotlin.math.abs(viewportCenter - cardCenter)
