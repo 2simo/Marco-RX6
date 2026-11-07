@@ -295,13 +295,15 @@ internal class GameLibraryRenderer(
 
                 val meta = listOf(game.genre, game.releaseYear)
                     .map { it.trim() }.filter { it.isNotBlank() }.joinToString(" • ")
-                if (meta.isNotBlank()) {
-                    card.addView(makeText(meta, 9f, gray, false).apply {
-                        maxLines = 1
-                        ellipsize = android.text.TextUtils.TruncateAt.END
-                        setPadding(dp(3), 0, dp(3), dp(4))
-                    })
-                }
+                // Reserve the same metadata row on every card. Without this, cards
+                // with no genre/year become shorter and their rating/view metrics
+                // no longer line up across the horizontal carousel.
+                card.addView(makeText(meta.ifBlank { " " }, 9f, gray, false).apply {
+                    minLines = 1
+                    maxLines = 1
+                    ellipsize = android.text.TextUtils.TruncateAt.END
+                    setPadding(dp(3), 0, dp(3), dp(4))
+                })
 
                 val engagement = LinearLayout(activity).apply {
                     orientation = LinearLayout.HORIZONTAL
