@@ -79,4 +79,32 @@ class LanguageTranslatorTest {
         assertEquals("Télécharger le modèle de traduction", LanguageTranslator.translate(source, "fr"))
         assertEquals("Descargar el modelo de traducción", LanguageTranslator.translate(source, "es"))
     }
+
+    @Test
+    fun keepsTheCanonicalTranslationForPreviouslyDuplicatedKeys() {
+        assertEquals(
+            "Personaliza MARCO a tu manera",
+            LanguageTranslator.translate("خصص تجربة MARCO بالطريقة التي تناسبك", "es")
+        )
+        assertEquals(
+            "Volver a intentar",
+            LanguageTranslator.translate("إعادة المحاولة", "es")
+        )
+        assertEquals(
+            "Todo listo",
+            LanguageTranslator.translate("جاهز للانطلاق", "es")
+        )
+        assertEquals(
+            "Previous",
+            LanguageTranslator.translate("السابق", "en")
+        )
+        assertEquals(
+            "Interface animations and transitions",
+            LanguageTranslator.translate("حركات وانتقالات الواجهة", "en")
+        )
+        assertEquals(
+            "Interface transitions enabled",
+            LanguageTranslator.translate("تم تفعيل انتقالات الواجهة", "en")
+        )
+    }
 }
