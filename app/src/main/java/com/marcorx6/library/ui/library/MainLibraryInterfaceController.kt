@@ -16,8 +16,10 @@ import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.Gravity
+import android.graphics.Rect
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.*
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -75,6 +77,49 @@ internal class MainLibraryInterfaceController(
 
     private fun makeText(value: String, size: Float, color: Int, bold: Boolean = false): TextView =
         createText(value, size, color, bold)
+
+    private fun loadCoverWhenVisible(image: ImageView, localPath: String, imageUrl: String) {
+        var requested = false
+        var observer: ViewTreeObserver? = null
+        lateinit var checkVisibility: () -> Unit
+        val scrollListener = ViewTreeObserver.OnScrollChangedListener { checkVisibility() }
+
+        fun removeObserver() {
+            observer?.takeIf { it.isAlive }?.removeOnScrollChangedListener(scrollListener)
+            observer = null
+        }
+
+        val attachListener = object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(view: View) {
+                observer = view.viewTreeObserver
+                if (observer?.isAlive == true) observer?.addOnScrollChangedListener(scrollListener)
+                view.post { checkVisibility() }
+            }
+
+            override fun onViewDetachedFromWindow(view: View) {
+                removeObserver()
+            }
+        }
+
+        checkVisibility = {
+            if (!requested && image.isAttachedToWindow) {
+                val visible = Rect()
+                if (image.getGlobalVisibleRect(visible) && visible.width() > 0 && visible.height() > 0) {
+                    requested = true
+                    removeObserver()
+                    image.removeOnAttachStateChangeListener(attachListener)
+                    loadCover(image, localPath, imageUrl)
+                }
+            }
+        }
+
+        image.addOnAttachStateChangeListener(attachListener)
+        if (image.isAttachedToWindow) {
+            observer = image.viewTreeObserver
+            if (observer?.isAlive == true) observer?.addOnScrollChangedListener(scrollListener)
+            image.post { checkVisibility() }
+        }
+    }
 
     fun dispose() {
         searchRenderRunnable?.let(mainHandler::removeCallbacks)
@@ -165,7 +210,7 @@ internal class MainLibraryInterfaceController(
                     background = rounded(ink, 12)
                 }
                 if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) {
-                    loadCover(cover, game.coverLocalPath, game.coverUrl)
+                    loadCoverWhenVisible(cover, game.coverLocalPath, game.coverUrl)
                 } else {
                     cover.setImageResource(android.R.drawable.ic_menu_gallery)
                     cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
