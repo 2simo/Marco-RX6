@@ -34,4 +34,22 @@ class LanguageTranslatorTest {
             LanguageTranslator.translate("تعذر التحقق من رابط الصورة (HTTP 404، النوع: text/html)", "es")
         )
     }
+    @Test
+    fun translatesAllLibrarySectionHeadingsIntoSupportedLanguages() {
+        val search = "MARCO  /  البحث الذكي"
+        assertEquals("MARCO  /  SMART SEARCH", LanguageTranslator.translate(search, "en"))
+        assertEquals("MARCO  /  RECHERCHE INTELLIGENTE", LanguageTranslator.translate(search, "fr"))
+        assertEquals("MARCO  /  BÚSQUEDA INTELIGENTE", LanguageTranslator.translate(search, "es"))
+
+        val hub = "MARCO  /  مركز الألعاب الرسمي"
+        assertEquals("MARCO  /  OFFICIAL GAME HUB", LanguageTranslator.translate(hub, "en"))
+        assertEquals("MARCO  /  CENTRE DE JEUX OFFICIEL", LanguageTranslator.translate(hub, "fr"))
+        assertEquals("MARCO  /  CENTRO OFICIAL DE JUEGOS", LanguageTranslator.translate(hub, "es"))
+
+        val games = "MARCO  /  الألعاب"
+        assertEquals("MARCO  /  GAMES", LanguageTranslator.translate(games, "en"))
+        assertEquals("MARCO  /  JEUX", LanguageTranslator.translate(games, "fr"))
+        assertEquals("MARCO  /  JUEGOS", LanguageTranslator.translate(games, "es"))
+    }
+
 }
