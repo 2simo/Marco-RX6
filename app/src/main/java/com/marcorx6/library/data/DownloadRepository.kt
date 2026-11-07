@@ -32,6 +32,7 @@ internal data class DownloadEntry(
 
 internal sealed class DownloadStartResult {
     data class Enqueued(val title: String) : DownloadStartResult()
+    data class AlreadyQueued(val title: String) : DownloadStartResult()
     data class OpenInBrowser(val finalUrl: String) : DownloadStartResult()
     data class Failed(val message: String) : DownloadStartResult()
     data class RefreshSource(val sourcePostUrl: String) : DownloadStartResult()
@@ -66,16 +67,21 @@ internal class DownloadRepository(context: Context) {
                     }
                     val finalTitle = probe.fileName ?: title.ifBlank { "MARCO" }
                     val cookie = CookieManager.getInstance().getCookie(probe.finalUrl).orEmpty()
+                    val duplicate = database.findActiveDuplicate(probe.finalUrl, sourcePostUrl)
+                    if (duplicate != null) {
+                        DownloadStartResult.AlreadyQueued(duplicate.title)
+                    } else {
                     val previous = database.findFailedBySource(sourcePostUrl)
                     if (previous != null) {
                         database.refreshSource(previous.id, probe.finalUrl, userAgent, cookie, referrer, probe.mimeType)
                         enqueueWork(previous.id, ExistingWorkPolicy.REPLACE)
                     } else {
-                        val id = System.currentTimeMillis().coerceAtLeast(1L)
+                        val id = database.nextId()
                         database.insert(id, probe.finalUrl, finalTitle, userAgent, cookie, referrer, probe.mimeType, sourcePostUrl)
                         enqueueWork(id, ExistingWorkPolicy.KEEP)
                     }
                     DownloadStartResult.Enqueued(finalTitle)
+                    }
                 }
             } catch (error: Exception) {
                 val message = error.message ?: "تعذر بدء تنزيل الملف"
