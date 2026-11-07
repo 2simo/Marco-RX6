@@ -348,6 +348,99 @@ internal class MainLibraryInterfaceController(
             bottomMargin = dp(15)
         })
 
+        // Featured cover-flow sits above platform filters and uses only real library entries.
+        val popularByPlatform = listOf("PS4", "PS3", "PS2").flatMap { platform ->
+            games().filter { GameLibraryManager.normalizePlatform(it.platform) == platform }
+                .sortedWith(compareByDescending<Game> { it.isFavorite }.thenBy { it.name.lowercase() })
+                .take(3)
+        }
+        if (popularByPlatform.isNotEmpty()) {
+            val popularHeader = LinearLayout(context).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(2), dp(3), dp(2), dp(7))
+            }
+            popularHeader.addView(makeText(tr("MARCO  /  مختارات المكتبة"), 8f, silverAccent, true).apply {
+                letterSpacing = 0.13f
+            })
+            popularHeader.addView(makeText(tr("الألعاب الأكثر شعبية"), 20f, silver, true))
+            root.addView(popularHeader, LinearLayout.LayoutParams(-1, -2).apply {
+                topMargin = dp(2)
+            })
+
+            val popularScroll = HorizontalScrollView(context).apply {
+                isHorizontalScrollBarEnabled = false
+                clipChildren = false
+                clipToPadding = false
+                overScrollMode = View.OVER_SCROLL_NEVER
+                setPadding(dp(12), dp(8), dp(12), dp(12))
+            }
+            val popularTrack = LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+            val popularCards = mutableListOf<View>()
+            popularByPlatform.forEach { game ->
+                val card = LinearLayout(context).apply {
+                    orientation = LinearLayout.VERTICAL
+                    gravity = Gravity.CENTER_HORIZONTAL
+                    setPadding(dp(7), dp(7), dp(7), dp(9))
+                    background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                        intArrayOf(Color.argb(150, 37, 40, 47), Color.argb(90, 16, 18, 23))).apply {
+                        cornerRadius = dp(20).toFloat()
+                        setStroke(dp(1), Color.argb(110, 145, 153, 166))
+                    }
+                    isClickable = true
+                    isFocusable = true
+                    setOnClickListener { showDetails(game) }
+                }
+                val cover = ImageView(context).apply {
+                    scaleType = ImageView.ScaleType.CENTER_CROP
+                    background = rounded(ink, 15)
+                    clipToOutline = true
+                }
+                if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) {
+                    loadCover(cover, game.coverLocalPath, game.coverUrl)
+                } else {
+                    cover.setImageResource(android.R.drawable.ic_menu_gallery)
+                    cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                }
+                card.addView(cover, LinearLayout.LayoutParams(dp(218), dp(276)))
+                card.addView(makeText(game.name, 13f, silver, true).apply {
+                    gravity = Gravity.CENTER
+                    maxLines = 2
+                    setPadding(dp(5), dp(8), dp(5), dp(2))
+                }, LinearLayout.LayoutParams(dp(218), -2))
+                card.addView(makeText(GameLibraryManager.normalizePlatform(game.platform) ?: game.platform,
+                    10f, muted, true).apply { gravity = Gravity.CENTER },
+                    LinearLayout.LayoutParams(-1, -2))
+                popularTrack.addView(card, LinearLayout.LayoutParams(dp(234), -2).apply {
+                    marginStart = dp(7)
+                    marginEnd = dp(7)
+                })
+                popularCards.add(card)
+            }
+            popularScroll.addView(popularTrack)
+            popularScroll.setOnScrollChangeListener { view, _, scrollX, _, _ ->
+                val center = scrollX + view.width / 2f
+                popularCards.forEach { card ->
+                    val cardCenter = card.left + card.width / 2f
+                    val distance = kotlin.math.abs(center - cardCenter) / view.width.coerceAtLeast(1)
+                    val emphasis = (1f - distance * 0.75f).coerceIn(0.58f, 1f)
+                    card.alpha = emphasis
+                    card.scaleX = 0.94f + emphasis * 0.06f
+                    card.scaleY = 0.94f + emphasis * 0.06f
+                }
+            }
+            root.addView(popularScroll, LinearLayout.LayoutParams(-1, -2).apply {
+                bottomMargin = dp(8)
+            })
+            popularScroll.post {
+                val first = popularCards.firstOrNull() ?: return@post
+                popularScroll.smoothScrollTo(
+                    (first.left + first.width / 2 - popularScroll.width / 2).coerceAtLeast(0), 0
+                )
+            }
+        }
 
         val filterScroll = HorizontalScrollView(context).apply {
             isHorizontalScrollBarEnabled = false
