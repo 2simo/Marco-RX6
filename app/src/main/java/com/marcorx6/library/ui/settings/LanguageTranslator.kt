@@ -478,6 +478,8 @@ internal object LanguageTranslator {
             "الإعدادات" to listOf("Settings", "Paramètres", "Ajustes"),
             "YOUR NEXT GAME STARTS HERE" to listOf("YOUR NEXT GAME STARTS HERE", "VOTRE PROCHAIN JEU COMMENCE ICI", "TU PRÓXIMO JUEGO EMPIEZA AQUÍ"),
             "اكتشف عالم الألعاب" to listOf("Discover the world of games", "Découvrez l’univers des jeux", "Descubre el mundo de los juegos"),
+            "مختارات المكتبة" to listOf("LIBRARY PICKS", "SÉLECTION DE LA BIBLIOTHÈQUE", "SELECCIÓN DE LA BIBLIOTECA"),
+            "الألعاب الأكثر شعبية" to listOf("Most popular games", "Jeux les plus populaires", "Juegos más populares"),
             "تصفح مكتبتك واختر مغامرتك القادمة" to listOf("Browse your library and choose your next adventure", "Parcourez votre bibliothèque et choisissez votre prochaine aventure", "Explora tu biblioteca y elige tu próxima aventura"),
             "اختر المنصة" to listOf("Choose a platform", "Choisir une plateforme", "Elige una plataforma"),
             "الترتيب:" to listOf("Sort:", "Tri :", "Orden:"),
