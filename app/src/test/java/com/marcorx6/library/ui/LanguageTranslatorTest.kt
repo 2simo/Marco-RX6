@@ -155,4 +155,12 @@ class LanguageTranslatorTest {
             LanguageTranslator.translate("جارٍ الاتصال بمدونة MARCO RX6...", "es")
         )
     }
+
+    @Test
+    fun translatesDynamicOnboardingStepNumbers() {
+        assertEquals("Step 2", LanguageTranslator.translate("خطوة 2", "en"))
+        assertEquals("Étape 3", LanguageTranslator.translate("خطوة 3", "fr"))
+        assertEquals("Paso 4", LanguageTranslator.translate("خطوة 4", "es"))
+        assertEquals("خطوة 4", LanguageTranslator.translate("خطوة 4", "ar"))
+    }
 }
