@@ -582,7 +582,6 @@ internal object LanguageTranslator {
             "حول التطبيق" to listOf("About app", "À propos de l’application", "Acerca de la aplicación"),
             "إغلاق الإعدادات" to listOf("Close settings", "Fermer les paramètres", "Cerrar ajustes"),
             "اللون الرئيسي" to listOf("Primary color", "Couleur principale", "Color principal"),
-            "أزرق كهربائي  •  اللون الرسمي للتطبيق" to listOf("Electric blue • Official app color", "Bleu électrique • Couleur officielle", "Azul eléctrico • Color oficial"),
             "●   فضي" to listOf("●   Silver", "●   Argent", "●   Plateado"),
             "حركات وانتقالات الواجهة" to listOf("Interface animations and transitions", "Animations et transitions de l’interface", "Animaciones y transiciones de la interfaz"),
             "الحركات مفعّلة  ✓" to listOf("Animations enabled ✓", "Animations activées ✓", "Animaciones activadas ✓"),
