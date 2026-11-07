@@ -54,10 +54,14 @@ internal class DownloadUiController(
         ) { result ->
             activity.runOnUiThread {
                 when (result) {
-                    is DownloadStartResult.Enqueued ->
+                    is DownloadStartResult.Enqueued -> {
                         Toast.makeText(activity, translate("تم التحقق من الملف وإضافته إلى مدير التنزيلات"), Toast.LENGTH_LONG).show()
-                    is DownloadStartResult.AlreadyQueued ->
+                        DownloadMiniPanelDialog(activity, downloadRepository, translate, isDarkMode).show()
+                    }
+                    is DownloadStartResult.AlreadyQueued -> {
                         Toast.makeText(activity, translate("هذا التنزيل موجود بالفعل في قائمة التنزيلات") + ": " + result.title, Toast.LENGTH_LONG).show()
+                        DownloadMiniPanelDialog(activity, downloadRepository, translate, isDarkMode).show()
+                    }
                     is DownloadStartResult.OpenInBrowser -> {
                         Toast.makeText(activity, translate("هذا رابط صفحة تحميل؛ افتح الصفحة لإكمال الخطوات واختيار الملف المباشر"), Toast.LENGTH_LONG).show()
                         DownloadPageDialog(activity, translate).show(result.finalUrl, title) { url, gameTitle, userAgent, disposition, mimeType, pageUrl ->
@@ -118,6 +122,37 @@ internal class DownloadUiController(
             setPadding(0, dp(4), 0, 0)
         })
         header.addView(titleBox, LinearLayout.LayoutParams(0, -2, 1f))
+        val concurrencyButton = TextView(activity).apply {
+            text = "×${downloadRepository.maxConcurrentDownloads()}"
+            textSize = 12f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(primary)
+            gravity = Gravity.CENTER
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            background = GradientDrawable().apply {
+                setColor(surface)
+                cornerRadius = dp(12).toFloat()
+                setStroke(dp(1), if (dark) Color.rgb(78, 85, 98) else Color.rgb(210, 216, 225))
+            }
+            setOnClickListener {
+                val options = arrayOf("1", "2", "3", "4", "5")
+                val selected = downloadRepository.maxConcurrentDownloads() - 1
+                val picker = AlertDialog.Builder(activity)
+                    .setTitle(translate("عدد التنزيلات المتزامنة"))
+                    .setSingleChoiceItems(options, selected) { dialog, which ->
+                        val value = which + 1
+                        downloadRepository.setMaxConcurrentDownloads(value)
+                        text = "×$value"
+                        Toast.makeText(activity, translate("تم تحديث عدد التنزيلات المتزامنة"), Toast.LENGTH_SHORT).show()
+                        dialog.dismiss()
+                    }
+                    .setNegativeButton(translate("إلغاء"), null)
+                    .create()
+                styleDialog(picker)
+                picker.show()
+            }
+        }
+        header.addView(concurrencyButton, LinearLayout.LayoutParams(-2, dp(44)).apply { marginEnd = dp(7) })
         header.addView(android.widget.ImageView(activity).apply {
             setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
             imageTintList = android.content.res.ColorStateList.valueOf(primary)
@@ -190,7 +225,7 @@ internal class DownloadUiController(
 
         fun updateProgress(item: com.marcorx6.library.data.DownloadEntry, views: RowViews) {
             val statusLabel = when (item.status) {
-                DownloadManager.STATUS_PENDING -> translate("في الانتظار")
+                DownloadManager.STATUS_PENDING, com.marcorx6.library.data.DownloadDatabase.STATUS_SCHEDULED -> translate("في الانتظار")
                 DownloadManager.STATUS_RUNNING -> translate("قيد التنزيل")
                 DownloadManager.STATUS_PAUSED -> translate("متوقف مؤقتاً")
                 DownloadManager.STATUS_SUCCESSFUL -> translate("اكتمل")
@@ -247,7 +282,7 @@ internal class DownloadUiController(
             if (views.details.text.toString() != detailsText) views.details.text = detailsText
             // Avoid invalidating the progress widget when the polled value did not change.
             val hasProgress = item.status == DownloadManager.STATUS_RUNNING ||
-                item.status == DownloadManager.STATUS_PENDING || item.status == DownloadManager.STATUS_PAUSED
+                item.status == DownloadManager.STATUS_PENDING || item.status == com.marcorx6.library.data.DownloadDatabase.STATUS_SCHEDULED || item.status == DownloadManager.STATUS_PAUSED
             val progressVisibility = if (hasProgress) View.VISIBLE else View.GONE
             if (views.progress.visibility != progressVisibility) views.progress.visibility = progressVisibility
             val indeterminate = item.status == DownloadManager.STATUS_RUNNING && item.totalBytes <= 0L
@@ -293,7 +328,7 @@ internal class DownloadUiController(
                     }
                 })
             }
-            if (item.status == DownloadManager.STATUS_RUNNING || item.status == DownloadManager.STATUS_PENDING) {
+            if (item.status == DownloadManager.STATUS_RUNNING || item.status == DownloadManager.STATUS_PENDING || item.status == com.marcorx6.library.data.DownloadDatabase.STATUS_SCHEDULED) {
                 addAction(smallAction(translate("إيقاف مؤقت")) {
                     if (downloadRepository.pauseDownload(item.id)) {
                         lastSpeedSample.remove(item.id); render?.invoke()
@@ -316,7 +351,7 @@ internal class DownloadUiController(
                 })
             }
             if (item.status == DownloadManager.STATUS_RUNNING || item.status == DownloadManager.STATUS_PENDING ||
-                item.status == DownloadManager.STATUS_PAUSED) {
+                item.status == com.marcorx6.library.data.DownloadDatabase.STATUS_SCHEDULED || item.status == DownloadManager.STATUS_PAUSED) {
                 addAction(smallAction(translate("إلغاء التنزيل")) {
                     if (downloadRepository.deleteDownload(item.id)) {
                         lastSpeedSample.remove(item.id); render?.invoke()
