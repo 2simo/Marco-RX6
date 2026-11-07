@@ -107,4 +107,20 @@ class LanguageTranslatorTest {
             LanguageTranslator.translate("تم تفعيل انتقالات الواجهة", "en")
         )
     }
+
+    @Test
+    fun translatesDynamicBlockedRequestCountWithoutChangingItsValue() {
+        assertEquals(
+            "Ads and trackers blocked: 17",
+            LanguageTranslator.translate("الإعلانات والمتتبعات المحجوبة: 17", "en")
+        )
+        assertEquals(
+            "Publicités et traceurs bloqués : 17",
+            LanguageTranslator.translate("الإعلانات والمتتبعات المحجوبة: 17", "fr")
+        )
+        assertEquals(
+            "Anuncios y rastreadores bloqueados: 17",
+            LanguageTranslator.translate("الإعلانات والمتتبعات المحجوبة: 17", "es")
+        )
+    }
 }
