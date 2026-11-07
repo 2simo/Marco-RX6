@@ -33,21 +33,6 @@ internal class BloggerFeedClient(
             "PS3_ARABIC",
             listOf("بلايستيشن 3 معربة", "ps3arabic", "PS3 Arabic")
         ),
-        SectionFeed(
-            "بلاي ستيشن 2 معربة",
-            "PS2_ARABIC",
-            listOf("PlayStation 2 — PlayStation 2 معربة", "ps2arabic", "PS2 ARABIC", "PS2 Arabic")
-        ),
-        SectionFeed(
-            "PlayStation 2 — PlayStation 2 PS3",
-            "PS2_PORT_PS3",
-            listOf("ps2ps3", "PS2 PORT PS3")
-        ),
-        SectionFeed(
-            "PlayStation 2 — PlayStation 2 PS4",
-            "PS2_PORT_PS4",
-            listOf("ps2ps4", "PS2 PORT PS4")
-        )
     )
 
     fun fetch(): BloggerFeedResult {
