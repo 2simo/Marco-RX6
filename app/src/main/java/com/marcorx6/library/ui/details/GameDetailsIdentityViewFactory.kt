@@ -15,15 +15,25 @@ internal class GameDetailsIdentityViewFactory(
     private val makeText: (String, Float, Int, Boolean) -> TextView,
     private val isDarkMode: () -> Boolean,
     private val loadCover: (ImageView, String, String) -> Unit,
+    private val loadDownloads: (Game, (Long) -> Unit) -> Unit,
     private val translate: (String) -> String
 ) {
     fun create(game: Game): LinearLayout {
         val dark = isDarkMode()
         val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
         val primary = if (dark) Color.rgb(244, 247, 252) else Color.rgb(25, 29, 36)
+        val cardColor = if (dark) Color.rgb(25, 28, 34) else Color.rgb(242, 244, 247)
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(13), dp(13), dp(13), dp(13))
+            layoutDirection = android.view.View.LAYOUT_DIRECTION_LOCALE
+        }
+
+        // Compact identity header: cover and title side by side, with a real download counter.
+        val gameCard = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            layoutDirection = android.view.View.LAYOUT_DIRECTION_LOCALE
+            setPadding(dp(12), dp(12), dp(12), dp(12))
             background = GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
                 if (dark) intArrayOf(Color.rgb(25, 28, 34), Color.rgb(8, 9, 12))
@@ -32,28 +42,80 @@ internal class GameDetailsIdentityViewFactory(
                 cornerRadius = dp(22).toFloat()
                 setStroke(dp(1), if (dark) Color.argb(170, 130, 138, 151) else Color.rgb(160, 168, 181))
             }
-            elevation = dp(4).toFloat()
+            elevation = dp(3).toFloat()
         }
 
         val cover = ImageView(activity).apply {
-            scaleType = ImageView.ScaleType.FIT_CENTER
-            adjustViewBounds = true
-            maxHeight = dp(270)
+            scaleType = ImageView.ScaleType.CENTER_CROP
             background = GradientDrawable().apply {
                 setColor(if (dark) Color.rgb(35, 38, 45) else Color.rgb(222, 226, 232))
-                cornerRadius = dp(15).toFloat()
+                cornerRadius = dp(13).toFloat()
             }
             clipToOutline = true
-            contentDescription = game.name
+            contentDescription = "${translate("غلاف اللعبة")} ${game.name}"
         }
         if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) {
             loadCover(cover, game.coverLocalPath, game.coverUrl)
         } else {
             cover.setImageResource(android.R.drawable.ic_menu_gallery)
         }
-        root.addView(cover, LinearLayout.LayoutParams(dp(180), dp(270)).apply {
-            gravity = android.view.Gravity.CENTER_HORIZONTAL
+        gameCard.addView(cover, LinearLayout.LayoutParams(dp(112), dp(168)))
+
+        val identityInfo = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(dp(13), dp(3), dp(3), dp(3))
+        }
+        identityInfo.addView(makeText(game.name, 17f, primary, true).apply {
+            gravity = android.view.Gravity.START
+            textAlignment = android.view.View.TEXT_ALIGNMENT_VIEW_START
+            maxLines = 3
+            setLineSpacing(dp(1).toFloat(), 1.02f)
+            setPadding(0, 0, 0, dp(3))
+            contentDescription = game.name
+        }, LinearLayout.LayoutParams(-1, -2))
+
+        if (game.platform.isNotBlank()) {
+            identityInfo.addView(makeText(translate(game.platform), 11f, muted, false).apply {
+                gravity = android.view.Gravity.START
+                textAlignment = android.view.View.TEXT_ALIGNMENT_VIEW_START
+                maxLines = 1
+                setPadding(0, 0, 0, dp(8))
+            }, LinearLayout.LayoutParams(-1, -2))
+        }
+
+        val downloadRow = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(dp(7), dp(5), dp(8), dp(5))
+            background = GradientDrawable().apply {
+                setColor(if (dark) Color.rgb(43, 47, 55) else Color.WHITE)
+                cornerRadius = dp(12).toFloat()
+                setStroke(dp(1), if (dark) Color.rgb(75, 80, 90) else Color.rgb(211, 215, 222))
+            }
+            contentDescription = translate("عدد التنزيلات")
+        }
+        val downloadIcon = ImageView(activity).apply {
+            setImageResource(com.marcorx6.library.R.drawable.ic_action_download)
+            contentDescription = null
+        }
+        downloadRow.addView(downloadIcon, LinearLayout.LayoutParams(dp(16), dp(16)))
+        val downloadCount = makeText(translate("التنزيلات: 0"), 11f, primary, true).apply {
+            setPadding(dp(6), 0, 0, 0)
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+        }
+        downloadRow.addView(downloadCount, LinearLayout.LayoutParams(-2, -2))
+        identityInfo.addView(downloadRow, LinearLayout.LayoutParams(-2, -2))
+        gameCard.addView(identityInfo, LinearLayout.LayoutParams(0, -2, 1f))
+        root.addView(gameCard, LinearLayout.LayoutParams(-1, -2).apply {
+            bottomMargin = dp(12)
         })
+        loadDownloads(game) { count ->
+            activity.runOnUiThread {
+                downloadCount.text = "${translate("التنزيلات")}: ${count.coerceAtLeast(0)}"
+            }
+        }
 
         val details = extractGameDetails(game)
         if (details.isNotEmpty()) {
@@ -61,10 +123,11 @@ internal class GameDetailsIdentityViewFactory(
                 orientation = LinearLayout.VERTICAL
                 setPadding(dp(13), dp(12), dp(13), dp(12))
                 background = GradientDrawable().apply {
-                    setColor(if (dark) Color.rgb(25, 28, 34) else Color.rgb(242, 244, 247))
-                    cornerRadius = dp(16).toFloat()
+                    setColor(cardColor)
+                    cornerRadius = dp(18).toFloat()
                     setStroke(dp(1), if (dark) Color.rgb(75, 80, 90) else Color.rgb(211, 215, 222))
                 }
+                elevation = dp(2).toFloat()
             }
             infoCard.addView(makeText(translate("معلومات اللعبة"), 16f, primary, true).apply {
                 setPadding(0, 0, 0, dp(10))
@@ -81,15 +144,12 @@ internal class GameDetailsIdentityViewFactory(
                 cell.addView(makeText(translate(item.first), 12f, muted, false).apply {
                     textDirection = android.view.View.TEXT_DIRECTION_FIRST_STRONG
                     gravity = android.view.Gravity.START
-                    includeFontPadding = true
                 }, LinearLayout.LayoutParams(-1, -2))
                 cell.addView(makeText(item.second, 15f, primary, true).apply {
                     textDirection = android.view.View.TEXT_DIRECTION_FIRST_STRONG
                     gravity = android.view.Gravity.START
                     textAlignment = android.view.View.TEXT_ALIGNMENT_VIEW_START
-                    includeFontPadding = true
                     setPadding(0, dp(4), 0, 0)
-                    // Keep the complete value visible, even when it needs several lines.
                     maxLines = Int.MAX_VALUE
                     ellipsize = null
                     setHorizontallyScrolling(false)
@@ -98,8 +158,16 @@ internal class GameDetailsIdentityViewFactory(
                     bottomMargin = dp(8)
                 })
             }
-            root.addView(infoCard, LinearLayout.LayoutParams(-1, -2).apply {
-                bottomMargin = dp(12)
+            root.addView(infoCard, LinearLayout.LayoutParams(-1, -2))
+        } else {
+            root.addView(makeText(
+                translate("لا تتوفر معلومات إضافية لهذه اللعبة"),
+                13f,
+                muted,
+                false
+            ).apply {
+                gravity = android.view.Gravity.CENTER
+                setPadding(dp(12), dp(12), dp(12), dp(12))
             })
         }
 
@@ -118,7 +186,9 @@ internal class GameDetailsIdentityViewFactory(
             "النوع" to game.genre,
             "سنة الإصدار" to game.releaseYear
         ).filterValues { it.isNotBlank() }.toMutableMap()
-        if (html.isBlank()) return stored.map { it.key to it.value }
+        if (html.isBlank()) return stored
+            .filterValues { !it.normalizedForDetails().equals(game.name.normalizedForDetails(), ignoreCase = true) }
+            .map { it.key to it.value }
         val fields = listOf(
             "الحجم" to listOf("الحجم", "حجم", "size"),
             "النسخة" to listOf("النسخة", "version", "title id", "cusa"),
@@ -133,8 +203,6 @@ internal class GameDetailsIdentityViewFactory(
             value, Html.FROM_HTML_MODE_LEGACY
         ).toString().replace('\u00a0', ' ').replace(Regex("\\s+"), " ").trim()
 
-        // Blogger commonly puts every field in its own <li>. Parse each item
-        // independently so a missing newline cannot merge the next field into it.
         val entries = linkedMapOf<String, String>().apply { putAll(stored) }
         Regex("(?is)<li\\b[^>]*>(.*?)</li\\s*>").findAll(html).forEach { item ->
             val text = plainText(item.groupValues[1]).trim(' ', ':', '：', '-', '•')
@@ -146,7 +214,6 @@ internal class GameDetailsIdentityViewFactory(
             }
         }
 
-        // Fallback for articles that use paragraphs or plain text rather than list items.
         if (entries.size < fields.size) {
             val plain = plainText(
                 html.replace(Regex("(?i)<br\\s*/?>"), "\\n")
@@ -162,10 +229,15 @@ internal class GameDetailsIdentityViewFactory(
                 }
             }
         }
-        // Show only metadata that actually exists in the Blogger post. Placeholder
-        // rows made incomplete game records look like duplicated or fabricated data.
+        val normalizedGameName = game.name.normalizedForDetails()
         return fields.mapNotNull { (label, _) ->
-            entries[label]?.takeIf { it.isNotBlank() }?.let { value -> label to value }
+            entries[label]?.takeIf {
+                it.isNotBlank() &&
+                    !it.normalizedForDetails().equals(normalizedGameName, ignoreCase = true)
+            }?.let { value -> label to value }
         }
     }
+
+    private fun String.normalizedForDetails(): String =
+        replace(Regex("\\s+"), " ").trim().removeSuffix(".").removeSuffix(",")
 }

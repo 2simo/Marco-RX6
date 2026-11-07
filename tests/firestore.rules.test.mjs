@@ -194,6 +194,34 @@ describe("Firestore user isolation rules", () => {
     );
   });
 
+  it("allows one immutable game download metric per authenticated user", async () => {
+    const uid = "guest-downloader";
+    const db = testEnv.authenticatedContext(uid, {
+      firebase: { sign_in_provider: "anonymous" },
+    }).firestore();
+    const gameId = "e".repeat(64);
+    const download = doc(db, "gameMetrics/" + gameId + "/downloads/" + uid);
+
+    await assertSucceeds(setDoc(download, { uid, createdAt: serverTimestamp() }));
+    // The UID document path prevents the same account from inflating the count.
+    await assertFails(setDoc(download, { uid, createdAt: serverTimestamp() }));
+    await assertFails(updateDoc(download, { createdAt: serverTimestamp() }));
+    await assertFails(deleteDoc(download));
+    await assertFails(
+      setDoc(doc(db, "gameMetrics/" + gameId + "/downloads/another-user"), {
+        uid,
+        createdAt: serverTimestamp(),
+      }),
+    );
+    await assertFails(
+      setDoc(doc(db, "gameMetrics/not-a-sha256-id/downloads/" + uid), {
+        uid,
+        createdAt: serverTimestamp(),
+      }),
+    );
+    await assertSucceeds(getDoc(download));
+  });
+
   it("allows registered users to create and update only their own 1-to-5-star rating", async () => {
     const uid = "registered-rater";
     const db = testEnv.authenticatedContext(uid).firestore();

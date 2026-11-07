@@ -1,6 +1,7 @@
 package com.marcorx6.library.ui.details
 
 import android.app.Activity
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
@@ -26,16 +27,21 @@ internal class GameRatingViewFactory(
     fun create(game: Game): LinearLayout {
         val dark = isDarkMode()
         val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
+        val primary = if (dark) Color.rgb(244, 247, 252) else Color.rgb(25, 29, 36)
+        val silver = if (dark) Color.rgb(205, 211, 220) else Color.rgb(104, 113, 126)
         val card = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(14), dp(13), dp(14), dp(13))
+            setPadding(dp(13), dp(12), dp(13), dp(12))
             background = GradientDrawable().apply {
-                setColor(if (dark) Color.rgb(35, 38, 45) else Color.rgb(242, 244, 247))
-                cornerRadius = dp(16).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(130, 138, 151) else Color.rgb(160, 168, 181))
+                setColor(if (dark) Color.rgb(25, 28, 34) else Color.rgb(242, 244, 247))
+                cornerRadius = dp(18).toFloat()
+                setStroke(dp(1), if (dark) Color.rgb(75, 80, 90) else Color.rgb(211, 215, 222))
             }
+            elevation = dp(2).toFloat()
         }
-        card.addView(makeText(translate("قيّم هذه اللعبة"), 15f, white(), true))
+        card.addView(makeText(translate("قيّم هذه اللعبة"), 16f, primary, true).apply {
+            setPadding(0, 0, 0, dp(2))
+        })
         val registered = isRegisteredUser()
         card.addView(makeText(
             translate(
@@ -44,14 +50,21 @@ internal class GameRatingViewFactory(
             ),
             12f,
             muted,
-            true
-        ).apply { setPadding(0, dp(8), 0, dp(5)) })
+            false
+        ).apply { setPadding(0, dp(5), 0, dp(7)) })
 
         val ratingBar = RatingBar(activity, null, android.R.attr.ratingBarStyle).apply {
             numStars = 5
             stepSize = 1f
             setIsIndicator(!registered)
             rating = 0f
+            progressTintList = ColorStateList.valueOf(silver)
+            secondaryProgressTintList = ColorStateList.valueOf(
+                if (dark) Color.rgb(105, 112, 123) else Color.rgb(190, 196, 205)
+            )
+            progressBackgroundTintList = ColorStateList.valueOf(
+                if (dark) Color.rgb(65, 70, 79) else Color.rgb(215, 219, 226)
+            )
             contentDescription = translate("قيّم هذه اللعبة من نجمة إلى خمس نجوم")
         }
         card.addView(ratingBar, LinearLayout.LayoutParams(-2, -2).apply {

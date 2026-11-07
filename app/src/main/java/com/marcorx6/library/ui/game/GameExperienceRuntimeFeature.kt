@@ -41,7 +41,8 @@ internal class GameExperienceRuntimeFeature(
     private val applyUnifiedSkin: (android.view.View) -> Unit,
     private val showDetailsForDay: (Game) -> Unit,
     private val isRegisteredUser: () -> Boolean,
-    private val loadEngagementSummary: (Game, (Long, Double, Long) -> Unit) -> Unit,
+    private val loadEngagementSummary: (Game, (Long, Double, Long, Long) -> Unit) -> Unit,
+    private val recordDownload: (Game) -> Unit,
     private val loadMyRating: (Game, (Int?) -> Unit) -> Unit,
     private val submitRating: (Game, Int, (Boolean, String?) -> Unit) -> Unit,
     private val recordViewOnce: (Game) -> Unit
@@ -78,6 +79,7 @@ internal class GameExperienceRuntimeFeature(
             applyUnifiedSkin = applyUnifiedSkin,
             isRegisteredUser = isRegisteredUser,
             loadEngagementSummary = loadEngagementSummary,
+            recordDownload = recordDownload,
             loadMyRating = loadMyRating,
             submitRating = submitRating,
             recordViewOnce = recordViewOnce

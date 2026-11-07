@@ -39,11 +39,15 @@ internal class GameDetailsFeature(
     applyMotionPreferences: (View) -> Unit,
     applyUnifiedSkin: (View) -> Unit,
     isRegisteredUser: () -> Boolean,
-    loadEngagementSummary: (Game, (Long, Double, Long) -> Unit) -> Unit,
+    loadEngagementSummary: (Game, (Long, Double, Long, Long) -> Unit) -> Unit,
+    recordDownload: (Game) -> Unit,
     loadMyRating: (Game, (Int?) -> Unit) -> Unit,
     submitRating: (Game, Int, (Boolean, String?) -> Unit) -> Unit,
     recordViewOnce: (Game) -> Unit
 ) {
+    // The download dialog is created once, while the selected game changes per details screen.
+    private var activeGameForDownload: Game? = null
+
     private val favoriteToggleFactory = GameFavoriteToggleFactory(
         activity = activity,
         games = games,
@@ -70,6 +74,9 @@ internal class GameDetailsFeature(
         makeText = makeText,
         isDarkMode = isDarkMode,
         loadCover = loadCover,
+        loadDownloads = { target, callback ->
+            loadEngagementSummary(target) { _, _, _, downloads -> callback(downloads) }
+        },
         translate = tr
     )
 
@@ -81,6 +88,7 @@ internal class GameDetailsFeature(
         red = red,
         white = white,
         enqueueDownload = { url, label, sourcePostUrl ->
+            activeGameForDownload?.let(recordDownload)
             enqueueGameDownload(url, label, "", "", "", "", sourcePostUrl)
         },
         translate = tr
@@ -126,8 +134,12 @@ internal class GameDetailsFeature(
         deleteGame = deleteGame,
         applyMotionPreferences = applyMotionPreferences,
         applyUnifiedSkin = applyUnifiedSkin,
-        translate = tr
+        translate = tr,
+        isDarkMode = isDarkMode
     )
 
-    fun show(game: Game) = controller.show(game)
+    fun show(game: Game) {
+        activeGameForDownload = game
+        controller.show(game)
+    }
 }

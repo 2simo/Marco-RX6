@@ -18,7 +18,8 @@ internal class GameEngagementRepository(
     data class Summary(
         val views: Long = 0,
         val ratingAverage: Double = 0.0,
-        val ratingCount: Long = 0
+        val ratingCount: Long = 0,
+        val downloads: Long = 0
     )
 
     private fun gameId(game: Game): String {
@@ -52,6 +53,24 @@ internal class GameEngagementRepository(
         }
     }
 
+    fun recordDownload(game: Game): Task<Boolean> {
+        val user = auth.currentUser
+            ?: return Tasks.forException(IllegalStateException("لا توجد جلسة مستخدم"))
+        val download = gameDocument(game).collection("downloads").document(user.uid)
+        return firestore.runTransaction { transaction ->
+            val snapshot = transaction.get(download)
+            if (snapshot.exists()) {
+                false
+            } else {
+                transaction.set(download, mapOf(
+                    "uid" to user.uid,
+                    "createdAt" to FieldValue.serverTimestamp()
+                ))
+                true
+            }
+        }
+    }
+
     fun submitRating(game: Game, rating: Int): Task<Void> {
         val user = auth.currentUser
             ?: return Tasks.forException(IllegalStateException("سجّل الدخول أولاً"))
@@ -76,11 +95,21 @@ internal class GameEngagementRepository(
             .addOnSuccessListener { views ->
                 root.collection("ratings").get()
                     .addOnSuccessListener { ratings ->
-                        val values = ratings.documents.mapNotNull { document ->
-                            document.getLong("rating")?.takeIf { it in 1L..5L }
-                        }
-                        val average = if (values.isEmpty()) 0.0 else values.average()
-                        callback(Summary(views.count, average, values.size.toLong()))
+                        root.collection("downloads").count()
+                            .get(com.google.firebase.firestore.AggregateSource.SERVER)
+                            .addOnSuccessListener { downloads ->
+                                val values = ratings.documents.mapNotNull { document ->
+                                    document.getLong("rating")?.takeIf { it in 1L..5L }
+                                }
+                                val average = if (values.isEmpty()) 0.0 else values.average()
+                                callback(Summary(
+                                    views = views.count,
+                                    ratingAverage = average,
+                                    ratingCount = values.size.toLong(),
+                                    downloads = downloads.count
+                                ))
+                            }
+                            .addOnFailureListener(onError)
                     }
                     .addOnFailureListener(onError)
             }

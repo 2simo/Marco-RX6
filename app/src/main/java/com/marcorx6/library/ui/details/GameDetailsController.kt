@@ -4,6 +4,7 @@ import android.app.Activity
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.view.Gravity
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -26,9 +27,11 @@ internal class GameDetailsController(
     private val deleteGame: (Game) -> Unit,
     private val applyMotionPreferences: (android.view.View) -> Unit,
     private val applyUnifiedSkin: (android.view.View) -> Unit,
-    private val translate: (String) -> String
+    private val translate: (String) -> String,
+    private val isDarkMode: () -> Boolean
 ) {
     fun show(game: Game) {
+        // Keep view recording intact; its counter is presented on library cards, not here.
         recordViewOnce(game)
         val reader = android.app.Dialog(activity)
         val root = LinearLayout(activity).apply {
@@ -45,70 +48,78 @@ internal class GameDetailsController(
         }
         val content = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
+            setPadding(dp(14), dp(12), dp(14), dp(18))
         }
         contentScroll.addView(content, android.widget.FrameLayout.LayoutParams(-1, -2))
         root.addView(contentScroll, LinearLayout.LayoutParams(-1, 0, 1f))
 
-        val identity = identityViewFactory.create(game)
-        content.addView(identity, LinearLayout.LayoutParams(-1, -2).apply {
-            setMargins(dp(14), dp(12), dp(14), dp(8))
-        })
-        content.addView(ratingViewFactory.create(game), LinearLayout.LayoutParams(-1, -2).apply {
-            setMargins(dp(14), dp(0), dp(14), dp(12))
-        })
+        // Game identity and information, followed by the original download actions.
+        content.addView(identityViewFactory.create(game), LinearLayout.LayoutParams(-1, -2))
 
-        // Similar titles are displayed as image-cover cards immediately after
-        // the game's information card, without restoring the removed summary.
-        similarGamesViewFactory.create(game, games()) { selected ->
-            reader.dismiss()
-            show(selected)
-        }?.let { suggestions ->
-            content.addView(suggestions, LinearLayout.LayoutParams(-1, -2).apply {
-                bottomMargin = dp(10)
+        val sourceUrl = game.sourcePostUrl.ifBlank { game.url }
+        val downloadButtons = downloadLinksViewFactory.createFromHtml(
+            game.bloggerHtml, game.name, sourceUrl
+        ) ?: downloadLinksViewFactory.create(game.downloadLinks, game.name, sourceUrl)
+        downloadButtons?.let { buttons ->
+            content.addView(buttons, LinearLayout.LayoutParams(-1, -2).apply {
+                topMargin = dp(10)
             })
         }
 
-        // Management actions are visible only in an authenticated admin session.
+        // Keep user ratings and related games available in the details page.
+        content.addView(ratingViewFactory.create(game), LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(10)
+        })
+        similarGamesViewFactory.create(game, games()) { selected ->
+            reader.dismiss()
+            show(selected)
+        }?.let { similar ->
+            content.addView(similar, LinearLayout.LayoutParams(-1, -2).apply {
+                topMargin = dp(10)
+            })
+        }
+
+        // Preserve game-management actions for administrators, using the same
+        // neutral black/silver visual language as the redesigned details page.
         if (isAdmin()) {
             val adminActions = LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL
-                setPadding(dp(14), dp(5), dp(14), dp(10))
+                gravity = Gravity.CENTER
+                setPadding(dp(10), dp(8), dp(10), dp(8))
+                background = GradientDrawable().apply {
+                    setColor(if (isDarkMode()) Color.rgb(25, 28, 34) else Color.rgb(242, 244, 247))
+                    cornerRadius = dp(16).toFloat()
+                    setStroke(dp(1), if (isDarkMode()) Color.rgb(75, 80, 90) else Color.rgb(190, 196, 205))
+                }
             }
-            fun adminButton(label: String, action: () -> Unit, color: Int): TextView =
+            fun adminButton(label: String, action: () -> Unit): TextView =
                 TextView(activity).apply {
                     text = translate(label)
                     textSize = 14f
-                    gravity = android.view.Gravity.CENTER
-                    setTextColor(Color.WHITE)
+                    gravity = Gravity.CENTER
+                    setTextColor(if (isDarkMode()) Color.rgb(244, 247, 252) else Color.rgb(25, 29, 36))
                     setTypeface(null, Typeface.BOLD)
-                    setPadding(dp(12), dp(13), dp(12), dp(13))
+                    setPadding(dp(12), dp(12), dp(12), dp(12))
                     background = GradientDrawable().apply {
-                        setColor(color)
+                        setColor(if (isDarkMode()) Color.rgb(43, 47, 55) else Color.WHITE)
                         cornerRadius = dp(12).toFloat()
+                        setStroke(dp(1), if (isDarkMode()) Color.rgb(105, 112, 123) else Color.rgb(190, 196, 205))
                     }
                     isClickable = true
                     isFocusable = true
                     setOnClickListener { action() }
                 }
             adminActions.addView(
-                adminButton("تعديل", { reader.dismiss(); showGameDialog(game) }, Color.rgb(190, 198, 210)),
-                LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(6) }
+                adminButton("تعديل") { reader.dismiss(); showGameDialog(game) },
+                LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(5) }
             )
             adminActions.addView(
-                adminButton("حذف", { reader.dismiss(); deleteGame(game) }, Color.rgb(190, 55, 67)),
-                LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(6) }
+                adminButton("حذف") { reader.dismiss(); deleteGame(game) },
+                LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(5) }
             )
-            content.addView(adminActions, LinearLayout.LayoutParams(-1, -2))
-        }
-
-        val sourceUrl = game.sourcePostUrl.ifBlank { game.url }
-        val bloggerDownloadButtons = downloadLinksViewFactory.createFromHtml(
-            game.bloggerHtml, game.name, sourceUrl
-        )
-        val downloadButtons = bloggerDownloadButtons
-            ?: downloadLinksViewFactory.create(game.downloadLinks, game.name, sourceUrl)
-        downloadButtons?.let { buttons ->
-            content.addView(buttons, LinearLayout.LayoutParams(-1, -2))
+            content.addView(adminActions, LinearLayout.LayoutParams(-1, -2).apply {
+                topMargin = dp(10)
+            })
         }
 
         applyMotionPreferences(root)
