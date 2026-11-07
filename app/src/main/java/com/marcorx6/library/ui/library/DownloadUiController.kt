@@ -150,6 +150,9 @@ internal class DownloadUiController(
         val lastSpeedSample = mutableMapOf<Long, Pair<Long, Long>>()
         val handler = Handler(Looper.getMainLooper())
         var render: (() -> Unit)? = null
+        // Poll more frequently only while a transfer is active. An idle download
+        // screen does not need to query the persistent queue several times per second.
+        var refreshIntervalMillis = 5_000L
         val emptyState = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
@@ -377,6 +380,10 @@ internal class DownloadUiController(
                 Toast.makeText(activity, translate("تعذر قراءة التنزيلات") + (error.message?.takeIf { it.isNotBlank() }?.let { ": ${translate(it)}" } ?: ""), Toast.LENGTH_LONG).show()
                 return@renderBlock
             }
+            refreshIntervalMillis = if (entries.any {
+                it.status == DownloadManager.STATUS_RUNNING ||
+                    it.status == DownloadManager.STATUS_PENDING
+            }) 1_200L else 5_000L
             val currentIds = entries.map { it.id }.toSet()
             val removedIds = rows.keys.filter { it !in currentIds }
             removedIds.forEach { id ->
@@ -408,7 +415,7 @@ internal class DownloadUiController(
             override fun run() {
                 if (!activity.isFinishing && !activity.isDestroyed && root.isAttachedToWindow) {
                     render?.invoke()
-                    handler.postDelayed(this, 900L)
+                    handler.postDelayed(this, refreshIntervalMillis)
                 }
             }
         }
