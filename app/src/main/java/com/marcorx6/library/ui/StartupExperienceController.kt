@@ -60,13 +60,13 @@ internal class StartupExperienceController(
             setImageResource(com.marcorx6.library.R.drawable.marco_rx6_dragon_nodpi)
             scaleType = ImageView.ScaleType.FIT_CENTER
             contentDescription = "MARCO"
-            setPadding(dp(15), dp(15), dp(15), dp(15))
+            setPadding(dp(4), dp(4), dp(4), dp(4))
             alpha = 0f
-            scaleX = 0.84f
-            scaleY = 0.84f
+            scaleX = 0.92f
+            scaleY = 0.92f
         }
         logoHalo.addView(logo, FrameLayout.LayoutParams(-1, -1))
-        center.addView(logoHalo, LinearLayout.LayoutParams(dp(154), dp(154)).apply { bottomMargin = dp(25) })
+        center.addView(logoHalo, LinearLayout.LayoutParams(dp(230), dp(230)).apply { bottomMargin = dp(25) })
         center.addView(makeText("MARCO", 25f, Color.WHITE, true).apply {
             gravity = Gravity.CENTER
             letterSpacing = 0.16f
