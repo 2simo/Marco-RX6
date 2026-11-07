@@ -404,7 +404,35 @@ internal class MainLibraryInterfaceController(
                     cover.setImageResource(android.R.drawable.ic_menu_gallery)
                     cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
                 }
-                card.addView(cover, LinearLayout.LayoutParams(dp(218), dp(276)))
+                val coverFrame = FrameLayout(context).apply {
+                    background = rounded(ink, 15)
+                    clipToOutline = true
+                    addView(cover, FrameLayout.LayoutParams(-1, -1))
+                }
+                val languageLabel = GameLanguageBadge.resolve(game)
+                if (languageLabel.isNotBlank()) {
+                    val languageBadge = TextView(context).apply {
+                        text = languageLabel
+                        textSize = 8f
+                        setTextColor(Color.WHITE)
+                        typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
+                        gravity = Gravity.CENTER
+                        setPadding(dp(6), dp(3), dp(6), dp(3))
+                        background = GradientDrawable().apply {
+                            setColor(Color.argb(224, 35, 38, 45))
+                            cornerRadius = dp(7).toFloat()
+                            setStroke(dp(1), Color.argb(210, 145, 153, 166))
+                        }
+                    }
+                    coverFrame.addView(
+                        languageBadge,
+                        FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.END).apply {
+                            rightMargin = dp(6)
+                            bottomMargin = dp(6)
+                        }
+                    )
+                }
+                card.addView(coverFrame, LinearLayout.LayoutParams(dp(218), dp(276)))
                 card.addView(makeText(game.name, 13f, silver, true).apply {
                     gravity = Gravity.CENTER
                     maxLines = 2
