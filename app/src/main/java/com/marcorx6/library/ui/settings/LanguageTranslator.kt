@@ -8,7 +8,7 @@ internal object LanguageTranslator {
             "اللغة والمجتمع" to listOf("LANGUAGE & COMMUNITY", "LANGUE ET COMMUNAUTÉ", "IDIOMA Y COMUNIDAD"),
             "إشعارات التطبيق" to listOf("APP NOTIFICATIONS", "NOTIFICATIONS DE L’APPLICATION", "NOTIFICACIONES DE LA APLICACIÓN"),
             "الحساب والصلاحيات" to listOf("ACCOUNT & PERMISSIONS", "COMPTE ET AUTORISATIONS", "CUENTA Y PERMISOS"),
-            "التخصيص والتخزين" to listOf("ACCESSIBILITY & STORAGE", "PERSONNALISATION ET STOCKAGE", "PERSONALIZACIÓN Y ALMACENAMIENTO"),
+            "التخصيص والتخزين" to listOf("PERSONALIZATION & STORAGE", "PERSONNALISATION ET STOCKAGE", "PERSONALIZACIÓN Y ALMACENAMIENTO"),
             "MARCO  /  البحث الذكي" to listOf("MARCO  /  SMART SEARCH", "MARCO  /  RECHERCHE INTELLIGENTE", "MARCO  /  BÚSQUEDA INTELIGENTE"),
             "MARCO  /  مركز الألعاب الرسمي" to listOf("MARCO  /  OFFICIAL GAME HUB", "MARCO  /  CENTRE DE JEUX OFFICIEL", "MARCO  /  CENTRO OFICIAL DE JUEGOS"),
             "MARCO  /  الألعاب" to listOf("MARCO  /  GAMES", "MARCO  /  JEUX", "MARCO  /  JUEGOS"),
