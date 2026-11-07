@@ -64,6 +64,7 @@ internal class AppearanceRuntimeFeature(
         AppearanceFeature(
             activity = activity,
             appearancePreferences = appearancePreferences,
+            currentLanguage = ::currentLanguage,
             dp = ::dp,
             makeText = ::makeText,
             panelColor = panel,
