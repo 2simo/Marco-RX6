@@ -2,9 +2,11 @@ package com.marcorx6.library.ui
 
 import android.app.Activity
 import android.graphics.Color
+import android.graphics.Rect
 import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
 import android.view.View
+import android.view.ViewTreeObserver
 import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.ImageView
@@ -36,6 +38,53 @@ internal class GameLibraryRenderer(
         val darkMode: Boolean,
         val gameLabel: String
     )
+
+    /**
+     * Start expensive image/network and Firestore work only when the corresponding
+     * row actually intersects the visible screen. Off-screen cards keep placeholders.
+     */
+    private fun runWhenVisible(view: View, action: () -> Unit) {
+        var completed = false
+        var observer: ViewTreeObserver? = null
+        lateinit var checkVisibility: () -> Unit
+        val scrollListener = ViewTreeObserver.OnScrollChangedListener { checkVisibility() }
+
+        fun removeObserver() {
+            observer?.takeIf { it.isAlive }?.removeOnScrollChangedListener(scrollListener)
+            observer = null
+        }
+
+        val attachListener = object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(v: View) {
+                observer = v.viewTreeObserver
+                if (observer?.isAlive == true) observer?.addOnScrollChangedListener(scrollListener)
+                v.post { checkVisibility() }
+            }
+
+            override fun onViewDetachedFromWindow(v: View) {
+                removeObserver()
+            }
+        }
+
+        checkVisibility = {
+            if (!completed && view.isAttachedToWindow) {
+                val visible = Rect()
+                if (view.getGlobalVisibleRect(visible) && visible.width() > 0 && visible.height() > 0) {
+                    completed = true
+                    removeObserver()
+                    view.removeOnAttachStateChangeListener(attachListener)
+                    action()
+                }
+            }
+        }
+
+        view.addOnAttachStateChangeListener(attachListener)
+        if (view.isAttachedToWindow) {
+            observer = view.viewTreeObserver
+            if (observer?.isAlive == true) observer?.addOnScrollChangedListener(scrollListener)
+            view.post { checkVisibility() }
+        }
+    }
 
     private var lastRenderedContainer: LinearLayout? = null
     private var lastRenderedGames: List<Game>? = null
@@ -320,7 +369,9 @@ internal class GameLibraryRenderer(
                     )
                 }
                 if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) {
-                    loadCover(image, game.coverLocalPath, game.coverUrl)
+                    runWhenVisible(image) {
+                        loadCover(image, game.coverLocalPath, game.coverUrl)
+                    }
                 } else {
                     image.setImageResource(android.R.drawable.ic_menu_gallery)
                     image.scaleType = ImageView.ScaleType.CENTER_INSIDE
@@ -396,11 +447,14 @@ internal class GameLibraryRenderer(
                     LinearLayout.LayoutParams(0, -2, 1f)
                 )
                 card.addView(engagement)
-                loadEngagementSummary(game) { views, average, count ->
-                    activity.runOnUiThread {
-                        ratingValue.text = if (count == 0L) "—"
-                        else String.format(Locale.US, "%.1f", average)
-                        viewsValue.text = compactCount(views)
+                runWhenVisible(engagement) {
+                    loadEngagementSummary(game) { views, average, count ->
+                        activity.runOnUiThread {
+                            if (!engagement.isAttachedToWindow) return@runOnUiThread
+                            ratingValue.text = if (count == 0L) "—"
+                            else String.format(Locale.US, "%.1f", average)
+                            viewsValue.text = compactCount(views)
+                        }
                     }
                 }
 
