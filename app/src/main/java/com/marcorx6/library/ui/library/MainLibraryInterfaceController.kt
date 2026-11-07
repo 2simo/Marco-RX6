@@ -328,26 +328,6 @@ internal class MainLibraryInterfaceController(
         root.addView(header)
 
 
-        val welcomePanel = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(130, 138, 151), Color.rgb(35, 38, 45))).apply {
-                cornerRadius = dp(22).toFloat()
-            }
-            setPadding(dp(18), dp(17), dp(18), dp(17))
-            elevation = dp(3).toFloat()
-        }
-        welcomePanel.addView(makeText(tr("YOUR NEXT GAME STARTS HERE"), 9f, Color.rgb(235, 238, 243), true).apply {
-            letterSpacing = 0.12f
-        })
-        welcomePanel.addView(makeText(tr("اكتشف عالم الألعاب"), 21f, Color.WHITE, true).apply {
-            setPadding(0, dp(5), 0, dp(3))
-        })
-        welcomePanel.addView(makeText(tr("تصفح مكتبتك واختر مغامرتك القادمة"), 11f, Color.rgb(218, 222, 229), false))
-        root.addView(welcomePanel, LinearLayout.LayoutParams(-1, -2).apply {
-            bottomMargin = dp(15)
-        })
-
         // Featured cover-flow sits above platform filters and uses only real library entries.
         val popularByPlatform = listOf("PS4", "PS3", "PS2").flatMap { platform ->
             games().filter { GameLibraryManager.normalizePlatform(it.platform) == platform }
@@ -357,12 +337,13 @@ internal class MainLibraryInterfaceController(
         if (popularByPlatform.isNotEmpty()) {
             val popularHeader = LinearLayout(context).apply {
                 orientation = LinearLayout.VERTICAL
-                setPadding(dp(2), dp(3), dp(2), dp(7))
+                gravity = Gravity.CENTER
+                setPadding(dp(2), dp(8), dp(2), dp(10))
             }
-            popularHeader.addView(makeText(tr("MARCO  /  مختارات المكتبة"), 8f, silverAccent, true).apply {
-                letterSpacing = 0.13f
+            popularHeader.addView(makeText(tr("الألعاب الأكثر شعبية"), 20f, silver, true).apply {
+                gravity = Gravity.CENTER
+                textAlignment = View.TEXT_ALIGNMENT_CENTER
             })
-            popularHeader.addView(makeText(tr("الألعاب الأكثر شعبية"), 20f, silver, true))
             root.addView(popularHeader, LinearLayout.LayoutParams(-1, -2).apply {
                 topMargin = dp(2)
             })
