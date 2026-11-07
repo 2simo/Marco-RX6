@@ -56,29 +56,6 @@ internal class GameDetailsController(
         // Game identity and information, followed by the original download actions.
         content.addView(identityViewFactory.create(game), LinearLayout.LayoutParams(-1, -2))
 
-        val sourceUrl = game.sourcePostUrl.ifBlank { game.url }
-        val downloadButtons = downloadLinksViewFactory.createFromHtml(
-            game.bloggerHtml, game.name, sourceUrl
-        ) ?: downloadLinksViewFactory.create(game.downloadLinks, game.name, sourceUrl)
-        downloadButtons?.let { buttons ->
-            content.addView(buttons, LinearLayout.LayoutParams(-1, -2).apply {
-                topMargin = dp(10)
-            })
-        }
-
-        // Keep user ratings and related games available in the details page.
-        content.addView(ratingViewFactory.create(game), LinearLayout.LayoutParams(-1, -2).apply {
-            topMargin = dp(10)
-        })
-        similarGamesViewFactory.create(game, games()) { selected ->
-            reader.dismiss()
-            show(selected)
-        }?.let { similar ->
-            content.addView(similar, LinearLayout.LayoutParams(-1, -2).apply {
-                topMargin = dp(10)
-            })
-        }
-
         // Preserve game-management actions for administrators, using the same
         // neutral black/silver visual language as the redesigned details page.
         if (isAdmin()) {
@@ -118,6 +95,30 @@ internal class GameDetailsController(
                 LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(5) }
             )
             content.addView(adminActions, LinearLayout.LayoutParams(-1, -2).apply {
+                topMargin = dp(10)
+            })
+        }
+
+
+        val sourceUrl = game.sourcePostUrl.ifBlank { game.url }
+        val downloadButtons = downloadLinksViewFactory.createFromHtml(
+            game.bloggerHtml, game.name, sourceUrl
+        ) ?: downloadLinksViewFactory.create(game.downloadLinks, game.name, sourceUrl)
+        downloadButtons?.let { buttons ->
+            content.addView(buttons, LinearLayout.LayoutParams(-1, -2).apply {
+                topMargin = dp(10)
+            })
+        }
+
+        // Keep user ratings and related games available in the details page.
+        content.addView(ratingViewFactory.create(game), LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(10)
+        })
+        similarGamesViewFactory.create(game, games()) { selected ->
+            reader.dismiss()
+            show(selected)
+        }?.let { similar ->
+            content.addView(similar, LinearLayout.LayoutParams(-1, -2).apply {
                 topMargin = dp(10)
             })
         }
