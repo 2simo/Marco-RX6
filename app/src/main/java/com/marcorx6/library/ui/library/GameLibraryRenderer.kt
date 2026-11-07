@@ -326,7 +326,7 @@ internal class GameLibraryRenderer(
                         else Color.argb(135, 160, 168, 181)
                     )
                 }
-                card.addView(imageFrame, LinearLayout.LayoutParams(-1, dp(164)))
+                card.addView(imageFrame, LinearLayout.LayoutParams(-1, dp(if (gridMode) 208 else 164)))
 
                 card.addView(makeText(game.name, 12f, white, true).apply {
                     maxLines = 2
@@ -397,7 +397,7 @@ internal class GameLibraryRenderer(
                 }
 
                 if (gridMode) {
-                    if (currentGridRow == null || currentGridRow!!.childCount == 3) {
+                    if (currentGridRow == null || currentGridRow!!.childCount == 2) {
                         currentGridRow = LinearLayout(activity).apply {
                             orientation = LinearLayout.HORIZONTAL
                             gravity = Gravity.TOP
