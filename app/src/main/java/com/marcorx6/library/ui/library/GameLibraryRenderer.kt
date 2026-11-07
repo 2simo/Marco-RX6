@@ -115,7 +115,8 @@ internal class GameLibraryRenderer(
             return
         }
 
-        val sectioned = selected == "ALL" || selected == "BLOG" || selected == "FAVORITES"
+        val gridMode = selected in setOf("PS2", "PS3", "PS4", "FAVORITES")
+        val sectioned = selected == "ALL" || selected == "BLOG"
         val priority = listOf("PS4", "PS3", "PS2")
         // Remove invisible bidi/zero-width marks before grouping so visually identical
         // platform names cannot produce duplicate sections in Arabic locale.
@@ -171,8 +172,13 @@ internal class GameLibraryRenderer(
                 }
             }
             heading.addView(sectionCount)
-            gameList.addView(heading, LinearLayout.LayoutParams(-1, -2))
+            if (!gridMode) gameList.addView(heading, LinearLayout.LayoutParams(-1, -2))
 
+            val grid = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(0, dp(2), 0, dp(8))
+            }
+            var currentGridRow: LinearLayout? = null
             val horizontal = HorizontalScrollView(activity).apply {
                 isHorizontalScrollBarEnabled = false
                 overScrollMode = View.OVER_SCROLL_NEVER
@@ -390,16 +396,38 @@ internal class GameLibraryRenderer(
                     }
                 }
 
-                carousel.addView(
-                    card,
-                    LinearLayout.LayoutParams(dp(158), -2).apply {
-                        marginStart = dp(5)
-                        marginEnd = dp(5)
+                if (gridMode) {
+                    if (currentGridRow == null || currentGridRow!!.childCount == 3) {
+                        currentGridRow = LinearLayout(activity).apply {
+                            orientation = LinearLayout.HORIZONTAL
+                            gravity = Gravity.TOP
+                        }
+                        grid.addView(currentGridRow, LinearLayout.LayoutParams(-1, -2))
                     }
-                )
+                    currentGridRow!!.addView(
+                        card,
+                        LinearLayout.LayoutParams(0, -2, 1f).apply {
+                            marginStart = dp(4)
+                            marginEnd = dp(4)
+                            bottomMargin = dp(10)
+                        }
+                    )
+                } else {
+                    carousel.addView(
+                        card,
+                        LinearLayout.LayoutParams(dp(158), -2).apply {
+                            marginStart = dp(5)
+                            marginEnd = dp(5)
+                        }
+                    )
+                }
             }
-            horizontal.addView(carousel, FrameLayout.LayoutParams(-2, -2))
-            gameList.addView(horizontal, LinearLayout.LayoutParams(-1, -2))
+            if (gridMode) {
+                gameList.addView(grid, LinearLayout.LayoutParams(-1, -2))
+            } else {
+                horizontal.addView(carousel, FrameLayout.LayoutParams(-2, -2))
+                gameList.addView(horizontal, LinearLayout.LayoutParams(-1, -2))
+            }
         }
     }
 
