@@ -50,15 +50,8 @@ internal class GameDetailsTopBarFactory(
             minHeight = dp(48)
         }
         topBar.addView(close, LinearLayout.LayoutParams(dp(48), dp(48)))
-        val heading = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
-        heading.addView(makeText(game.name, 16f, white(), true).apply {
-            maxLines = 1
-            ellipsize = android.text.TextUtils.TruncateAt.END
-        })
-        heading.addView(makeText(game.platform, 10f, android.graphics.Color.rgb(190, 198, 210), true))
-        heading.contentDescription = "${game.name}, ${game.platform}"
-        topBar.addView(heading, LinearLayout.LayoutParams(0, -2, 1f))
-        topBar.addView(favoriteToggleFactory.create(game))
+        // Title, platform and favorite action are shown together in the identity card.
+        topBar.addView(android.view.View(activity), LinearLayout.LayoutParams(0, dp(48), 1f))
         return topBar
     }
 }
