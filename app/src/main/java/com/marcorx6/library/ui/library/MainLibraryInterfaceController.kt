@@ -668,7 +668,7 @@ internal class MainLibraryInterfaceController(
                     .start()
             }
         }
-        ViewCompat.setOnScrollChangeListener(pageScroll) { _, _, scrollY, _, _ ->
+        pageScroll.setOnScrollChangeListener { _, _, scrollY, _, _ ->
             val delta = scrollY - lastDockScrollY
             if (scrollY <= dp(2)) {
                 setDockVisible(true)
