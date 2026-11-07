@@ -64,6 +64,7 @@ internal class GameExperienceRuntimeFeature(
             gray = gray,
             panel = panel,
             tr = translate,
+            targetLanguage = targetLanguage,
             loadCover = loadCover,
             saveGames = saveGames,
             renderGames = renderGames,

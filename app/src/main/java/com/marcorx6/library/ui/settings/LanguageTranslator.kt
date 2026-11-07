@@ -3,6 +3,9 @@ package com.marcorx6.library.ui
 /** Centralized static translations for the app interface. */
 internal object LanguageTranslator {
     private val translations = mapOf(
+            "MARCO  /  البحث الذكي" to listOf("MARCO  /  SMART SEARCH", "MARCO  /  RECHERCHE INTELLIGENTE", "MARCO  /  BÚSQUEDA INTELIGENTE"),
+            "MARCO  /  مركز الألعاب الرسمي" to listOf("MARCO  /  OFFICIAL GAME HUB", "MARCO  /  CENTRE DE JEUX OFFICIEL", "MARCO  /  CENTRO OFICIAL DE JUEGOS"),
+            "MARCO  /  الألعاب" to listOf("MARCO  /  GAMES", "MARCO  /  JEUX", "MARCO  /  JUEGOS"),
             "تحميل نموذج الترجمة" to listOf("Download translation model", "Télécharger le modèle de traduction", "Descargar el modelo de traducción"),
             "العربية لا تحتاج إلى نموذج ترجمة" to listOf("Arabic does not need a translation model", "L’arabe n’a pas besoin d’un modèle de traduction", "El árabe no necesita un modelo de traducción"),
             "جارٍ تحميل نموذج الترجمة" to listOf("Downloading translation model", "Téléchargement du modèle de traduction", "Descargando el modelo de traducción"),
@@ -298,6 +301,10 @@ internal object LanguageTranslator {
             "تسجيل Google العادي لا يفعّل النشر. اربط هنا حساب Blogger المشرف نفسه لتفعيل النشر ورفع الأغلفة" to listOf("A regular Google sign-in does not enable publishing. Link the Blogger owner account here to enable publishing and cover uploads.", "Une connexion Google classique n’active pas la publication. Associez ici le compte propriétaire Blogger pour activer la publication et l’envoi des couvertures.", "Un inicio de sesión normal de Google no activa la publicación. Vincula aquí la cuenta propietaria de Blogger para activar la publicación y la subida de portadas."),
             "عرض مساحة التطبيق والملفات المؤقتة وإدارة ذاكرة التخزين المؤقت" to listOf("View app storage and temporary files and manage the cache", "Consulter le stockage de l’application et les fichiers temporaires, et gérer le cache", "Ver el almacenamiento de la aplicación y los archivos temporales y gestionar la caché"),
             "معلومات اللعبة" to listOf("Game information", "Informations sur le jeu", "Información del juego"),
+            "غلاف اللعبة" to listOf("Game cover", "Couverture du jeu", "Portada del juego"),
+            "عدد التنزيلات" to listOf("Download count", "Nombre de téléchargements", "Número de descargas"),
+            "التنزيلات: 0" to listOf("Downloads: 0", "Téléchargements : 0", "Descargas: 0"),
+            "لا تتوفر معلومات إضافية لهذه اللعبة" to listOf("No additional information is available for this game", "Aucune information supplémentaire n’est disponible pour ce jeu", "No hay información adicional disponible para este juego"),
             "نبذة عن اللعبة" to listOf("About this game", "À propos de ce jeu", "Acerca de este juego"),
             "الحجم" to listOf("Size", "Taille", "Tamaño"),
             "حجم" to listOf("Size", "Taille", "Tamaño"),
@@ -678,6 +685,12 @@ internal object LanguageTranslator {
             "نتيجة" to listOf("results", "résultats", "resultados"),
             "لم يتم العثور على ألعاب مطابقة" to listOf("No matching games found", "Aucun jeu correspondant trouvé", "No se encontraron juegos coincidentes"),
             "تم إعداد مكتبتك. اختياراتك محفوظة ويمكنك تغييرها لاحقاً من الإعدادات." to listOf("Your library is ready. Your choices are saved and can be changed later in Settings.", "Votre bibliothèque est prête. Vos choix sont enregistrés et modifiables dans les paramètres.", "Tu biblioteca está lista. Tus opciones se han guardado y puedes cambiarlas en Ajustes."),
+            "قيّم هذه اللعبة" to listOf("Rate this game", "Évaluer ce jeu", "Califica este juego"),
+            "اختر تقييماً من نجمة إلى خمس نجوم" to listOf("Choose a rating from one to five stars", "Choisissez une note d’une à cinq étoiles", "Elige una valoración de una a cinco estrellas"),
+            "سجّل الدخول لتتمكن من تقييم اللعبة" to listOf("Sign in to rate this game", "Connectez-vous pour évaluer ce jeu", "Inicia sesión para calificar este juego"),
+            "قيّم هذه اللعبة من نجمة إلى خمس نجوم" to listOf("Rate this game from one to five stars", "Évaluez ce jeu de une à cinq étoiles", "Califica este juego de una a cinco estrellas"),
+            "تم حفظ تقييمك" to listOf("Your rating has been saved", "Votre évaluation a été enregistrée", "Tu valoración se ha guardado"),
+            "تعذر حفظ التقييم" to listOf("Could not save the rating", "Impossible d’enregistrer l’évaluation", "No se pudo guardar la valoración"),
         )
 
     fun translate(ar: String, lang: String): String {

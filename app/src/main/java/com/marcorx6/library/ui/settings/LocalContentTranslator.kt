@@ -16,8 +16,9 @@ import com.google.mlkit.nl.translate.TranslatorOptions
 internal class LocalContentTranslator(context: Context) {
     private val appContext = context.applicationContext
     private val languageIdentifier = LanguageIdentification.getClient()
-    private var activeTranslator: Translator? = null
-    private var activePair: Pair<String, String>? = null
+    // Keep one client per language pair so concurrent field translations do not
+    // close a translator that another request is still using.
+    private val translators = linkedMapOf<Pair<String, String>, Translator>()
 
     fun downloadModel(
         sourceLanguage: String,
@@ -86,22 +87,19 @@ internal class LocalContentTranslator(context: Context) {
             "Unsupported translation language pair: $source -> $target"
         }
         val pair = source to target
-        if (activePair != pair || activeTranslator == null) {
-            activeTranslator?.close()
+        return translators.getOrPut(pair) {
             val options = TranslatorOptions.Builder()
                 .setSourceLanguage(source)
                 .setTargetLanguage(target)
                 .build()
-            activeTranslator = Translation.getClient(options)
-            activePair = pair
+            Translation.getClient(options)
         }
-        return checkNotNull(activeTranslator)
     }
 
     fun close() {
-        activeTranslator?.close()
-        activeTranslator = null
-        activePair = null
+        translators.values.forEach { it.close() }
+        translators.clear()
+        languageIdentifier.close()
     }
 
     companion object {
