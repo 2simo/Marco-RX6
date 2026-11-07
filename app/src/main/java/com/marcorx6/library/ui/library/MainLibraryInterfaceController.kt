@@ -176,7 +176,7 @@ internal class MainLibraryInterfaceController(
                     addView(cover, FrameLayout.LayoutParams(-1, -1))
                 }
                 val languageLabel = GameLanguageBadge.resolve(game)
-                if (!game.blogImported && languageLabel.isNotBlank()) {
+                if (GameLibraryManager.normalizePlatform(game.platform) != null && languageLabel.isNotBlank()) {
                     val languageBadge = TextView(context).apply {
                         text = languageLabel
                         textSize = 8f
