@@ -9,13 +9,14 @@ import java.net.URLEncoder
 
 internal data class BloggerFeedResult(
     val blogId: String,
-    val games: List<Game>
+    val games: List<Game>,
+    val rawEntryCount: Int = 0
 )
 
 /**
- * Downloads the main Blogger feed and the dedicated OS-label feeds used by the
- * independent MARCO RX6 sections. Each feed is paginated so posts beyond the
- * first 100 entries are not silently omitted.
+ * Downloads the main Blogger feed and dedicated OS-label feeds.
+ * Pagination is based on raw Blogger entries, not parsed games, because some
+ * posts may be intentionally skipped by the game parser.
  */
 internal class BloggerFeedClient(
     private val feedUrl: String
@@ -59,7 +60,6 @@ internal class BloggerFeedClient(
         }
 
         dedicatedSections.forEach { section ->
-            // Try the exact Blogger label first, then known alternate spellings.
             val labelsToTry = (listOf(section.label) + section.fallbackLabels).distinct()
             var sectionGames = emptyList<Game>()
             for (label in labelsToTry) {
@@ -72,8 +72,6 @@ internal class BloggerFeedClient(
             sectionGames.forEach { game ->
                 val key = game.sourcePostUrl.ifBlank { game.url }
                 if (key.isNotBlank()) {
-                    // The dedicated feed is authoritative even when a post also
-                    // carries a broad PS2/PS3 category.
                     merged[key] = game.copy(platform = section.platform)
                 }
             }
@@ -81,7 +79,8 @@ internal class BloggerFeedClient(
 
         return BloggerFeedResult(
             blogId = main.blogId,
-            games = merged.values.toList()
+            games = merged.values.toList(),
+            rawEntryCount = main.rawEntryCount
         )
     }
 
@@ -92,14 +91,15 @@ internal class BloggerFeedClient(
     }
 
     /**
-     * Blogger caps a response page. Walk start-index in batches so large labels
-     * and the main feed can return all available posts, not only the first page.
+     * Blogger returns up to 100 raw entries per page. Continue while the raw
+     * page is full even if the parser produced fewer Game objects from it.
      */
     private fun fetchAllPages(url: String): BloggerFeedResult {
         val base = url.substringBefore('?')
         val query = url.substringAfter('?', "")
         val allGames = LinkedHashMap<String, Game>()
         var blogId = ""
+        var totalRawEntries = 0
 
         for (page in 0 until 50) {
             val startIndex = page * 100 + 1
@@ -115,14 +115,19 @@ internal class BloggerFeedClient(
             }
             val result = fetchFeed(pageUrl)
             if (blogId.isBlank()) blogId = result.blogId
+            totalRawEntries += result.rawEntryCount
             result.games.forEach { game ->
                 val key = game.sourcePostUrl.ifBlank { game.url }
                 if (key.isNotBlank()) allGames[key] = game
             }
-            if (result.games.size < 100) break
+            if (result.rawEntryCount < 100) break
         }
 
-        return BloggerFeedResult(blogId = blogId, games = allGames.values.toList())
+        return BloggerFeedResult(
+            blogId = blogId,
+            games = allGames.values.toList(),
+            rawEntryCount = totalRawEntries
+        )
     }
 
     private fun fetchFeed(url: String): BloggerFeedResult {
@@ -158,6 +163,10 @@ internal class BloggerFeedClient(
                 BloggerFeedParser.parseBlogEntry(entry)?.let(::add)
             }
         }
-        return BloggerFeedResult(blogId = blogId, games = games)
+        return BloggerFeedResult(
+            blogId = blogId,
+            games = games,
+            rawEntryCount = entries.length()
+        )
     }
 }
