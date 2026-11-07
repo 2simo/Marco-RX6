@@ -647,6 +647,7 @@ internal object LanguageTranslator {
             "اختر اللون الذي سيظهر في الأزرار والعناصر التفاعلية." to listOf("Choose the color used for buttons and interactive elements.", "Choisissez la couleur des boutons et des éléments interactifs.", "Elige el color de los botones y elementos interactivos."),
             "هل ترغب في تلقي إشعار عند نشر مقالات جديدة في المدونة؟" to listOf("Would you like to be notified when new blog articles are published?", "Souhaitez-vous recevoir une notification lors de la publication de nouveaux articles ?", "¿Quieres recibir avisos cuando se publiquen nuevos artículos?"),
             "البحث الذكي" to listOf("Smart search", "Recherche intelligente", "Búsqueda inteligente"),
+            "خطوة" to listOf("Step", "Étape", "Paso"),
             "رجوع" to listOf("Back", "Retour", "Volver"),
             "اكتب اسم اللعبة أو المنصة أو النوع أو السنة..." to listOf("Enter a game, platform, genre, or year...", "Saisissez un jeu, une plateforme, un genre ou une année...", "Escribe un juego, plataforma, género o año..."),
             "ابدأ بكتابة اسم اللعبة للبحث" to listOf("Start typing a game name to search", "Commencez à saisir le nom d’un jeu", "Empieza a escribir el nombre de un juego"),
@@ -678,6 +679,10 @@ internal object LanguageTranslator {
         }
         Regex("^تعذر التحقق من رابط الصورة \\(HTTP ([^،]+)، النوع: (.*)\\)$").matchEntire(ar)?.let { match ->
             return "${localized("تعذر التحقق من رابط الصورة") ?: "تعذر التحقق من رابط الصورة"} (HTTP ${match.groupValues[1]}, type: ${match.groupValues[2]})"
+        }
+        Regex("^خطوة (\\d+)$").matchEntire(ar)?.let { match ->
+            val prefix = localized("خطوة")
+            if (prefix != null) return "$prefix ${match.groupValues[1]}"
         }
         Regex("^الإعلانات والمتتبعات المحجوبة: (\\d+)$").matchEntire(ar)?.let { match ->
             val prefix = localized("الإعلانات والمتتبعات المحجوبة:")
