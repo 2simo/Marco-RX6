@@ -193,7 +193,7 @@ internal class GameDetailsIdentityViewFactory(
                 // Translate only the displayed copy. The Game object and Blogger HTML
                 // remain untouched, so uploads, edits and stored metadata keep originals.
                 val target = targetLanguage()
-                if (target in setOf("en", "fr", "es") && item.second.length >= 3) {
+                if (target in setOf("ar", "en", "fr", "es") && item.second.length >= 3) {
                     contentTranslator.translateAutomatically(
                         text = item.second,
                         targetLanguage = target,
