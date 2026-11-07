@@ -78,6 +78,49 @@ internal class MainLibraryInterfaceController(
     private fun makeText(value: String, size: Float, color: Int, bold: Boolean = false): TextView =
         createText(value, size, color, bold)
 
+    private fun runWhenVisible(view: View, action: () -> Unit) {
+        var completed = false
+        var observer: ViewTreeObserver? = null
+        lateinit var checkVisibility: () -> Unit
+        val scrollListener = ViewTreeObserver.OnScrollChangedListener { checkVisibility() }
+
+        fun removeObserver() {
+            observer?.takeIf { it.isAlive }?.removeOnScrollChangedListener(scrollListener)
+            observer = null
+        }
+
+        val attachListener = object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(v: View) {
+                observer = v.viewTreeObserver
+                if (observer?.isAlive == true) observer?.addOnScrollChangedListener(scrollListener)
+                v.post { checkVisibility() }
+            }
+
+            override fun onViewDetachedFromWindow(v: View) {
+                removeObserver()
+            }
+        }
+
+        checkVisibility = {
+            if (!completed && view.isAttachedToWindow) {
+                val visible = Rect()
+                if (view.getGlobalVisibleRect(visible) && visible.width() > 0 && visible.height() > 0) {
+                    completed = true
+                    removeObserver()
+                    view.removeOnAttachStateChangeListener(attachListener)
+                    action()
+                }
+            }
+        }
+
+        view.addOnAttachStateChangeListener(attachListener)
+        if (view.isAttachedToWindow) {
+            observer = view.viewTreeObserver
+            if (observer?.isAlive == true) observer?.addOnScrollChangedListener(scrollListener)
+            view.post { checkVisibility() }
+        }
+    }
+
     private fun loadCoverWhenVisible(image: ImageView, localPath: String, imageUrl: String) {
         var requested = false
         var observer: ViewTreeObserver? = null
@@ -191,6 +234,8 @@ internal class MainLibraryInterfaceController(
                 return
             }
             matches.forEach { game ->
+                val slot = FrameLayout(context).apply { minimumHeight = dp(110) }
+                val buildCard = {
                 val card = LinearLayout(context).apply {
                     orientation = LinearLayout.HORIZONTAL
                     gravity = Gravity.CENTER_VERTICAL
@@ -256,7 +301,10 @@ internal class MainLibraryInterfaceController(
                     setPadding(0, dp(5), 0, 0)
                 })
                 card.addView(details, LinearLayout.LayoutParams(0, -2, 1f))
-                results.addView(card, LinearLayout.LayoutParams(-1, -2).apply {
+                slot.addView(card, FrameLayout.LayoutParams(-1, -2))
+                }
+                runWhenVisible(slot) { buildCard() }
+                results.addView(slot, LinearLayout.LayoutParams(-1, -2).apply {
                     bottomMargin = dp(9)
                 })
             }
