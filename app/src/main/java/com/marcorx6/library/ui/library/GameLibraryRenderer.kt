@@ -222,7 +222,7 @@ internal class GameLibraryRenderer(
                 // Resolve the game's language from its stored field, with the original
                 // Blogger article as a fallback for older/imported entries.
                 val languageLabel = GameLanguageBadge.resolve(game)
-                if (languageLabel.isNotEmpty() && selected != "BLOG") {
+                if (languageLabel.isNotEmpty() && !game.blogImported) {
                     val languageBadge = TextView(activity).apply {
                         text = languageLabel
                         importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
