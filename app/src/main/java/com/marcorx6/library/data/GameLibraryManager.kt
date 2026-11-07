@@ -69,6 +69,11 @@ internal object GameLibraryManager {
         sortMode: String
     ): List<Game> {
         val normalizedQuery = query.trim()
+        val normalizedGenre = genre.trim()
+        val normalizedYear = year.trim()
+        // Resolve the selected platform once per search instead of normalizing it
+        // again for every game in a large library.
+        val selectedPlatform = normalizePlatform(category) ?: category.trim()
         val filtered = games.filter { item ->
             val categoryMatch = when (category) {
                 "ALL" -> true
@@ -76,7 +81,6 @@ internal object GameLibraryManager {
                 "BLOG" -> item.blogImported
                 else -> {
                     val itemPlatform = normalizePlatform(item.platform) ?: item.platform.trim()
-                    val selectedPlatform = normalizePlatform(category) ?: category.trim()
                     itemPlatform.equals(selectedPlatform, ignoreCase = true)
                 }
             }
@@ -86,8 +90,9 @@ internal object GameLibraryManager {
                 item.description.contains(normalizedQuery, ignoreCase = true) ||
                 item.genre.contains(normalizedQuery, ignoreCase = true) ||
                 item.releaseYear.contains(normalizedQuery, ignoreCase = true)
-            val genreMatch = genre.isBlank() || item.genre.trim().equals(genre.trim(), ignoreCase = true)
-            val yearMatch = year.isBlank() || item.releaseYear.trim() == year.trim()
+            val genreMatch = normalizedGenre.isBlank() ||
+                item.genre.trim().equals(normalizedGenre, ignoreCase = true)
+            val yearMatch = normalizedYear.isBlank() || item.releaseYear.trim() == normalizedYear
             categoryMatch && searchMatch && genreMatch && yearMatch
         }
         return when (sortMode) {
