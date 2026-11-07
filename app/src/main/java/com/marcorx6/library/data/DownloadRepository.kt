@@ -6,13 +6,6 @@ import android.net.Uri
 import android.webkit.CookieManager
 import android.provider.DocumentsContract
 import androidx.core.content.FileProvider
-import androidx.work.BackoffPolicy
-import androidx.work.Constraints
-import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.workDataOf
 import com.marcorx6.library.network.SecureUrlPolicy
 import java.io.File
 import java.net.HttpURLConnection
@@ -42,7 +35,11 @@ internal sealed class DownloadStartResult {
 internal class DownloadRepository(context: Context) {
     private val appContext = context.applicationContext
     private val database = DownloadDatabase.get(appContext)
-    private val workManager = WorkManager.getInstance(appContext)
+    private val concurrencyPreferences = DownloadConcurrencyPreferences(appContext)
+
+    init {
+        DownloadWorkScheduler.schedule(appContext)
+    }
 
     fun enqueue(
         link: String,
@@ -74,11 +71,11 @@ internal class DownloadRepository(context: Context) {
                     val previous = database.findFailedBySource(sourcePostUrl)
                     if (previous != null) {
                         database.refreshSource(previous.id, probe.finalUrl, userAgent, cookie, referrer, probe.mimeType)
-                        enqueueWork(previous.id, ExistingWorkPolicy.REPLACE)
+                        DownloadWorkScheduler.schedule(appContext)
                     } else {
                         val id = database.nextId()
                         database.insert(id, probe.finalUrl, finalTitle, userAgent, cookie, referrer, probe.mimeType, sourcePostUrl)
-                        enqueueWork(id, ExistingWorkPolicy.KEEP)
+                        DownloadWorkScheduler.schedule(appContext)
                     }
                     DownloadStartResult.Enqueued(finalTitle)
                     }
@@ -93,18 +90,6 @@ internal class DownloadRepository(context: Context) {
         }.start()
     }
 
-    private fun enqueueWork(id: Long, policy: ExistingWorkPolicy) {
-        val request = OneTimeWorkRequestBuilder<ResumableDownloadWorker>()
-            .setInputData(workDataOf(ResumableDownloadWorker.KEY_ID to id))
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build()
-            )
-            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30L, TimeUnit.SECONDS)
-            .build()
-        workManager.enqueueUniqueWork(workName(id), policy, request)
-    }
 
     fun getDownloads(): List<DownloadEntry> = database.all().map { item ->
         DownloadEntry(
@@ -123,8 +108,9 @@ internal class DownloadRepository(context: Context) {
         if (item.status == DownloadManager.STATUS_SUCCESSFUL) return false
         // Request cancellation first, then persist PAUSED so the row remains visible
         // while WorkManager transitions the worker to its cancelled state.
-        workManager.cancelUniqueWork(workName(id))
+        DownloadWorkScheduler.cancel(appContext, id)
         database.status(id, DownloadManager.STATUS_PAUSED)
+        DownloadWorkScheduler.schedule(appContext)
         return true
     }
 
@@ -132,8 +118,15 @@ internal class DownloadRepository(context: Context) {
         val item = database.get(id) ?: return false
         if (item.status == DownloadManager.STATUS_SUCCESSFUL) return false
         database.status(id, DownloadManager.STATUS_PENDING)
-        enqueueWork(id, ExistingWorkPolicy.REPLACE)
+        DownloadWorkScheduler.schedule(appContext)
         return true
+    }
+
+    fun maxConcurrentDownloads(): Int = concurrencyPreferences.maxConcurrent()
+
+    fun setMaxConcurrentDownloads(value: Int) {
+        concurrencyPreferences.setMaxConcurrent(value)
+        DownloadWorkScheduler.schedule(appContext)
     }
 
     fun openDownloadedFile(id: Long): Uri? {
@@ -152,7 +145,7 @@ internal class DownloadRepository(context: Context) {
     fun deleteDownload(id: Long): Boolean {
         val item = database.get(id) ?: return false
         database.cancel(id)
-        workManager.cancelUniqueWork(workName(id))
+        DownloadWorkScheduler.cancel(appContext, id)
         if (item.localPath.startsWith("content://")) {
             runCatching { DocumentsContract.deleteDocument(appContext.contentResolver, Uri.parse(item.localPath)) }
         } else if (item.localPath.isNotBlank()) {
@@ -161,10 +154,9 @@ internal class DownloadRepository(context: Context) {
         val directory = File(appContext.filesDir, "MARCO_RX6_downloads")
         File(directory, "$id.part").delete()
         database.delete(id)
+        DownloadWorkScheduler.schedule(appContext)
         return true
     }
-
-    private fun workName(id: Long) = "marco_rx6_download_$id"
 
     private data class DownloadProbe(
         val finalUrl: String,
