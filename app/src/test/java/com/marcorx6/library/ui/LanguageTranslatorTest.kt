@@ -172,4 +172,27 @@ class LanguageTranslatorTest {
         assertEquals("Forward", LanguageTranslator.translate("تقدم", "en"))
         assertEquals("Open externally", LanguageTranslator.translate("فتح خارجياً", "en"))
     }
+
+    @Test
+    fun translatesPublishingStudioAndAccountVerificationStrings() {
+        assertEquals(
+            "Enter the game information and links, then preview the post before publishing.",
+            LanguageTranslator.translate("أدخل معلومات اللعبة وروابطها، ثم راجع شكل المقال قبل النشر.", "en")
+        )
+        assertEquals("Titre et libellés de l’article", LanguageTranslator.translate("العنوان وأقسام المقال", "fr"))
+        assertEquals("Direct download links", LanguageTranslator.translate("روابط التحميل المباشرة", "en"))
+        assertEquals("Nom du lien (exemple : Google Drive)", LanguageTranslator.translate("اسم الرابط (مثال: Google Drive)", "fr"))
+        assertEquals("HTTPS download URL", LanguageTranslator.translate("رابط التحميل HTTPS", "en"))
+        assertEquals("Download link", LanguageTranslator.translate("رابط تحميل", "en"))
+        assertEquals("Supprimer ce lien", LanguageTranslator.translate("إزالة هذا الرابط", "fr"))
+        assertEquals("Add another link", LanguageTranslator.translate("إضافة رابط جديد", "en"))
+        assertEquals("Back from the publishing studio", LanguageTranslator.translate("الرجوع من استوديو النشر", "en"))
+        assertEquals("Estudio de publicación", LanguageTranslator.translate("استوديو النشر", "es"))
+        assertEquals("Edit post", LanguageTranslator.translate("تحرير المقال", "en"))
+        assertEquals("El enlace debe comenzar por HTTPS", LanguageTranslator.translate("يجب أن يبدأ الرابط بـ HTTPS", "es"))
+        assertEquals(
+            "Enter your current password to verify your identity before deletion.",
+            LanguageTranslator.translate("أدخل كلمة المرور الحالية للتحقق من هويتك قبل الحذف.", "en")
+        )
+    }
 }
