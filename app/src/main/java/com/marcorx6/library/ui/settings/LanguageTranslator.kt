@@ -201,6 +201,7 @@ internal object LanguageTranslator {
             "تم فتح النسخة المحفوظة" to listOf("Saved copy opened", "Copie enregistrée ouverte", "Copia guardada abierta"),
             "تم حفظ المقال للقراءة دون اتصال" to listOf("Article saved for offline reading", "Article enregistré pour une lecture hors ligne", "Artículo guardado para leer sin conexión"),
             "تعذر حفظ المقال. انتظر اكتمال تحميل الصور ثم حاول مجدداً." to listOf("Could not save the article. Wait for images to finish loading, then try again.", "Impossible d’enregistrer l’article. Attendez la fin du chargement des images, puis réessayez.", "No se pudo guardar el artículo. Espera a que terminen de cargarse las imágenes y vuelve a intentarlo."),
+            "جارٍ الاتصال بمدونة MARCO RX6..." to listOf("Connecting to the MARCO RX6 blog...", "Connexion au blog MARCO RX6...", "Conectando con el blog MARCO RX6..."),
             "اكتملت المزامنة" to listOf("Sync complete", "Synchronisation terminée", "Sincronización completada"),
             "تمت إضافة" to listOf("added", "ajoutés", "añadidos"),
             "وتحديث" to listOf("and updated", "et mis à jour", "y actualizados"),
