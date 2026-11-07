@@ -427,7 +427,9 @@ internal class MainLibraryInterfaceController(
                     }
                     coverFrame.addView(
                         languageBadge,
-                        FrameLayout.LayoutParams(-2, -2, Gravity.CENTER)
+                        FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
+                            bottomMargin = dp(12)
+                        }
                     )
                 }
                 card.addView(coverFrame, LinearLayout.LayoutParams(dp(218), dp(276)))
