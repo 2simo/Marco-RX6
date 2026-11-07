@@ -51,8 +51,8 @@ internal class StartupExperienceController(
         val logoHalo = FrameLayout(activity).apply {
             background = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
-                setColor(Color.rgb(25, 28, 34))
-                setStroke(dp(2), Color.rgb(190, 198, 210))
+                setColor(Color.rgb(8, 24, 48))
+                setStroke(dp(3), Color.rgb(35, 145, 255))
             }
             elevation = dp(18).toFloat()
         }
@@ -60,7 +60,12 @@ internal class StartupExperienceController(
             setImageResource(com.marcorx6.library.R.drawable.marco_splash)
             scaleType = ImageView.ScaleType.FIT_CENTER
             contentDescription = "MARCO"
-            setPadding(dp(4), dp(4), dp(4), dp(4))
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(Color.rgb(5, 12, 24))
+            }
+            clipToOutline = true
+            setPadding(dp(7), dp(7), dp(7), dp(7))
             alpha = 0f
             scaleX = 0.92f
             scaleY = 0.92f
