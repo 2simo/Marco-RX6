@@ -69,7 +69,8 @@ internal class MainLibraryRuntimeFeature(
             red = { red },
             white = { white },
             gray = { gray },
-            loadEngagementSummary = loadEngagementSummary
+            loadEngagementSummary = loadEngagementSummary,
+            openCategory = { category, title -> mainLibraryFeature.openCategoryFromSection(category, title) }
         )
     }
 
