@@ -675,6 +675,10 @@ internal object LanguageTranslator {
         Regex("^تعذر التحقق من رابط الصورة \\(HTTP ([^،]+)، النوع: (.*)\\)$").matchEntire(ar)?.let { match ->
             return "${localized("تعذر التحقق من رابط الصورة") ?: "تعذر التحقق من رابط الصورة"} (HTTP ${match.groupValues[1]}, type: ${match.groupValues[2]})"
         }
+        Regex("^الإعلانات والمتتبعات المحجوبة: (\\d+)$").matchEntire(ar)?.let { match ->
+            val template = translations["الإعلانات والمتتبعات المحجوبة: \$count"]?.get(index)
+            if (template != null) return template.replace("\$count", match.groupValues[1])
+        }
         return localized(ar) ?: ar
     }
 
