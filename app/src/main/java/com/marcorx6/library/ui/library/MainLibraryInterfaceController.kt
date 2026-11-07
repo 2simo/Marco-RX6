@@ -219,7 +219,15 @@ internal class MainLibraryInterfaceController(
         searchBox.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                renderResults(s?.toString().orEmpty())
+                // Debounce rapid typing so filtering and rebuilding result cards happen
+                // only after the user pauses, rather than once for every keystroke.
+                searchRenderRunnable?.let(mainHandler::removeCallbacks)
+                val query = s?.toString().orEmpty()
+                val pendingRender = Runnable {
+                    if (searchBox.isAttachedToWindow) renderResults(query)
+                }
+                searchRenderRunnable = pendingRender
+                mainHandler.postDelayed(pendingRender, 180L)
             }
             override fun afterTextChanged(s: Editable?) {}
         })
