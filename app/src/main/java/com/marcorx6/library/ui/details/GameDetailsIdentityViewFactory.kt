@@ -67,14 +67,6 @@ internal class GameDetailsIdentityViewFactory(
             gravity = android.view.Gravity.CENTER_VERTICAL
             setPadding(dp(13), dp(3), dp(3), dp(3))
         }
-        val titleRow = LinearLayout(activity).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = android.view.Gravity.CENTER_VERTICAL
-            layoutDirection = android.view.View.LAYOUT_DIRECTION_LOCALE
-        }
-        titleRow.addView(favoriteToggleFactory.create(game), LinearLayout.LayoutParams(dp(48), dp(48)).apply {
-            marginEnd = dp(7)
-        })
         val titleColumn = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             gravity = android.view.Gravity.CENTER_VERTICAL
@@ -94,8 +86,7 @@ internal class GameDetailsIdentityViewFactory(
                 setPadding(0, dp(3), 0, 0)
             }, LinearLayout.LayoutParams(-1, -2))
         }
-        titleRow.addView(titleColumn, LinearLayout.LayoutParams(0, -2, 1f))
-        identityInfo.addView(titleRow, LinearLayout.LayoutParams(-1, -2))
+        identityInfo.addView(titleColumn, LinearLayout.LayoutParams(-1, -2))
 
         val downloadRow = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -122,7 +113,16 @@ internal class GameDetailsIdentityViewFactory(
             ellipsize = android.text.TextUtils.TruncateAt.END
         }
         downloadRow.addView(downloadCount, LinearLayout.LayoutParams(-2, -2))
-        identityInfo.addView(downloadRow, LinearLayout.LayoutParams(-2, -2).apply {
+        val actionsRow = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            layoutDirection = android.view.View.LAYOUT_DIRECTION_LOCALE
+        }
+        actionsRow.addView(downloadRow, LinearLayout.LayoutParams(0, -2, 1f).apply {
+            marginEnd = dp(8)
+        })
+        actionsRow.addView(favoriteToggleFactory.create(game), LinearLayout.LayoutParams(dp(48), dp(48)))
+        identityInfo.addView(actionsRow, LinearLayout.LayoutParams(-1, -2).apply {
             topMargin = dp(10)
         })
         gameCard.addView(identityInfo, LinearLayout.LayoutParams(0, -2, 1f))
