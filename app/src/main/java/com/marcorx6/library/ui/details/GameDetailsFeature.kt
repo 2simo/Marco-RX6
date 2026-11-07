@@ -134,7 +134,8 @@ internal class GameDetailsFeature(
         deleteGame = deleteGame,
         applyMotionPreferences = applyMotionPreferences,
         applyUnifiedSkin = applyUnifiedSkin,
-        translate = tr
+        translate = tr,
+        isDarkMode = isDarkMode
     )
 
     fun show(game: Game) {
