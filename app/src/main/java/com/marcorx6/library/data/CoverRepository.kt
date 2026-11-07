@@ -17,10 +17,10 @@ import java.util.concurrent.Executors
 /** Loads and caches cover bitmaps independently of UI widgets. */
 internal class CoverRepository(context: Context) : AutoCloseable {
     private val appContext = context.applicationContext
-    private val worker: ExecutorService = Executors.newFixedThreadPool(3)
+    private val worker: ExecutorService = Executors.newFixedThreadPool(2)
     private val mainHandler = Handler(Looper.getMainLooper())
     private val bitmapCache = object : LruCache<String, Bitmap>(
-        (Runtime.getRuntime().maxMemory() / 1024 / 8).toInt().coerceAtLeast(1024)
+        (Runtime.getRuntime().maxMemory() / 1024 / 16).toInt().coerceAtLeast(1024)
     ) {
         override fun sizeOf(key: String, value: Bitmap): Int =
             (value.byteCount / 1024).coerceAtLeast(1)
@@ -108,7 +108,7 @@ internal class CoverRepository(context: Context) : AutoCloseable {
         BitmapFactory.decodeFile(file.absolutePath, bounds)
         if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
         var sample = 1
-        while (bounds.outWidth / sample > 900 || bounds.outHeight / sample > 1100) sample *= 2
+        while (bounds.outWidth / sample > 800 || bounds.outHeight / sample > 1000) sample *= 2
         val options = BitmapFactory.Options().apply {
             inSampleSize = sample
             inPreferredConfig = Bitmap.Config.RGB_565
@@ -121,7 +121,7 @@ internal class CoverRepository(context: Context) : AutoCloseable {
         appContext.assets.open(assetPath).use { BitmapFactory.decodeStream(it, null, bounds) }
         if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
         var sample = 1
-        while (bounds.outWidth / sample > 900 || bounds.outHeight / sample > 1100) sample *= 2
+        while (bounds.outWidth / sample > 800 || bounds.outHeight / sample > 1000) sample *= 2
         val options = BitmapFactory.Options().apply {
             inSampleSize = sample
             inPreferredConfig = Bitmap.Config.RGB_565
