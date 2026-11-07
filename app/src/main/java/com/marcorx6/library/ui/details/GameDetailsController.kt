@@ -125,8 +125,31 @@ internal class GameDetailsController(
         applyMotionPreferences(root)
         applyUnifiedSkin(root)
         reader.setContentView(root)
-        reader.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        reader.window?.let { window ->
+            window.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(bg()))
+            window.addFlags(android.view.WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+            window.statusBarColor = bg()
+            window.navigationBarColor = bg()
+            window.setDimAmount(0f)
+            if (android.os.Build.VERSION.SDK_INT >= 29) {
+                window.isNavigationBarContrastEnforced = false
+                window.isStatusBarContrastEnforced = false
+            }
+        }
         reader.show()
-        reader.window?.setLayout(-1, -1)
+        reader.window?.let { window ->
+            window.setLayout(
+                android.view.WindowManager.LayoutParams.MATCH_PARENT,
+                android.view.WindowManager.LayoutParams.MATCH_PARENT
+            )
+            val lightSystemBars = !isDarkMode()
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = if (lightSystemBars) {
+                android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or
+                    android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+            } else {
+                0
+            }
+        }
     }
 }
