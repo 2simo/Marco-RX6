@@ -3,6 +3,9 @@ package com.marcorx6.library.ui
 /** Centralized static translations for the app interface. */
 internal object LanguageTranslator {
     private val translations = mapOf(
+            "MARCO  /  البحث الذكي" to listOf("MARCO  /  SMART SEARCH", "MARCO  /  RECHERCHE INTELLIGENTE", "MARCO  /  BÚSQUEDA INTELIGENTE"),
+            "MARCO  /  مركز الألعاب الرسمي" to listOf("MARCO  /  OFFICIAL GAME HUB", "MARCO  /  CENTRE DE JEUX OFFICIEL", "MARCO  /  CENTRO OFICIAL DE JUEGOS"),
+            "MARCO  /  الألعاب" to listOf("MARCO  /  GAMES", "MARCO  /  JEUX", "MARCO  /  JUEGOS"),
             "تحميل نموذج الترجمة" to listOf("Download translation model", "Télécharger le modèle de traduction", "Descargar el modelo de traducción"),
             "العربية لا تحتاج إلى نموذج ترجمة" to listOf("Arabic does not need a translation model", "L’arabe n’a pas besoin d’un modèle de traduction", "El árabe no necesita un modelo de traducción"),
             "جارٍ تحميل نموذج الترجمة" to listOf("Downloading translation model", "Téléchargement du modèle de traduction", "Descargando el modelo de traducción"),
