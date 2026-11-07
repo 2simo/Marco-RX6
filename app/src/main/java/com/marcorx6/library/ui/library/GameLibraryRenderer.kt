@@ -27,7 +27,6 @@ internal class GameLibraryRenderer(
     private val loadEngagementSummary: (Game, (Long, Double, Long) -> Unit) -> Unit,
 ) {
     private data class RenderSignature(
-        val games: List<Game>,
         val selected: String,
         val selectedGenre: String,
         val selectedYear: String,
@@ -39,6 +38,7 @@ internal class GameLibraryRenderer(
     )
 
     private var lastRenderedContainer: LinearLayout? = null
+    private var lastRenderedGames: List<Game>? = null
     private var lastRenderSignature: RenderSignature? = null
 
     fun render(
@@ -56,8 +56,14 @@ internal class GameLibraryRenderer(
         white: Int,
         gray: Int
     ) {
+        // Game is a data class containing full Blogger HTML. Compare object identity
+        // instead of deep equality so a refresh does not repeatedly compare hundreds
+        // of potentially large article bodies just to decide whether to redraw cards.
+        val previousGames = lastRenderedGames
+        val sameGameInstances = previousGames != null &&
+            previousGames.size == games.size &&
+            previousGames.indices.all { previousGames[it] === games[it] }
         val signature = RenderSignature(
-            games = games.toList(),
             selected = selected,
             selectedGenre = selectedGenre,
             selectedYear = selectedYear,
@@ -73,11 +79,13 @@ internal class GameLibraryRenderer(
         // unchanged data and presentation state. This prevents card/cover flicker
         // and avoids re-issuing image and engagement requests on every refresh.
         if (lastRenderedContainer === gameList &&
+            sameGameInstances &&
             lastRenderSignature == signature &&
             gameList.childCount > 0
         ) return
 
         lastRenderedContainer = gameList
+        lastRenderedGames = games.toList()
         lastRenderSignature = signature
         gameList.removeAllViews()
         for (i in 0 until filters.childCount) {
