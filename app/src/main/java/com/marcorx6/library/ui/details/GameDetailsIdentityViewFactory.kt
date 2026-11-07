@@ -16,7 +16,8 @@ internal class GameDetailsIdentityViewFactory(
     private val isDarkMode: () -> Boolean,
     private val loadCover: (ImageView, String, String) -> Unit,
     private val loadDownloads: (Game, (Long) -> Unit) -> Unit,
-    private val translate: (String) -> String
+    private val translate: (String) -> String,
+    private val favoriteToggleFactory: GameFavoriteToggleFactory
 ) {
     fun create(game: Game): LinearLayout {
         val dark = isDarkMode()
@@ -66,32 +67,44 @@ internal class GameDetailsIdentityViewFactory(
             gravity = android.view.Gravity.CENTER_VERTICAL
             setPadding(dp(13), dp(3), dp(3), dp(3))
         }
-        identityInfo.addView(makeText(game.name, 17f, primary, true).apply {
+        val titleRow = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            layoutDirection = android.view.View.LAYOUT_DIRECTION_LOCALE
+        }
+        titleRow.addView(favoriteToggleFactory.create(game), LinearLayout.LayoutParams(dp(48), dp(48)).apply {
+            marginEnd = dp(7)
+        })
+        val titleColumn = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+        }
+        titleColumn.addView(makeText(game.name, 17f, primary, true).apply {
             gravity = android.view.Gravity.START
             textAlignment = android.view.View.TEXT_ALIGNMENT_VIEW_START
             maxLines = 3
             setLineSpacing(dp(1).toFloat(), 1.02f)
-            setPadding(0, 0, 0, dp(3))
             contentDescription = game.name
         }, LinearLayout.LayoutParams(-1, -2))
-
         if (game.platform.isNotBlank()) {
-            identityInfo.addView(makeText(translate(game.platform), 11f, muted, false).apply {
+            titleColumn.addView(makeText(translate(game.platform), 11f, muted, false).apply {
                 gravity = android.view.Gravity.START
                 textAlignment = android.view.View.TEXT_ALIGNMENT_VIEW_START
                 maxLines = 1
-                setPadding(0, 0, 0, dp(8))
+                setPadding(0, dp(3), 0, 0)
             }, LinearLayout.LayoutParams(-1, -2))
         }
+        titleRow.addView(titleColumn, LinearLayout.LayoutParams(0, -2, 1f))
+        identityInfo.addView(titleRow, LinearLayout.LayoutParams(-1, -2))
 
         val downloadRow = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = android.view.Gravity.CENTER_VERTICAL
-            setPadding(dp(7), dp(5), dp(8), dp(5))
+            setPadding(dp(10), dp(7), dp(11), dp(7))
             background = GradientDrawable().apply {
-                setColor(if (dark) Color.rgb(43, 47, 55) else Color.WHITE)
-                cornerRadius = dp(12).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(75, 80, 90) else Color.rgb(211, 215, 222))
+                setColor(if (dark) Color.rgb(35, 48, 66) else Color.rgb(232, 240, 250))
+                cornerRadius = dp(13).toFloat()
+                setStroke(dp(1), if (dark) Color.rgb(65, 91, 122) else Color.rgb(190, 210, 232))
             }
             contentDescription = translate("عدد التنزيلات")
         }
@@ -106,7 +119,9 @@ internal class GameDetailsIdentityViewFactory(
             ellipsize = android.text.TextUtils.TruncateAt.END
         }
         downloadRow.addView(downloadCount, LinearLayout.LayoutParams(-2, -2))
-        identityInfo.addView(downloadRow, LinearLayout.LayoutParams(-2, -2))
+        identityInfo.addView(downloadRow, LinearLayout.LayoutParams(-2, -2).apply {
+            topMargin = dp(10)
+        })
         gameCard.addView(identityInfo, LinearLayout.LayoutParams(0, -2, 1f))
         root.addView(gameCard, LinearLayout.LayoutParams(-1, -2).apply {
             bottomMargin = dp(12)
