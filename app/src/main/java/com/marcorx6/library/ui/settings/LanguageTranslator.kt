@@ -3,6 +3,12 @@ package com.marcorx6.library.ui
 /** Centralized static translations for the app interface. */
 internal object LanguageTranslator {
     private val translations = mapOf(
+            "المظهر والحركة" to listOf("APPEARANCE & MOTION", "APPARENCE ET MOUVEMENT", "APARIENCIA Y MOVIMIENTO"),
+            "الخصوصية والتنزيلات" to listOf("PRIVACY & DOWNLOADS", "CONFIDENTIALITÉ ET TÉLÉCHARGEMENTS", "PRIVACIDAD Y DESCARGAS"),
+            "اللغة والمجتمع" to listOf("LANGUAGE & COMMUNITY", "LANGUE ET COMMUNAUTÉ", "IDIOMA Y COMUNIDAD"),
+            "إشعارات التطبيق" to listOf("APP NOTIFICATIONS", "NOTIFICATIONS DE L’APPLICATION", "NOTIFICACIONES DE LA APLICACIÓN"),
+            "الحساب والصلاحيات" to listOf("ACCOUNT & PERMISSIONS", "COMPTE ET AUTORISATIONS", "CUENTA Y PERMISOS"),
+            "التخصيص والتخزين" to listOf("ACCESSIBILITY & STORAGE", "PERSONNALISATION ET STOCKAGE", "PERSONALIZACIÓN Y ALMACENAMIENTO"),
             "MARCO  /  البحث الذكي" to listOf("MARCO  /  SMART SEARCH", "MARCO  /  RECHERCHE INTELLIGENTE", "MARCO  /  BÚSQUEDA INTELIGENTE"),
             "MARCO  /  مركز الألعاب الرسمي" to listOf("MARCO  /  OFFICIAL GAME HUB", "MARCO  /  CENTRE DE JEUX OFFICIEL", "MARCO  /  CENTRO OFICIAL DE JUEGOS"),
             "MARCO  /  الألعاب" to listOf("MARCO  /  GAMES", "MARCO  /  JEUX", "MARCO  /  JUEGOS"),
