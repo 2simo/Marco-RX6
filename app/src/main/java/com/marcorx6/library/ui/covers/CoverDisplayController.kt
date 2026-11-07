@@ -7,7 +7,7 @@ internal class CoverDisplayController(
     private val resolveKey: (String, String) -> String,
     private val loadBitmap: (String, String, (android.graphics.Bitmap?) -> Unit) -> Unit
 ) {
-    private data class RequestState(val key: String, var completed: Boolean = false)
+    private data class RequestState(val key: String)
 
     fun load(image: ImageView, localPath: String, imageUrl: String) {
         val resolvedImageUrl = normalizeUrl(imageUrl)
@@ -32,7 +32,6 @@ internal class CoverDisplayController(
             if (image.tag === state) {
                 if (bitmap != null) {
                     image.setImageBitmap(bitmap)
-                    state.completed = true
                 } else {
                     // Permit a later render to retry a failed cover request.
                     image.tag = null
