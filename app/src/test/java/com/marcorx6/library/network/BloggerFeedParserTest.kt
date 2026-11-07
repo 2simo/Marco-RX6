@@ -14,6 +14,10 @@ class BloggerFeedParserTest {
         assertEquals("PS2", BloggerFeedParser.normalizePlatform("PS-2"))
         assertEquals("PS3", BloggerFeedParser.normalizePlatform("PlayStation3"))
         assertEquals("PS4", BloggerFeedParser.normalizePlatform("ps4"))
+        assertEquals("PS3_ARABIC", BloggerFeedParser.normalizePlatform("ps3arabic"))
+        assertEquals("PS2_ARABIC", BloggerFeedParser.normalizePlatform("ps2arabic"))
+        assertEquals("PS2_PORT_PS4", BloggerFeedParser.normalizePlatform("ps2ps4"))
+        assertEquals("PS2_PORT_PS3", BloggerFeedParser.normalizePlatform("ps2ps3"))
         assertEquals("3DS", BloggerFeedParser.normalizePlatform("Nintendo 3DS"))
         assertEquals("3DS", BloggerFeedParser.normalizePlatform("3DS"))
         assertEquals("GBA", BloggerFeedParser.normalizePlatform("Game Boy Advance"))
@@ -61,6 +65,17 @@ class BloggerFeedParserTest {
         )
 
         assertEquals("PS2", BloggerFeedParser.platformFromCategories(entry))
+    }
+
+    @Test
+    fun prioritizesSpecificOsCategoryOverBroadConsoleCategory() {
+        val entry = JSONObject().put(
+            "category",
+            org.json.JSONArray()
+                .put(JSONObject().put("term", "PS2"))
+                .put(JSONObject().put("term", "ps2ps4"))
+        )
+        assertEquals("PS2_PORT_PS4", BloggerFeedParser.platformFromCategories(entry))
     }
 
     @Test
