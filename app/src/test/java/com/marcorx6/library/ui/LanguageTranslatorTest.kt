@@ -52,4 +52,31 @@ class LanguageTranslatorTest {
         assertEquals("MARCO  /  JUEGOS", LanguageTranslator.translate(games, "es"))
     }
 
+
+    @Test
+    fun preservesUnknownTextAndUnsupportedLanguageCodes() {
+        val source = "نص جديد غير موجود في القاموس"
+        assertEquals(source, LanguageTranslator.translate(source, "en"))
+        assertEquals(source, LanguageTranslator.translate(source, "fr"))
+        assertEquals(source, LanguageTranslator.translate(source, "es"))
+        assertEquals(source, LanguageTranslator.translate(source, "de"))
+        assertEquals(source, LanguageTranslator.translate(source, ""))
+    }
+
+    @Test
+    fun translatesRatingInterfaceIntoAllSupportedLanguages() {
+        val source = "قيّم هذه اللعبة"
+        assertEquals("Rate this game", LanguageTranslator.translate(source, "en"))
+        assertEquals("Évaluer ce jeu", LanguageTranslator.translate(source, "fr"))
+        assertEquals("Califica este juego", LanguageTranslator.translate(source, "es"))
+        assertEquals(source, LanguageTranslator.translate(source, "ar"))
+    }
+
+    @Test
+    fun translatesTranslationModelMessagesIntoAllSupportedLanguages() {
+        val source = "تحميل نموذج الترجمة"
+        assertEquals("Download translation model", LanguageTranslator.translate(source, "en"))
+        assertEquals("Télécharger le modèle de traduction", LanguageTranslator.translate(source, "fr"))
+        assertEquals("Descargar el modelo de traducción", LanguageTranslator.translate(source, "es"))
+    }
 }
