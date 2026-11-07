@@ -102,14 +102,17 @@ internal class GameDetailsIdentityViewFactory(
             gravity = android.view.Gravity.CENTER_VERTICAL
             setPadding(dp(10), dp(7), dp(11), dp(7))
             background = GradientDrawable().apply {
-                setColor(if (dark) Color.rgb(35, 48, 66) else Color.rgb(232, 240, 250))
+                setColor(if (dark) Color.rgb(35, 38, 45) else Color.rgb(232, 234, 238))
                 cornerRadius = dp(13).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(65, 91, 122) else Color.rgb(190, 210, 232))
+                setStroke(dp(1), if (dark) Color.rgb(105, 113, 126) else Color.rgb(190, 198, 210))
             }
             contentDescription = translate("عدد التنزيلات")
         }
         val downloadIcon = ImageView(activity).apply {
             setImageResource(com.marcorx6.library.R.drawable.ic_action_download)
+            imageTintList = android.content.res.ColorStateList.valueOf(
+                if (dark) Color.rgb(225, 228, 234) else Color.rgb(65, 71, 80)
+            )
             contentDescription = null
         }
         downloadRow.addView(downloadIcon, LinearLayout.LayoutParams(dp(16), dp(16)))
