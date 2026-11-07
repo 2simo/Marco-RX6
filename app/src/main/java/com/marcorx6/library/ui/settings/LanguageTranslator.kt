@@ -676,8 +676,8 @@ internal object LanguageTranslator {
             return "${localized("تعذر التحقق من رابط الصورة") ?: "تعذر التحقق من رابط الصورة"} (HTTP ${match.groupValues[1]}, type: ${match.groupValues[2]})"
         }
         Regex("^الإعلانات والمتتبعات المحجوبة: (\\d+)$").matchEntire(ar)?.let { match ->
-            val template = translations["الإعلانات والمتتبعات المحجوبة: \$count"]?.get(index)
-            if (template != null) return template.replace("\$count", match.groupValues[1])
+            val prefix = localized("الإعلانات والمتتبعات المحجوبة:")
+            if (prefix != null) return "$prefix ${match.groupValues[1]}"
         }
         return localized(ar) ?: ar
     }
