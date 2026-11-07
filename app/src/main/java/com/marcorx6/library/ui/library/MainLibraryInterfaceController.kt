@@ -439,6 +439,8 @@ internal class MainLibraryInterfaceController(
         applyMotionPreferences(scroll)
     }
 
+    fun openCategoryFromSection(category: String, title: String) = showFullScreenCategory(category, title)
+
     private fun showFullScreenCategory(category: String, title: String) {
         selected = category
         val ink = bg
