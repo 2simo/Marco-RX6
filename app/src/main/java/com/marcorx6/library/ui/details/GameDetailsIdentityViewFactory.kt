@@ -66,18 +66,28 @@ internal class GameDetailsIdentityViewFactory(
             gravity = android.view.Gravity.CENTER_VERTICAL
             setPadding(dp(13), dp(3), dp(3), dp(3))
         }
-        identityInfo.addView(makeText(game.name, 18f, primary, true).apply {
+        identityInfo.addView(makeText(game.name, 17f, primary, true).apply {
             gravity = android.view.Gravity.START
             textAlignment = android.view.View.TEXT_ALIGNMENT_VIEW_START
-            maxLines = 4
-            setPadding(0, 0, 0, dp(14))
+            maxLines = 3
+            setLineSpacing(dp(1).toFloat(), 1.02f)
+            setPadding(0, 0, 0, dp(3))
             contentDescription = game.name
         }, LinearLayout.LayoutParams(-1, -2))
+
+        if (game.platform.isNotBlank()) {
+            identityInfo.addView(makeText(translate(game.platform), 11f, muted, false).apply {
+                gravity = android.view.Gravity.START
+                textAlignment = android.view.View.TEXT_ALIGNMENT_VIEW_START
+                maxLines = 1
+                setPadding(0, 0, 0, dp(8))
+            }, LinearLayout.LayoutParams(-1, -2))
+        }
 
         val downloadRow = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = android.view.Gravity.CENTER_VERTICAL
-            setPadding(dp(9), dp(8), dp(10), dp(8))
+            setPadding(dp(7), dp(5), dp(8), dp(5))
             background = GradientDrawable().apply {
                 setColor(if (dark) Color.rgb(43, 47, 55) else Color.WHITE)
                 cornerRadius = dp(12).toFloat()
@@ -89,10 +99,11 @@ internal class GameDetailsIdentityViewFactory(
             setImageResource(com.marcorx6.library.R.drawable.ic_action_download)
             contentDescription = null
         }
-        downloadRow.addView(downloadIcon, LinearLayout.LayoutParams(dp(19), dp(19)))
-        val downloadCount = makeText(translate("التنزيلات: 0"), 13f, primary, true).apply {
-            setPadding(dp(7), 0, 0, 0)
+        downloadRow.addView(downloadIcon, LinearLayout.LayoutParams(dp(16), dp(16)))
+        val downloadCount = makeText(translate("التنزيلات: 0"), 11f, primary, true).apply {
+            setPadding(dp(6), 0, 0, 0)
             maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
         }
         downloadRow.addView(downloadCount, LinearLayout.LayoutParams(-2, -2))
         identityInfo.addView(downloadRow, LinearLayout.LayoutParams(-2, -2))
@@ -175,7 +186,9 @@ internal class GameDetailsIdentityViewFactory(
             "النوع" to game.genre,
             "سنة الإصدار" to game.releaseYear
         ).filterValues { it.isNotBlank() }.toMutableMap()
-        if (html.isBlank()) return stored.map { it.key to it.value }
+        if (html.isBlank()) return stored
+            .filterValues { !it.normalizedForDetails().equals(game.name.normalizedForDetails(), ignoreCase = true) }
+            .map { it.key to it.value }
         val fields = listOf(
             "الحجم" to listOf("الحجم", "حجم", "size"),
             "النسخة" to listOf("النسخة", "version", "title id", "cusa"),
@@ -216,8 +229,15 @@ internal class GameDetailsIdentityViewFactory(
                 }
             }
         }
+        val normalizedGameName = game.name.normalizedForDetails()
         return fields.mapNotNull { (label, _) ->
-            entries[label]?.takeIf { it.isNotBlank() }?.let { value -> label to value }
+            entries[label]?.takeIf {
+                it.isNotBlank() &&
+                    !it.normalizedForDetails().equals(normalizedGameName, ignoreCase = true)
+            }?.let { value -> label to value }
         }
     }
+
+    private fun String.normalizedForDetails(): String =
+        replace(Regex("\\s+"), " ").trim().removeSuffix(".").removeSuffix(",")
 }
