@@ -26,6 +26,21 @@ internal class GameLibraryRenderer(
     private val showDetails: (Game) -> Unit,
     private val loadEngagementSummary: (Game, (Long, Double, Long) -> Unit) -> Unit,
 ) {
+    private data class RenderSignature(
+        val games: List<Game>,
+        val selected: String,
+        val selectedGenre: String,
+        val selectedYear: String,
+        val sortMode: String,
+        val filterLabels: List<String>,
+        val colors: List<Int>,
+        val darkMode: Boolean,
+        val gameLabel: String
+    )
+
+    private var lastRenderedContainer: LinearLayout? = null
+    private var lastRenderSignature: RenderSignature? = null
+
     fun render(
         gameList: LinearLayout,
         filters: LinearLayout,
@@ -41,6 +56,29 @@ internal class GameLibraryRenderer(
         white: Int,
         gray: Int
     ) {
+        val signature = RenderSignature(
+            games = games.toList(),
+            selected = selected,
+            selectedGenre = selectedGenre,
+            selectedYear = selectedYear,
+            sortMode = sortMode,
+            filterLabels = (0 until filters.childCount).map { filters.getChildAt(it).let { child ->
+                (child as? TextView)?.text?.toString().orEmpty()
+            } },
+            colors = listOf(bg, panel, red, white, gray),
+            darkMode = isDarkMode(),
+            gameLabel = tr("لعبة")
+        )
+        // Skip rebuilding the entire carousel when a caller requests a render with
+        // unchanged data and presentation state. This prevents card/cover flicker
+        // and avoids re-issuing image and engagement requests on every refresh.
+        if (lastRenderedContainer === gameList &&
+            lastRenderSignature == signature &&
+            gameList.childCount > 0
+        ) return
+
+        lastRenderedContainer = gameList
+        lastRenderSignature = signature
         gameList.removeAllViews()
         for (i in 0 until filters.childCount) {
             val chip = filters.getChildAt(i) as TextView
