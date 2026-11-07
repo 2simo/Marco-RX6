@@ -421,33 +421,59 @@ internal class MainLibraryInterfaceController(
                 popularCards.add(card)
             }
             popularScroll.addView(popularTrack)
-            popularScroll.setOnScrollChangeListener { view, _, scrollX, _, _ ->
-                val center = scrollX + view.width / 2f
+            var popularSnapRunnable: Runnable? = null
+            fun updatePopularFocus() {
+                val viewportCenter = popularScroll.scrollX +
+                    (popularScroll.width / 2f) - popularScroll.paddingLeft
+                val focusRange = (popularScroll.width * 0.72f).coerceAtLeast(1).toFloat()
                 popularCards.forEach { card ->
                     val cardCenter = card.left + card.width / 2f
-                    val distance = kotlin.math.abs(center - cardCenter) / view.width.coerceAtLeast(1)
-                    val emphasis = (1f - distance * 0.55f).coerceIn(0.72f, 1f)
-                    card.alpha = emphasis
-                    card.translationZ = dp((emphasis * 10f).toInt()).toFloat()
-                    card.scaleX = 0.97f + emphasis * 0.03f
-                    card.scaleY = 0.97f + emphasis * 0.03f
+                    val distance = kotlin.math.abs(viewportCenter - cardCenter)
+                    val focus = (1f - distance / focusRange).coerceIn(0f, 1f)
+                    card.alpha = 0.68f + (focus * 0.32f)
+                    val scale = 0.88f + (focus * 0.12f)
+                    card.scaleX = scale
+                    card.scaleY = scale
+                    card.translationZ = dp((focus * 10f).toInt()).toFloat()
                 }
+            }
+            fun snapPopularToNearest() {
+                if (popularCards.isEmpty() || popularScroll.width == 0) return
+                val viewportCenter = popularScroll.scrollX +
+                    (popularScroll.width / 2f) - popularScroll.paddingLeft
+                val nearest = popularCards.minByOrNull { card ->
+                    kotlin.math.abs((card.left + card.width / 2f) - viewportCenter)
+                } ?: return
+                val target = nearest.left + nearest.width / 2 -
+                    (popularScroll.width / 2 - popularScroll.paddingLeft)
+                val maxScroll = (popularTrack.width + popularScroll.paddingLeft +
+                    popularScroll.paddingRight - popularScroll.width).coerceAtLeast(0)
+                popularScroll.smoothScrollTo(target.coerceIn(0, maxScroll), 0)
+            }
+            popularScroll.setOnScrollChangeListener { _, _, _, _, _ ->
+                updatePopularFocus()
+                popularSnapRunnable?.let(mainHandler::removeCallbacks)
+                val pendingSnap = Runnable { snapPopularToNearest() }
+                popularSnapRunnable = pendingSnap
+                // Wait until the finger/fling stops, then settle the nearest cover exactly in the center.
+                mainHandler.postDelayed(pendingSnap, 150L)
             }
             root.addView(popularScroll, LinearLayout.LayoutParams(-1, -2).apply {
                 bottomMargin = dp(8)
             })
             popularScroll.post {
-                val first = popularCards.firstOrNull() ?: return@post
-                val sideInset = ((popularScroll.width - first.width) / 2).coerceAtLeast(dp(12))
+                if (popularCards.isEmpty()) return@post
+                val sideInset = ((popularScroll.width - popularCards.first().width) / 2)
+                    .coerceAtLeast(dp(12))
                 popularScroll.setPadding(sideInset, dp(8), sideInset, dp(12))
-                popularScroll.scrollTo(0, 0)
-                popularCards.forEach { card ->
-                    val isMain = card === first
-                    card.alpha = if (isMain) 1f else 0.76f
-                    card.scaleX = if (isMain) 1f else 0.90f
-                    card.scaleY = if (isMain) 1f else 0.90f
-                    card.translationZ = if (isMain) dp(12).toFloat() else 0f
-                }
+                // Start on a middle entry so neighboring covers are visible on BOTH sides.
+                val initial = popularCards[popularCards.size / 2]
+                val initialTarget = initial.left + initial.width / 2 -
+                    (popularScroll.width / 2 - popularScroll.paddingLeft)
+                val maxScroll = (popularTrack.width + popularScroll.paddingLeft +
+                    popularScroll.paddingRight - popularScroll.width).coerceAtLeast(0)
+                popularScroll.scrollTo(initialTarget.coerceIn(0, maxScroll), 0)
+                updatePopularFocus()
             }
         }
 
