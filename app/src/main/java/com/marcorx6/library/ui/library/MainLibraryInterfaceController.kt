@@ -259,7 +259,7 @@ internal class MainLibraryInterfaceController(
 
     fun create() {
         // Blog posts are included in ALL; normalize any previously saved Blog filter.
-        if (selected == "BLOG") selected = "ALL"
+        if (selected in setOf("BLOG", "PS2_ARABIC", "PS2_PORT_PS4", "PS2_PORT_PS3")) selected = "ALL"
         activeDockTab = "HOME"
         // MARCO visual system: charcoal surfaces with brushed-silver accents.
         val silver = if (isDarkMode()) Color.rgb(225, 228, 234) else Color.rgb(43, 47, 55)
@@ -495,7 +495,7 @@ internal class MainLibraryInterfaceController(
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        listOf("ALL", "PS4", "PS3", "PS2", "PS3_ARABIC", "PS2_ARABIC", "PS2_PORT_PS4", "PS2_PORT_PS3", "FAVORITES").forEach { category ->
+        listOf("ALL", "PS4", "PS3", "PS2", "PS3_ARABIC", "FAVORITES").forEach { category ->
             val chip = TextView(context).apply {
                 text = when (category) {
                     "ALL" -> tr("الكل")
@@ -503,9 +503,6 @@ internal class MainLibraryInterfaceController(
                     "PS3" -> "PS3"
                     "PS2" -> "PS2"
                     "PS3_ARABIC" -> tr("PS3 Arabic")
-                    "PS2_ARABIC" -> tr("PS2 Arabic")
-                    "PS2_PORT_PS4" -> tr("PS2 Port PS4")
-                    "PS2_PORT_PS3" -> tr("PS2 Port PS3")
                     "FAVORITES" -> tr("المفضلة")
                     else -> category
                 }
