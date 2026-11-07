@@ -413,23 +413,21 @@ internal class MainLibraryInterfaceController(
                 if (languageLabel.isNotBlank()) {
                     val languageBadge = TextView(context).apply {
                         text = languageLabel
-                        textSize = 8f
+                        textSize = 11f
                         setTextColor(Color.WHITE)
                         typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
                         gravity = Gravity.CENTER
-                        setPadding(dp(6), dp(3), dp(6), dp(3))
+                        setPadding(dp(12), dp(7), dp(12), dp(7))
                         background = GradientDrawable().apply {
-                            setColor(Color.argb(224, 35, 38, 45))
-                            cornerRadius = dp(7).toFloat()
-                            setStroke(dp(1), Color.argb(210, 145, 153, 166))
+                            setColor(Color.argb(232, 35, 38, 45))
+                            cornerRadius = dp(10).toFloat()
+                            setStroke(dp(1), Color.argb(225, 165, 175, 190))
                         }
+                        elevation = dp(5).toFloat()
                     }
                     coverFrame.addView(
                         languageBadge,
-                        FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.END).apply {
-                            rightMargin = dp(6)
-                            bottomMargin = dp(6)
-                        }
+                        FrameLayout.LayoutParams(-2, -2, Gravity.CENTER)
                     )
                 }
                 card.addView(coverFrame, LinearLayout.LayoutParams(dp(218), dp(276)))
