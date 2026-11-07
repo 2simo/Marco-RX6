@@ -123,4 +123,20 @@ class LanguageTranslatorTest {
             LanguageTranslator.translate("الإعلانات والمتتبعات المحجوبة: 17", "es")
         )
     }
+
+    @Test
+    fun translatesBloggerComposerValidationMessages() {
+        assertEquals(
+            "Enter both the link name and its URL",
+            LanguageTranslator.translate("أدخل اسم الرابط وعنوانه معاً", "en")
+        )
+        assertEquals(
+            "Ajoutez au moins un lien de téléchargement avant l’aperçu",
+            LanguageTranslator.translate("أضف رابط تحميل واحداً على الأقل قبل المعاينة", "fr")
+        )
+        assertEquals(
+            "Añade al menos un enlace de descarga antes de publicar",
+            LanguageTranslator.translate("أضف رابط تحميل واحداً على الأقل قبل النشر", "es")
+        )
+    }
 }
