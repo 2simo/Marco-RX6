@@ -163,4 +163,13 @@ class LanguageTranslatorTest {
         assertEquals("Paso 4", LanguageTranslator.translate("خطوة 4", "es"))
         assertEquals("خطوة 4", LanguageTranslator.translate("خطوة 4", "ar"))
     }
+
+    @Test
+    fun translatesDownloadBrowserControlsAndValidation() {
+        assertEquals("Download browser", LanguageTranslator.translate("متصفح التحميل", "en"))
+        assertEquals("Rechercher ou saisir l’adresse d’un site", LanguageTranslator.translate("ابحث أو أدخل عنوان الموقع", "fr"))
+        assertEquals("La URL de la página no es válida o no es segura", LanguageTranslator.translate("رابط الصفحة غير صالح أو غير آمن", "es"))
+        assertEquals("Forward", LanguageTranslator.translate("تقدم", "en"))
+        assertEquals("Open externally", LanguageTranslator.translate("فتح خارجياً", "en"))
+    }
 }
