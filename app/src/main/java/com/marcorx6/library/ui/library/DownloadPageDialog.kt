@@ -356,7 +356,16 @@ internal class DownloadPageDialog(
             "serving-sys.com", "sharethrough.com", "simpli.fi", "siteimproveanalytics.com",
             "smartadserver.com", "sportradarserving.com", 
             "teads.tv", "triplelift.com", "turn.com", "undertone.com",
-            "yieldlove.com", "zemanta.com"
+            "yieldlove.com", "zemanta.com",
+            "adclick.g.doubleclick.net", "ads.google.com", "ads.youtube.com",
+            "amazon-adsystem.com", "advertising.amazon.com", "adzerk.net",
+            "adlightning.com", "admanmedia.com", "adpushup.com", "adrecover.com",
+            "adthrive.com", "carbonads.com", "ethicalads.io", " BuySellAds.com".trim().lowercase(),
+            "onesignal.com", "pushengage.com", "webpushr.com",
+            "optad360.com", " monetizemore.com".trim().lowercase(), "snigel.com",
+            "shareasale.com", "impact.com", "awin1.com", "partnerize.com",
+            "track.adform.net", "pixel.facebook.com", "connect.facebook.net",
+            "analytics.tiktok.com", "bat.bing.com", "stats.g.doubleclick.net"
         )
         fun hostIsAllowed(host: String): Boolean =
             allowedHosts.any { host == it || host.endsWith(".$it") }
@@ -386,9 +395,14 @@ internal class DownloadPageDialog(
                 'div[id*="taboola"]','div[class*="taboola"]',
                 'div[id*="outbrain"]','div[class*="outbrain"]'];
               function hideAds(root){var n=0;selectors.forEach(function(s){
-                try{root.querySelectorAll(s).forEach(function(e){
-                  if(n<120){e.style.setProperty('display','none','important');n++;}
-                });}catch(ignore){}
+                try{
+                  if(root&&root.nodeType===1&&root.matches&&root.matches(s)){
+                    root.style.setProperty('display','none','important');n++;
+                  }
+                  root.querySelectorAll(s).forEach(function(e){
+                    if(n<160){e.style.setProperty('display','none','important');n++;}
+                  });
+                }catch(ignore){}
               });}
               hideAds(document);
               if(!window.__marcoAdObserver){
