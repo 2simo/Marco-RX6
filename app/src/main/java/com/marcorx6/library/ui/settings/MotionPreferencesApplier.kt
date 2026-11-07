@@ -1,6 +1,5 @@
 package com.marcorx6.library.ui
 
-import android.animation.LayoutTransition
 import android.view.View
 import android.view.ViewGroup
 import android.content.SharedPreferences
@@ -15,11 +14,20 @@ internal class MotionPreferencesApplier(
 ) {
     fun apply(view: View) {
         val animationsEnabled = preferences().getBoolean("animations", true)
+
+        // Implicit LayoutTransition animates every child insertion/removal. Large
+        // library renders and download refreshes can therefore trigger overlapping
+        // layout animations that look like flicker and waste UI-thread work.
+        // Screens keep their deliberate, short entrance/step animations separately.
         if (view is ViewGroup) {
-            view.layoutTransition = if (animationsEnabled) LayoutTransition().apply { setDuration(150) } else null
+            view.layoutTransition = null
             for (i in 0 until view.childCount) apply(view.getChildAt(i))
         }
-        // Avoid replacing screen-specific touch listeners. Individual controls own
-        // their ripple feedback; this helper only coordinates container transitions.
+
+        // When the user disables motion, stop any in-flight property animation.
+        if (!animationsEnabled) {
+            view.animate().cancel()
+            view.clearAnimation()
+        }
     }
 }
