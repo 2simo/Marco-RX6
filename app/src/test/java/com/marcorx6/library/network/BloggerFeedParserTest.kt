@@ -18,6 +18,8 @@ class BloggerFeedParserTest {
         assertEquals("PS2_ARABIC", BloggerFeedParser.normalizePlatform("ps2arabic"))
         assertEquals("PS2_PORT_PS4", BloggerFeedParser.normalizePlatform("ps2ps4"))
         assertEquals("PS2_PORT_PS3", BloggerFeedParser.normalizePlatform("ps2ps3"))
+        assertEquals("PS2_PORT_PS4", BloggerFeedParser.normalizePlatform("PS2 Port PS4"))
+        assertEquals("PS2_PORT_PS3", BloggerFeedParser.normalizePlatform("PS2 Port PS3"))
         assertEquals("3DS", BloggerFeedParser.normalizePlatform("Nintendo 3DS"))
         assertEquals("3DS", BloggerFeedParser.normalizePlatform("3DS"))
         assertEquals("GBA", BloggerFeedParser.normalizePlatform("Game Boy Advance"))
