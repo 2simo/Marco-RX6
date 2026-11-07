@@ -8,6 +8,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.marcorx6.library.data.Game
+import com.marcorx6.library.ui.settings.LocalContentTranslator
 
 internal class GameDetailsIdentityViewFactory(
     private val activity: Activity,
@@ -17,8 +18,11 @@ internal class GameDetailsIdentityViewFactory(
     private val loadCover: (ImageView, String, String) -> Unit,
     private val loadDownloads: (Game, (Long) -> Unit) -> Unit,
     private val translate: (String) -> String,
+    private val targetLanguage: () -> String,
     private val favoriteToggleFactory: GameFavoriteToggleFactory
 ) {
+    private val contentTranslator by lazy { LocalContentTranslator(activity) }
+
     fun create(game: Game): LinearLayout {
         val dark = isDarkMode()
         val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
@@ -163,7 +167,7 @@ internal class GameDetailsIdentityViewFactory(
                     textDirection = android.view.View.TEXT_DIRECTION_FIRST_STRONG
                     gravity = android.view.Gravity.START
                 }, LinearLayout.LayoutParams(-1, -2))
-                cell.addView(makeText(item.second, 15f, primary, true).apply {
+                val valueView = makeText(item.second, 15f, primary, true).apply {
                     textDirection = android.view.View.TEXT_DIRECTION_FIRST_STRONG
                     gravity = android.view.Gravity.START
                     textAlignment = android.view.View.TEXT_ALIGNMENT_VIEW_START
@@ -171,7 +175,28 @@ internal class GameDetailsIdentityViewFactory(
                     maxLines = Int.MAX_VALUE
                     ellipsize = null
                     setHorizontallyScrolling(false)
-                }, LinearLayout.LayoutParams(-1, -2))
+                }
+                cell.addView(valueView, LinearLayout.LayoutParams(-1, -2))
+
+                // Translate only the displayed copy. The Game object and Blogger HTML
+                // remain untouched, so uploads, edits and stored metadata keep originals.
+                val target = targetLanguage()
+                if (target in setOf("en", "fr", "es") && item.second.length >= 3) {
+                    contentTranslator.translateAutomatically(
+                        text = item.second,
+                        targetLanguage = target,
+                        onTranslated = { translated ->
+                            activity.runOnUiThread {
+                                if (!activity.isFinishing && !activity.isDestroyed &&
+                                    valueView.isAttachedToWindow && translated.isNotBlank()
+                                ) {
+                                    valueView.text = translated
+                                }
+                            }
+                        },
+                        onError = { /* Keep the original value when detection or translation fails. */ }
+                    )
+                }
                 infoCard.addView(cell, LinearLayout.LayoutParams(-1, -2).apply {
                     bottomMargin = dp(8)
                 })
