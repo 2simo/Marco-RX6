@@ -199,6 +199,10 @@ internal class GameLibraryRenderer(
         }
 
         sections.forEach { (platform, sectionGames) ->
+            val sectionTitle = when (platform) {
+                "PS3_ARABIC" -> tr("PS3 Arabic")
+                else -> platform
+            }
             val heading = LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
@@ -246,8 +250,8 @@ internal class GameLibraryRenderer(
                     }
                     isClickable = true
                     isFocusable = true
-                    contentDescription = tr("فتح قسم") + " " + platform
-                    setOnClickListener { openCategory(platform, platform) }
+                    contentDescription = tr("فتح قسم") + " " + sectionTitle
+                    setOnClickListener { openCategory(platform, sectionTitle) }
                 }
                 heading.addView(openSection, LinearLayout.LayoutParams(-2, -2).apply {
                     marginEnd = dp(7)
