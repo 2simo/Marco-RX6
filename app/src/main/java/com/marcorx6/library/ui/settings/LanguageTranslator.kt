@@ -685,6 +685,12 @@ internal object LanguageTranslator {
             "نتيجة" to listOf("results", "résultats", "resultados"),
             "لم يتم العثور على ألعاب مطابقة" to listOf("No matching games found", "Aucun jeu correspondant trouvé", "No se encontraron juegos coincidentes"),
             "تم إعداد مكتبتك. اختياراتك محفوظة ويمكنك تغييرها لاحقاً من الإعدادات." to listOf("Your library is ready. Your choices are saved and can be changed later in Settings.", "Votre bibliothèque est prête. Vos choix sont enregistrés et modifiables dans les paramètres.", "Tu biblioteca está lista. Tus opciones se han guardado y puedes cambiarlas en Ajustes."),
+            "قيّم هذه اللعبة" to listOf("Rate this game", "Évaluer ce jeu", "Califica este juego"),
+            "اختر تقييماً من نجمة إلى خمس نجوم" to listOf("Choose a rating from one to five stars", "Choisissez une note d’une à cinq étoiles", "Elige una valoración de una a cinco estrellas"),
+            "سجّل الدخول لتتمكن من تقييم اللعبة" to listOf("Sign in to rate this game", "Connectez-vous pour évaluer ce jeu", "Inicia sesión para calificar este juego"),
+            "قيّم هذه اللعبة من نجمة إلى خمس نجوم" to listOf("Rate this game from one to five stars", "Évaluez ce jeu de une à cinq étoiles", "Califica este juego de una a cinco estrellas"),
+            "تم حفظ تقييمك" to listOf("Your rating has been saved", "Votre évaluation a été enregistrée", "Tu valoración se ha guardado"),
+            "تعذر حفظ التقييم" to listOf("Could not save the rating", "Impossible d’enregistrer l’évaluation", "No se pudo guardar la valoración"),
         )
 
     fun translate(ar: String, lang: String): String {
