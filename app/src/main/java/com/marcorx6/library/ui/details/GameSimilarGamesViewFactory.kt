@@ -5,7 +5,9 @@ import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.Drawable
 import android.text.TextUtils
+import android.view.Gravity
 import android.view.View
+import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -74,7 +76,40 @@ internal class GameSimilarGamesViewFactory(
                 cover.setImageResource(android.R.drawable.ic_menu_gallery)
                 cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
             }
-            card.addView(cover, LinearLayout.LayoutParams(-1, dp(142)))
+            val coverFrame = FrameLayout(activity).apply {
+                background = GradientDrawable().apply {
+                    setColor(if (dark) Color.rgb(35, 38, 45) else Color.rgb(222, 226, 232))
+                    cornerRadius = dp(10).toFloat()
+                }
+                clipToOutline = true
+                addView(cover, FrameLayout.LayoutParams(-1, -1))
+            }
+            val languageLabel = GameLanguageBadge.resolve(item)
+            if (languageLabel.isNotBlank()) {
+                val languageBadge = TextView(activity).apply {
+                    text = languageLabel
+                    textSize = 8.5f
+                    setTextColor(Color.WHITE)
+                    typeface = android.graphics.Typeface.create(
+                        "sans-serif-medium", android.graphics.Typeface.BOLD
+                    )
+                    gravity = Gravity.CENTER
+                    setPadding(dp(7), dp(4), dp(7), dp(4))
+                    background = GradientDrawable().apply {
+                        setColor(Color.argb(224, 35, 38, 45))
+                        cornerRadius = dp(8).toFloat()
+                        setStroke(dp(1), Color.argb(210, 145, 153, 166))
+                    }
+                }
+                coverFrame.addView(
+                    languageBadge,
+                    FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.END).apply {
+                        rightMargin = dp(6)
+                        bottomMargin = dp(6)
+                    }
+                )
+            }
+            card.addView(coverFrame, LinearLayout.LayoutParams(-1, dp(142)))
             card.addView(TextView(activity).apply {
                 text = item.name
                 textSize = 11f
