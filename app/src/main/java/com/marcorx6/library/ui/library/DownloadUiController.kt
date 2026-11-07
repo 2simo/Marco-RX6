@@ -56,6 +56,8 @@ internal class DownloadUiController(
                 when (result) {
                     is DownloadStartResult.Enqueued ->
                         Toast.makeText(activity, translate("تم التحقق من الملف وإضافته إلى مدير التنزيلات"), Toast.LENGTH_LONG).show()
+                    is DownloadStartResult.AlreadyQueued ->
+                        Toast.makeText(activity, translate("هذا التنزيل موجود بالفعل في قائمة التنزيلات") + ": " + result.title, Toast.LENGTH_LONG).show()
                     is DownloadStartResult.OpenInBrowser -> {
                         Toast.makeText(activity, translate("هذا رابط صفحة تحميل؛ افتح الصفحة لإكمال الخطوات واختيار الملف المباشر"), Toast.LENGTH_LONG).show()
                         DownloadPageDialog(activity, translate).show(result.finalUrl, title) { url, gameTitle, userAgent, disposition, mimeType, pageUrl ->
