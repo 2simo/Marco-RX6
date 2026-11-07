@@ -379,7 +379,7 @@ internal class MainLibraryInterfaceController(
                 gravity = Gravity.CENTER_VERTICAL
             }
             val popularCards = mutableListOf<View>()
-            popularByPlatform.forEach { game ->
+            popularByPlatform.forEachIndexed { index, game ->
                 val card = LinearLayout(context).apply {
                     orientation = LinearLayout.VERTICAL
                     gravity = Gravity.CENTER_HORIZONTAL
@@ -414,7 +414,8 @@ internal class MainLibraryInterfaceController(
                     10f, muted, true).apply { gravity = Gravity.CENTER },
                     LinearLayout.LayoutParams(-1, -2))
                 popularTrack.addView(card, LinearLayout.LayoutParams(dp(234), -2).apply {
-                    marginStart = dp(7)
+                    // Negative spacing creates the layered, partially visible cover-flow effect.
+                    marginStart = if (index == 0) dp(7) else -dp(46)
                     marginEnd = dp(7)
                 })
                 popularCards.add(card)
