@@ -103,17 +103,16 @@ internal object BloggerFeedParser {
         val categories = entry.optJSONArray("category")
             ?: return null
 
-        for (i in 0 until categories.length()) {
-
-            val term = categories.optJSONObject(i)
-                ?.optString("term", "") ?: continue
-
-            val platform = normalizePlatform(term)
-
-            if (platform != null) return platform
+        // Prefer the specific Blogger OS/category label over its broad console label.
+        // For example, a PS2 PORT PS4 post can carry both "PS2" and "ps2ps4".
+        val terms = (0 until categories.length()).mapNotNull { index ->
+            categories.optJSONObject(index)?.optString("term", "")?.takeIf { it.isNotBlank() }
         }
-
-        return null
+        val specific = terms.firstNotNullOfOrNull { term ->
+            normalizePlatform(term)?.takeIf { it in setOf("PS3_ARABIC", "PS2_ARABIC", "PS2_PORT_PS4", "PS2_PORT_PS3") }
+        }
+        if (specific != null) return specific
+        return terms.firstNotNullOfOrNull(::normalizePlatform)
     }
 
     fun normalizePlatform(value: String): String? =
