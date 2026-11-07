@@ -60,4 +60,17 @@ class GameLibraryManagerTest {
         assertEquals(listOf(ps2), GameLibraryManager.filterAndSort(
             listOf(ps2), " ps2 ", "", "", "", "LATEST"))
     }
+
+    @Test fun searchAndAdvancedFiltersTrimUserInput() {
+        val alpha = game("Alpha", "PS2").copy(genre = "Action", releaseYear = "2020")
+        assertEquals(listOf(alpha), GameLibraryManager.filterAndSort(
+            listOf(alpha), " ps2 ", " Alpha ", " Action ", " 2020 ", "A-Z"))
+    }
+
+    @Test fun favoritesSortPlacesFavoriteGamesFirst() {
+        val regular = game("Regular", "PS2")
+        val favorite = game("Favorite", "PS3", favorite = true)
+        assertEquals(listOf(favorite, regular), GameLibraryManager.filterAndSort(
+            listOf(regular, favorite), "ALL", "", "", "", "FAVORITES"))
+    }
 }
