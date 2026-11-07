@@ -69,6 +69,7 @@ internal class DownloadDatabase private constructor(context: Context) :
         val activeStatuses = intArrayOf(
             DownloadManager.STATUS_PENDING,
             DownloadManager.STATUS_RUNNING,
+            STATUS_SCHEDULED,
             DownloadManager.STATUS_PAUSED
         )
         val byUrl = readableDatabase.query(
@@ -85,6 +86,48 @@ internal class DownloadDatabase private constructor(context: Context) :
             arrayOf(sourcePostUrl, *activeStatuses.map(Int::toString).toTypedArray()),
             null, null, "id DESC", "1"
         ).use { if (it.moveToFirst()) it.toRecord() else null }
+    }
+
+
+    /**
+     * Atomically reserves free download slots before WorkManager is notified.
+     * STATUS_SCHEDULED counts as an occupied slot, preventing concurrent enqueue
+     * calls from exceeding the user's configured limit.
+     */
+    @Synchronized
+    fun claimPending(maxConcurrent: Int): List<Long> {
+        val db = writableDatabase
+        db.beginTransaction()
+        try {
+            val active = db.rawQuery(
+                "SELECT COUNT(*) FROM downloads WHERE status IN (?,?)",
+                arrayOf(DownloadManager.STATUS_RUNNING.toString(), STATUS_SCHEDULED.toString())
+            ).use { if (it.moveToFirst()) it.getInt(0) else 0 }
+            val available = (maxConcurrent.coerceIn(1, 5) - active).coerceAtLeast(0)
+            if (available == 0) {
+                db.setTransactionSuccessful()
+                return emptyList()
+            }
+            val ids = db.query(
+                "downloads", arrayOf("id"), "status=?",
+                arrayOf(DownloadManager.STATUS_PENDING.toString()),
+                null, null, "id ASC", available.toString()
+            ).use { cursor ->
+                buildList { while (cursor.moveToNext()) add(cursor.getLong(0)) }
+            }
+            ids.forEach { id ->
+                db.update(
+                    "downloads",
+                    ContentValues().apply { put("status", STATUS_SCHEDULED) },
+                    "id=? AND status=?",
+                    arrayOf(id.toString(), DownloadManager.STATUS_PENDING.toString())
+                )
+            }
+            db.setTransactionSuccessful()
+            return ids
+        } finally {
+            db.endTransaction()
+        }
     }
 
     @Synchronized
@@ -181,6 +224,7 @@ internal class DownloadDatabase private constructor(context: Context) :
 
     companion object {
         const val STATUS_CANCELLED = 6
+        const val STATUS_SCHEDULED = 7
         @Volatile private var instance: DownloadDatabase? = null
         fun get(context: Context): DownloadDatabase =
             instance ?: synchronized(this) {
