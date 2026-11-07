@@ -77,7 +77,8 @@ internal class GameDetailsFeature(
         loadDownloads = { target, callback ->
             loadEngagementSummary(target) { _, _, _, downloads -> callback(downloads) }
         },
-        translate = tr
+        translate = tr,
+        favoriteToggleFactory = favoriteToggleFactory
     )
 
     private val downloadLinksViewFactory = GameDownloadLinksViewFactory(
