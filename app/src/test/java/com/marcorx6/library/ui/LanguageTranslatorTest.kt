@@ -139,4 +139,20 @@ class LanguageTranslatorTest {
             LanguageTranslator.translate("أضف رابط تحميل واحداً على الأقل قبل النشر", "es")
         )
     }
+
+    @Test
+    fun translatesBloggerSyncStatus() {
+        assertEquals(
+            "Connecting to the MARCO RX6 blog...",
+            LanguageTranslator.translate("جارٍ الاتصال بمدونة MARCO RX6...", "en")
+        )
+        assertEquals(
+            "Connexion au blog MARCO RX6...",
+            LanguageTranslator.translate("جارٍ الاتصال بمدونة MARCO RX6...", "fr")
+        )
+        assertEquals(
+            "Conectando con el blog MARCO RX6...",
+            LanguageTranslator.translate("جارٍ الاتصال بمدونة MARCO RX6...", "es")
+        )
+    }
 }
