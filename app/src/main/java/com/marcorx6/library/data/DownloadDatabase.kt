@@ -65,6 +65,37 @@ internal class DownloadDatabase private constructor(context: Context) :
     }
 
     @Synchronized
+    fun findActiveDuplicate(url: String, sourcePostUrl: String): StoredDownload? {
+        val activeStatuses = intArrayOf(
+            DownloadManager.STATUS_PENDING,
+            DownloadManager.STATUS_RUNNING,
+            DownloadManager.STATUS_PAUSED
+        )
+        val byUrl = readableDatabase.query(
+            "downloads", null,
+            "url=? AND status IN (?,?,?)",
+            arrayOf(url, *activeStatuses.map(Int::toString).toTypedArray()),
+            null, null, "id DESC", "1"
+        ).use { if (it.moveToFirst()) it.toRecord() else null }
+        if (byUrl != null) return byUrl
+        if (sourcePostUrl.isBlank()) return null
+        return readableDatabase.query(
+            "downloads", null,
+            "source_post_url=? AND status IN (?,?,?)",
+            arrayOf(sourcePostUrl, *activeStatuses.map(Int::toString).toTypedArray()),
+            null, null, "id DESC", "1"
+        ).use { if (it.moveToFirst()) it.toRecord() else null }
+    }
+
+    @Synchronized
+    fun nextId(): Long {
+        val current = readableDatabase.rawQuery("SELECT MAX(id) FROM downloads", null).use {
+            if (it.moveToFirst()) it.getLong(0) else 0L
+        }
+        return maxOf(System.currentTimeMillis(), current + 1L, 1L)
+    }
+
+    @Synchronized
     fun findFailedBySource(sourcePostUrl: String): StoredDownload? {
         if (sourcePostUrl.isBlank()) return null
         return readableDatabase.query("downloads", null, "source_post_url=? AND status=?", arrayOf(sourcePostUrl, DownloadManager.STATUS_FAILED.toString()), null, null, "id DESC", "1")
