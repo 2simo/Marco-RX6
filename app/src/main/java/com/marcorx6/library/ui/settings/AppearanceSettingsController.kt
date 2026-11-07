@@ -17,6 +17,7 @@ import android.widget.TextView
 internal class AppearanceSettingsController(
     private val activity: Activity,
     private val preferences: SharedPreferences,
+    private val currentLanguage: () -> String,
     private val applyMotionPreferences: (View) -> Unit,
     private val recreateActivity: () -> Unit,
     private val showLanguagePicker: () -> Unit,
@@ -50,7 +51,9 @@ internal class AppearanceSettingsController(
         }
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            layoutDirection = if (translate("العربية") == "العربية") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
+            val rtl = currentLanguage() == "ar"
+            layoutDirection = if (rtl) View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
+            textDirection = if (rtl) View.TEXT_DIRECTION_RTL else View.TEXT_DIRECTION_LTR
             setPadding(dp(20), dp(20), dp(20), dp(20))
             setBackgroundColor(bg)
         }
