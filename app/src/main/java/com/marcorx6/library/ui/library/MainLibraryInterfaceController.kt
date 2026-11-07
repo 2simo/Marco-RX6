@@ -413,10 +413,10 @@ internal class MainLibraryInterfaceController(
                 card.addView(makeText(GameLibraryManager.normalizePlatform(game.platform) ?: game.platform,
                     10f, muted, true).apply { gravity = Gravity.CENTER },
                     LinearLayout.LayoutParams(-1, -2))
-                popularTrack.addView(card, LinearLayout.LayoutParams(dp(234), -2).apply {
-                    // Negative spacing creates the layered, partially visible cover-flow effect.
-                    marginStart = if (index == 0) dp(10) else -dp(14)
-                    marginEnd = dp(7)
+                popularTrack.addView(card, LinearLayout.LayoutParams(dp(224), -2).apply {
+                    // Keep cards separated; the centered card is the primary featured game.
+                    marginStart = dp(6)
+                    marginEnd = dp(6)
                 })
                 popularCards.add(card)
             }
@@ -438,9 +438,16 @@ internal class MainLibraryInterfaceController(
             })
             popularScroll.post {
                 val first = popularCards.firstOrNull() ?: return@post
-                popularScroll.smoothScrollTo(
-                    (first.left + first.width / 2 - popularScroll.width / 2).coerceAtLeast(0), 0
-                )
+                val sideInset = ((popularScroll.width - first.width) / 2).coerceAtLeast(dp(12))
+                popularScroll.setPadding(sideInset, dp(8), sideInset, dp(12))
+                popularScroll.scrollTo(0, 0)
+                popularCards.forEach { card ->
+                    val isMain = card === first
+                    card.alpha = if (isMain) 1f else 0.76f
+                    card.scaleX = if (isMain) 1f else 0.90f
+                    card.scaleY = if (isMain) 1f else 0.90f
+                    card.translationZ = if (isMain) dp(12).toFloat() else 0f
+                }
             }
         }
 
