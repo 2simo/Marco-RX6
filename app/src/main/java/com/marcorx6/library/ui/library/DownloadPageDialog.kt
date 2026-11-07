@@ -199,7 +199,7 @@ internal class DownloadPageDialog(
         }
         root.addView(status, LinearLayout.LayoutParams(-1, -2))
         val blockedStats = TextView(activity).apply {
-            text = translate("الإعلانات المحجوبة: 0")
+            text = translate("الإعلانات والمتتبعات المحجوبة: 0")
             textSize = 10f
             setTextColor(primary)
             setPadding(dp(3), 0, dp(3), dp(6))
@@ -370,7 +370,7 @@ internal class DownloadPageDialog(
             val count = blockedRequests.incrementAndGet()
             activity.runOnUiThread {
                 if (blockedStats.isAttachedToWindow) {
-                    blockedStats.text = "${translate("الإعلانات والمتتبعات المحجوبة:")} $count"
+                    blockedStats.text = translate("الإعلانات والمتتبعات المحجوبة: $count")
                 }
             }
         }
