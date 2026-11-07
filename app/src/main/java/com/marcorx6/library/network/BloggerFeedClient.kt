@@ -27,10 +27,26 @@ internal class BloggerFeedClient(
     )
 
     private val dedicatedSections = listOf(
-        SectionFeed("ps3arabic", "PS3_ARABIC", listOf("PS3 Arabic")),
-        SectionFeed("ps2arabic", "PS2_ARABIC", listOf("PS2 ARABIC", "PS2 Arabic")),
-        SectionFeed("ps2ps4", "PS2_PORT_PS4", listOf("PS2 PORT PS4")),
-        SectionFeed("ps2ps3", "PS2_PORT_PS3", listOf("PS2 PORT PS3"))
+        SectionFeed(
+            "بلايستيشن 3 معربة",
+            "PS3_ARABIC",
+            listOf("ps3arabic", "PS3 Arabic")
+        ),
+        SectionFeed(
+            "PlayStation 2 — PlayStation 2 معربة",
+            "PS2_ARABIC",
+            listOf("ps2arabic", "PS2 ARABIC", "PS2 Arabic")
+        ),
+        SectionFeed(
+            "PlayStation 2 — PlayStation 2 PS3",
+            "PS2_PORT_PS3",
+            listOf("ps2ps3", "PS2 PORT PS3")
+        ),
+        SectionFeed(
+            "PlayStation 2 — PlayStation 2 PS4",
+            "PS2_PORT_PS4",
+            listOf("ps2ps4", "PS2 PORT PS4")
+        )
     )
 
     fun fetch(): BloggerFeedResult {
