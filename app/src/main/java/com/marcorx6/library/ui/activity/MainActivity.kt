@@ -66,13 +66,11 @@ class MainActivity : ComponentActivity() {
         val content = findViewById<android.view.ViewGroup>(android.R.id.content)
         for (index in 0 until content.childCount) cancelScreenMotion(content.getChildAt(index))
         cancelScreenMotion(view)
-        setContentView(view)
+        // Translate once before the first draw. A permanent global-layout listener
+        // repeatedly traversed the entire view tree and could trigger needless text
+        // updates during scrolling/resizing, contributing to visible flicker.
         LanguageTranslator.translateViewTree(view, appearanceRuntimeFeature.currentLanguage())
-        view.viewTreeObserver.addOnGlobalLayoutListener {
-            if (view.isAttachedToWindow) {
-                LanguageTranslator.translateViewTree(view, appearanceRuntimeFeature.currentLanguage())
-            }
-        }
+        setContentView(view)
         applyMotionPreferences(view)
         applyUnifiedSkin(view)
     }

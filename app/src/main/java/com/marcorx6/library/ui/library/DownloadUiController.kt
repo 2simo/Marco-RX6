@@ -150,6 +150,9 @@ internal class DownloadUiController(
         val lastSpeedSample = mutableMapOf<Long, Pair<Long, Long>>()
         val handler = Handler(Looper.getMainLooper())
         var render: (() -> Unit)? = null
+        // Poll more frequently only while a transfer is active. An idle download
+        // screen does not need to query the persistent queue several times per second.
+        var refreshIntervalMillis = 5_000L
         val emptyState = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
@@ -205,13 +208,15 @@ internal class DownloadUiController(
             } else {
                 lastSpeedSample.remove(item.id)
             }
-            views.title.text = item.title
-            views.status.text = if (item.totalBytes > 0L) "$statusLabel  •  $percent%" else statusLabel
-            views.status.setTextColor(when (item.status) {
+            if (views.title.text.toString() != item.title) views.title.text = item.title
+            val statusText = if (item.totalBytes > 0L) "$statusLabel  •  $percent%" else statusLabel
+            if (views.status.text.toString() != statusText) views.status.text = statusText
+            val statusColor = when (item.status) {
                 DownloadManager.STATUS_SUCCESSFUL -> Color.rgb(36, 170, 112)
                 DownloadManager.STATUS_FAILED -> Color.rgb(230, 85, 96)
                 else -> primary
-            })
+            }
+            if (views.status.currentTextColor != statusColor) views.status.setTextColor(statusColor)
             val downloaded = android.text.format.Formatter.formatFileSize(activity, item.downloadedBytes.coerceAtLeast(0L))
             val details = StringBuilder(downloaded)
             if (item.totalBytes > 0L) {
@@ -236,13 +241,16 @@ internal class DownloadUiController(
             if (item.status == DownloadManager.STATUS_FAILED) {
                 details.append("\n").append(translate("تعذر إكمال التنزيل. يمكنك إعادة المحاولة أو تحديث رابط اللعبة."))
             }
-            views.details.text = details.toString()
-            // Keep the progress indicator visible while pending or paused so resume never blanks the row.
+            val detailsText = details.toString()
+            if (views.details.text.toString() != detailsText) views.details.text = detailsText
+            // Avoid invalidating the progress widget when the polled value did not change.
             val hasProgress = item.status == DownloadManager.STATUS_RUNNING ||
                 item.status == DownloadManager.STATUS_PENDING || item.status == DownloadManager.STATUS_PAUSED
-            views.progress.visibility = if (hasProgress) View.VISIBLE else View.GONE
-            views.progress.isIndeterminate = item.status == DownloadManager.STATUS_RUNNING && item.totalBytes <= 0L
-            views.progress.progress = percent
+            val progressVisibility = if (hasProgress) View.VISIBLE else View.GONE
+            if (views.progress.visibility != progressVisibility) views.progress.visibility = progressVisibility
+            val indeterminate = item.status == DownloadManager.STATUS_RUNNING && item.totalBytes <= 0L
+            if (views.progress.isIndeterminate != indeterminate) views.progress.isIndeterminate = indeterminate
+            if (!indeterminate && views.progress.progress != percent) views.progress.progress = percent
         }
 
         fun smallAction(label: String, filled: Boolean = false, onClick: () -> Unit) =
@@ -377,6 +385,10 @@ internal class DownloadUiController(
                 Toast.makeText(activity, translate("تعذر قراءة التنزيلات") + (error.message?.takeIf { it.isNotBlank() }?.let { ": ${translate(it)}" } ?: ""), Toast.LENGTH_LONG).show()
                 return@renderBlock
             }
+            refreshIntervalMillis = if (entries.any {
+                it.status == DownloadManager.STATUS_RUNNING ||
+                    it.status == DownloadManager.STATUS_PENDING
+            }) 1_200L else 5_000L
             val currentIds = entries.map { it.id }.toSet()
             val removedIds = rows.keys.filter { it !in currentIds }
             removedIds.forEach { id ->
@@ -408,7 +420,7 @@ internal class DownloadUiController(
             override fun run() {
                 if (!activity.isFinishing && !activity.isDestroyed && root.isAttachedToWindow) {
                     render?.invoke()
-                    handler.postDelayed(this, 900L)
+                    handler.postDelayed(this, refreshIntervalMillis)
                 }
             }
         }

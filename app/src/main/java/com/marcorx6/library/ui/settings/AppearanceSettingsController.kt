@@ -17,6 +17,7 @@ import android.widget.TextView
 internal class AppearanceSettingsController(
     private val activity: Activity,
     private val preferences: SharedPreferences,
+    private val currentLanguage: () -> String,
     private val applyMotionPreferences: (View) -> Unit,
     private val recreateActivity: () -> Unit,
     private val showLanguagePicker: () -> Unit,
@@ -48,9 +49,19 @@ internal class AppearanceSettingsController(
                 )
             }
         }
+        fun sectionLabel(value: String) = TextView(activity).apply {
+            text = translate(value)
+            textSize = 10f
+            letterSpacing = 0.10f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(silverAccent)
+            setPadding(dp(3), dp(18), dp(3), dp(8))
+        }
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            layoutDirection = if (translate("العربية") == "العربية") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
+            val rtl = currentLanguage() == "ar"
+            layoutDirection = if (rtl) View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
+            textDirection = if (rtl) View.TEXT_DIRECTION_RTL else View.TEXT_DIRECTION_LTR
             setPadding(dp(20), dp(20), dp(20), dp(20))
             setBackgroundColor(bg)
         }
@@ -90,6 +101,7 @@ internal class AppearanceSettingsController(
             setTextColor(muted)
             setPadding(0, dp(8), 0, dp(22))
         })
+        root.addView(sectionLabel("المظهر والحركة"), LinearLayout.LayoutParams(-1, -2))
         val colorCard = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(16), dp(16), dp(16))
@@ -211,6 +223,7 @@ internal class AppearanceSettingsController(
             preferences.edit().putBoolean("dark_mode", !dark).apply()
             recreateActivity()
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
+        root.addView(sectionLabel("الخصوصية والتنزيلات"), LinearLayout.LayoutParams(-1, -2))
         val adBlockerEnabled = preferences.getBoolean("download_page_ad_blocker", true)
         root.addView(settingRow(
             translate("حجب الإعلانات في صفحة التحميل"),
@@ -221,6 +234,7 @@ internal class AppearanceSettingsController(
             Toast.makeText(activity, translate(if (enabled) "تم تفعيل حجب الإعلانات" else "تم إيقاف حجب الإعلانات"), Toast.LENGTH_SHORT).show()
             show()
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
+        root.addView(sectionLabel("اللغة والمجتمع"), LinearLayout.LayoutParams(-1, -2))
         root.addView(settingRow(translate("اللغة"), translate("العربية والإنجليزية والفرنسية والإسبانية"), showLanguagePicker),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         root.addView(settingRow(
@@ -276,13 +290,16 @@ internal class AppearanceSettingsController(
                 }
                 .show()
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
+        root.addView(sectionLabel("إشعارات التطبيق"), LinearLayout.LayoutParams(-1, -2))
         root.addView(settingRow(translate("الإشعارات"), translate("التحكم في تنبيهات المقالات الجديدة"), showNotificationSettings),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
+        root.addView(sectionLabel("الحساب والصلاحيات"), LinearLayout.LayoutParams(-1, -2))
         root.addView(settingRow(
             translate(if (adminSessionConnected()) "فصل حساب المشرف" else "ربط حساب المشرف (اختياري)"),
             translate(if (adminSessionConnected()) "حساب المشرف مربوط؛ صلاحيات Blogger للنشر وDrive لرفع الأغلفة مفعّلة" else "تسجيل Google العادي لا يفعّل النشر. اربط هنا حساب Blogger المشرف نفسه لتفعيل النشر ورفع الأغلفة"),
             onAdminSessionAction
         ), LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
+        root.addView(sectionLabel("التخصيص والتخزين"), LinearLayout.LayoutParams(-1, -2))
         root.addView(settingRow(translate("الخط وحجم النص"), translate("تخصيص عائلة الخط وحجم القراءة"), showTypographySettings),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         root.addView(settingRow(translate("التخزين"), translate("عرض مساحة التطبيق والملفات المؤقتة وإدارة ذاكرة التخزين المؤقت")) {

@@ -747,7 +747,7 @@ internal class FirebaseAccountController(
         }
         val dialog = AlertDialog.Builder(activity)
             .setTitle(translate("تأكيد هوية صاحب الحساب"))
-            .setMessage(translate("أأدخل كلمة المرور الحالية. للتحقق من هويتك قبل الحذف."))
+            .setMessage(translate("أدخل كلمة المرور الحالية للتحقق من هويتك قبل الحذف."))
             .setView(password)
             .setNegativeButton("إلغاء", null)
             .setPositiveButton(translate("تحقق وحذف"), null)

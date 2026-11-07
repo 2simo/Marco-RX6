@@ -26,6 +26,21 @@ internal class GameLibraryRenderer(
     private val showDetails: (Game) -> Unit,
     private val loadEngagementSummary: (Game, (Long, Double, Long) -> Unit) -> Unit,
 ) {
+    private data class RenderSignature(
+        val games: List<Game>,
+        val selected: String,
+        val selectedGenre: String,
+        val selectedYear: String,
+        val sortMode: String,
+        val filterLabels: List<String>,
+        val colors: List<Int>,
+        val darkMode: Boolean,
+        val gameLabel: String
+    )
+
+    private var lastRenderedContainer: LinearLayout? = null
+    private var lastRenderSignature: RenderSignature? = null
+
     fun render(
         gameList: LinearLayout,
         filters: LinearLayout,
@@ -41,6 +56,29 @@ internal class GameLibraryRenderer(
         white: Int,
         gray: Int
     ) {
+        val signature = RenderSignature(
+            games = games.toList(),
+            selected = selected,
+            selectedGenre = selectedGenre,
+            selectedYear = selectedYear,
+            sortMode = sortMode,
+            filterLabels = (0 until filters.childCount).map { filters.getChildAt(it).let { child ->
+                (child as? TextView)?.text?.toString().orEmpty()
+            } },
+            colors = listOf(bg, panel, red, white, gray),
+            darkMode = isDarkMode(),
+            gameLabel = tr("لعبة")
+        )
+        // Skip rebuilding the entire carousel when a caller requests a render with
+        // unchanged data and presentation state. This prevents card/cover flicker
+        // and avoids re-issuing image and engagement requests on every refresh.
+        if (lastRenderedContainer === gameList &&
+            lastRenderSignature == signature &&
+            gameList.childCount > 0
+        ) return
+
+        lastRenderedContainer = gameList
+        lastRenderSignature = signature
         gameList.removeAllViews()
         for (i in 0 until filters.childCount) {
             val chip = filters.getChildAt(i) as TextView
@@ -295,13 +333,15 @@ internal class GameLibraryRenderer(
 
                 val meta = listOf(game.genre, game.releaseYear)
                     .map { it.trim() }.filter { it.isNotBlank() }.joinToString(" • ")
-                if (meta.isNotBlank()) {
-                    card.addView(makeText(meta, 9f, gray, false).apply {
-                        maxLines = 1
-                        ellipsize = android.text.TextUtils.TruncateAt.END
-                        setPadding(dp(3), 0, dp(3), dp(4))
-                    })
-                }
+                // Reserve the same metadata row on every card. Without this, cards
+                // with no genre/year become shorter and their rating/view metrics
+                // no longer line up across the horizontal carousel.
+                card.addView(makeText(meta.ifBlank { " " }, 9f, gray, false).apply {
+                    minLines = 1
+                    maxLines = 1
+                    ellipsize = android.text.TextUtils.TruncateAt.END
+                    setPadding(dp(3), 0, dp(3), dp(4))
+                })
 
                 val engagement = LinearLayout(activity).apply {
                     orientation = LinearLayout.HORIZONTAL

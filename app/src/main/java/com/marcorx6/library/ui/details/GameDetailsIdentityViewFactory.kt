@@ -193,7 +193,9 @@ internal class GameDetailsIdentityViewFactory(
                 // Translate only the displayed copy. The Game object and Blogger HTML
                 // remain untouched, so uploads, edits and stored metadata keep originals.
                 val target = targetLanguage()
-                if (target in setOf("ar", "en", "fr", "es") && item.second.length >= 3) {
+                if (shouldTranslateDetailValue(item.first, item.second) &&
+                    target in setOf("ar", "en", "fr", "es")
+                ) {
                     contentTranslator.translateAutomatically(
                         text = item.second,
                         targetLanguage = target,
@@ -227,6 +229,18 @@ internal class GameDetailsIdentityViewFactory(
         }
 
         return root
+    }
+
+    /**
+     * Only translate human-readable language and genre values.
+     * Versions, sizes, formats, passwords, credits and release years may contain
+     * identifiers or technical data and must remain byte-for-byte unchanged.
+     */
+    private fun shouldTranslateDetailValue(label: String, value: String): Boolean {
+        if (label !in setOf("اللغة", "النوع") || value.length < 3) return false
+        if (Regex("(?i)^(https?://|www\\.)").containsMatchIn(value)) return false
+        if (Regex("^[\\d\\s.,:/+%×xX-]+$").matches(value)) return false
+        return true
     }
 
     private fun extractGameDetails(game: Game): List<Pair<String, String>> {

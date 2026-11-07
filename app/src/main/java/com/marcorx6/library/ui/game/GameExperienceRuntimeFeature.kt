@@ -102,7 +102,8 @@ internal class GameExperienceRuntimeFeature(
             showDetails = showDetailsForDay,
             openGameLink = openGameLink,
             styleAlertDialog = styleAlertDialog,
-            translate = translate
+            translate = translate,
+            targetLanguage = targetLanguage
         )
     }
 

@@ -11,6 +11,7 @@ import android.graphics.drawable.GradientDrawable
 internal class AppearanceFeature(
     private val activity: Activity,
     private val appearancePreferences: () -> SharedPreferences,
+    private val currentLanguage: () -> String,
     private val dp: (Int) -> Int,
     private val makeText: (String, Float, Int, Boolean) -> TextView,
     private val panelColor: () -> Int,
@@ -50,6 +51,7 @@ internal class AppearanceFeature(
         AppearanceSettingsController(
             activity = activity,
             preferences = appearancePreferences(),
+            currentLanguage = currentLanguage,
             applyMotionPreferences = applyMotionPreferences,
             recreateActivity = recreateActivity,
             showLanguagePicker = showLanguagePicker,
