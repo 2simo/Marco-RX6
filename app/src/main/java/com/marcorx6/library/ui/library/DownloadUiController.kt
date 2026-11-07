@@ -208,13 +208,15 @@ internal class DownloadUiController(
             } else {
                 lastSpeedSample.remove(item.id)
             }
-            views.title.text = item.title
-            views.status.text = if (item.totalBytes > 0L) "$statusLabel  •  $percent%" else statusLabel
-            views.status.setTextColor(when (item.status) {
+            if (views.title.text.toString() != item.title) views.title.text = item.title
+            val statusText = if (item.totalBytes > 0L) "$statusLabel  •  $percent%" else statusLabel
+            if (views.status.text.toString() != statusText) views.status.text = statusText
+            val statusColor = when (item.status) {
                 DownloadManager.STATUS_SUCCESSFUL -> Color.rgb(36, 170, 112)
                 DownloadManager.STATUS_FAILED -> Color.rgb(230, 85, 96)
                 else -> primary
-            })
+            }
+            if (views.status.currentTextColor != statusColor) views.status.setTextColor(statusColor)
             val downloaded = android.text.format.Formatter.formatFileSize(activity, item.downloadedBytes.coerceAtLeast(0L))
             val details = StringBuilder(downloaded)
             if (item.totalBytes > 0L) {
@@ -239,13 +241,16 @@ internal class DownloadUiController(
             if (item.status == DownloadManager.STATUS_FAILED) {
                 details.append("\n").append(translate("تعذر إكمال التنزيل. يمكنك إعادة المحاولة أو تحديث رابط اللعبة."))
             }
-            views.details.text = details.toString()
-            // Keep the progress indicator visible while pending or paused so resume never blanks the row.
+            val detailsText = details.toString()
+            if (views.details.text.toString() != detailsText) views.details.text = detailsText
+            // Avoid invalidating the progress widget when the polled value did not change.
             val hasProgress = item.status == DownloadManager.STATUS_RUNNING ||
                 item.status == DownloadManager.STATUS_PENDING || item.status == DownloadManager.STATUS_PAUSED
-            views.progress.visibility = if (hasProgress) View.VISIBLE else View.GONE
-            views.progress.isIndeterminate = item.status == DownloadManager.STATUS_RUNNING && item.totalBytes <= 0L
-            views.progress.progress = percent
+            val progressVisibility = if (hasProgress) View.VISIBLE else View.GONE
+            if (views.progress.visibility != progressVisibility) views.progress.visibility = progressVisibility
+            val indeterminate = item.status == DownloadManager.STATUS_RUNNING && item.totalBytes <= 0L
+            if (views.progress.isIndeterminate != indeterminate) views.progress.isIndeterminate = indeterminate
+            if (!indeterminate && views.progress.progress != percent) views.progress.progress = percent
         }
 
         fun smallAction(label: String, filled: Boolean = false, onClick: () -> Unit) =
