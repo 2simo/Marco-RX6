@@ -51,8 +51,8 @@ internal class StartupExperienceController(
         val logoHalo = FrameLayout(activity).apply {
             background = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
-                setColor(Color.rgb(8, 24, 48))
-                setStroke(dp(3), Color.rgb(35, 145, 255))
+                setColor(Color.rgb(25, 28, 34))
+                setStroke(dp(3), Color.rgb(190, 198, 210))
             }
             elevation = dp(18).toFloat()
         }
@@ -62,7 +62,7 @@ internal class StartupExperienceController(
             contentDescription = "MARCO"
             background = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
-                setColor(Color.rgb(5, 12, 24))
+                setColor(Color.rgb(8, 9, 12))
             }
             clipToOutline = true
             setPadding(dp(7), dp(7), dp(7), dp(7))
@@ -93,7 +93,7 @@ internal class StartupExperienceController(
             progressBackgroundTintList = android.content.res.ColorStateList.valueOf(Color.rgb(57, 61, 70))
             progressDrawable = progressDrawable.mutate().apply {
                 if (this is android.graphics.drawable.LayerDrawable) {
-                    findDrawableByLayerId(android.R.id.background)?.let { it.setTint(Color.rgb(29, 48, 70)) }
+                    findDrawableByLayerId(android.R.id.background)?.let { it.setTint(Color.rgb(57, 61, 70)) }
                     findDrawableByLayerId(android.R.id.progress)?.let { it.setTint(Color.rgb(190, 198, 210)) }
                 }
             }
