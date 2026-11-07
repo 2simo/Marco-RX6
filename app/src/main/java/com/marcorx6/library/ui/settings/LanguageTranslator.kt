@@ -665,7 +665,6 @@ internal object LanguageTranslator {
             "استوديو النشر" to listOf("Publishing studio", "Studio de publication", "Estudio de publicación"),
             "تحرير المقال" to listOf("Edit post", "Modifier l’article", "Editar publicación"),
             "يجب أن يبدأ الرابط بـ HTTPS" to listOf("The link must start with HTTPS", "Le lien doit commencer par HTTPS", "El enlace debe comenzar por HTTPS"),
-            "أدخل كلمة المرور الحالية للتحقق من هويتك قبل الحذف." to listOf("Enter your current password to verify your identity before deletion.", "Saisissez votre mot de passe actuel pour vérifier votre identité avant la suppression.", "Introduce tu contraseña actual para verificar tu identidad antes de eliminar la cuenta."),
             "خطوة" to listOf("Step", "Étape", "Paso"),
             "رجوع" to listOf("Back", "Retour", "Volver"),
             "اكتب اسم اللعبة أو المنصة أو النوع أو السنة..." to listOf("Enter a game, platform, genre, or year...", "Saisissez un jeu, une plateforme, un genre ou une année...", "Escribe un juego, plataforma, género o año..."),
