@@ -250,6 +250,8 @@ internal class MainLibraryInterfaceController(
     }
 
     fun create() {
+        // Blog posts are included in ALL; normalize any previously saved Blog filter.
+        if (selected == "BLOG") selected = "ALL"
         activeDockTab = "HOME"
         // MARCO visual system: charcoal surfaces with brushed-silver accents.
         val silver = if (isDarkMode()) Color.rgb(225, 228, 234) else Color.rgb(43, 47, 55)
@@ -348,14 +350,13 @@ internal class MainLibraryInterfaceController(
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        listOf("ALL", "PS4", "PS3", "PS2", "BLOG", "FAVORITES").forEach { category ->
+        listOf("ALL", "PS4", "PS3", "PS2", "FAVORITES").forEach { category ->
             val chip = TextView(context).apply {
                 text = when (category) {
                     "ALL" -> tr("الكل")
                     "PS4" -> "PS4"
                     "PS3" -> "PS3"
                     "PS2" -> "PS2"
-                    "BLOG" -> tr("المدونة")
                     "FAVORITES" -> tr("المفضلة")
                     else -> category
                 }
