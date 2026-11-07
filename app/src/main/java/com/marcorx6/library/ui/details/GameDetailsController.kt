@@ -1,8 +1,13 @@
 package com.marcorx6.library.ui
 
 import android.app.Activity
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
+import android.view.Gravity
 import android.widget.LinearLayout
 import android.widget.ScrollView
+import android.widget.TextView
 import com.marcorx6.library.data.Game
 import com.marcorx6.library.ui.details.GameRatingViewFactory
 
@@ -22,7 +27,8 @@ internal class GameDetailsController(
     private val deleteGame: (Game) -> Unit,
     private val applyMotionPreferences: (android.view.View) -> Unit,
     private val applyUnifiedSkin: (android.view.View) -> Unit,
-    private val translate: (String) -> String
+    private val translate: (String) -> String,
+    private val isDarkMode: () -> Boolean
 ) {
     fun show(game: Game) {
         // Keep view recording intact; its counter is presented on library cards, not here.
@@ -69,6 +75,49 @@ internal class GameDetailsController(
             show(selected)
         }?.let { similar ->
             content.addView(similar, LinearLayout.LayoutParams(-1, -2).apply {
+                topMargin = dp(10)
+            })
+        }
+
+        // Preserve game-management actions for administrators, using the same
+        // neutral black/silver visual language as the redesigned details page.
+        if (isAdmin()) {
+            val adminActions = LinearLayout(activity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER
+                setPadding(dp(10), dp(8), dp(10), dp(8))
+                background = GradientDrawable().apply {
+                    setColor(if (isDarkMode()) Color.rgb(25, 28, 34) else Color.rgb(242, 244, 247))
+                    cornerRadius = dp(16).toFloat()
+                    setStroke(dp(1), if (isDarkMode()) Color.rgb(75, 80, 90) else Color.rgb(190, 196, 205))
+                }
+            }
+            fun adminButton(label: String, action: () -> Unit): TextView =
+                TextView(activity).apply {
+                    text = translate(label)
+                    textSize = 14f
+                    gravity = Gravity.CENTER
+                    setTextColor(if (isDarkMode()) Color.rgb(244, 247, 252) else Color.rgb(25, 29, 36))
+                    setTypeface(null, Typeface.BOLD)
+                    setPadding(dp(12), dp(12), dp(12), dp(12))
+                    background = GradientDrawable().apply {
+                        setColor(if (isDarkMode()) Color.rgb(43, 47, 55) else Color.WHITE)
+                        cornerRadius = dp(12).toFloat()
+                        setStroke(dp(1), if (isDarkMode()) Color.rgb(105, 112, 123) else Color.rgb(190, 196, 205))
+                    }
+                    isClickable = true
+                    isFocusable = true
+                    setOnClickListener { action() }
+                }
+            adminActions.addView(
+                adminButton("تعديل") { reader.dismiss(); showGameDialog(game) },
+                LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(5) }
+            )
+            adminActions.addView(
+                adminButton("حذف") { reader.dismiss(); deleteGame(game) },
+                LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(5) }
+            )
+            content.addView(adminActions, LinearLayout.LayoutParams(-1, -2).apply {
                 topMargin = dp(10)
             })
         }
