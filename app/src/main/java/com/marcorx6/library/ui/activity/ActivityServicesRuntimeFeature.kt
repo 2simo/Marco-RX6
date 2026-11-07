@@ -17,7 +17,9 @@ internal class ActivityServicesRuntimeFeature(
     showHome: () -> Unit,
     openGameSource: (String) -> Unit
 ) {
-    val ioExecutor = java.util.concurrent.Executors.newCachedThreadPool()
+    // Bound concurrent background work so bursts of sync/download tasks cannot
+    // create an unbounded number of threads on lower-memory phones.
+    val ioExecutor = java.util.concurrent.Executors.newFixedThreadPool(3)
 
     private val downloadFeature by lazy {
         DownloadFeature(activity, styleAlertDialog, isDarkMode, setContentView, translate, { showHome() }, openGameSource)
