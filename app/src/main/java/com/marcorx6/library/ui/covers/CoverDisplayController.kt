@@ -7,6 +7,8 @@ internal class CoverDisplayController(
     private val resolveKey: (String, String) -> String,
     private val loadBitmap: (String, String, (android.graphics.Bitmap?) -> Unit) -> Unit
 ) {
+    private data class RequestState(val key: String, var completed: Boolean = false)
+
     fun load(image: ImageView, localPath: String, imageUrl: String) {
         val resolvedImageUrl = normalizeUrl(imageUrl)
         if (localPath.isBlank() && resolvedImageUrl.isBlank()) {
@@ -16,16 +18,26 @@ internal class CoverDisplayController(
         }
 
         val key = resolveKey(localPath, resolvedImageUrl)
-        val sameRequest = image.tag == key
-        // Keep the currently displayed bitmap when the same cover is requested again.
-        // Resetting to the placeholder on every render caused visible flashing while
-        // cached images were delivered back to the main thread.
-        if (!sameRequest || image.drawable == null) {
-            image.setImageResource(android.R.drawable.ic_menu_gallery)
+        val previous = image.tag as? RequestState
+        if (previous?.key == key && (previous.completed || !previous.completed)) {
+            // A matching request is already displayed or in flight. Do not reset the
+            // drawable or enqueue another callback for the same ImageView.
+            return
         }
-        image.tag = key
+
+        val state = RequestState(key)
+        image.tag = state
+        image.setImageResource(android.R.drawable.ic_menu_gallery)
         loadBitmap(localPath, resolvedImageUrl) { bitmap ->
-            if (bitmap != null && image.tag == key) image.setImageBitmap(bitmap)
+            if (image.tag === state) {
+                if (bitmap != null) {
+                    image.setImageBitmap(bitmap)
+                    state.completed = true
+                } else {
+                    // Permit a later render to retry a failed cover request.
+                    image.tag = null
+                }
+            }
         }
     }
 }
