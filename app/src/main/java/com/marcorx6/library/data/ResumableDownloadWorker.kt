@@ -30,9 +30,12 @@ internal class ResumableDownloadWorker(
         if (id <= 0L) return Result.failure()
         val database = DownloadDatabase.get(applicationContext)
         val item = database.get(id) ?: return Result.failure()
-        if (item.status == DownloadManager.STATUS_PAUSED) return Result.success()
+        if (item.status == DownloadManager.STATUS_PAUSED) {
+            DownloadWorkScheduler.schedule(applicationContext)
+            return Result.success()
+        }
         return try {
-            setForeground(createForegroundInfo(item.title))
+            setForeground(createForegroundInfo(item.title, id))
             database.status(id, DownloadManager.STATUS_RUNNING)
             download(item, database)
         } catch (error: Exception) {
@@ -53,6 +56,8 @@ internal class ResumableDownloadWorker(
                 database.status(id, DownloadManager.STATUS_FAILED, error.message ?: "Download failed")
                 Result.failure()
             }
+        } finally {
+            DownloadWorkScheduler.schedule(applicationContext)
         }
     }
 
@@ -199,7 +204,7 @@ internal class ResumableDownloadWorker(
         }
     }
 
-    private fun createForegroundInfo(title: String): ForegroundInfo {
+    private fun createForegroundInfo(title: String, downloadId: Long): ForegroundInfo {
         val manager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val language = applicationContext.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
             .getString("language", "ar") ?: "ar"
@@ -232,6 +237,6 @@ internal class ResumableDownloadWorker(
         const val KEY_ID = "download_id"
         private const val MAX_AUTOMATIC_RETRIES = 5
         private const val CHANNEL_ID = "marco_rx6_downloads"
-        private const val NOTIFICATION_ID = 6406
+        private fun notificationId(downloadId: Long): Int = 6406 + (downloadId % 100000L).toInt()
     }
 }
