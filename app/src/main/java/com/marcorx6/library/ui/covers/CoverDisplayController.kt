@@ -19,7 +19,7 @@ internal class CoverDisplayController(
 
         val key = resolveKey(localPath, resolvedImageUrl)
         val previous = image.tag as? RequestState
-        if (previous?.key == key && (previous.completed || !previous.completed)) {
+        if (previous?.key == key) {
             // A matching request is already displayed or in flight. Do not reset the
             // drawable or enqueue another callback for the same ImageView.
             return
