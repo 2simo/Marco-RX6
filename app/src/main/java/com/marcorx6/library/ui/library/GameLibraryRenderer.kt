@@ -251,6 +251,11 @@ internal class GameLibraryRenderer(
             }
 
             sectionGames.forEach { game ->
+                // Keep only a lightweight slot in the layout until this card approaches the viewport.
+                val slot = FrameLayout(activity).apply {
+                    minimumHeight = dp(if (gridMode) 300 else 258)
+                }
+                val buildCard = {
                 val card = LinearLayout(activity).apply {
                     orientation = LinearLayout.VERTICAL
                     val surface = GradientDrawable(
@@ -458,6 +463,10 @@ internal class GameLibraryRenderer(
                     }
                 }
 
+                slot.addView(card, FrameLayout.LayoutParams(-1, -2))
+                }
+                runWhenVisible(slot) { buildCard() }
+
                 if (gridMode) {
                     if (currentGridRow == null || currentGridRow!!.childCount == 2) {
                         currentGridRow = LinearLayout(activity).apply {
@@ -467,7 +476,7 @@ internal class GameLibraryRenderer(
                         grid.addView(currentGridRow, LinearLayout.LayoutParams(-1, -2))
                     }
                     currentGridRow!!.addView(
-                        card,
+                        slot,
                         LinearLayout.LayoutParams(0, -2, 1f).apply {
                             marginStart = dp(4)
                             marginEnd = dp(4)
@@ -476,7 +485,7 @@ internal class GameLibraryRenderer(
                     )
                 } else {
                     carousel.addView(
-                        card,
+                        slot,
                         LinearLayout.LayoutParams(dp(158), -2).apply {
                             marginStart = dp(5)
                             marginEnd = dp(5)
