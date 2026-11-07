@@ -8,6 +8,9 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import com.marcorx6.library.data.Game
+import com.marcorx6.library.ui.settings.LocalContentTranslator
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import java.util.Calendar
 
 internal class GameOfTheDayController(
@@ -24,8 +27,20 @@ internal class GameOfTheDayController(
     private val showDetails: (Game) -> Unit,
     private val openGameLink: (String) -> Unit,
     private val styleAlertDialog: (AlertDialog) -> Unit,
-    private val translate: (String) -> String
+    private val translate: (String) -> String,
+    private val targetLanguage: () -> String
 ) {
+    private val contentTranslatorDelegate = lazy { LocalContentTranslator(activity) }
+    private val contentTranslator by contentTranslatorDelegate
+
+    init {
+        (activity as? LifecycleOwner)?.lifecycle?.addObserver(object : DefaultLifecycleObserver {
+            override fun onDestroy(owner: LifecycleOwner) {
+                if (contentTranslatorDelegate.isInitialized()) contentTranslator.close()
+                owner.lifecycle.removeObserver(this)
+            }
+        })
+    }
     fun show() {
         val library = games()
         if (library.isEmpty()) {
@@ -53,15 +68,48 @@ internal class GameOfTheDayController(
             setPadding(0, dp(12), 0, dp(5))
         })
         val platformLabel = game.platform + if (game.genre.isNotBlank()) " • ${game.genre}" else ""
-        box.addView(makeText(platformLabel, 11f, android.graphics.Color.rgb(190, 198, 210), true))
+        val genreView = makeText(platformLabel, 11f, android.graphics.Color.rgb(190, 198, 210), true)
+        box.addView(genreView)
         val summary = game.description.ifBlank {
             translate("اكتشف تفاصيل هذه اللعبة وروابطها داخل مكتبة MARCO.")
         }
-        box.addView(makeText(summary, 12f, gray(), false).apply {
+        val summaryView = makeText(summary, 12f, gray(), false).apply {
             setPadding(0, dp(8), 0, 0)
             maxLines = 5
             ellipsize = android.text.TextUtils.TruncateAt.END
-        })
+        }
+        box.addView(summaryView)
+        // Translate only the short description shown in this preview, never Blogger's
+        // full article, game title, platform identifier, or stored Game fields.
+        val target = targetLanguage()
+        if (target in setOf("ar", "en", "fr", "es")) {
+            if (game.genre.isNotBlank()) {
+                contentTranslator.translateAutomatically(
+                    game.genre, target,
+                    onTranslated = { value ->
+                        activity.runOnUiThread {
+                            if (!activity.isFinishing && !activity.isDestroyed &&
+                                genreView.isAttachedToWindow && value.isNotBlank()
+                            ) genreView.text = game.platform + " • " + value
+                        }
+                    },
+                    onError = { /* Keep original genre. */ }
+                )
+            }
+            if (game.description.length in 3..500) {
+                contentTranslator.translateAutomatically(
+                    game.description, target,
+                    onTranslated = { value ->
+                        activity.runOnUiThread {
+                            if (!activity.isFinishing && !activity.isDestroyed &&
+                                summaryView.isAttachedToWindow && value.isNotBlank()
+                            ) summaryView.text = value
+                        }
+                    },
+                    onError = { /* Keep original summary. */ }
+                )
+            }
+        }
         AlertDialog.Builder(activity)
             .setTitle("✧ " + translate("لعبة اليوم"))
             .setView(box)
