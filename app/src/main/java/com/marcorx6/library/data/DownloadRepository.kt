@@ -161,6 +161,13 @@ internal class DownloadRepository(context: Context) {
 
     fun clearCompletedDownloads(): Int = database.deleteCompleted()
 
+    fun wifiOnlyDownloads(): Boolean = concurrencyPreferences.wifiOnly()
+
+    fun setWifiOnlyDownloads(enabled: Boolean) {
+        concurrencyPreferences.setWifiOnly(enabled)
+        DownloadWorkScheduler.schedule(appContext)
+    }
+
     fun maxConcurrentDownloads(): Int = concurrencyPreferences.maxConcurrent()
 
     fun setMaxConcurrentDownloads(value: Int) {
