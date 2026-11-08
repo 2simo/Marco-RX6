@@ -159,11 +159,6 @@ internal class FirebaseAccountController(
                 setTextColor(if (dark) Color.rgb(175, 182, 193) else Color.rgb(91, 98, 110))
             })
         } else {
-            val providerLabel = when {
-                user.providerData.any { it.providerId == "google.com" } -> translate("حساب Google")
-                user.providerData.any { it.providerId == "password" } -> translate("حساب بالبريد الإلكتروني")
-                else -> translate("حساب MARCO")
-            }
             identityCard.addView(TextView(activity).apply {
                 text = translate("ملف MARCO الشخصي")
                 textSize = 11f
@@ -178,21 +173,6 @@ internal class FirebaseAccountController(
                 gravity = Gravity.CENTER
                 setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
                 setPadding(0, dp(7), 0, dp(5))
-            })
-            identityCard.addView(TextView(activity).apply {
-                text = user.email.orEmpty()
-                textSize = 12f
-                gravity = Gravity.CENTER
-                setTextColor(if (dark) Color.rgb(175, 182, 193) else Color.rgb(91, 98, 110))
-            })
-            identityCard.addView(TextView(activity).apply {
-                text = providerLabel + "  •  " + translate(
-                    if (user.isEmailVerified) "البريد مؤكد" else "البريد غير مؤكد"
-                )
-                textSize = 11f
-                setTypeface(null, android.graphics.Typeface.BOLD)
-                setTextColor(Color.rgb(190, 198, 210))
-                setPadding(0, dp(9), 0, 0)
             })
 
             val createdAt = user.metadata?.creationTimestamp ?: 0L
