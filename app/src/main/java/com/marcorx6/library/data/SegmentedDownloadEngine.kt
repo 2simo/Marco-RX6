@@ -47,11 +47,16 @@ internal object SegmentedDownloadEngine {
             val parsedTotal = Regex("""bytes 0-0/(\\d+)""").find(contentRange)
                 ?.groupValues?.getOrNull(1)?.toLongOrNull()
             if (code != HttpURLConnection.HTTP_PARTIAL || parsedTotal == null || parsedTotal < MIN_FILE_SIZE) {
+                clearSegments(directory, item.id)
                 return false
             }
             total = parsedTotal
             etag = probe.getHeaderField("ETag").orEmpty()
             modified = probe.getHeaderField("Last-Modified").orEmpty()
+            if (etag.isBlank() && modified.isBlank()) {
+                clearSegments(directory, item.id)
+                return false
+            }
             mime = probe.contentType?.substringBefore(';')?.trim().orEmpty().ifBlank { item.mimeType }
             val responseName = DownloadFileNames.fromResponse(
                 probe.getHeaderField("Content-Disposition"), probe.url.toString()
