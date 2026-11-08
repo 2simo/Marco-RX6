@@ -153,6 +153,18 @@ internal class FirebaseAccountController(
                 setTextColor(Color.rgb(190, 198, 210))
                 setPadding(0, dp(9), 0, 0)
             })
+
+            val createdAt = user.metadata?.creationTimestamp ?: 0L
+            if (createdAt > 0L) {
+                val memberDate = java.text.DateFormat.getDateInstance(java.text.DateFormat.MEDIUM)
+                    .format(java.util.Date(createdAt))
+                identityCard.addView(TextView(activity).apply {
+                    text = translate("عضو منذ") + "  " + memberDate
+                    textSize = 11f
+                    setTextColor(if (dark) Color.rgb(150, 158, 171) else Color.rgb(105, 112, 124))
+                    setPadding(0, dp(7), 0, 0)
+                })
+            }
         }
         page.addView(identityCard, LinearLayout.LayoutParams(-1, -2).apply {
             topMargin = dp(12)
@@ -189,6 +201,32 @@ internal class FirebaseAccountController(
                 bottomMargin = dp(8)
             })
             action(page, translate("تغيير صورة الحساب"), translate("اختيار صورة من هاتفك وحفظها في ملفك السحابي"), dark, run = ::chooseProfilePhoto)
+            if (!user.isEmailVerified && user.email != null) {
+                action(
+                    page,
+                    translate("تأكيد البريد الإلكتروني"),
+                    translate("إرسال رسالة تحقق جديدة إلى بريدك"),
+                    dark,
+                    run = {
+                        user.sendEmailVerification()
+                            .addOnSuccessListener { toast("تم إرسال رسالة تأكيد البريد الإلكتروني") }
+                            .addOnFailureListener { toast("تعذر إرسال رسالة التأكيد") }
+                    }
+                )
+            }
+            if (user.email != null && user.providerData.any { it.providerId == "password" }) {
+                action(
+                    page,
+                    translate("إعادة تعيين كلمة المرور"),
+                    translate("إرسال رابط آمن لتغيير كلمة مرور الحساب"),
+                    dark,
+                    run = {
+                        authRepository.sendPasswordReset(user.email!!)
+                            .addOnSuccessListener { toast("إذا كان الحساب موجوداً، فستصلك رسالة إعادة التعيين.") }
+                            .addOnFailureListener { toast("تعذر إرسال رابط إعادة تعيين كلمة المرور") }
+                    }
+                )
+            }
 
             page.addView(TextView(activity).apply {
                 text = translate("الاسم")
