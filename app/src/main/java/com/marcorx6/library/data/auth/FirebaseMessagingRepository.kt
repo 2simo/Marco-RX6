@@ -136,7 +136,7 @@ internal class FirebaseMessagingRepository(
     }
 
     fun otherParticipant(snapshot: DocumentSnapshot, currentUid: String): String? =
-        snapshot.get("participants") as? List<*>
+        (snapshot.get("participants") as? List<*>)
             ?.filterIsInstance<String>()
             ?.firstOrNull { it != currentUid }
 
