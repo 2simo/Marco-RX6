@@ -143,6 +143,18 @@ internal class FirebaseMessagingRepository(
                     "createdAt" to FieldValue.serverTimestamp(),
                     "readBy" to listOf(senderUid)
                 ))
+                val notification = firestore.collection("users")
+                    .document(recipientUid).collection("notifications").document()
+                batch.set(notification, mapOf(
+                    "type" to "message",
+                    "actorUid" to senderUid,
+                    "conversationId" to id,
+                    "messageId" to message.id,
+                    "title" to "رسالة جديدة",
+                    "body" to body.take(120),
+                    "createdAt" to FieldValue.serverTimestamp(),
+                    "read" to false
+                ))
                 batch.commit()
             }
         }
