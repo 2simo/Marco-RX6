@@ -2,22 +2,29 @@ package com.marcorx6.library.ui
 
 import android.app.Activity
 import android.app.Dialog
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.text.InputType
+import android.text.TextUtils
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
-import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.view.inputmethod.EditorInfo
 import android.webkit.URLUtil
 import android.net.Uri
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TextView
+import com.marcorx6.library.data.DownloadStoragePreferences
 
 /**
- * A focused, 1DM-inspired download sheet shown directly over the in-app browser.
- * It gathers the filename before handing the real transfer to DownloadRepository.
+ * Download-add sheet shown directly over the in-app browser.
+ * The actual transfer remains owned by DownloadRepository.
  */
 internal class DownloadConfirmationPanel(
     private val activity: Activity,
@@ -35,44 +42,61 @@ internal class DownloadConfirmationPanel(
         fun dp(value: Int): Int =
             (value * activity.resources.displayMetrics.density).toInt()
 
-        val background = if (dark) Color.rgb(12, 14, 18) else Color.rgb(248, 249, 251)
-        val surface = if (dark) Color.rgb(27, 30, 37) else Color.WHITE
-        val raised = if (dark) Color.rgb(36, 40, 48) else Color.rgb(239, 242, 246)
-        val silver = if (dark) Color.rgb(205, 212, 222) else Color.rgb(89, 99, 114)
+        val background = if (dark) Color.rgb(13, 15, 19) else Color.rgb(247, 248, 250)
+        val surface = if (dark) Color.rgb(27, 30, 36) else Color.WHITE
+        val raised = if (dark) Color.rgb(36, 40, 47) else Color.rgb(239, 242, 246)
+        val silver = if (dark) Color.rgb(207, 214, 224) else Color.rgb(91, 101, 116)
         val heading = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
-        val muted = if (dark) Color.rgb(160, 168, 181) else Color.rgb(103, 111, 124)
-        val border = if (dark) Color.rgb(75, 82, 95) else Color.rgb(211, 216, 224)
+        val muted = if (dark) Color.rgb(157, 166, 179) else Color.rgb(103, 111, 124)
+        val border = if (dark) Color.rgb(69, 77, 90) else Color.rgb(211, 216, 224)
 
-        fun panelShape(fill: Int, stroke: Int = border, radius: Int = 16) =
+        fun shape(fill: Int, stroke: Int = border, radius: Int = 15) =
             GradientDrawable().apply {
                 setColor(fill)
                 cornerRadius = dp(radius).toFloat()
                 setStroke(dp(1), stroke)
             }
 
-        fun label(text: String, size: Float, color: Int, bold: Boolean = false) =
+        fun label(value: String, size: Float, color: Int, bold: Boolean = false) =
             TextView(activity).apply {
-                this.text = text
+                text = value
                 textSize = size
                 setTextColor(color)
                 if (bold) setTypeface(null, Typeface.BOLD)
             }
 
+        val fileName = suggestedName.ifBlank { URLUtil.guessFileName(url, null, mimeType) }
+        val extension = fileName.substringAfterLast('.', "FILE")
+            .uppercase().take(6).ifBlank { "FILE" }
+        val host = runCatching { Uri.parse(url).host.orEmpty() }.getOrDefault("")
+        val storageName = runCatching {
+            DownloadStoragePreferences(activity).displayName()
+        }.getOrDefault("تخزين التطبيق")
+
         val dialog = Dialog(activity)
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(10), dp(20), dp(22))
-            setBackground(panelShape(background, border, 25))
-            elevation = dp(18).toFloat()
+            setPadding(dp(18), dp(10), dp(18), dp(20))
+            background = shape(background, border, 25)
+            elevation = dp(20).toFloat()
+            alpha = 0f
+            translationY = dp(18).toFloat()
+        }
+
+        val scroll = ScrollView(activity).apply {
+            isFillViewport = false
+            isVerticalScrollBarEnabled = false
+            clipToPadding = false
+            addView(root, ScrollView.LayoutParams(-1, -2))
         }
 
         val handleRow = LinearLayout(activity).apply {
             gravity = Gravity.CENTER
-            setPadding(0, 0, 0, dp(14))
+            setPadding(0, 0, 0, dp(13))
         }
         handleRow.addView(View(activity).apply {
             background = GradientDrawable().apply {
-                setColor(if (dark) Color.rgb(91, 98, 110) else Color.rgb(190, 196, 205))
+                setColor(if (dark) Color.rgb(91, 99, 112) else Color.rgb(190, 196, 205))
                 cornerRadius = dp(3).toFloat()
             }
         }, LinearLayout.LayoutParams(dp(42), dp(4)))
@@ -83,7 +107,7 @@ internal class DownloadConfirmationPanel(
             gravity = Gravity.CENTER_VERTICAL
         }
         val headingBox = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
-        headingBox.addView(label("MARCO RX6  /  DOWNLOAD", 9f, silver, true))
+        headingBox.addView(label("1DM STYLE  /  MARCO RX6", 9f, silver, true))
         headingBox.addView(label(translate("إضافة إلى التنزيلات"), 21f, heading, true).apply {
             setPadding(0, dp(4), 0, 0)
         })
@@ -93,9 +117,10 @@ internal class DownloadConfirmationPanel(
             textSize = 25f
             gravity = Gravity.CENTER
             setTextColor(muted)
-            background = panelShape(raised)
+            background = shape(raised)
             isClickable = true
             isFocusable = true
+            contentDescription = translate("إغلاق")
             setOnClickListener { dialog.dismiss() }
         }, LinearLayout.LayoutParams(dp(42), dp(42)))
         root.addView(header)
@@ -104,10 +129,8 @@ internal class DownloadConfirmationPanel(
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(13), dp(14), dp(13), dp(14))
-            background = panelShape(surface)
+            background = shape(surface)
         }
-        val extension = URLUtil.guessFileName(url, null, mimeType)
-            .substringAfterLast('.', "FILE").uppercase().take(5).ifBlank { "FILE" }
         fileCard.addView(TextView(activity).apply {
             text = extension
             textSize = 10f
@@ -118,24 +141,60 @@ internal class DownloadConfirmationPanel(
                 setColor(silver)
                 cornerRadius = dp(12).toFloat()
             }
-        }, LinearLayout.LayoutParams(dp(54), dp(48)))
+        }, LinearLayout.LayoutParams(dp(54), dp(50)))
         val fileInfo = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(12), 0, 0, 0)
         }
-        fileInfo.addView(label(translate("ملف جاهز للتنزيل"), 13f, heading, true))
-        fileInfo.addView(label(
-            Uri.parse(url).host.orEmpty(),
-            10f,
-            muted
-        ).apply { setPadding(0, dp(5), 0, 0) })
+        fileInfo.addView(label(fileName, 13f, heading, true).apply {
+            maxLines = 2
+            ellipsize = TextUtils.TruncateAt.END
+        })
+        fileInfo.addView(label(host, 10f, muted).apply {
+            setPadding(0, dp(5), 0, 0)
+            maxLines = 1
+            ellipsize = TextUtils.TruncateAt.END
+        })
         fileCard.addView(fileInfo, LinearLayout.LayoutParams(0, -2, 1f))
         root.addView(fileCard, LinearLayout.LayoutParams(-1, -2).apply {
-            topMargin = dp(18)
+            topMargin = dp(16)
         })
 
+        root.addView(label(translate("رابط التنزيل"), 12f, muted, true).apply {
+            setPadding(dp(2), dp(17), dp(2), dp(7))
+        })
+        val urlCard = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(12), dp(8), dp(8), dp(8))
+            background = shape(raised, Color.TRANSPARENT)
+        }
+        urlCard.addView(label(url, 10f, muted).apply {
+            maxLines = 2
+            ellipsize = TextUtils.TruncateAt.MIDDLE
+            setTextIsSelectable(true)
+        }, LinearLayout.LayoutParams(0, -2, 1f))
+        urlCard.addView(TextView(activity).apply {
+            text = translate("نسخ")
+            textSize = 11f
+            setTypeface(null, Typeface.BOLD)
+            gravity = Gravity.CENTER
+            setTextColor(heading)
+            setPadding(dp(12), dp(9), dp(12), dp(9))
+            background = shape(surface)
+            isClickable = true
+            isFocusable = true
+            setOnClickListener {
+                val clipboard = activity.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                clipboard?.setPrimaryClip(ClipData.newPlainText("download_url", url))
+                text = translate("تم النسخ")
+                postDelayed({ text = translate("نسخ") }, 1200L)
+            }
+        }, LinearLayout.LayoutParams(-2, dp(38)).apply { marginStart = dp(8) })
+        root.addView(urlCard, LinearLayout.LayoutParams(-1, -2))
+
         root.addView(label(translate("اسم الملف"), 12f, muted, true).apply {
-            setPadding(dp(2), dp(18), dp(2), dp(7))
+            setPadding(dp(2), dp(16), dp(2), dp(7))
         })
         val nameInput = EditText(activity).apply {
             setSingleLine(true)
@@ -143,58 +202,60 @@ internal class DownloadConfirmationPanel(
             setTextColor(heading)
             setHintTextColor(muted)
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
-            setText(suggestedName.ifBlank { URLUtil.guessFileName(url, null, mimeType) })
+            setText(fileName)
             setSelection(text.length)
             setPadding(dp(13), 0, dp(13), 0)
-            background = panelShape(surface)
-            imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_DONE
+            background = shape(surface)
+            imeOptions = EditorInfo.IME_ACTION_DONE
+            isSelectAllOnFocus = true
         }
         root.addView(nameInput, LinearLayout.LayoutParams(-1, dp(50)))
 
         val details = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(14), dp(12), dp(14), dp(12))
-            background = panelShape(raised, Color.TRANSPARENT)
+            background = shape(raised, Color.TRANSPARENT)
         }
-        fun detailLine(title: String, value: String) {
+        fun detailLine(title: String, value: String, last: Boolean = false) {
             val line = LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
+                setPadding(0, if (details.childCount == 0) 0 else dp(10), 0, if (last) 0 else dp(10))
             }
             line.addView(label(title, 11f, muted), LinearLayout.LayoutParams(0, -2, 1f))
             line.addView(label(value, 11f, heading, true).apply {
                 maxLines = 1
-                ellipsize = android.text.TextUtils.TruncateAt.END
+                ellipsize = TextUtils.TruncateAt.END
                 gravity = Gravity.END
-            }, LinearLayout.LayoutParams(0, -2, 1.4f))
+            }, LinearLayout.LayoutParams(0, -2, 1.35f))
             details.addView(line)
         }
-        detailLine(translate("نوع الملف"), mimeType.ifBlank { extension })
-        detailLine(translate("مكان الحفظ"), translate("مجلد التنزيلات"))
-        detailLine(translate("طريقة التنزيل"), translate("في الخلفية"))
+        detailLine(translate("نوع الملف"), mimeType.substringBefore(';').ifBlank { extension })
+        detailLine(translate("مجلد الحفظ"), storageName)
+        detailLine(translate("طريقة التنزيل"), translate("في الخلفية • قابل للاستئناف"), true)
         root.addView(details, LinearLayout.LayoutParams(-1, -2).apply {
             topMargin = dp(14)
         })
 
         root.addView(label(
-            translate("سيستمر التنزيل في الخلفية ويمكنك متابعة السرعة والتقدم من مدير التنزيلات."),
+            translate("يمكنك متابعة السرعة والتقدم والتحكم في التنزيل من مدير التنزيلات."),
             10f,
             muted
         ).apply {
-            setPadding(dp(2), dp(12), dp(2), dp(4))
+            setPadding(dp(2), dp(12), dp(2), dp(3))
         })
 
         val actions = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, dp(16), 0, 0)
+            setPadding(0, dp(15), 0, 0)
         }
         val cancel = TextView(activity).apply {
             text = translate("إلغاء")
             textSize = 12f
             gravity = Gravity.CENTER
             setTextColor(silver)
-            background = panelShape(surface)
+            background = shape(surface)
             isClickable = true
             isFocusable = true
             setOnClickListener { dialog.dismiss() }
@@ -227,7 +288,7 @@ internal class DownloadConfirmationPanel(
         actions.addView(start, LinearLayout.LayoutParams(0, dp(50), 1.5f))
         root.addView(actions)
 
-        dialog.setContentView(root)
+        dialog.setContentView(scroll)
         dialog.setCanceledOnTouchOutside(true)
         dialog.show()
         dialog.window?.apply {
@@ -235,9 +296,10 @@ internal class DownloadConfirmationPanel(
             setLayout(-1, WindowManager.LayoutParams.WRAP_CONTENT)
             setGravity(Gravity.BOTTOM)
             addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-            attributes = attributes.apply { dimAmount = 0.52f }
+            attributes = attributes.apply { dimAmount = 0.55f }
             navigationBarColor = background
             setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         }
+        root.animate().alpha(1f).translationY(0f).setDuration(190L).start()
     }
 }
