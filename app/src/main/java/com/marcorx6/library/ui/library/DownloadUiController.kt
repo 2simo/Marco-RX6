@@ -716,7 +716,7 @@ internal class DownloadUiController(
             val actionScroll = android.widget.HorizontalScrollView(activity).apply {
                 isHorizontalScrollBarEnabled = false
                 overScrollMode = View.OVER_SCROLL_NEVER
-                addView(actions, android.widget.HorizontalScrollView.LayoutParams(-2, -2))
+                addView(actions, android.widget.FrameLayout.LayoutParams(-2, -2))
             }
             card.addView(actionScroll)
             return RowViews(card, titleView, statusView, detailsView, progressView, actions)
