@@ -342,11 +342,22 @@ describe("Firestore user isolation rules", () => {
       senderUid: "message-alice",
       text: "Hello",
       createdAt: serverTimestamp(),
+      readBy: ["message-alice"],
     }));
-    await assertSucceeds(getDoc(doc(bob, "conversations/" + conversationId + "/messages/first")));
+    const bobMessage = doc(bob, "conversations/" + conversationId + "/messages/first");
+    await assertFails(updateDoc(bobMessage, {
+      readBy: ["message-alice", "message-outsider"],
+      readAt: serverTimestamp(),
+    }));
+    await assertSucceeds(updateDoc(bobMessage, {
+      readBy: ["message-alice", "message-bob"],
+      readAt: serverTimestamp(),
+    }));
+    await assertSucceeds(getDoc(bobMessage));
     await assertFails(getDoc(doc(outsider, "conversations/" + conversationId)));
     await assertFails(setDoc(doc(outsider, "conversations/" + conversationId + "/messages/intrusion"), {
       senderUid: "message-outsider", text: "Intrusion", createdAt: serverTimestamp(),
+      readBy: ["message-outsider"],
     }));
   });
 
