@@ -450,7 +450,7 @@ internal class BloggerPostComposerController(
                 androidx.core.view.WindowInsetsCompat.Type.navigationBars() or
                     androidx.core.view.WindowInsetsCompat.Type.mandatorySystemGestures()
             ).bottom
-            view.setPadding(dp(14), baseTop + safeTop, dp(14), baseBottom + safeBottom)
+            view.setPadding(dp(14), baseTop, dp(14), baseBottom + safeBottom)
             insets
         }
         setContentView(page)
