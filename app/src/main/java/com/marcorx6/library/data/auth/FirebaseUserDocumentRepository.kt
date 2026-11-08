@@ -192,7 +192,31 @@ internal class FirebaseUserDocumentRepository(
         }
     }
 
-    /** Deletes the known user-owned settings document before removing the parent profile. */
+    private fun deleteFollowEdges(uid: String): Task<Void> {
+        val outgoing = firestore.collection("userFollows")
+            .document(uid)
+            .collection("following")
+            .get()
+        val incoming = firestore.collectionGroup("following")
+            .whereEqualTo("targetUid", uid)
+            .get()
+        return Tasks.whenAllSuccess<com.google.firebase.firestore.QuerySnapshot>(outgoing, incoming)
+            .continueWithTask { task ->
+                if (!task.isSuccessful) {
+                    throw task.exception ?: IllegalStateException("تعذر تحميل علاقات المتابعة")
+                }
+                val documents = task.result.flatMap { it.documents }.distinctBy { it.reference.path }
+                documents.chunked(450).fold(Tasks.forResult<Void>(null)) { previous, chunk ->
+                    previous.continueWithTask {
+                        val batch = firestore.batch()
+                        chunk.forEach { batch.delete(it.reference) }
+                        batch.commit()
+                    }
+                }
+            }
+    }
+
+    /** Remove social edges and profile documents before the Firebase Auth account is deleted. */
     fun deleteUserData(uid: String): Task<Void> =
         userDocument(uid)
             .collection(SETTINGS_COLLECTION)
@@ -202,12 +226,19 @@ internal class FirebaseUserDocumentRepository(
                 if (!task.isSuccessful) {
                     throw task.exception ?: IllegalStateException("تعذر حذف إعدادات الحساب")
                 }
-                publicProfileDocument(uid).delete().continueWithTask { publicDelete ->
-                    if (!publicDelete.isSuccessful) {
-                        throw publicDelete.exception ?: IllegalStateException("تعذر حذف الملف العام")
-                    }
-                    userDocument(uid).delete()
+                deleteFollowEdges(uid)
+            }
+            .continueWithTask { task ->
+                if (!task.isSuccessful) {
+                    throw task.exception ?: IllegalStateException("تعذر حذف علاقات المتابعة")
                 }
+                publicProfileDocument(uid).delete()
+            }
+            .continueWithTask { task ->
+                if (!task.isSuccessful) {
+                    throw task.exception ?: IllegalStateException("تعذر حذف الملف العام")
+                }
+                userDocument(uid).delete()
             }
 
     fun saveSettings(uid: String, values: Map<String, Any>): Task<Void> =
