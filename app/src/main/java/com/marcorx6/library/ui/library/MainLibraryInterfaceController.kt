@@ -302,6 +302,7 @@ internal class MainLibraryInterfaceController(
                 })
                 card.addView(details, LinearLayout.LayoutParams(0, -2, 1f))
                 slot.addView(card, FrameLayout.LayoutParams(-1, -2))
+                ScrollRevealAnimator.reveal(card)
                 }
                 runWhenVisible(slot) { buildCard() }
                 results.addView(slot, LinearLayout.LayoutParams(-1, -2).apply {
@@ -413,6 +414,7 @@ internal class MainLibraryInterfaceController(
             item.addView(info, LinearLayout.LayoutParams(0, -2, 1f))
             item.addView(makeText("‹", 27f, silver, true))
             cards.addView(item, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(11) })
+            ScrollRevealAnimator.reveal(item)
         }
         if (available.isEmpty()) {
             cards.addView(makeText(tr("لا توجد أقسام تحتوي على ألعاب حالياً"), 14f, gray, false).apply {
