@@ -1137,15 +1137,24 @@ internal class FirebaseAccountController(
             return
         }
         val title = translate(if (showFollowers) "المتابعون" else "يتابع")
+        val listContainer = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(18), dp(8), dp(18), dp(8))
+        }
         val loading = TextView(activity).apply {
             text = translate("جارٍ تحميل القائمة...")
             textSize = 13f
             setTextColor(Color.rgb(190, 198, 210))
-            setPadding(dp(20), dp(18), dp(20), dp(18))
+            setPadding(dp(4), dp(18), dp(4), dp(18))
+        }
+        listContainer.addView(loading)
+        val scroll = ScrollView(activity).apply {
+            isFillViewport = true
+            addView(listContainer)
         }
         val dialog = AlertDialog.Builder(activity)
             .setTitle(title)
-            .setView(loading)
+            .setView(scroll)
             .setPositiveButton(translate("إغلاق"), null)
             .create()
         dialog.setOnShowListener { styleDialog(dialog) }
@@ -1162,10 +1171,7 @@ internal class FirebaseAccountController(
             com.google.android.gms.tasks.Tasks.whenAllSuccess<com.google.firebase.firestore.DocumentSnapshot>(tasks)
                 .addOnSuccessListener { profiles ->
                     if (!dialog.isShowing) return@addOnSuccessListener
-                    val list = LinearLayout(activity).apply {
-                        orientation = LinearLayout.VERTICAL
-                        setPadding(dp(18), dp(8), dp(18), dp(8))
-                    }
+                    listContainer.removeAllViews()
                     profiles.filter { it.exists() }.forEach { profile ->
                         val name = profile.getString("displayName")?.takeIf { it.isNotBlank() }
                             ?: translate("مستخدم MARCO")
@@ -1192,11 +1198,13 @@ internal class FirebaseAccountController(
                             })
                         }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
                     }
-                    if (list.childCount == 0) {
-                        loading.text = translate("لا توجد ملفات عامة متاحة للعرض حالياً.")
-                    } else {
-                        val scroll = ScrollView(activity).apply { addView(list) }
-                        dialog.setView(scroll)
+                    if (listContainer.childCount == 0) {
+                        listContainer.addView(TextView(activity).apply {
+                            text = translate("لا توجد ملفات عامة متاحة للعرض حالياً.")
+                            textSize = 12f
+                            setTextColor(Color.rgb(160, 168, 181))
+                            setPadding(dp(4), dp(18), dp(4), dp(18))
+                        })
                     }
                 }
                 .addOnFailureListener {
