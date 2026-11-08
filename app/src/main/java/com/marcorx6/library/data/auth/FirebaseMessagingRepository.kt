@@ -85,7 +85,6 @@ internal class FirebaseMessagingRepository(
 
 
     fun markMessagesRead(
-        conversationId: String,
         readerUid: String,
         messages: List<DocumentSnapshot>
     ): Task<Void> {
