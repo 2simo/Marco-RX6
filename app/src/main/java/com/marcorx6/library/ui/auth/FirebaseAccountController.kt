@@ -169,7 +169,12 @@ internal class FirebaseAccountController(
                 letterSpacing = 0.12f
                 setTextColor(Color.rgb(190, 198, 210))
             })
-            identityCard.addView(TextView(activity).apply {
+            val accountNameRow = LinearLayout(activity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER
+                layoutDirection = View.LAYOUT_DIRECTION_LTR
+            }
+            accountNameRow.addView(TextView(activity).apply {
                 text = user.displayName?.takeIf { it.isNotBlank() } ?: translate("مستخدم MARCO")
                 textSize = 23f
                 setTypeface(null, android.graphics.Typeface.BOLD)
@@ -177,6 +182,24 @@ internal class FirebaseAccountController(
                 setTextColor(Color.WHITE)
                 setPadding(0, dp(7), 0, dp(4))
             })
+            accountNameRow.addView(ImageView(activity).apply {
+                setImageResource(android.R.drawable.ic_menu_edit)
+                imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
+                contentDescription = translate("تعديل الملف الشخصي")
+                scaleType = ImageView.ScaleType.CENTER_INSIDE
+                isClickable = true
+                isFocusable = true
+                setPadding(dp(9), dp(9), dp(9), dp(9))
+                background = GradientDrawable().apply {
+                    shape = GradientDrawable.OVAL
+                    setColor(Color.rgb(35, 39, 46))
+                    setStroke(dp(1), Color.rgb(100, 108, 120))
+                }
+                setOnClickListener { showEditProfile() }
+            }, LinearLayout.LayoutParams(dp(38), dp(38)).apply {
+                marginStart = dp(8)
+            })
+            identityCard.addView(accountNameRow)
             user.email?.takeIf { it.isNotBlank() }?.let { emailAddress ->
                 identityCard.addView(TextView(activity).apply {
                     text = emailAddress
@@ -542,14 +565,6 @@ internal class FirebaseAccountController(
                 toast("تم نسخ معرّف الملف الشخصي")
             }, LinearLayout.LayoutParams(-1, dp(46)))
             page.addView(profileIdCard, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(14) })
-            action(
-                page,
-                translate("تعديل الملف الشخصي"),
-                translate("غيّر صورتك واسمك ونبذتك وإعدادات ظهور ملفك"),
-                dark,
-                primary = true,
-                run = ::showEditProfile
-            )
             action(
                 page,
                 translate("إعدادات الحساب"),
@@ -963,6 +978,7 @@ internal class FirebaseAccountController(
             identity.addView(TextView(activity).apply {
                 text = snapshot.getString("displayName")?.takeIf { it.isNotBlank() } ?: translate("مستخدم MARCO")
                 textSize = 22f
+                gravity = Gravity.CENTER
                 setTypeface(null, android.graphics.Typeface.BOLD)
                 setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
             })
@@ -1385,13 +1401,28 @@ internal class FirebaseAccountController(
                 }
             }
         }
-        fun refreshCounts() {
-            userDocuments.loadFollowCounts(targetUid).addOnSuccessListener { counts ->
-                followers.text = counts.first.toString() + "  " + translate("المتابعون")
-                following.text = counts.second.toString() + "  " + translate("يتابع")
+        fun renderCounts(followerCount: Long, followingCount: Long) {
+            followers.text = followerCount.toString() + "  " + translate("المتابعون")
+            following.text = followingCount.toString() + "  " + translate("يتابع")
+        }
+        if (isOwnProfile) {
+            userDocuments.refreshPublicFollowCounts(targetUid)
+                .addOnFailureListener { error ->
+                    android.util.Log.w("MarcoSocial", "Public follow-count refresh failed", error)
+                }
+        }
+        userDocuments.loadPublicProfile(targetUid).addOnSuccessListener { profile ->
+            if (profile.exists()) {
+                renderCounts(
+                    profile.getLong("followerCount") ?: 0L,
+                    profile.getLong("followingCount") ?: 0L
+                )
+            } else if (isOwnProfile) {
+                userDocuments.loadFollowCounts(targetUid).addOnSuccessListener { counts ->
+                    renderCounts(counts.first, counts.second)
+                }
             }
         }
-        refreshCounts()
         if (isOwnProfile) return
         if (currentUser == null || currentUser.isAnonymous) {
             action(
