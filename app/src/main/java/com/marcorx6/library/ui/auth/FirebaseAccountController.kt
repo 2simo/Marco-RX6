@@ -1247,7 +1247,7 @@ internal class FirebaseAccountController(
                                         avatar.imageTintList = null
                                     }
                                 }
-                            }.apply { name = "marco-connection-avatar-loader" }.start()
+                            }.start()
                         }
                         listContainer.addView(row, LinearLayout.LayoutParams(-1, -2).apply {
                             bottomMargin = dp(9)
