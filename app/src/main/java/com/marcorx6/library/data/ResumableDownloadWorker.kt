@@ -83,6 +83,7 @@ internal class ResumableDownloadWorker(
         )
         if (segmented) return Result.success()
         var offset = if (partial.exists()) partial.length() else 0L
+        val speedLimiter = DownloadSpeedLimiter(DownloadConcurrencyPreferences(applicationContext).speedLimitBytesPerSecond())
         var connection: HttpURLConnection? = null
         try {
             connection = (URL(item.url).openConnection() as HttpURLConnection).apply {
@@ -163,6 +164,7 @@ internal class ResumableDownloadWorker(
                         if (isStopped) throw InterruptedException("Download paused or cancelled")
                         val count = input.read(buffer)
                         if (count < 0) break
+                        speedLimiter.acquire(count)
                         sink.write(buffer, 0, count)
                         offset += count
                         val now = System.currentTimeMillis()
