@@ -7,7 +7,6 @@ import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.view.View
 import android.view.ViewGroup
-import android.view.Gravity
 import android.view.WindowManager
 import android.widget.ArrayAdapter
 import android.widget.Button
