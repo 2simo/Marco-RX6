@@ -554,7 +554,7 @@ internal class FirebaseAccountController(
                         photoData = profilePhotoData,
                         publicProfile = publicProfileToggle.isChecked,
                         showFavorites = showFavoritesToggle.isChecked,
-                        favoriteGames = libraryGames.filter { it.isFavorite }.take(30).map { game ->
+                        favoriteGames = games().filter { it.isFavorite }.take(30).map { game ->
                             mapOf("name" to game.name, "platform" to game.platform, "coverUrl" to game.coverUrl)
                         }
                     ).addOnSuccessListener {
