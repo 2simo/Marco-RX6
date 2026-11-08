@@ -233,11 +233,23 @@ internal class FirebaseUserDocumentRepository(
             .collection("following")
             .document(targetUid)
         return if (follow) {
-            edge.set(mapOf(
+            val batch = firestore.batch()
+            batch.set(edge, mapOf(
                 "uid" to followerUid,
                 "targetUid" to targetUid,
                 "createdAt" to FieldValue.serverTimestamp()
             ))
+            val notification = firestore.collection("users")
+                .document(targetUid).collection("notifications").document()
+            batch.set(notification, mapOf(
+                "type" to "follow",
+                "actorUid" to followerUid,
+                "title" to "متابع جديد",
+                "body" to "بدأ هذا المستخدم بمتابعتك",
+                "createdAt" to FieldValue.serverTimestamp(),
+                "read" to false
+            ))
+            batch.commit()
         } else edge.delete()
     }
 
