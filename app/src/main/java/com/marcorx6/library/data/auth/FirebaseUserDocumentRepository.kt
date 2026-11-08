@@ -153,7 +153,7 @@ internal class FirebaseUserDocumentRepository(
             val previousKey = privateSnapshot.getString("username")?.let(::usernameKey)
             val previousClaimRef = previousKey?.takeIf { it != key }
                 ?.let { firestore.collection(USERNAMES_COLLECTION).document(it) }
-            val previousClaim = previousClaimRef?.let(transaction::get)
+            val previousClaim = if (previousClaimRef != null) transaction.get(previousClaimRef) else null
             val claimedBy = newClaim.getString("uid")
             if (newClaim.exists() && claimedBy != uid) {
                 throw IllegalStateException("اسم المستخدم مستخدم بالفعل. اختر اسماً آخر.")
