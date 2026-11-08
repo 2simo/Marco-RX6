@@ -20,6 +20,7 @@ import com.marcorx6.library.data.GameEngagementRepository
 import com.marcorx6.library.data.DownloadStoragePreferences
 import com.marcorx6.library.data.auth.FirebaseSessionCoordinator
 import com.marcorx6.library.data.auth.FirebaseAuthRepository
+import com.marcorx6.library.data.auth.FirebasePushTokenRepository
 import com.google.firebase.appcheck.FirebaseAppCheck
 import com.google.firebase.appcheck.AppCheckProviderFactory
 import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory
@@ -110,6 +111,7 @@ class MainActivity : ComponentActivity() {
                 createInterface()
             },
             onSignedIn = {
+                FirebasePushTokenRepository(applicationContext).syncCurrentToken()
                 // After authentication, open the editable account profile directly.
                 showFirebaseAccount()
             },
@@ -377,6 +379,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        FirebasePushTokenRepository(applicationContext).syncCurrentToken()
         firebaseSessionCoordinator.ensureGuestSession()
         lifecycleCoordinator.onResume()
     }
