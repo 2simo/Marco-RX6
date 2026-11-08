@@ -197,9 +197,7 @@ internal class FirebaseUserDocumentRepository(
                 throw privateTask.exception ?: IllegalStateException("تعذر قراءة إعدادات الملف")
             }
             val privateProfile = privateTask.result
-            if (privateProfile.getBoolean("publicProfile") != true ||
-                privateProfile.getBoolean("showFavorites") == false
-            ) {
+            if (privateProfile.getBoolean("publicProfile") != true) {
                 return@continueWithTask Tasks.forResult<Void>(null)
             }
             loadPublicProfile(uid).continueWithTask { publicTask ->
@@ -212,8 +210,13 @@ internal class FirebaseUserDocumentRepository(
                 val privateBio = privateProfile.getString("bio") ?: bio
                 val privatePhotoUrl = photoUrl ?: privateProfile.getString("photoUrl")
                 val privatePhotoData = privateProfile.getString("photoData") ?: photoData
+                val favoritesMatch = if (privateProfile.getBoolean("showFavorites") == false) {
+                    !existing.contains("favoriteGames")
+                } else {
+                    (existing.get("favoriteGames") as? List<*>) == normalized
+                }
                 val needsSync =
-                    (existing.get("favoriteGames") as? List<*>) != normalized ||
+                    !favoritesMatch ||
                     existing.getString("displayName") != privateName ||
                     existing.getString("bio").orEmpty() != privateBio.orEmpty() ||
                     existing.getString("photoUrl") != privatePhotoUrl ||
