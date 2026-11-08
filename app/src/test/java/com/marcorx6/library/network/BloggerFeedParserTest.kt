@@ -153,4 +153,52 @@ class BloggerFeedParserTest {
         )
     }
 
+    @Test
+    fun detectsDownloadLinksInsideArabicDownloadSectionWithGenericButtonText() {
+        val html = """
+            <h2>روابط التحميل</h2>
+            <div>
+              <a class="download" title="رابط اللعبة" href="https://example.org/files/game">
+                اضغط هنا
+              </a>
+              <a href="https://example.org/files/update">الرابط الأول</a>
+            </div>
+            <h2>معلومات إضافية</h2>
+            <a href="https://example.org/author">الكاتب</a>
+        """.trimIndent()
+
+        val links = org.json.JSONArray(BloggerFeedParser.extractDownloadLinks(html))
+        assertEquals(2, links.length())
+        assertEquals("https://example.org/files/game", links.getJSONObject(0).getString("url"))
+        assertEquals("https://example.org/files/update", links.getJSONObject(1).getString("url"))
+    }
+
+    @Test
+    fun detectsDirectFileLinksEvenWhenButtonLabelIsGeneric() {
+        val html = """
+            <a href="https://files.example.org/archive/game.7z?token=abc">اضغط هنا</a>
+            <a href="https://example.org/images/cover.jpg">تحميل اللعبة</a>
+            <a href="https://example.org/about">حول اللعبة</a>
+        """.trimIndent()
+
+        val links = org.json.JSONArray(BloggerFeedParser.extractDownloadLinks(html))
+        assertEquals(1, links.length())
+        assertEquals(
+            "https://files.example.org/archive/game.7z?token=abc",
+            links.getJSONObject(0).getString("url")
+        )
+    }
+
+    @Test
+    fun detectsCommonDownloadHostEvenWithNonDescriptiveButtonText() {
+        val html = """
+            <a title="ملف اللعبة" href="https://gofile.io/d/AbCd">فتح الرابط</a>
+            <a href="https://example.org/contact">اتصل بنا</a>
+        """.trimIndent()
+
+        val links = org.json.JSONArray(BloggerFeedParser.extractDownloadLinks(html))
+        assertEquals(1, links.length())
+        assertEquals("https://gofile.io/d/AbCd", links.getJSONObject(0).getString("url"))
+    }
+
 }
