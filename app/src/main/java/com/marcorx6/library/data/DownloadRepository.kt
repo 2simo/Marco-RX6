@@ -243,7 +243,7 @@ internal class DownloadRepository(context: Context) {
                 return DownloadProbe(finalUrl, mime, false, null)
             }
             val path = Uri.parse(finalUrl).lastPathSegment.orEmpty().lowercase(Locale.ROOT)
-            val hasFileExtension = Regex("""\.(apk|zip|7z|rar|iso|pkg|bin|cue|chd|img|pbp|cso|nsp|xci|pdf|mp4|mp3)$""").containsMatchIn(path)
+            val hasFileExtension = Regex("""\.(apk|zip|7z|rar|iso|pkg|bin|cue|chd|img|pbp|cso|nsp|xci|pdf|mp4|m4v|mkv|webm|mov|avi|flv|3gp|mp3|m4a|aac|wav|flac|ogg)$""").containsMatchIn(path)
             val responseFileName = DownloadFileNames.fromResponse(
                 connection.getHeaderField("Content-Disposition"),
                 finalUrl
