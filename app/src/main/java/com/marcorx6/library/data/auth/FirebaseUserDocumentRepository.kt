@@ -81,7 +81,7 @@ internal class FirebaseUserDocumentRepository(
                     "displayName" to (displayName?.trim()?.take(40) ?: "MARCO User"),
                     "showFavorites" to (showFavorites ?: true)
                 )
-                bio?.trim()?.takeIf(String::isNotBlank)?.let { publicData["bio"] = it.take(160) }
+                publicData["bio"] = bio?.trim()?.take(160).orEmpty()
                 if (showFavorites == false) {
                     publicData["favoriteGames"] = FieldValue.delete()
                 } else {
