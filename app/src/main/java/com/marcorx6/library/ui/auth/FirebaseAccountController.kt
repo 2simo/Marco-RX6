@@ -197,6 +197,16 @@ internal class FirebaseAccountController(
         if (user != null && !user.isAnonymous) {
             // These figures describe the locally available library, not cloud-account-wide activity.
             val libraryGames = games()
+            userDocuments.syncPublicFavorites(
+                uid = user.uid,
+                displayName = user.displayName,
+                bio = null,
+                photoUrl = user.photoUrl?.toString(),
+                photoData = null,
+                favoriteGames = libraryGames.filter { it.isFavorite }.take(30).map { game ->
+                    mapOf("name" to game.name, "platform" to game.platform, "coverUrl" to game.coverUrl)
+                }
+            ).addOnFailureListener { /* The local library remains usable offline. */ }
             val favoriteCount = libraryGames.count { it.isFavorite }
             page.addView(sectionCaption("نظرة عامة على مكتبتك", dark))
             val statsCard = LinearLayout(activity).apply {
@@ -997,13 +1007,24 @@ internal class FirebaseAccountController(
         profilePhotoUploadInProgress = true
         try {
             val encoded = compressProfilePhoto(uri)
-            userDocuments.saveProfile(
-                uid = user.uid,
-                displayName = user.displayName,
-                bio = null,
-                photoUrl = user.photoUrl?.toString(),
-                photoData = encoded
-            ).addOnSuccessListener {
+            userDocuments.loadUser(user.uid).continueWithTask { profileTask ->
+                if (!profileTask.isSuccessful) {
+                    throw profileTask.exception ?: IllegalStateException("تعذر تحميل إعدادات الملف")
+                }
+                val profile = profileTask.result
+                userDocuments.saveProfile(
+                    uid = user.uid,
+                    displayName = user.displayName,
+                    bio = profile.getString("bio"),
+                    photoUrl = user.photoUrl?.toString(),
+                    photoData = encoded,
+                    publicProfile = profile.getBoolean("publicProfile") ?: false,
+                    showFavorites = profile.getBoolean("showFavorites") ?: true,
+                    favoriteGames = games().filter { it.isFavorite }.take(30).map { game ->
+                        mapOf("name" to game.name, "platform" to game.platform, "coverUrl" to game.coverUrl)
+                    }
+                )
+            }.addOnSuccessListener {
                 profilePhotoUploadInProgress = false
                 toast("تم تحديث صورة الحساب")
                 val returnToEditor = returnToProfileEditorAfterPhotoPick
