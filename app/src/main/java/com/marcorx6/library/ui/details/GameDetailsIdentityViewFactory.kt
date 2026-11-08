@@ -120,7 +120,7 @@ internal class GameDetailsIdentityViewFactory(
             background = GradientDrawable().apply {
                 setColor(if (dark) Color.rgb(35, 38, 45) else Color.rgb(232, 234, 238))
                 cornerRadius = dp(13).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(35, 91, 165) else Color.rgb(76, 145, 235))
+                setStroke(dp(1), if (dark) Color.rgb(105, 113, 126) else Color.rgb(190, 198, 210))
             }
             contentDescription = translate("عدد التنزيلات")
         }
