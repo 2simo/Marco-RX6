@@ -73,6 +73,50 @@ service cloud.firestore {
             )
         );
 
+      match /notifications/{notificationId} {
+        allow get, list: if signedInAs(userId);
+        allow create: if signedInAs(request.resource.data.actorUid)
+          && request.auth.uid != userId
+          && !isAnonymous()
+          && request.resource.data.keys().hasOnly([
+            'type', 'actorUid', 'conversationId', 'messageId',
+            'title', 'body', 'createdAt', 'read'
+          ])
+          && request.resource.data.keys().hasAll([
+            'type', 'actorUid', 'title', 'body', 'createdAt', 'read'
+          ])
+          && request.resource.data.actorUid is string
+          && request.resource.data.title is string
+          && request.resource.data.title.size() <= 80
+          && request.resource.data.body is string
+          && request.resource.data.body.size() <= 160
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.read == false
+          && (
+            (
+              request.resource.data.type == 'follow'
+              && !('conversationId' in request.resource.data)
+              && !('messageId' in request.resource.data)
+              && existsAfter(/databases/$(database)/documents/userFollows/$(request.auth.uid)/following/$(userId))
+            )
+            ||
+            (
+              request.resource.data.type == 'message'
+              && request.resource.data.conversationId is string
+              && request.resource.data.messageId is string
+              && existsAfter(/databases/$(database)/documents/conversations/$(request.resource.data.conversationId)/messages/$(request.resource.data.messageId))
+              && getAfter(/databases/$(database)/documents/conversations/$(request.resource.data.conversationId)/messages/$(request.resource.data.messageId)).data.senderUid == request.auth.uid
+              && getAfter(/databases/$(database)/documents/conversations/$(request.resource.data.conversationId)).data.participants.hasAll([request.auth.uid, userId])
+            )
+          );
+        allow update: if signedInAs(userId)
+          && resource.data.read == false
+          && request.resource.data.read == true
+          && request.resource.data.readAt == request.time
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt']);
+        allow delete: if signedInAs(userId);
+      }
+
       match /settings/preferences {
         // Preferences are cloud-synced only for non-anonymous accounts.
         allow read: if signedInAs(userId) && !isAnonymous();
