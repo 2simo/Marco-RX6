@@ -75,11 +75,36 @@ internal class FirebaseMessagingRepository(
                 batch.set(message, mapOf(
                     "senderUid" to senderUid,
                     "text" to body,
-                    "createdAt" to FieldValue.serverTimestamp()
+                    "createdAt" to FieldValue.serverTimestamp(),
+                    "readBy" to listOf(senderUid)
                 ))
                 batch.commit()
             }
         }
+    }
+
+
+    fun markMessagesRead(
+        conversationId: String,
+        readerUid: String,
+        messages: List<DocumentSnapshot>
+    ): Task<Void> {
+        val unread = messages.filter { message ->
+            message.getString("senderUid") != readerUid &&
+                !((message.get("readBy") as? List<*>)?.contains(readerUid) ?: false)
+        }
+        if (unread.isEmpty()) return Tasks.forResult<Void>(null)
+        val batch = firestore.batch()
+        unread.forEach { message ->
+            batch.update(
+                message.reference,
+                mapOf(
+                    "readBy" to FieldValue.arrayUnion(readerUid),
+                    "readAt" to FieldValue.serverTimestamp()
+                )
+            )
+        }
+        return batch.commit()
     }
 
     fun listenInbox(
