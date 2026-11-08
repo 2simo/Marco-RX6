@@ -219,6 +219,27 @@ internal class FirebaseAccountController(
             addMetric(libraryGames.size, "الألعاب")
             addMetric(favoriteCount, "المفضلة")
             statsCard.addView(metrics)
+            val favoritePreview = libraryGames.filter { it.isFavorite }.take(3)
+            statsCard.addView(TextView(activity).apply {
+                text = translate("ألعابك المفضلة")
+                textSize = 12f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(if (dark) Color.rgb(190, 198, 210) else Color.rgb(75, 83, 96))
+                setPadding(0, dp(8), 0, dp(5))
+            })
+            val favoritesText = when {
+                favoritePreview.isEmpty() -> translate("لم تضف ألعاباً إلى المفضلة بعد.")
+                else -> favoritePreview.joinToString("\n") { "★  ${it.name}" } +
+                    if (favoriteCount > favoritePreview.size) {
+                        "\n" + translate("و") + " ${favoriteCount - favoritePreview.size} " + translate("ألعاب أخرى")
+                    } else ""
+            }
+            statsCard.addView(TextView(activity).apply {
+                text = favoritesText
+                textSize = 12f
+                setLineSpacing(dp(3).toFloat(), 1f)
+                setTextColor(if (dark) Color.rgb(160, 168, 181) else Color.rgb(91, 98, 110))
+            })
             page.addView(statsCard, LinearLayout.LayoutParams(-1, -2).apply {
                 bottomMargin = dp(14)
             })
