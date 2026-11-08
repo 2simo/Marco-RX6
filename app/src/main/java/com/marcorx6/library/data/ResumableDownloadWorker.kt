@@ -38,9 +38,12 @@ internal class ResumableDownloadWorker(
             return Result.success()
         }
         return try {
-            setForeground(createForegroundInfo(item.title, id))
-            database.status(id, DownloadManager.STATUS_RUNNING)
-            download(item, database)
+            if (!database.markRunning(id)) {
+                Result.success()
+            } else {
+                setForeground(createForegroundInfo(item.title, id))
+                download(item, database)
+            }
         } catch (error: Exception) {
             val latest = database.get(id)
             if (latest == null || latest.status == DownloadDatabase.STATUS_CANCELLED) {
