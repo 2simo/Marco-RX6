@@ -11,7 +11,6 @@ import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Locale
-import java.util.concurrent.TimeUnit
 
 internal data class DownloadEntry(
     val id: Long,
