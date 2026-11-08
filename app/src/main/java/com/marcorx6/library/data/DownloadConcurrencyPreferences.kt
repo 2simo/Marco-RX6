@@ -15,8 +15,15 @@ internal class DownloadConcurrencyPreferences(context: Context) {
         preferences.edit().putInt(KEY_MAX_CONCURRENT, value.coerceIn(1, 5)).apply()
     }
 
+    fun wifiOnly(): Boolean = preferences.getBoolean(KEY_WIFI_ONLY, false)
+
+    fun setWifiOnly(enabled: Boolean) {
+        preferences.edit().putBoolean(KEY_WIFI_ONLY, enabled).apply()
+    }
+
     companion object {
         private const val KEY_MAX_CONCURRENT = "max_concurrent_downloads"
+        private const val KEY_WIFI_ONLY = "wifi_only_downloads"
         const val DEFAULT_MAX_CONCURRENT = 2
     }
 }
