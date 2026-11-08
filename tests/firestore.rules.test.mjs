@@ -242,6 +242,13 @@ describe("Firestore user isolation rules", () => {
       createdAt: serverTimestamp(),
     }));
     await assertFails(updateDoc(aliceFollowingBob, { targetUid: "charlie" }));
+    // The followed account may remove an incoming edge when deleting its profile.
+    await assertSucceeds(deleteDoc(doc(bob, "userFollows/alice/following/bob")));
+    await assertSucceeds(setDoc(aliceFollowingBob, {
+      uid: "alice",
+      targetUid: "bob",
+      createdAt: serverTimestamp(),
+    }));
     await assertSucceeds(deleteDoc(aliceFollowingBob));
   });
 
