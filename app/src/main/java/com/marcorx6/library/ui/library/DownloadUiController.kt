@@ -153,6 +153,27 @@ internal class DownloadUiController(
             }
         }
         header.addView(concurrencyButton, LinearLayout.LayoutParams(-2, dp(44)).apply { marginEnd = dp(7) })
+        val wifiOnlyButton = TextView(activity).apply {
+            text = if (downloadRepository.wifiOnlyDownloads()) "Wi-Fi" else "ALL"
+            textSize = 10f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(primary)
+            gravity = Gravity.CENTER
+            setPadding(dp(10), dp(10), dp(10), dp(10))
+            background = GradientDrawable().apply {
+                setColor(surface)
+                cornerRadius = dp(12).toFloat()
+                setStroke(dp(1), if (dark) Color.rgb(78, 85, 98) else Color.rgb(210, 216, 225))
+            }
+            contentDescription = translate("التنزيل عبر Wi-Fi فقط")
+            setOnClickListener {
+                val enabled = !downloadRepository.wifiOnlyDownloads()
+                downloadRepository.setWifiOnlyDownloads(enabled)
+                text = if (enabled) "Wi-Fi" else "ALL"
+                Toast.makeText(activity, translate(if (enabled) "التنزيل عبر Wi-Fi فقط" else "التنزيل عبر جميع الشبكات"), Toast.LENGTH_SHORT).show()
+            }
+        }
+        header.addView(wifiOnlyButton, LinearLayout.LayoutParams(-2, dp(44)).apply { marginEnd = dp(7) })
         header.addView(android.widget.ImageView(activity).apply {
             setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
             imageTintList = android.content.res.ColorStateList.valueOf(primary)
