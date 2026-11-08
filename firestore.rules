@@ -100,7 +100,7 @@ service cloud.firestore {
     // the social graph metadata, never private account documents.
     // Collection-group queries over the `following` subcollection require a
     // recursive wildcard match. Keep reads limited to signed-in users.
-    match /userFollows/{path=**}/following/{targetUid} {
+    match /{path=**}/following/{targetUid} {
       allow read: if request.auth != null;
     }
 
