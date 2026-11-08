@@ -463,6 +463,19 @@ internal class FirebaseUserDocumentRepository(
                 if (!task.isSuccessful) {
                     throw task.exception ?: IllegalStateException("تعذر حذف الملف العام")
                 }
+                loadUser(uid).continueWithTask { profileTask ->
+                    if (!profileTask.isSuccessful) {
+                        throw profileTask.exception ?: IllegalStateException("تعذر قراءة اسم المستخدم")
+                    }
+                    val key = profileTask.result.getString("username")?.let(::usernameKey)
+                    if (key.isNullOrBlank()) Tasks.forResult<Void>(null)
+                    else firestore.collection(USERNAMES_COLLECTION).document(key).delete()
+                }
+            }
+            .continueWithTask { task ->
+                if (!task.isSuccessful) {
+                    throw task.exception ?: IllegalStateException("تعذر تحرير اسم المستخدم")
+                }
                 userDocument(uid).delete()
             }
 
