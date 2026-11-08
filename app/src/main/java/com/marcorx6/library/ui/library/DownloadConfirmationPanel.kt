@@ -77,7 +77,7 @@ internal class DownloadConfirmationPanel(
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(18), dp(10), dp(18), dp(20))
-            background = shape(background, border, 25)
+            this.background = shape(background, border, 25)
             elevation = dp(20).toFloat()
             alpha = 0f
             translationY = dp(18).toFloat()
@@ -87,7 +87,7 @@ internal class DownloadConfirmationPanel(
             isFillViewport = false
             isVerticalScrollBarEnabled = false
             clipToPadding = false
-            addView(root, ScrollView.LayoutParams(-1, -2))
+            addView(root, android.widget.FrameLayout.LayoutParams(-1, -2))
         }
 
         val handleRow = LinearLayout(activity).apply {
@@ -95,7 +95,7 @@ internal class DownloadConfirmationPanel(
             setPadding(0, 0, 0, dp(13))
         }
         handleRow.addView(View(activity).apply {
-            background = GradientDrawable().apply {
+            this.background = GradientDrawable().apply {
                 setColor(if (dark) Color.rgb(91, 99, 112) else Color.rgb(190, 196, 205))
                 cornerRadius = dp(3).toFloat()
             }
@@ -117,7 +117,7 @@ internal class DownloadConfirmationPanel(
             textSize = 25f
             gravity = Gravity.CENTER
             setTextColor(muted)
-            background = shape(raised)
+            this.background = shape(raised)
             isClickable = true
             isFocusable = true
             contentDescription = translate("إغلاق")
@@ -129,7 +129,7 @@ internal class DownloadConfirmationPanel(
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(13), dp(14), dp(13), dp(14))
-            background = shape(surface)
+            this.background = shape(surface)
         }
         fileCard.addView(TextView(activity).apply {
             text = extension
@@ -137,7 +137,7 @@ internal class DownloadConfirmationPanel(
             setTypeface(null, Typeface.BOLD)
             gravity = Gravity.CENTER
             setTextColor(if (dark) Color.rgb(22, 25, 31) else Color.WHITE)
-            background = GradientDrawable().apply {
+            this.background = GradientDrawable().apply {
                 setColor(silver)
                 cornerRadius = dp(12).toFloat()
             }
@@ -167,7 +167,7 @@ internal class DownloadConfirmationPanel(
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(12), dp(8), dp(8), dp(8))
-            background = shape(raised, Color.TRANSPARENT)
+            this.background = shape(raised, Color.TRANSPARENT)
         }
         urlCard.addView(label(url, 10f, muted).apply {
             maxLines = 2
@@ -181,7 +181,7 @@ internal class DownloadConfirmationPanel(
             gravity = Gravity.CENTER
             setTextColor(heading)
             setPadding(dp(12), dp(9), dp(12), dp(9))
-            background = shape(surface)
+            this.background = shape(surface)
             isClickable = true
             isFocusable = true
             setOnClickListener {
@@ -205,16 +205,16 @@ internal class DownloadConfirmationPanel(
             setText(fileName)
             setSelection(text.length)
             setPadding(dp(13), 0, dp(13), 0)
-            background = shape(surface)
+            this.background = shape(surface)
             imeOptions = EditorInfo.IME_ACTION_DONE
-            isSelectAllOnFocus = true
+            setSelectAllOnFocus(true)
         }
         root.addView(nameInput, LinearLayout.LayoutParams(-1, dp(50)))
 
         val details = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(14), dp(12), dp(14), dp(12))
-            background = shape(raised, Color.TRANSPARENT)
+            this.background = shape(raised, Color.TRANSPARENT)
         }
         fun detailLine(title: String, value: String, last: Boolean = false) {
             val line = LinearLayout(activity).apply {
@@ -255,7 +255,7 @@ internal class DownloadConfirmationPanel(
             textSize = 12f
             gravity = Gravity.CENTER
             setTextColor(silver)
-            background = shape(surface)
+            this.background = shape(surface)
             isClickable = true
             isFocusable = true
             setOnClickListener { dialog.dismiss() }
@@ -269,7 +269,7 @@ internal class DownloadConfirmationPanel(
             setTypeface(null, Typeface.BOLD)
             gravity = Gravity.CENTER
             setTextColor(if (dark) Color.rgb(19, 22, 28) else Color.WHITE)
-            background = GradientDrawable().apply {
+            this.background = GradientDrawable().apply {
                 setColor(silver)
                 cornerRadius = dp(15).toFloat()
             }
