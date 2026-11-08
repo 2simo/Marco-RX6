@@ -468,7 +468,66 @@ internal class DownloadUiController(
                         Toast.makeText(activity, translate("تعذر فتح الملف؛ تحقق من وجود تطبيق مناسب لفتحه"), Toast.LENGTH_LONG).show()
                     }
                 })
+                addAction(smallAction(translate("مشاركة")) {
+                    try {
+                        val uri = downloadRepository.openDownloadedFile(item.id)
+                            ?: throw IllegalStateException("File URI unavailable")
+                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = item.mimeType?.takeIf { it.isNotBlank() } ?: "*/*"
+                            putExtra(Intent.EXTRA_STREAM, uri)
+                            clipData = android.content.ClipData.newUri(
+                                activity.contentResolver, item.title, uri
+                            )
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                        activity.startActivity(Intent.createChooser(
+                            shareIntent, translate("مشاركة الملف")
+                        ))
+                    } catch (_: Exception) {
+                        Toast.makeText(activity, translate("تعذرت مشاركة الملف"), Toast.LENGTH_LONG).show()
+                    }
+                })
             }
+            addAction(smallAction(translate("التفاصيل")) {
+                val status = when (item.status) {
+                    DownloadManager.STATUS_PENDING,
+                    com.marcorx6.library.data.DownloadDatabase.STATUS_SCHEDULED -> translate("في الانتظار")
+                    DownloadManager.STATUS_RUNNING -> translate("قيد التنزيل")
+                    DownloadManager.STATUS_PAUSED -> translate("متوقف مؤقتاً")
+                    DownloadManager.STATUS_SUCCESSFUL -> translate("اكتمل")
+                    DownloadManager.STATUS_FAILED -> translate("فشل")
+                    else -> translate("غير معروف")
+                }
+                val downloaded = android.text.format.Formatter.formatFileSize(
+                    activity, item.downloadedBytes.coerceAtLeast(0L)
+                )
+                val total = if (item.totalBytes > 0L) android.text.format.Formatter.formatFileSize(
+                    activity, item.totalBytes
+                ) else translate("الحجم غير معروف")
+                val details = buildString {
+                    append(translate("الحالة")).append(": ").append(status)
+                    append("\\n").append(translate("الحجم المحمّل")).append(": ")
+                        .append(downloaded).append(" / ").append(total)
+                    append("\\n").append(translate("نوع الملف")).append(": ")
+                        .append(item.mimeType?.takeIf { it.isNotBlank() } ?: "—")
+                    append("\\n").append(translate("الأولوية")).append(": ").append(
+                        translate(when (item.priority) {
+                            2 -> "عالية"
+                            1 -> "متوسطة"
+                            else -> "عادية"
+                        })
+                    )
+                    if (item.sourcePostUrl.isNotBlank()) {
+                        append("\\n").append(translate("المصدر")).append(": ")
+                            .append(item.sourcePostUrl)
+                    }
+                }
+                AlertDialog.Builder(activity)
+                    .setTitle(item.title)
+                    .setMessage(details)
+                    .setPositiveButton(translate("حسناً"), null)
+                    .show().also(styleDialog)
+            })
             if (item.status == DownloadManager.STATUS_RUNNING || item.status == DownloadManager.STATUS_PENDING || item.status == com.marcorx6.library.data.DownloadDatabase.STATUS_SCHEDULED) {
                 addAction(smallAction(translate("إيقاف مؤقت")) {
                     if (downloadRepository.pauseDownload(item.id)) {
