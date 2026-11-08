@@ -90,6 +90,14 @@ internal class FirebaseAccountController(
             setPadding(dp(8), 0, 0, dp(8))
         }, LinearLayout.LayoutParams(0, -2, 1f))
         page.addView(header)
+        page.addView(TextView(activity).apply {
+            text = translate("ملفك الشخصي • MARCO RX6")
+            textSize = 11f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            letterSpacing = 0.08f
+            setTextColor(if (dark) Color.rgb(135, 145, 160) else Color.rgb(105, 114, 128))
+            setPadding(dp(56), 0, 0, dp(8))
+        })
 
         // Keep the avatar and account identity together as one profile header.
         val photoView = ImageView(activity).apply {
@@ -107,17 +115,21 @@ internal class FirebaseAccountController(
         // A compact identity panel makes the account state immediately clear.
         val identityCard = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(18), dp(16), dp(18), dp(16))
-            background = GradientDrawable().apply {
-                cornerRadius = dp(20).toFloat()
-                setColor(if (dark) Color.rgb(22, 24, 29) else Color.WHITE)
-                setStroke(dp(1), if (dark) Color.rgb(105, 113, 126) else Color.rgb(180, 187, 198))
+            gravity = Gravity.CENTER_HORIZONTAL
+            setPadding(dp(20), dp(22), dp(20), dp(20))
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                if (dark) intArrayOf(Color.rgb(34, 38, 46), Color.rgb(15, 17, 22))
+                else intArrayOf(Color.WHITE, Color.rgb(229, 233, 239))
+            ).apply {
+                cornerRadius = dp(24).toFloat()
+                setStroke(dp(1), if (dark) Color.rgb(105, 115, 130) else Color.rgb(180, 189, 202))
             }
         }
         if (user != null && !user.isAnonymous) {
-            identityCard.addView(photoView, LinearLayout.LayoutParams(dp(88), dp(88)).apply {
+            identityCard.addView(photoView, LinearLayout.LayoutParams(dp(100), dp(100)).apply {
                 gravity = Gravity.CENTER_HORIZONTAL
-                bottomMargin = dp(10)
+                bottomMargin = dp(14)
             })
         }
         if (user == null || user.isAnonymous) {
@@ -155,14 +167,16 @@ internal class FirebaseAccountController(
             })
             identityCard.addView(TextView(activity).apply {
                 text = user.displayName?.takeIf { it.isNotBlank() } ?: translate("مستخدم MARCO")
-                textSize = 19f
+                textSize = 22f
                 setTypeface(null, android.graphics.Typeface.BOLD)
+                gravity = Gravity.CENTER
                 setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
-                setPadding(0, dp(7), 0, dp(3))
+                setPadding(0, dp(7), 0, dp(5))
             })
             identityCard.addView(TextView(activity).apply {
                 text = user.email.orEmpty()
                 textSize = 12f
+                gravity = Gravity.CENTER
                 setTextColor(if (dark) Color.rgb(175, 182, 193) else Color.rgb(91, 98, 110))
             })
             identityCard.addView(TextView(activity).apply {
@@ -196,14 +210,16 @@ internal class FirebaseAccountController(
             // These figures describe the locally available library, not cloud-account-wide activity.
             val libraryGames = games()
             val favoriteCount = libraryGames.count { it.isFavorite }
+            page.addView(sectionCaption("نظرة عامة على مكتبتك", dark))
             val statsCard = LinearLayout(activity).apply {
                 orientation = LinearLayout.VERTICAL
-                setPadding(dp(16), dp(13), dp(16), dp(13))
+                setPadding(dp(17), dp(16), dp(17), dp(16))
                 background = GradientDrawable().apply {
-                    cornerRadius = dp(18).toFloat()
-                    setColor(if (dark) Color.rgb(17, 19, 24) else Color.WHITE)
-                    setStroke(dp(1), if (dark) Color.rgb(76, 83, 94) else Color.rgb(205, 210, 218))
+                    cornerRadius = dp(20).toFloat()
+                    setColor(if (dark) Color.rgb(21, 24, 30) else Color.WHITE)
+                    setStroke(dp(1), if (dark) Color.rgb(82, 91, 105) else Color.rgb(199, 207, 218))
                 }
+                elevation = dp(2).toFloat()
             }
             statsCard.addView(TextView(activity).apply {
                 text = translate("مكتبتك على هذا الجهاز")
@@ -278,6 +294,7 @@ internal class FirebaseAccountController(
             page.addView(profileBioPreview, LinearLayout.LayoutParams(-1, -2).apply {
                 bottomMargin = dp(14)
             })
+            page.addView(sectionCaption("إعدادات الملف الشخصي", dark))
         }
 
         if (user == null || user.isAnonymous) {
@@ -336,7 +353,7 @@ internal class FirebaseAccountController(
                 setText(user.displayName.orEmpty())
                 setSelection(text.length)
             }
-            page.addView(nameInput, LinearLayout.LayoutParams(-1, dp(54)).apply { bottomMargin = dp(12) })
+            page.addView(nameInput, LinearLayout.LayoutParams(-1, dp(56)).apply { bottomMargin = dp(14) })
 
             page.addView(TextView(activity).apply {
                 text = translate("نبذة عنك")
@@ -363,7 +380,7 @@ internal class FirebaseAccountController(
                     setStroke(dp(1), if (dark) Color.argb(120, 130, 138, 151) else Color.argb(160, 160, 168, 181))
                 }
             }
-            page.addView(bioInput, LinearLayout.LayoutParams(-1, dp(112)).apply { bottomMargin = dp(2) })
+            page.addView(bioInput, LinearLayout.LayoutParams(-1, dp(124)).apply { bottomMargin = dp(2) })
             val bioCounter = TextView(activity).apply {
                 text = "0/160"
                 textSize = 10f
@@ -433,7 +450,7 @@ internal class FirebaseAccountController(
                 }
             }
             saveButton.isEnabled = false
-            page.addView(saveButton, LinearLayout.LayoutParams(-1, dp(52)).apply { bottomMargin = dp(18) })
+            page.addView(saveButton, LinearLayout.LayoutParams(-1, dp(56)).apply { bottomMargin = dp(20) })
 
             userDocuments.loadUser(user.uid)
                 .addOnSuccessListener { snapshot ->
@@ -643,12 +660,22 @@ internal class FirebaseAccountController(
             orientation = LinearLayout.VERTICAL
             isClickable = true
             isFocusable = true
-            setPadding(dp(17), dp(14), dp(17), dp(14))
-            background = GradientDrawable().apply {
-                cornerRadius = dp(16).toFloat()
-                setColor(if (primary) Color.rgb(190, 198, 210) else if (dark) Color.rgb(25, 28, 34) else Color.WHITE)
-                setStroke(dp(1), if (primary) Color.rgb(145, 153, 166) else if (dark) Color.rgb(75, 80, 90) else Color.rgb(160, 168, 181))
+            setPadding(dp(18), dp(16), dp(18), dp(16))
+            background = GradientDrawable(
+                if (primary) GradientDrawable.Orientation.LEFT_RIGHT else GradientDrawable.Orientation.TL_BR,
+                if (primary) intArrayOf(Color.rgb(218, 224, 233), Color.rgb(155, 166, 182))
+                else if (dark) intArrayOf(Color.rgb(31, 35, 43), Color.rgb(20, 23, 29))
+                else intArrayOf(Color.WHITE, Color.rgb(239, 242, 247))
+            ).apply {
+                cornerRadius = dp(19).toFloat()
+                setStroke(dp(1), if (primary) Color.rgb(145, 156, 173) else if (dark) Color.rgb(83, 92, 106) else Color.rgb(194, 202, 214))
             }
+            elevation = dp(1).toFloat()
+            if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
+                android.content.res.ColorStateList.valueOf(Color.argb(55, 190, 198, 210)),
+                null,
+                android.graphics.drawable.ColorDrawable(Color.WHITE)
+            )
             setOnClickListener { run() }
         }
         card.addView(TextView(activity).apply {
@@ -663,8 +690,17 @@ internal class FirebaseAccountController(
             setTextColor(if (primary) Color.rgb(20, 23, 29) else if (dark) Color.rgb(160, 168, 181) else Color.rgb(91, 98, 110))
             setPadding(0, dp(5), 0, 0)
         })
-        page.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
+        page.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
     }
+
+    private fun sectionCaption(label: String, dark: Boolean): TextView =
+        TextView(activity).apply {
+            text = translate(label)
+            textSize = 13f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(if (dark) Color.rgb(205, 212, 222) else Color.rgb(65, 73, 86))
+            setPadding(dp(2), dp(4), dp(2), dp(10))
+        }
 
     /**
      * Clear the Firebase Google client's cached account before opening account selection.
