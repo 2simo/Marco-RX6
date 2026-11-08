@@ -56,7 +56,8 @@ internal class FirebaseAccountController(
     private val launchProfilePhotoPicker: (Intent) -> Unit,
     private val translate: (String) -> String,
     private val games: () -> List<Game>,
-    private val loadCover: (ImageView, String, String) -> Unit
+    private val loadCover: (ImageView, String, String) -> Unit,
+    private val openGameDetails: (Game) -> Unit
 ) {
     private val userDocuments = FirebaseUserDocumentRepository()
     private var pendingDeletionUid: String? = null
@@ -306,7 +307,7 @@ internal class FirebaseAccountController(
                                 android.graphics.drawable.ColorDrawable(Color.WHITE)
                             )
                         contentDescription = game.name + "، " + translate(game.platform)
-                        setOnClickListener { onBack(); activity.post { } }
+                        setOnClickListener { openGameDetails(game) }
                     }
                     val cover = ImageView(activity).apply {
                         scaleType = ImageView.ScaleType.CENTER_CROP
