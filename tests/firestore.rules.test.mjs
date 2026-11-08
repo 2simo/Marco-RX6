@@ -143,6 +143,44 @@ describe("Firestore user isolation rules", () => {
     );
   });
 
+  it("allows exact-UID reads only when a profile owner enables public visibility", async () => {
+    const ownerDb = testEnv.authenticatedContext("public-owner").firestore();
+    const visitorDb = testEnv.authenticatedContext("profile-visitor").firestore();
+    const profile = doc(ownerDb, "users/public-owner");
+
+    await assertSucceeds(setDoc(profile, {
+      displayName: "Public MARCO",
+      bio: "Retro games",
+      publicProfile: true,
+      showFavorites: true,
+      favoriteGames: [{ name: "Game", platform: "PS2", coverUrl: "" }],
+      updatedAt: serverTimestamp(),
+    }));
+    await assertSucceeds(getDoc(doc(visitorDb, "users/public-owner")));
+    await assertFails(getDocs(collection(visitorDb, "users")));
+
+    await assertSucceeds(updateDoc(profile, { publicProfile: false }));
+    await assertFails(getDoc(doc(visitorDb, "users/public-owner")));
+  });
+
+  it("bounds the public favorite-game preview stored in a profile", async () => {
+    const db = testEnv.authenticatedContext("favorite-owner").firestore();
+    const profile = doc(db, "users/favorite-owner");
+    const games = Array.from({ length: 31 }, (_, index) => ({
+      name: "Game " + index,
+      platform: "PS2",
+      coverUrl: "",
+    }));
+
+    await assertFails(setDoc(profile, {
+      displayName: "Favorite owner",
+      publicProfile: true,
+      showFavorites: true,
+      favoriteGames: games,
+      updatedAt: serverTimestamp(),
+    }));
+  });
+
   it("denies access to another user's profile and nested data", async () => {
     const dbA = testEnv.authenticatedContext("user-a").firestore();
     const dbB = testEnv.authenticatedContext("user-b").firestore();
