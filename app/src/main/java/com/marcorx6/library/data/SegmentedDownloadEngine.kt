@@ -24,22 +24,6 @@ internal object SegmentedDownloadEngine {
     private const val MIN_FILE_SIZE = 4L * 1024L * 1024L
     private const val BUFFER_SIZE = 64 * 1024
 
-    /** Shared by all ranges of one file so the cap applies to the whole file, not each socket. */
-    private class SharedSpeedLimiter(private val bytesPerSecond: Long) {
-        private var nextAvailableNanos = 0L
-
-        @Synchronized
-        fun acquire(bytes: Int) {
-            if (bytesPerSecond <= 0L || bytes <= 0) return
-            val now = System.nanoTime()
-            val scheduled = maxOf(now, nextAvailableNanos)
-            val duration = (bytes.toLong() * 1_000_000_000L / bytesPerSecond).coerceAtLeast(1L)
-            nextAvailableNanos = scheduled + duration
-            val waitNanos = scheduled - now
-            if (waitNanos > 0L) TimeUnit.NANOSECONDS.sleep(waitNanos)
-        }
-    }
-
     fun download(
         context: Context,
         item: StoredDownload,
@@ -97,7 +81,7 @@ internal object SegmentedDownloadEngine {
         // when the user changes the number of simultaneous HTTP connections.
         val activeConnections = DownloadConcurrencyPreferences(context).segmentConnections().coerceIn(1, SEGMENT_COUNT)
         val executor = Executors.newFixedThreadPool(activeConnections)
-        val speedLimiter = SharedSpeedLimiter(DownloadConcurrencyPreferences(context).speedLimitBytesPerSecond())
+        val speedLimiter = DownloadSpeedLimiter(DownloadConcurrencyPreferences(context).speedLimitBytesPerSecond())
         val completedBytes = java.util.concurrent.atomic.AtomicLong(
             (0 until SEGMENT_COUNT).sumOf { index ->
                 val start = index * segmentSize
