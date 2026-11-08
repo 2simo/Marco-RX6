@@ -76,7 +76,7 @@ service cloud.firestore {
       allow create, update: if signedInAs(userId)
         && !isAnonymous()
         && request.resource.data.keys().hasOnly([
-          'uid', 'displayName', 'bio', 'showFavorites', 'favoriteGames', 'updatedAt'
+          'uid', 'displayName', 'bio', 'photoUrl', 'photoData', 'showFavorites', 'favoriteGames', 'updatedAt'
         ])
         && request.resource.data.keys().hasAll(['uid', 'displayName', 'showFavorites', 'updatedAt'])
         && request.resource.data.uid == userId
@@ -87,9 +87,31 @@ service cloud.firestore {
         && (!('bio' in request.resource.data)
           || (request.resource.data.bio is string
             && request.resource.data.bio.size() <= 160))
+        && (!('photoUrl' in request.resource.data)
+          || (request.resource.data.photoUrl is string
+            && request.resource.data.photoUrl.size() <= 2048))
+        && (!('photoData' in request.resource.data)
+          || (request.resource.data.photoData is string
+            && request.resource.data.photoData.size() <= 600000))
         && (!('favoriteGames' in request.resource.data)
           || (request.resource.data.favoriteGames is list
             && request.resource.data.favoriteGames.size() <= 30));
+    }
+
+
+    // A follow edge is owned by its follower. Public read access exposes only
+    // the social graph metadata, never private account documents.
+    match /userFollows/{followerUid}/following/{targetUid} {
+      allow read: if request.auth != null;
+      allow create: if signedInAs(followerUid)
+        && followerUid != targetUid
+        && request.resource.data.keys().hasOnly(['uid', 'targetUid', 'createdAt'])
+        && request.resource.data.keys().hasAll(['uid', 'targetUid', 'createdAt'])
+        && request.resource.data.uid == followerUid
+        && request.resource.data.targetUid == targetUid
+        && request.resource.data.createdAt == request.time;
+      allow delete: if signedInAs(followerUid);
+      allow update: if false;
     }
 
     // Game IDs are SHA-256 hashes generated from stable game identity fields.
