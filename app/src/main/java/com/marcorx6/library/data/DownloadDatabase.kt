@@ -131,6 +131,22 @@ internal class DownloadDatabase private constructor(context: Context) :
     }
 
     @Synchronized
+    fun markRunning(id: Long): Boolean {
+        val changed = writableDatabase.update(
+            "downloads",
+            ContentValues().apply { put("status", DownloadManager.STATUS_RUNNING) },
+            "id=? AND status IN (?,?,?)",
+            arrayOf(
+                id.toString(),
+                DownloadManager.STATUS_PENDING.toString(),
+                STATUS_SCHEDULED.toString(),
+                DownloadManager.STATUS_RUNNING.toString()
+            )
+        )
+        return changed > 0
+    }
+
+    @Synchronized
     fun nextId(): Long {
         val current = readableDatabase.rawQuery("SELECT MAX(id) FROM downloads", null).use {
             if (it.moveToFirst()) it.getLong(0) else 0L
