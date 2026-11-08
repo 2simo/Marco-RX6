@@ -1260,6 +1260,7 @@ internal class FirebaseAccountController(
             }
             conversations.forEach { conversation ->
                 val otherUid = messaging.otherParticipant(conversation, user.uid) ?: return@forEach
+                messaging.ensureConversation(user.uid, otherUid).addOnSuccessListener {
                 userDocuments.loadPublicProfile(otherUid).addOnSuccessListener { profile ->
                     if (!profile.exists() || activity.isFinishing || activity.isDestroyed) return@addOnSuccessListener
                     val row = TextView(activity).apply {
@@ -1403,9 +1404,22 @@ internal class FirebaseAccountController(
                         messages.addView(line, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(7) })
                     }
                     scroll.post { scroll.fullScroll(View.FOCUS_DOWN) }
-                }, { error -> toast("تعذر تحديث المحادثة. تحقق من الاتصال.") })
-            }.addOnFailureListener { toast("تعذر فتح ملف المستخدم.") }
-        }.addOnFailureListener { toast("تعذر التحقق من صلاحية المراسلة.") }
+                }, { error ->
+                    android.util.Log.e("MarcoMessages", "Conversation messages listener failed", error)
+                    toast(error.localizedMessage ?: "تعذر تحديث المحادثة. تحقق من الاتصال.")
+                })
+                }.addOnFailureListener { error ->
+                    android.util.Log.e("MarcoMessages", "Public profile load failed before conversation display", error)
+                    toast(error.localizedMessage ?: "تعذر فتح ملف المستخدم.")
+                }
+            }.addOnFailureListener { error ->
+                android.util.Log.e("MarcoMessages", "Conversation initialization failed", error)
+                toast(error.localizedMessage ?: "تعذر تهيئة المحادثة.")
+            }
+        }.addOnFailureListener { error ->
+            android.util.Log.e("MarcoMessages", "Mutual-follow check failed", error)
+            toast(error.localizedMessage ?: "تعذر التحقق من صلاحية المراسلة.")
+        }
     }
 
     private fun showSocialConnections(uid: String, showFollowers: Boolean) {
