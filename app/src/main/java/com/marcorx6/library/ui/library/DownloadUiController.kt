@@ -173,6 +173,7 @@ internal class DownloadUiController(
             setTextColor(muted)
             setPadding(0, dp(7), 0, dp(18))
         })
+        var render: (() -> Unit)? = null
         var selectedFilter = "all"
         val filterButtons = linkedMapOf<String, TextView>()
         fun filterButton(key: String, label: String): TextView = TextView(activity).apply {
@@ -211,6 +212,10 @@ internal class DownloadUiController(
             filterRow.addView(button, LinearLayout.LayoutParams(0, dp(40), 1f).apply {
                 if (key != "all") marginStart = dp(5)
             })
+        }
+        filterButtons["all"]?.apply {
+            setTextColor(Color.rgb(20, 23, 29))
+            (background as? GradientDrawable)?.setColor(primary)
         }
         val bulkRow = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -259,7 +264,7 @@ internal class DownloadUiController(
         val rows = linkedMapOf<Long, RowViews>()
         val lastSpeedSample = mutableMapOf<Long, Pair<Long, Long>>()
         val handler = Handler(Looper.getMainLooper())
-        var render: (() -> Unit)? = null
+
         // Poll more frequently only while a transfer is active. An idle download
         // screen does not need to query the persistent queue several times per second.
         var refreshIntervalMillis = 5_000L
