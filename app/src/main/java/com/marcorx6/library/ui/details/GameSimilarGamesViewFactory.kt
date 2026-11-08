@@ -39,7 +39,7 @@ internal class GameSimilarGamesViewFactory(
             makeText(
                 translate("اكتشف المزيد  •  قد يعجبك أيضاً"),
                 12f,
-                if (dark) Color.rgb(76, 145, 235) else Color.rgb(130, 138, 151),
+                if (dark) Color.rgb(190, 198, 210) else Color.rgb(130, 138, 151),
                 true
             ).apply { setPadding(0, 0, 0, dp(9)) }
         )
