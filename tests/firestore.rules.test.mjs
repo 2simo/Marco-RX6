@@ -166,6 +166,8 @@ describe("Firestore user isolation rules", () => {
       favoriteGames: [{ name: "Game", platform: "PS2", coverUrl: "" }],
       photoUrl: "https://example.com/avatar.jpg",
       photoData: "a".repeat(120000),
+      followerCount: 4,
+      followingCount: 8,
       updatedAt: serverTimestamp(),
     }));
     const visibleProfile = await assertSucceeds(getDoc(doc(visitorDb, "publicProfiles/public-owner")));
@@ -175,8 +177,20 @@ describe("Firestore user isolation rules", () => {
     if (visibleProfile.data()?.photoData !== "a".repeat(120000)) {
       throw new Error("An explicitly shared, size-bounded avatar should be visible in the public profile");
     }
+    if (visibleProfile.data()?.followerCount !== 4 || visibleProfile.data()?.followingCount !== 8) {
+      throw new Error("Public visitors should be able to read cached follow counts");
+    }
     await assertFails(getDoc(doc(visitorDb, "users/public-owner")));
     await assertFails(getDocs(collection(visitorDb, "publicProfiles")));
+    await assertFails(updateDoc(doc(visitorDb, "publicProfiles/public-owner"), {
+      followerCount: 999,
+      updatedAt: serverTimestamp(),
+    }));
+    await assertSucceeds(updateDoc(publicProfile, {
+      followerCount: 5,
+      followingCount: 9,
+      updatedAt: serverTimestamp(),
+    }));
 
     await assertSucceeds(updateDoc(publicProfile, {
       showFavorites: false,
