@@ -165,11 +165,15 @@ describe("Firestore user isolation rules", () => {
       showFavorites: true,
       favoriteGames: [{ name: "Game", platform: "PS2", coverUrl: "" }],
       photoUrl: "https://example.com/avatar.jpg",
+      photoData: "a".repeat(120000),
       updatedAt: serverTimestamp(),
     }));
     const visibleProfile = await assertSucceeds(getDoc(doc(visitorDb, "publicProfiles/public-owner")));
-    if (visibleProfile.data()?.email !== undefined || visibleProfile.data()?.photoData !== undefined) {
-      throw new Error("Private email/photo data must never appear in a public profile");
+    if (visibleProfile.data()?.email !== undefined) {
+      throw new Error("Private email must never appear in a public profile");
+    }
+    if (visibleProfile.data()?.photoData !== "a".repeat(120000)) {
+      throw new Error("An explicitly shared, size-bounded avatar should be visible in the public profile");
     }
     await assertFails(getDoc(doc(visitorDb, "users/public-owner")));
     await assertFails(getDocs(collection(visitorDb, "publicProfiles")));
@@ -179,8 +183,12 @@ describe("Firestore user isolation rules", () => {
       favoriteGames: deleteField(),
       updatedAt: serverTimestamp(),
     }));
+    await assertSucceeds(updateDoc(publicProfile, {
+      photoData: "updated-public-avatar",
+      updatedAt: serverTimestamp(),
+    }));
     await assertFails(updateDoc(publicProfile, {
-      photoData: "private-photo-data",
+      photoData: "x".repeat(180001),
       updatedAt: serverTimestamp(),
     }));
     await assertSucceeds(deleteDoc(publicProfile));
