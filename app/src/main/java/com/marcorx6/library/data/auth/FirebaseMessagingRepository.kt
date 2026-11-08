@@ -39,6 +39,45 @@ internal class FirebaseMessagingRepository(
             }
     }
 
+    /**
+     * Creates the conversation document before attaching a message listener.
+     * Firestore rules use this parent document to authorize message reads.
+     */
+    fun ensureConversation(firstUid: String, secondUid: String): Task<Void> {
+        if (firstUid.isBlank() || secondUid.isBlank() || firstUid == secondUid) {
+            return Tasks.forException(IllegalArgumentException("معرّف المستخدم غير صالح"))
+        }
+        val participants = listOf(firstUid, secondUid).sorted()
+        val conversation = firestore.collection(CONVERSATIONS)
+            .document(conversationId(firstUid, secondUid))
+        return canMessage(firstUid, secondUid).continueWithTask { allowedTask ->
+            if (!allowedTask.isSuccessful) {
+                throw allowedTask.exception ?: IllegalStateException("تعذر التحقق من صلاحية المراسلة")
+            }
+            if (allowedTask.result != true) {
+                throw IllegalStateException("يمكنك المراسلة فقط عندما يتابع كل منكما الآخر")
+            }
+            firestore.runTransaction { transaction ->
+                val existing = transaction.get(conversation)
+                if (!existing.exists()) {
+                    transaction.set(conversation, mapOf(
+                        "participants" to participants,
+                        "lastMessage" to "",
+                        "lastSenderUid" to firstUid,
+                        "createdAt" to FieldValue.serverTimestamp(),
+                        "updatedAt" to FieldValue.serverTimestamp()
+                    ))
+                }
+                true
+            }.continueWith { transactionTask ->
+                if (!transactionTask.isSuccessful) {
+                    throw transactionTask.exception ?: IllegalStateException("تعذر إنشاء المحادثة")
+                }
+                null
+            }
+        }
+    }
+
     fun sendMessage(senderUid: String, recipientUid: String, text: String): Task<Void> {
         val body = text.trim()
         if (senderUid.isBlank() || recipientUid.isBlank() || senderUid == recipientUid ||
