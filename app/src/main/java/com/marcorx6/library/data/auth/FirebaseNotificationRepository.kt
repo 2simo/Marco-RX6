@@ -37,6 +37,29 @@ internal class FirebaseNotificationRepository(
             }
     }
 
+    fun addNewGameNotifications(
+        uid: String,
+        newGames: List<Pair<String, String>>
+    ): Task<Void> {
+        if (uid.isBlank() || newGames.isEmpty()) return Tasks.forResult(null)
+        val batch = firestore.batch()
+        newGames.take(30).forEach { (name, platform) ->
+            val ref = firestore.collection("users").document(uid)
+                .collection("notifications").document()
+            batch.set(ref, mapOf(
+                "type" to "game",
+                "actorUid" to uid,
+                "gameName" to name.take(120),
+                "platform" to platform.take(30),
+                "title" to "لعبة جديدة في المكتبة",
+                "body" to "$name • $platform",
+                "createdAt" to FieldValue.serverTimestamp(),
+                "read" to false
+            ))
+        }
+        return batch.commit()
+    }
+
     fun markRead(uid: String, notification: DocumentSnapshot): Task<Void> {
         if (uid.isBlank() || notification.reference.parent.parent?.id != uid) {
             return Tasks.forException(IllegalArgumentException("إشعار غير صالح"))
