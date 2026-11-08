@@ -2,8 +2,6 @@ package com.marcorx6.library.ui.activity
 
 import androidx.activity.ComponentActivity
 import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 
 /**
  * Coordinates Activity lifecycle with the independently owned runtime features.
@@ -49,8 +47,6 @@ internal class MainActivityLifecycleCoordinator(
 
     fun onResume() {
         applySystemBarAppearance()
-        WindowInsetsControllerCompat(activity.window, activity.window.decorView)
-            .show(WindowInsetsCompat.Type.systemBars())
         ViewCompat.requestApplyInsets(activity.window.decorView)
     }
 
