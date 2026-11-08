@@ -1267,13 +1267,14 @@ internal class FirebaseAccountController(
             setPadding(dp(18), dp(16), dp(18), dp(24))
             setBackgroundColor(Color.rgb(7, 8, 10))
         }
-        page.addView(TextView(activity).apply {
+        val titleView = TextView(activity).apply {
             text = translate("الإشعارات")
             textSize = 24f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(Color.WHITE)
             setPadding(0, 0, 0, dp(14))
-        })
+        }
+        page.addView(titleView)
         val list = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
         val scroll = ScrollView(activity).apply { addView(list) }
         page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
@@ -1288,6 +1289,8 @@ internal class FirebaseAccountController(
         notificationsListener = notifications.listen(user.uid, { items ->
             if (activity.isFinishing || activity.isDestroyed) return@listen
             list.removeAllViews()
+            val unread = notifications.unreadCount(items)
+            titleView.text = if (unread > 0) "${translate("الإشعارات")} • $unread" else translate("الإشعارات")
             if (items.isEmpty()) {
                 list.addView(TextView(activity).apply {
                     text = translate("لا توجد إشعارات بعد.")
