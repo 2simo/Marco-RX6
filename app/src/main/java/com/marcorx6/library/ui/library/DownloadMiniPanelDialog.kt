@@ -33,7 +33,7 @@ internal class DownloadMiniPanelDialog(
         val surface = if (dark) Color.rgb(25, 28, 34) else Color.WHITE
         val heading = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
         val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
-        val accent = if (dark) Color.rgb(91, 157, 242) else Color.rgb(105, 116, 132)
+        val accent = if (dark) Color.rgb(91, 157, 242) else Color.rgb(35, 91, 165)
 
         val dialog = Dialog(activity)
         val root = LinearLayout(activity).apply {
@@ -87,7 +87,7 @@ internal class DownloadMiniPanelDialog(
             gravity = Gravity.CENTER
             setPadding(dp(14), dp(12), dp(14), dp(12))
             this.background = GradientDrawable().apply {
-                setColor(if (dark) Color.rgb(91, 157, 242) else Color.rgb(75, 86, 103))
+                setColor(if (dark) Color.rgb(91, 157, 242) else Color.rgb(35, 91, 165))
                 cornerRadius = dp(14).toFloat()
             }
             setOnClickListener { dialog.dismiss() }
