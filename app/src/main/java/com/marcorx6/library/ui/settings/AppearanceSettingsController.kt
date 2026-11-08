@@ -310,7 +310,7 @@ internal class AppearanceSettingsController(
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
 
         root.addView(TextView(activity).apply {
-            text = "MARCO  •  BLACK / SILVER EXPERIENCE"
+            text = "MARCO  •  BLACK / BLACK / SILVER EXPERIENCE"
             textSize = 9f
             gravity = Gravity.CENTER
             setTextColor(muted)
