@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit
  * without mixing bytes from different parts of the file.
  */
 internal object SegmentedDownloadEngine {
-    private const val CONNECTIONS = 4
+    private const val SEGMENT_COUNT = 4
     private const val MIN_FILE_SIZE = 4L * 1024L * 1024L
     private const val BUFFER_SIZE = 64 * 1024
 
@@ -77,9 +77,12 @@ internal object SegmentedDownloadEngine {
         }
 
         val segmentSize = (total + CONNECTIONS - 1L) / CONNECTIONS
-        val executor = Executors.newFixedThreadPool(CONNECTIONS)
+        // Keep four stable byte ranges so interrupted segments remain reusable even
+        // when the user changes the number of simultaneous HTTP connections.
+        val activeConnections = DownloadConcurrencyPreferences(context).segmentConnections().coerceIn(1, SEGMENT_COUNT)
+        val executor = Executors.newFixedThreadPool(activeConnections)
         val completedBytes = java.util.concurrent.atomic.AtomicLong(
-            (0 until CONNECTIONS).sumOf { index ->
+            (0 until SEGMENT_COUNT).sumOf { index ->
                 val start = index * segmentSize
                 if (start >= total) 0L else {
                     val segment = File(directory, "${item.id}.seg$index")
@@ -93,7 +96,7 @@ internal object SegmentedDownloadEngine {
         onProgress(completedBytes.get(), total)
         val lastProgressUpdate = java.util.concurrent.atomic.AtomicLong(System.currentTimeMillis())
         try {
-            val jobs = (0 until CONNECTIONS).mapNotNull { index ->
+            val jobs = (0 until SEGMENT_COUNT).mapNotNull { index ->
                 val start = index * segmentSize
                 if (start >= total) return@mapNotNull null
                 val end = minOf(total - 1L, start + segmentSize - 1L)
@@ -130,7 +133,7 @@ internal object SegmentedDownloadEngine {
             throw InterruptedException("Segmented download stopped")
         }
 
-        val segmentFiles = (0 until CONNECTIONS).mapNotNull { index ->
+        val segmentFiles = (0 until SEGMENT_COUNT).mapNotNull { index ->
             val start = index * segmentSize
             if (start >= total) null else File(directory, "${item.id}.seg$index")
         }
@@ -261,6 +264,6 @@ internal object SegmentedDownloadEngine {
         }
 
     private fun clearSegments(directory: File, id: Long) {
-        (0 until CONNECTIONS).forEach { File(directory, "$id.seg$it").delete() }
+        (0 until SEGMENT_COUNT).forEach { File(directory, "$id.seg$it").delete() }
     }
 }
