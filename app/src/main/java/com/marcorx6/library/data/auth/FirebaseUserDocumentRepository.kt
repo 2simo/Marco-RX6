@@ -1,6 +1,7 @@
 package com.marcorx6.library.data.auth
 
 import com.google.android.gms.tasks.Task
+import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
@@ -82,6 +83,8 @@ internal class FirebaseUserDocumentRepository(
                     "showFavorites" to (showFavorites ?: true)
                 )
                 publicData["bio"] = bio?.trim()?.take(160).orEmpty()
+                photoUrl?.trim()?.takeIf(String::isNotBlank)?.let { publicData["photoUrl"] = it }
+                photoData?.takeIf(String::isNotBlank)?.let { publicData["photoData"] = it }
                 if (showFavorites == false) {
                     publicData["favoriteGames"] = FieldValue.delete()
                 } else {
@@ -91,6 +94,102 @@ internal class FirebaseUserDocumentRepository(
             }
         }
         return batch.commit()
+    }
+
+
+    /** Follow edges are stored once under the follower UID; counts are derived from Firestore. */
+    fun setFollowing(followerUid: String, targetUid: String, follow: Boolean): Task<Void> {
+        if (followerUid.isBlank() || targetUid.isBlank() || followerUid == targetUid) {
+            return Tasks.forException(IllegalArgumentException("معرّف المتابعة غير صالح"))
+        }
+        val edge = firestore.collection("userFollows")
+            .document(followerUid)
+            .collection("following")
+            .document(targetUid)
+        return if (follow) {
+            edge.set(mapOf(
+                "uid" to followerUid,
+                "targetUid" to targetUid,
+                "createdAt" to FieldValue.serverTimestamp()
+            ))
+        } else edge.delete()
+    }
+
+    fun isFollowing(followerUid: String, targetUid: String): Task<Boolean> {
+        if (followerUid.isBlank() || targetUid.isBlank() || followerUid == targetUid) {
+            return Tasks.forResult(false)
+        }
+        return firestore.collection("userFollows")
+            .document(followerUid)
+            .collection("following")
+            .document(targetUid)
+            .get()
+            .continueWith { task ->
+                if (!task.isSuccessful) throw task.exception ?: IllegalStateException("تعذر تحميل حالة المتابعة")
+                task.result.exists()
+            }
+    }
+
+    /** Returns follower count first, then following count, both computed server-side. */
+    fun loadFollowCounts(uid: String): Task<Pair<Long, Long>> {
+        if (uid.isBlank()) return Tasks.forResult(0L to 0L)
+        val followers = firestore.collectionGroup("following")
+            .whereEqualTo("targetUid", uid)
+            .count()
+            .get(com.google.firebase.firestore.AggregateSource.SERVER)
+        val following = firestore.collection("userFollows")
+            .document(uid)
+            .collection("following")
+            .count()
+            .get(com.google.firebase.firestore.AggregateSource.SERVER)
+        return Tasks.whenAllSuccess<com.google.firebase.firestore.AggregateQuerySnapshot>(followers, following)
+            .continueWith { task ->
+                if (!task.isSuccessful) throw task.exception ?: IllegalStateException("تعذر تحميل إحصائيات المتابعة")
+                val values = task.result
+                values[0].count to values[1].count
+            }
+    }
+
+    /** Refreshes the public favorite preview only when it differs from the device library. */
+    fun syncPublicFavorites(
+        uid: String,
+        displayName: String?,
+        bio: String?,
+        photoUrl: String?,
+        photoData: String?,
+        favoriteGames: List<Map<String, Any>>
+    ): Task<Void> {
+        return loadUser(uid).continueWithTask { privateTask ->
+            if (!privateTask.isSuccessful) {
+                throw privateTask.exception ?: IllegalStateException("تعذر قراءة إعدادات الملف")
+            }
+            val privateProfile = privateTask.result
+            if (privateProfile.getBoolean("publicProfile") != true ||
+                privateProfile.getBoolean("showFavorites") == false
+            ) {
+                return@continueWithTask Tasks.forResult<Void>(null)
+            }
+            loadPublicProfile(uid).continueWithTask { publicTask ->
+                if (!publicTask.isSuccessful) {
+                    throw publicTask.exception ?: IllegalStateException("تعذر قراءة الملف العام")
+                }
+                val existing = publicTask.result.get("favoriteGames") as? List<*>
+                val normalized = favoriteGames.take(30)
+                if (existing == normalized) {
+                    return@continueWithTask Tasks.forResult<Void>(null)
+                }
+                saveProfile(
+                    uid = uid,
+                    displayName = displayName,
+                    bio = bio,
+                    photoUrl = photoUrl,
+                    photoData = photoData,
+                    publicProfile = true,
+                    showFavorites = true,
+                    favoriteGames = normalized
+                )
+            }
+        }
     }
 
     /** Deletes the known user-owned settings document before removing the parent profile. */
