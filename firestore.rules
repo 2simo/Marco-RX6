@@ -152,6 +152,12 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Collection-group queries need a recursive match. Keep this read-only;
+    // rating writes remain restricted by the game-specific rule below.
+    match /{path=**}/ratings/{userId} {
+      allow read: if true;
+    }
+
     match /gameMetrics/{gameId}/ratings/{userId} {
       // Ratings are intentionally public app engagement data. This also permits
       // a single collection-group query for the signed-in user's own rating history.
