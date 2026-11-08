@@ -27,6 +27,7 @@ import com.marcorx6.library.data.Game
 import com.marcorx6.library.data.GameEngagementRepository
 import com.marcorx6.library.data.auth.FirebaseAuthRepository
 import com.marcorx6.library.data.auth.FirebaseUserDocumentRepository
+import com.marcorx6.library.data.auth.FirebaseMessagingRepository
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.auth.FirebaseAuthException
@@ -63,6 +64,9 @@ internal class FirebaseAccountController(
     private val gameEngagementRepository: GameEngagementRepository
 ) {
     private val userDocuments = FirebaseUserDocumentRepository()
+    private val messaging = FirebaseMessagingRepository()
+    private var inboxListener: com.google.firebase.firestore.ListenerRegistration? = null
+    private var messagesListener: com.google.firebase.firestore.ListenerRegistration? = null
     private var pendingDeletionUid: String? = null
     private var returnToProfileEditorAfterPhotoPick = false
 
@@ -567,6 +571,13 @@ internal class FirebaseAccountController(
             page.addView(profileIdCard, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(14) })
             action(
                 page,
+                translate("الرسائل الخاصة"),
+                translate("محادثاتك مع الأشخاص الذين يتابعونك وتتابعهم"),
+                dark,
+                run = ::showInbox
+            )
+            action(
+                page,
                 translate("إعدادات الحساب"),
                 translate("البريد الإلكتروني والأمان وتسجيل الخروج"),
                 dark,
@@ -624,21 +635,42 @@ internal class FirebaseAccountController(
         })
             page.addView(sectionCaption("بيانات الملف الشخصي", dark))
             page.addView(TextView(activity).apply {
-                text = translate("الاسم")
+                text = translate("الاسم الظاهر")
                 textSize = 13f
                 setTypeface(null, android.graphics.Typeface.BOLD)
                 setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
                 setPadding(0, dp(8), 0, dp(6))
             })
             val nameInput = accountInput(
-                translate("اسم المستخدم"),
+                translate("اسمك الظاهر"),
                 InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS
             ).apply {
                 filters = arrayOf(android.text.InputFilter.LengthFilter(40))
                 setText(user.displayName.orEmpty())
                 setSelection(text.length)
             }
-            page.addView(nameInput, LinearLayout.LayoutParams(-1, dp(56)).apply { bottomMargin = dp(14) })
+            page.addView(nameInput, LinearLayout.LayoutParams(-1, dp(56)).apply { bottomMargin = dp(12) })
+            page.addView(TextView(activity).apply {
+                text = translate("اسم المستخدم الفريد")
+                textSize = 13f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+                setPadding(0, dp(2), 0, dp(6))
+            })
+            val usernameInput = accountInput(
+                "@marco_rx6",
+                InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+            ).apply {
+                filters = arrayOf(android.text.InputFilter.LengthFilter(20))
+                setSingleLine(true)
+            }
+            page.addView(usernameInput, LinearLayout.LayoutParams(-1, dp(56)).apply { bottomMargin = dp(4) })
+            page.addView(TextView(activity).apply {
+                text = translate("من 3 إلى 20 حرفاً: أحرف إنجليزية وأرقام وشرطة سفلية فقط. لا يمكن تكرار الاسم.")
+                textSize = 10f
+                setTextColor(Color.rgb(145, 153, 166))
+                setPadding(dp(4), 0, dp(4), dp(12))
+            })
 
             page.addView(TextView(activity).apply {
                 text = translate("نبذة عنك")
@@ -708,6 +740,11 @@ internal class FirebaseAccountController(
             val saveButton = accountSubmitButton(translate("حفظ التغييرات")) { button ->
                 val name = nameInput.text.toString().trim()
                 val bio = bioInput.text.toString().trim()
+                val username = usernameInput.text.toString().trim().removePrefix("@")
+                if (!Regex("[A-Za-z0-9][A-Za-z0-9_]{2,19}").matches(username)) {
+                    toast("اسم المستخدم يجب أن يكون من 3 إلى 20 حرفاً إنجليزياً أو رقماً أو _.")
+                    return@accountSubmitButton
+                }
                 if (name.isBlank() || name.length > 40) {
                     toast("الاسم مطلوب ويجب ألا يتجاوز 40 حرفاً.")
                     return@accountSubmitButton
@@ -732,6 +769,7 @@ internal class FirebaseAccountController(
                         bio = bio,
                         photoUrl = user.photoUrl?.toString(),
                         photoData = profilePhotoData,
+                        username = username,
                         publicProfile = publicProfileToggle.isChecked,
                         showFavorites = showFavoritesToggle.isChecked,
                         favoriteGames = games().filter { it.isFavorite }.take(30).map { game ->
@@ -766,6 +804,7 @@ internal class FirebaseAccountController(
                 .addOnSuccessListener { snapshot ->
                     profilePhotoData = snapshot.getString("photoData")
                     val savedBio = snapshot.getString("bio").orEmpty().trim()
+                    usernameInput.setText(snapshot.getString("username").orEmpty())
                     publicProfileToggle.isChecked = snapshot.getBoolean("publicProfile") ?: false
                     showFavoritesToggle.isChecked = snapshot.getBoolean("showFavorites") ?: true
                     publicProfileToggle.isEnabled = true
@@ -925,13 +964,17 @@ internal class FirebaseAccountController(
             .create()
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val uid = uidInput.text.toString().trim()
-                if (uid.length < 10 || uid.length > 128) {
-                    toast("معرّف الملف الشخصي غير صالح")
-                    return@setOnClickListener
-                }
+                val entered = uidInput.text.toString().trim()
                 dialog.dismiss()
-                showPublicProfile(uid)
+                if (entered.startsWith("@") || Regex("[A-Za-z0-9][A-Za-z0-9_]{2,19}").matches(entered)) {
+                    userDocuments.loadUidByUsername(entered).addOnSuccessListener { uid ->
+                        if (uid.isNullOrBlank()) toast("اسم المستخدم غير موجود.") else showPublicProfile(uid)
+                    }.addOnFailureListener { toast("تعذر البحث عن اسم المستخدم. تحقق من الاتصال.") }
+                } else if (entered.length in 10..128) {
+                    showPublicProfile(entered)
+                } else {
+                    toast("أدخل اسم مستخدم صالحاً أو معرّف الملف الشخصي.")
+                }
             }
         }
         dialog.show()
@@ -982,6 +1025,15 @@ internal class FirebaseAccountController(
                 setTypeface(null, android.graphics.Typeface.BOLD)
                 setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
             })
+            snapshot.getString("username")?.takeIf { it.isNotBlank() }?.let { handle ->
+                identity.addView(TextView(activity).apply {
+                    text = "@$handle"
+                    textSize = 13f
+                    gravity = Gravity.CENTER
+                    setTextColor(Color.rgb(165, 173, 185))
+                    setPadding(0, dp(3), 0, dp(4))
+                })
+            }
             snapshot.getString("bio")?.takeIf { it.isNotBlank() }?.let { bio ->
                 identity.addView(TextView(activity).apply {
                     text = bio
