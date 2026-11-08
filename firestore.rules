@@ -21,6 +21,13 @@ service cloud.firestore {
         && follows(secondUid, firstUid);
     }
 
+    function ownsReservedUsername(userId) {
+      return !('username' in request.resource.data)
+        || (request.resource.data.username is string
+          && existsAfter(/databases/$(database)/documents/usernames/$(request.resource.data.username.lower()))
+          && getAfter(/databases/$(database)/documents/usernames/$(request.resource.data.username.lower())).data.uid == userId);
+    }
+
     function validGuestProfile() {
       return request.resource.data.keys().hasOnly([
           'uid', 'isAnonymous', 'createdAt', 'updatedAt'
@@ -55,6 +62,7 @@ service cloud.firestore {
                 && request.resource.data.username.size() >= 3
                 && request.resource.data.username.size() <= 20
                 && request.resource.data.username.matches('[A-Za-z0-9][A-Za-z0-9_]{2,19}')))
+            && ownsReservedUsername(userId)
             && (!('photoData' in request.resource.data)
               || (request.resource.data.photoData is string
                 && request.resource.data.photoData.size() <= 600000))
@@ -105,6 +113,7 @@ service cloud.firestore {
             && request.resource.data.username.size() >= 3
             && request.resource.data.username.size() <= 20
             && request.resource.data.username.matches('[A-Za-z0-9][A-Za-z0-9_]{2,19}')))
+        && ownsReservedUsername(userId)
         && (!('bio' in request.resource.data)
           || (request.resource.data.bio is string
             && request.resource.data.bio.size() <= 160))
@@ -166,7 +175,10 @@ service cloud.firestore {
         && request.resource.data.username.lower() == usernameKey
         && request.resource.data.createdAt == request.time;
       allow update: if false;
-      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow delete: if request.auth != null
+        && resource.data.uid == request.auth.uid
+        && (!existsAfter(/databases/$(database)/documents/users/$(request.auth.uid))
+          || getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.username.lower() != usernameKey);
     }
 
     // Private one-to-one conversations. Inbox queries must constrain participants
