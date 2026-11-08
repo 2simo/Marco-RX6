@@ -43,7 +43,7 @@ service cloud.firestore {
               'email', 'displayName', 'photoUrl', 'bio', 'photoData', 'username',
               'publicProfile', 'showFavorites'
             ])
-            && request.resource.data.keys().size() <= 11
+            && request.resource.data.keys().size() <= 12
             && (!('displayName' in request.resource.data)
               || (request.resource.data.displayName is string
                 && request.resource.data.displayName.size() <= 40))
@@ -199,6 +199,7 @@ service cloud.firestore {
       allow update: if request.auth != null
         && resource.data.participants is list
         && resource.data.participants.hasAny([request.auth.uid])
+        && mutuallyFollowing(resource.data.participants[0], resource.data.participants[1])
         && request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['lastMessage', 'lastSenderUid', 'updatedAt'])
         && request.resource.data.lastSenderUid == request.auth.uid
