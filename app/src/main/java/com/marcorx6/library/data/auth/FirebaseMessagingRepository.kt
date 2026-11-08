@@ -98,7 +98,10 @@ internal class FirebaseMessagingRepository(
         }
     }
 
-    fun sendMessage(senderUid: String, recipientUid: String, text: String): Task<Void> {
+    fun sendMessage(
+        senderUid: String, recipientUid: String, text: String,
+        replyToMessageId: String? = null, replyToText: String? = null, replyToSenderUid: String? = null
+    ): Task<Void> {
         val body = text.trim()
         if (senderUid.isBlank() || recipientUid.isBlank() || senderUid == recipientUid ||
             body.isEmpty() || body.length > MAX_MESSAGE_LENGTH
@@ -136,13 +139,23 @@ internal class FirebaseMessagingRepository(
                 if (!conversationTask.result.exists()) {
                     conversationData["createdAt"] = FieldValue.serverTimestamp()
                 }
+                conversationData["deletedFor"] = FieldValue.arrayRemove(senderUid, recipientUid)
                 batch.set(conversation, conversationData, SetOptions.merge())
-                batch.set(message, mapOf(
+                val messageData = mutableMapOf<String, Any>(
                     "senderUid" to senderUid,
                     "text" to body,
                     "createdAt" to FieldValue.serverTimestamp(),
                     "readBy" to listOf(senderUid)
-                ))
+                )
+                if (!replyToMessageId.isNullOrBlank() && !replyToText.isNullOrBlank() &&
+                    !replyToSenderUid.isNullOrBlank() &&
+                    (replyToSenderUid == senderUid || replyToSenderUid == recipientUid)
+                ) {
+                    messageData["replyToMessageId"] = replyToMessageId
+                    messageData["replyToText"] = replyToText.take(180)
+                    messageData["replyToSenderUid"] = replyToSenderUid
+                }
+                batch.set(message, messageData)
                 val notification = firestore.collection("users")
                     .document(recipientUid).collection("notifications").document()
                 batch.set(notification, mapOf(
@@ -161,6 +174,32 @@ internal class FirebaseMessagingRepository(
         }
     }
 
+
+    fun hideConversation(currentUid: String, otherUid: String): Task<Void> {
+        if (currentUid.isBlank() || otherUid.isBlank() || currentUid == otherUid) {
+            return Tasks.forException(IllegalArgumentException("معرّف المحادثة غير صالح"))
+        }
+        return firestore.collection(CONVERSATIONS)
+            .document(conversationId(currentUid, otherUid))
+            .update("deletedFor", FieldValue.arrayUnion(currentUid))
+    }
+
+    fun deleteMessage(currentUid: String, otherUid: String, messageId: String): Task<Void> {
+        if (currentUid.isBlank() || otherUid.isBlank() || messageId.isBlank()) {
+            return Tasks.forException(IllegalArgumentException("الرسالة غير صالحة"))
+        }
+        val conversation = firestore.collection(CONVERSATIONS)
+            .document(conversationId(currentUid, otherUid))
+        val message = conversation.collection(MESSAGES).document(messageId)
+        val batch = firestore.batch()
+        batch.delete(message)
+        batch.update(conversation, mapOf(
+            "lastMessage" to "تم حذف رسالة",
+            "lastSenderUid" to currentUid,
+            "updatedAt" to FieldValue.serverTimestamp()
+        ))
+        return batch.commit()
+    }
 
     fun markMessagesRead(
         readerUid: String,
