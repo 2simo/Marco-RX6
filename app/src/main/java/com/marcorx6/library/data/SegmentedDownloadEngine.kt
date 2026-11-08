@@ -91,6 +91,7 @@ internal object SegmentedDownloadEngine {
         )
         database.progress(item.id, completedBytes.get(), total, etag, modified)
         onProgress(completedBytes.get(), total)
+        val lastProgressUpdate = java.util.concurrent.atomic.AtomicLong(System.currentTimeMillis())
         try {
             val jobs = (0 until CONNECTIONS).mapNotNull { index ->
                 val start = index * segmentSize
@@ -100,8 +101,14 @@ internal object SegmentedDownloadEngine {
                 Callable {
                     downloadRange(item, segment, start, end, total, etag, modified, isStopped) { delta ->
                         val current = completedBytes.addAndGet(delta).coerceAtMost(total)
-                        database.progress(item.id, current, total, etag, modified)
-                        onProgress(current, total)
+                        val now = System.currentTimeMillis()
+                        val previous = lastProgressUpdate.get()
+                        if (now - previous >= 500L || current >= total) {
+                            if (lastProgressUpdate.compareAndSet(previous, now) || current >= total) {
+                                database.progress(item.id, current, total, etag, modified)
+                                onProgress(current, total)
+                            }
+                        }
                     }
                 }
             }
