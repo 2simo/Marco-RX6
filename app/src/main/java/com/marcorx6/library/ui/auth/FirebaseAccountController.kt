@@ -1581,6 +1581,13 @@ internal class FirebaseAccountController(
                                     if (!replyText.isNullOrBlank()) append(replyText).append("\n")
                                     append(messageText)
                                 }
+                                if (!replyText.isNullOrBlank()) {
+                                    setCompoundDrawablesRelativeWithIntrinsicBounds(
+                                        activity.getDrawable(com.marcorx6.library.R.drawable.ic_action_reply),
+                                        null, null, null
+                                    )
+                                    compoundDrawablePadding = dp(5)
+                                }
                                 textSize = 14f
                                 setTextColor(if (mine) Color.rgb(18, 20, 24) else Color.WHITE)
                                 setPadding(dp(13), dp(10), dp(13), dp(10))
