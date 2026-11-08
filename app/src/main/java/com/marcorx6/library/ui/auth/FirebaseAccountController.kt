@@ -68,12 +68,13 @@ internal class FirebaseAccountController(
 
     fun show() {
         returnToProfileEditorAfterPhotoPick = false
-        val dark = isDarkMode()
+        // Keep the social profile strictly monochrome, independent of the app reading theme.
+        val dark = true
         val page = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             layoutDirection = View.LAYOUT_DIRECTION_RTL
-            setPadding(dp(22), dp(24), dp(22), dp(28))
-            setBackgroundColor(if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247))
+            setPadding(dp(20), dp(18), dp(20), dp(30))
+            setBackgroundColor(Color.rgb(7, 8, 10))
         }
         val user = authRepository.currentUser
         val header = LinearLayout(activity).apply {
@@ -170,11 +171,33 @@ internal class FirebaseAccountController(
             })
             identityCard.addView(TextView(activity).apply {
                 text = user.displayName?.takeIf { it.isNotBlank() } ?: translate("مستخدم MARCO")
-                textSize = 22f
+                textSize = 23f
                 setTypeface(null, android.graphics.Typeface.BOLD)
                 gravity = Gravity.CENTER
-                setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
-                setPadding(0, dp(7), 0, dp(5))
+                setTextColor(Color.WHITE)
+                setPadding(0, dp(7), 0, dp(4))
+            })
+            user.email?.takeIf { it.isNotBlank() }?.let { emailAddress ->
+                identityCard.addView(TextView(activity).apply {
+                    text = emailAddress
+                    textSize = 11f
+                    gravity = Gravity.CENTER
+                    setTextColor(Color.rgb(155, 162, 173))
+                    setPadding(0, 0, 0, dp(6))
+                })
+            }
+            identityCard.addView(TextView(activity).apply {
+                text = translate(if (user.isEmailVerified) "حساب موثّق" else "عضو في مجتمع MARCO")
+                textSize = 10f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                gravity = Gravity.CENTER
+                setTextColor(Color.rgb(205, 211, 220))
+                setPadding(dp(12), dp(6), dp(12), dp(6))
+                background = GradientDrawable().apply {
+                    cornerRadius = dp(30).toFloat()
+                    setColor(Color.rgb(35, 39, 46))
+                    setStroke(dp(1), Color.rgb(100, 108, 120))
+                }
             })
 
             val createdAt = user.metadata?.creationTimestamp ?: 0L
@@ -445,7 +468,26 @@ internal class FirebaseAccountController(
             action(page, translate("تسجيل الدخول بالبريد الإلكتروني"), translate("لديك حساب MARCO بالفعل؟"), dark, run = { showEmailForm(createAccount = false) })
             action(page, translate("نسيت كلمة المرور؟"), translate("استرجاع الوصول إلى حسابك"), dark, run = ::showPasswordResetForm)
         } else {
-            page.addView(sectionCaption("ملفك الشخصي", dark))
+            page.addView(sectionCaption("إدارة ملفك الاجتماعي", dark))
+            val profileIdCard = profileSectionCard(dark)
+            profileIdCard.addView(TextView(activity).apply {
+                text = translate("معرّف ملفك الشخصي")
+                textSize = 13f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(Color.WHITE)
+            })
+            profileIdCard.addView(TextView(activity).apply {
+                text = user.uid
+                textSize = 10f
+                setTextColor(Color.rgb(155, 162, 173))
+                setPadding(0, dp(6), 0, dp(10))
+            })
+            profileIdCard.addView(accountSubmitButton(translate("نسخ المعرّف لمشاركته")) {
+                val clipboard = activity.getSystemService(Activity.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                clipboard.setPrimaryClip(android.content.ClipData.newPlainText("MARCO profile ID", user.uid))
+                toast("تم نسخ معرّف الملف الشخصي")
+            }, LinearLayout.LayoutParams(-1, dp(46)))
+            page.addView(profileIdCard, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(14) })
             action(
                 page,
                 translate("تعديل الملف الشخصي"),
@@ -1440,7 +1482,7 @@ internal class FirebaseAccountController(
     }
 
     private fun showAccountPage(page: LinearLayout) {
-        val dark = isDarkMode()
+        val dark = true
         val scroll = ScrollView(activity).apply {
             isFillViewport = true
             clipToPadding = false
