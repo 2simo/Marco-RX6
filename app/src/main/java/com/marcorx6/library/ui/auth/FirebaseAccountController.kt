@@ -1565,7 +1565,7 @@ internal class FirebaseAccountController(
                             val replyText = snapshot.getString("replyToText")
                             val bubble = TextView(activity).apply {
                                 text = buildString {
-                                    if (!replyText.isNullOrBlank()) append("↪ ").append(replyText).append("\\n")
+                                    if (!replyText.isNullOrBlank()) append("↪ ").append(replyText).append("\n")
                                     append(messageText)
                                 }
                                 textSize = 14f
