@@ -1130,6 +1130,83 @@ internal class FirebaseAccountController(
         }
     }
 
+    private fun showSocialConnections(uid: String, showFollowers: Boolean) {
+        val currentUser = authRepository.currentUser
+        if (currentUser == null || currentUser.isAnonymous || currentUser.uid != uid) {
+            toast("قوائم المتابعين متاحة لصاحب الحساب فقط.")
+            return
+        }
+        val title = translate(if (showFollowers) "المتابعون" else "يتابع")
+        val loading = TextView(activity).apply {
+            text = translate("جارٍ تحميل القائمة...")
+            textSize = 13f
+            setTextColor(Color.rgb(190, 198, 210))
+            setPadding(dp(20), dp(18), dp(20), dp(18))
+        }
+        val dialog = AlertDialog.Builder(activity)
+            .setTitle(title)
+            .setView(loading)
+            .setPositiveButton(translate("إغلاق"), null)
+            .create()
+        dialog.setOnShowListener { styleDialog(dialog) }
+        dialog.show()
+        val idsTask = if (showFollowers) userDocuments.loadFollowerIds(uid)
+            else userDocuments.loadFollowingIds(uid)
+        idsTask.addOnSuccessListener { ids ->
+            if (!dialog.isShowing) return@addOnSuccessListener
+            if (ids.isEmpty()) {
+                loading.text = translate(if (showFollowers) "لا يوجد متابعون بعد." else "لا تتابع أي حساب حالياً.")
+                return@addOnSuccessListener
+            }
+            val tasks = ids.map { userDocuments.loadPublicProfile(it) }
+            com.google.android.gms.tasks.Tasks.whenAllSuccess<com.google.firebase.firestore.DocumentSnapshot>(tasks)
+                .addOnSuccessListener { profiles ->
+                    if (!dialog.isShowing) return@addOnSuccessListener
+                    val list = LinearLayout(activity).apply {
+                        orientation = LinearLayout.VERTICAL
+                        setPadding(dp(18), dp(8), dp(18), dp(8))
+                    }
+                    profiles.filter { it.exists() }.forEach { profile ->
+                        val name = profile.getString("displayName")?.takeIf { it.isNotBlank() }
+                            ?: translate("مستخدم MARCO")
+                        val bio = profile.getString("bio").orEmpty()
+                        list.addView(LinearLayout(activity).apply {
+                            orientation = LinearLayout.VERTICAL
+                            setPadding(dp(12), dp(12), dp(12), dp(12))
+                            background = GradientDrawable().apply {
+                                cornerRadius = dp(14).toFloat()
+                                setColor(Color.rgb(25, 28, 34))
+                                setStroke(dp(1), Color.rgb(76, 84, 97))
+                            }
+                            addView(TextView(activity).apply {
+                                text = name
+                                textSize = 14f
+                                setTypeface(null, android.graphics.Typeface.BOLD)
+                                setTextColor(Color.WHITE)
+                            })
+                            if (bio.isNotBlank()) addView(TextView(activity).apply {
+                                text = bio
+                                textSize = 11f
+                                setTextColor(Color.rgb(160, 168, 181))
+                                setPadding(0, dp(4), 0, 0)
+                            })
+                        }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
+                    }
+                    if (list.childCount == 0) {
+                        loading.text = translate("لا توجد ملفات عامة متاحة للعرض حالياً.")
+                    } else {
+                        val scroll = ScrollView(activity).apply { addView(list) }
+                        dialog.setView(scroll)
+                    }
+                }
+                .addOnFailureListener {
+                    if (dialog.isShowing) loading.text = translate("تعذر تحميل بيانات الحسابات حالياً.")
+                }
+        }.addOnFailureListener {
+            if (dialog.isShowing) loading.text = translate("تعذر تحميل القائمة. تحقق من الاتصال.")
+        }
+    }
+
     private fun addPublicAvatar(identity: LinearLayout, snapshot: com.google.firebase.firestore.DocumentSnapshot, dark: Boolean) {
         val avatar = ImageView(activity).apply {
             scaleType = ImageView.ScaleType.CENTER_CROP
@@ -1203,9 +1280,22 @@ internal class FirebaseAccountController(
             setTextColor(if (dark) Color.rgb(205, 212, 222) else Color.rgb(65, 72, 84))
             setPadding(dp(16), dp(10), dp(16), dp(10))
         }
-        stats.addView(followers)
-        stats.addView(following)
+        stats.addView(followers, LinearLayout.LayoutParams(0, -2, 1f))
+        stats.addView(following, LinearLayout.LayoutParams(0, -2, 1f))
         page.addView(stats, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
+        if (isOwnProfile) {
+            listOf(followers, following).forEach { counter ->
+                counter.isClickable = true
+                counter.isFocusable = true
+                counter.background = GradientDrawable().apply {
+                    cornerRadius = dp(12).toFloat()
+                    setColor(Color.rgb(29, 33, 40))
+                }
+                counter.setOnClickListener {
+                    showSocialConnections(targetUid, counter === followers)
+                }
+            }
+        }
         fun refreshCounts() {
             userDocuments.loadFollowCounts(targetUid).addOnSuccessListener { counts ->
                 followers.text = counts.first.toString() + "  " + translate("المتابعون")
