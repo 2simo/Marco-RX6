@@ -88,6 +88,77 @@ internal class FirebaseAccountController(
             setPadding(dp(8), 0, 0, dp(8))
         }, LinearLayout.LayoutParams(0, -2, 1f))
         page.addView(header)
+
+        // A compact identity panel makes the account state immediately clear.
+        val identityCard = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(18), dp(16), dp(18), dp(16))
+            background = GradientDrawable().apply {
+                cornerRadius = dp(20).toFloat()
+                setColor(if (dark) Color.rgb(22, 24, 29) else Color.WHITE)
+                setStroke(dp(1), if (dark) Color.rgb(105, 113, 126) else Color.rgb(180, 187, 198))
+            }
+        }
+        if (user == null || user.isAnonymous) {
+            identityCard.addView(TextView(activity).apply {
+                text = translate("MARCO RX6")
+                textSize = 11f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                letterSpacing = 0.16f
+                setTextColor(Color.rgb(190, 198, 210))
+            })
+            identityCard.addView(TextView(activity).apply {
+                text = translate("مرحباً بك في مجتمع MARCO")
+                textSize = 19f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+                setPadding(0, dp(7), 0, dp(4))
+            })
+            identityCard.addView(TextView(activity).apply {
+                text = translate("أنت تستخدم التطبيق كزائر. أنشئ حساباً لحفظ ملفك الشخصي والوصول إليه لاحقاً.")
+                textSize = 12f
+                setTextColor(if (dark) Color.rgb(175, 182, 193) else Color.rgb(91, 98, 110))
+            })
+        } else {
+            val providerLabel = when {
+                user.providerData.any { it.providerId == "google.com" } -> translate("حساب Google")
+                user.providerData.any { it.providerId == "password" } -> translate("حساب بالبريد الإلكتروني")
+                else -> translate("حساب MARCO")
+            }
+            identityCard.addView(TextView(activity).apply {
+                text = translate("ملف MARCO الشخصي")
+                textSize = 11f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                letterSpacing = 0.12f
+                setTextColor(Color.rgb(190, 198, 210))
+            })
+            identityCard.addView(TextView(activity).apply {
+                text = user.displayName?.takeIf { it.isNotBlank() } ?: translate("مستخدم MARCO")
+                textSize = 19f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+                setPadding(0, dp(7), 0, dp(3))
+            })
+            identityCard.addView(TextView(activity).apply {
+                text = user.email.orEmpty()
+                textSize = 12f
+                setTextColor(if (dark) Color.rgb(175, 182, 193) else Color.rgb(91, 98, 110))
+            })
+            identityCard.addView(TextView(activity).apply {
+                text = providerLabel + "  •  " + translate(
+                    if (user.isEmailVerified) "البريد مؤكد" else "البريد غير مؤكد"
+                )
+                textSize = 11f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(Color.rgb(190, 198, 210))
+                setPadding(0, dp(9), 0, 0)
+            })
+        }
+        page.addView(identityCard, LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(12)
+            bottomMargin = dp(16)
+        })
+
         if (user == null || user.isAnonymous) {
             page.addView(TextView(activity).apply {
                 text = translate("استعمل التطبيق كزائر، أو سجّل الدخول لحفظ حسابك ومزامنة بياناتك.")
