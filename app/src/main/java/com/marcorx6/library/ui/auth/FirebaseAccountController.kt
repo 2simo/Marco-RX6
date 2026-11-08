@@ -64,8 +64,10 @@ internal class FirebaseAccountController(
 ) {
     private val userDocuments = FirebaseUserDocumentRepository()
     private var pendingDeletionUid: String? = null
+    private var returnToProfileEditorAfterPhotoPick = false
 
     fun show() {
+        returnToProfileEditorAfterPhotoPick = false
         val dark = isDarkMode()
         val page = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
@@ -490,7 +492,10 @@ internal class FirebaseAccountController(
             gravity = Gravity.CENTER_HORIZONTAL
             bottomMargin = dp(8)
         })
-        action(page, translate("تغيير الصورة الشخصية"), translate("اختر صورة من هاتفك"), dark, run = ::chooseProfilePhoto)
+        action(page, translate("تغيير الصورة الشخصية"), translate("اختر صورة من هاتفك"), dark, run = {
+            returnToProfileEditorAfterPhotoPick = true
+            chooseProfilePhoto()
+        })
             page.addView(sectionCaption("بيانات الملف الشخصي", dark))
             page.addView(TextView(activity).apply {
                 text = translate("الاسم")
@@ -1001,9 +1006,12 @@ internal class FirebaseAccountController(
             ).addOnSuccessListener {
                 profilePhotoUploadInProgress = false
                 toast("تم تحديث صورة الحساب")
-                show()
+                val returnToEditor = returnToProfileEditorAfterPhotoPick
+                returnToProfileEditorAfterPhotoPick = false
+                if (returnToEditor) showEditProfile() else show()
             }.addOnFailureListener { error ->
                 profilePhotoUploadInProgress = false
+                returnToProfileEditorAfterPhotoPick = false
                 toast("تعذر حفظ صورة الحساب. بقيت صورتك السابقة كما هي؛ حاول مجدداً.")
             }
         } catch (error: Exception) {
