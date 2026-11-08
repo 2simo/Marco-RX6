@@ -43,7 +43,7 @@ internal object SegmentedDownloadEngine {
             val code = probe.responseCode
             if (!probe.url.protocol.equals("https", true)) throw SecurityException("Download redirect did not use HTTPS")
             val contentRange = probe.getHeaderField("Content-Range").orEmpty()
-            val parsedTotal = Regex("""bytes 0-0/(\\d+)""").find(contentRange)
+            val parsedTotal = Regex("""bytes 0-0/(\d+)""").find(contentRange)
                 ?.groupValues?.getOrNull(1)?.toLongOrNull()
             if (code != HttpURLConnection.HTTP_PARTIAL || parsedTotal == null || parsedTotal < MIN_FILE_SIZE) {
                 clearSegments(directory, item.id)
@@ -202,7 +202,7 @@ internal object SegmentedDownloadEngine {
                 throw IOException("Server stopped supporting byte ranges (HTTP $code)")
             }
             val returnedRange = connection.getHeaderField("Content-Range").orEmpty()
-            val returnedStart = Regex("""bytes (\\d+)-(\\d+)/(\\d+)""").find(returnedRange)
+            val returnedStart = Regex("""bytes (\d+)-(\d+)/(\d+)""").find(returnedRange)
             val actualStart = returnedStart?.groupValues?.getOrNull(1)?.toLongOrNull()
             val actualEnd = returnedStart?.groupValues?.getOrNull(2)?.toLongOrNull()
             val actualTotal = returnedStart?.groupValues?.getOrNull(3)?.toLongOrNull()
