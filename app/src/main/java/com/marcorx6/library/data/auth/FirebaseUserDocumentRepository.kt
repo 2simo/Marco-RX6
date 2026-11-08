@@ -149,6 +149,29 @@ internal class FirebaseUserDocumentRepository(
             }
     }
 
+    /** Lists follower UIDs for the signed-in account only; Firestore rules enforce this boundary. */
+    fun loadFollowerIds(uid: String): Task<List<String>> {
+        if (uid.isBlank()) return Tasks.forResult(emptyList())
+        return firestore.collectionGroup("following")
+            .whereEqualTo("targetUid", uid)
+            .get()
+            .continueWith { task ->
+                if (!task.isSuccessful) throw task.exception ?: IllegalStateException("تعذر تحميل المتابعين")
+                task.result.documents.mapNotNull { it.getString("uid") }.distinct()
+            }
+    }
+
+    /** Lists accounts followed by the signed-in account only. */
+    fun loadFollowingIds(uid: String): Task<List<String>> {
+        if (uid.isBlank()) return Tasks.forResult(emptyList())
+        return firestore.collection("userFollows").document(uid)
+            .collection("following").get()
+            .continueWith { task ->
+                if (!task.isSuccessful) throw task.exception ?: IllegalStateException("تعذر تحميل قائمة المتابعة")
+                task.result.documents.mapNotNull { it.getString("targetUid") }.distinct()
+            }
+    }
+
     /** Refreshes the public favorite preview only when it differs from the device library. */
     fun syncPublicFavorites(
         uid: String,
