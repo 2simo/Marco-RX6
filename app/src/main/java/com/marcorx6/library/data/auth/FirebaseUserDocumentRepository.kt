@@ -181,9 +181,9 @@ internal class FirebaseUserDocumentRepository(
                 saveProfile(
                     uid = uid,
                     displayName = displayName,
-                    bio = bio,
-                    photoUrl = photoUrl,
-                    photoData = photoData,
+                    bio = privateProfile.getString("bio") ?: bio,
+                    photoUrl = photoUrl ?: privateProfile.getString("photoUrl"),
+                    photoData = privateProfile.getString("photoData") ?: photoData,
                     publicProfile = true,
                     showFavorites = true,
                     favoriteGames = normalized
