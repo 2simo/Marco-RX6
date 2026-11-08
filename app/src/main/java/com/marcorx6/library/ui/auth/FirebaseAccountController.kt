@@ -21,6 +21,7 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import com.marcorx6.library.data.Game
 import com.marcorx6.library.data.auth.FirebaseAuthRepository
 import com.marcorx6.library.data.auth.FirebaseUserDocumentRepository
 import com.google.firebase.auth.FirebaseUser
@@ -52,7 +53,8 @@ internal class FirebaseAccountController(
     private val isDarkMode: () -> Boolean,
     private val applyUnifiedSkin: (View) -> Unit,
     private val launchProfilePhotoPicker: (Intent) -> Unit,
-    private val translate: (String) -> String
+    private val translate: (String) -> String,
+    private val games: () -> List<Game>
 ) {
     private val userDocuments = FirebaseUserDocumentRepository()
     private var pendingDeletionUid: String? = null
@@ -170,6 +172,57 @@ internal class FirebaseAccountController(
             topMargin = dp(12)
             bottomMargin = dp(16)
         })
+
+        if (user != null && !user.isAnonymous) {
+            // These figures describe the locally available library, not cloud-account-wide activity.
+            val libraryGames = games()
+            val favoriteCount = libraryGames.count { it.isFavorite }
+            val statsCard = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(16), dp(13), dp(16), dp(13))
+                background = GradientDrawable().apply {
+                    cornerRadius = dp(18).toFloat()
+                    setColor(if (dark) Color.rgb(17, 19, 24) else Color.WHITE)
+                    setStroke(dp(1), if (dark) Color.rgb(76, 83, 94) else Color.rgb(205, 210, 218))
+                }
+            }
+            statsCard.addView(TextView(activity).apply {
+                text = translate("مكتبتك على هذا الجهاز")
+                textSize = 12f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(if (dark) Color.rgb(190, 198, 210) else Color.rgb(75, 83, 96))
+                setPadding(0, 0, 0, dp(10))
+            })
+            val metrics = LinearLayout(activity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+            fun addMetric(value: Int, label: String) {
+                val metric = LinearLayout(activity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    gravity = Gravity.CENTER
+                    setPadding(dp(8), dp(8), dp(8), dp(8))
+                }
+                metric.addView(TextView(activity).apply {
+                    text = value.toString()
+                    textSize = 23f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+                })
+                metric.addView(TextView(activity).apply {
+                    text = translate(label)
+                    textSize = 11f
+                    setTextColor(if (dark) Color.rgb(150, 158, 171) else Color.rgb(105, 112, 124))
+                })
+                metrics.addView(metric, LinearLayout.LayoutParams(0, -2, 1f))
+            }
+            addMetric(libraryGames.size, "الألعاب")
+            addMetric(favoriteCount, "المفضلة")
+            statsCard.addView(metrics)
+            page.addView(statsCard, LinearLayout.LayoutParams(-1, -2).apply {
+                bottomMargin = dp(14)
+            })
+        }
 
         if (user == null || user.isAnonymous) {
             page.addView(TextView(activity).apply {
