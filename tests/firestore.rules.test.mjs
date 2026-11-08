@@ -327,6 +327,7 @@ describe("Firestore user isolation rules", () => {
       uid: "message-bob", targetUid: "message-alice", createdAt: serverTimestamp(),
     }));
 
+    await assertSucceeds(getDoc(doc(alice, "conversations/not-created-yet")));
     const conversationId = "mutual-follow-conversation";
     const conversation = doc(alice, "conversations/" + conversationId);
     await assertSucceeds(setDoc(conversation, {
