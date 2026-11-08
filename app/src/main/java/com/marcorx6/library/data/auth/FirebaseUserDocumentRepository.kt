@@ -180,7 +180,7 @@ internal class FirebaseUserDocumentRepository(
                 }
                 saveProfile(
                     uid = uid,
-                    displayName = displayName,
+                    displayName = privateProfile.getString("displayName") ?: displayName,
                     bio = privateProfile.getString("bio") ?: bio,
                     photoUrl = photoUrl ?: privateProfile.getString("photoUrl"),
                     photoData = privateProfile.getString("photoData") ?: photoData,
