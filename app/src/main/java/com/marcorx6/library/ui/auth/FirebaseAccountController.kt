@@ -1176,7 +1176,7 @@ internal class FirebaseAccountController(
                         val name = profile.getString("displayName")?.takeIf { it.isNotBlank() }
                             ?: translate("مستخدم MARCO")
                         val bio = profile.getString("bio").orEmpty()
-                        list.addView(LinearLayout(activity).apply {
+                        listContainer.addView(LinearLayout(activity).apply {
                             orientation = LinearLayout.VERTICAL
                             setPadding(dp(12), dp(12), dp(12), dp(12))
                             background = GradientDrawable().apply {
