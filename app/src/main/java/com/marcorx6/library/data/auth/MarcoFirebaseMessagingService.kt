@@ -3,10 +3,13 @@ package com.marcorx6.library.data.auth
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.Manifest
+import android.content.pm.PackageManager
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.core.app.NotificationManagerCompat
 import com.marcorx6.library.ui.activity.MainActivity
 import com.marcorx6.library.R
@@ -51,10 +54,22 @@ class MarcoFirebaseMessagingService : FirebaseMessagingService() {
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
-        NotificationManagerCompat.from(this).notify(
-            (System.currentTimeMillis() % Int.MAX_VALUE).toInt(),
-            notification
-        )
+        // Android 13+ can revoke notification permission at runtime.
+        // Do not attempt to post when permission is unavailable.
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) return
+
+        try {
+            NotificationManagerCompat.from(this).notify(
+                (System.currentTimeMillis() % Int.MAX_VALUE).toInt(),
+                notification
+            )
+        } catch (_: SecurityException) {
+            // Permission may be revoked between the check and notify call.
+        }
     }
 
     private fun ensureChannel(channelId: String) {
