@@ -269,7 +269,7 @@ internal class DownloadPageDialog(
         fun isDirectFileUrl(url: String): Boolean {
             val uri = try { Uri.parse(url) } catch (_: Exception) { return false }
             val path = uri.path.orEmpty().lowercase()
-            val knownExtension = path.matches(Regex(""" .+ """.trim()))
+            val knownExtension = Regex("""\.(zip|7z|rar|iso|pkg|bin|cue|chd|img|pbp|cso|nsp|xci|apk|pdf|mp4|m4v|mkv|webm|mov|avi|flv|3gp|mp3|m4a|aac|wav|flac|ogg)$""", RegexOption.IGNORE_CASE).containsMatchIn(path)
             val downloadFlag = listOf("download", "attachment", "file", "export").any { key ->
                 uri.getQueryParameter(key)?.let { value ->
                     value.equals("1", true) || value.equals("true", true) ||
