@@ -91,6 +91,19 @@ internal class FirebaseAccountController(
         }, LinearLayout.LayoutParams(0, -2, 1f))
         page.addView(header)
 
+        // Keep the avatar and account identity together as one profile header.
+        val photoView = ImageView(activity).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(if (dark) Color.rgb(35, 38, 45) else Color.rgb(222, 226, 232))
+                setStroke(dp(2), Color.rgb(190, 198, 210))
+            }
+            clipToOutline = true
+            contentDescription = translate("صورة الحساب")
+            setImageResource(com.marcorx6.library.R.drawable.ic_nav_profile)
+            imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
+        }
         // A compact identity panel makes the account state immediately clear.
         val identityCard = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
@@ -100,6 +113,12 @@ internal class FirebaseAccountController(
                 setColor(if (dark) Color.rgb(22, 24, 29) else Color.WHITE)
                 setStroke(dp(1), if (dark) Color.rgb(105, 113, 126) else Color.rgb(180, 187, 198))
             }
+        }
+        if (user != null && !user.isAnonymous) {
+            identityCard.addView(photoView, LinearLayout.LayoutParams(dp(88), dp(88)).apply {
+                gravity = Gravity.CENTER_HORIZONTAL
+                bottomMargin = dp(10)
+            })
         }
         if (user == null || user.isAnonymous) {
             identityCard.addView(TextView(activity).apply {
@@ -274,22 +293,6 @@ internal class FirebaseAccountController(
             action(page, translate("تسجيل الدخول بالبريد الإلكتروني"), translate("لديك حساب MARCO بالفعل؟"), dark, run = { showEmailForm(createAccount = false) })
             action(page, translate("نسيت كلمة المرور؟"), translate("استرجاع الوصول إلى حسابك"), dark, run = ::showPasswordResetForm)
         } else {
-            val photoView = ImageView(activity).apply {
-                scaleType = ImageView.ScaleType.CENTER_CROP
-                background = GradientDrawable().apply {
-                    shape = GradientDrawable.OVAL
-                    setColor(if (dark) Color.rgb(35, 38, 45) else Color.rgb(222, 226, 232))
-                    setStroke(dp(2), Color.rgb(190, 198, 210))
-                }
-                clipToOutline = true
-                contentDescription = translate("صورة الحساب")
-                setImageResource(com.marcorx6.library.R.drawable.ic_nav_profile)
-                imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
-            }
-            page.addView(photoView, LinearLayout.LayoutParams(dp(104), dp(104)).apply {
-                gravity = Gravity.CENTER
-                bottomMargin = dp(8)
-            })
             action(page, translate("تغيير صورة الحساب"), translate("اختيار صورة من هاتفك وحفظها في ملفك السحابي"), dark, run = ::chooseProfilePhoto)
             if (!user.isEmailVerified && user.email != null) {
                 action(
