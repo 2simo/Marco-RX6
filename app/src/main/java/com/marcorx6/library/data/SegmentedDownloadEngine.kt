@@ -76,7 +76,7 @@ internal object SegmentedDownloadEngine {
             database.progress(item.id, 0L, total, etag, modified)
         }
 
-        val segmentSize = (total + CONNECTIONS - 1L) / CONNECTIONS
+        val segmentSize = (total + SEGMENT_COUNT - 1L) / SEGMENT_COUNT
         // Keep four stable byte ranges so interrupted segments remain reusable even
         // when the user changes the number of simultaneous HTTP connections.
         val activeConnections = DownloadConcurrencyPreferences(context).segmentConnections().coerceIn(1, SEGMENT_COUNT)
