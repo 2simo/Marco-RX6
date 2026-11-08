@@ -257,7 +257,7 @@ internal class DownloadPageDialog(
 
         fun isDirectFileUrl(url: String): Boolean {
             val path = try { Uri.parse(url).path.orEmpty().lowercase() } catch (_: Exception) { "" }
-            return path.matches(Regex(""".+\\.(zip|7z|rar|iso|pkg|bin|cue|chd|img|pbp|cso|nsp|xci|apk|pdf|mp4|m4v|mkv|webm|mov|avi|flv|3gp|mp3|m4a|aac|wav|flac|ogg)$"""))
+            return path.matches(Regex(""".+\.(zip|7z|rar|iso|pkg|bin|cue|chd|img|pbp|cso|nsp|xci|apk|pdf|mp4|m4v|mkv|webm|mov|avi|flv|3gp|mp3|m4a|aac|wav|flac|ogg)$"""))
         }
 
         fun addCandidate(label: String, url: String) {
