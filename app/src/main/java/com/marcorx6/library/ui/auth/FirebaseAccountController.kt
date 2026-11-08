@@ -390,7 +390,7 @@ internal class FirebaseAccountController(
                 ratingsContent.addView(TextView(activity).apply {
                     text = translate("تعذر تحميل تقييماتك الآن. ") + details
                     textSize = 12f
-                    setTextColor(if (dark) Color.rgb(180, 150, 150) else Color.rgb(140, 75, 75))
+                    setTextColor(Color.rgb(165, 173, 185))
                 })
             })
 
