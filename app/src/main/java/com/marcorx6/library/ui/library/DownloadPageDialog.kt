@@ -259,11 +259,10 @@ internal class DownloadPageDialog(
                 cornerRadius = dp(20).toFloat()
                 setStroke(dp(1), border)
             })
-            prompt.findViewById<TextView>(android.R.id.alertTitle)?.setTextColor(heading)
             prompt.findViewById<TextView>(android.R.id.message)?.setTextColor(muted)
             prompt.getButton(AlertDialog.BUTTON_POSITIVE)?.apply {
                 setTextColor(if (dark) Color.rgb(20, 23, 29) else Color.WHITE)
-                background = GradientDrawable().apply {
+                this.background = GradientDrawable().apply {
                     setColor(if (dark) Color.rgb(205, 212, 222) else Color.rgb(75, 86, 103))
                     cornerRadius = dp(11).toFloat()
                 }
