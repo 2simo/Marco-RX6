@@ -67,6 +67,8 @@ internal class FirebaseUserDocumentRepository(
         bio?.trim()?.let { data["bio"] = it }
         photoUrl?.trim()?.takeIf(String::isNotBlank)?.let { data["photoUrl"] = it }
         photoData?.takeIf(String::isNotBlank)?.let { data["photoData"] = it }
+        publicProfile?.let { data["publicProfile"] = it }
+        showFavorites?.let { data["showFavorites"] = it }
         val privateSave = userDocument(uid).set(data, SetOptions.merge())
         if (publicProfile == null) return privateSave
 
