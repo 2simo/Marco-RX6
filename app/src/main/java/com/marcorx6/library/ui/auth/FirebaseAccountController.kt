@@ -1382,24 +1382,44 @@ internal class FirebaseAccountController(
             gravity = Gravity.CENTER
             textSize = 14f
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(Color.rgb(20, 23, 29))
             setPadding(dp(18), dp(14), dp(18), dp(14))
             background = GradientDrawable().apply {
                 cornerRadius = dp(16).toFloat()
-                setColor(Color.rgb(190, 198, 210))
+                setColor(Color.rgb(35, 38, 45))
+                setStroke(dp(1), Color.rgb(105, 113, 126))
             }
+            setTextColor(Color.rgb(190, 198, 210))
+            contentDescription = translate("جارٍ التحقق من حالة المتابعة")
             isEnabled = false
         }
         page.addView(followButton, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(14) })
         userDocuments.isFollowing(currentUser.uid, targetUid).addOnSuccessListener { initialFollowing ->
             var followingState = initialFollowing
             fun updateLabel() {
-                followButton.text = translate(if (followingState) "إلغاء المتابعة" else "متابعة")
+                followButton.text = translate(if (followingState) "تتابعه ✓" else "＋ متابعة")
+                followButton.contentDescription = translate(
+                    if (followingState) "أنت تتابع هذا المستخدم. اضغط لإلغاء المتابعة"
+                    else "اضغط لمتابعة هذا المستخدم"
+                )
+                followButton.background = GradientDrawable().apply {
+                    cornerRadius = dp(16).toFloat()
+                    if (followingState) {
+                        setColor(Color.rgb(30, 33, 40))
+                        setStroke(dp(1), Color.rgb(190, 198, 210))
+                    } else {
+                        setColor(Color.rgb(190, 198, 210))
+                        setStroke(dp(1), Color.rgb(145, 153, 166))
+                    }
+                }
+                followButton.setTextColor(
+                    if (followingState) Color.rgb(215, 220, 228) else Color.rgb(20, 23, 29)
+                )
             }
             updateLabel()
             followButton.isEnabled = true
             followButton.setOnClickListener {
                 followButton.isEnabled = false
+                followButton.text = translate("جارٍ تحديث المتابعة...")
                 val nextState = !followingState
                 userDocuments.setFollowing(currentUser.uid, targetUid, nextState)
                     .addOnSuccessListener {
@@ -1407,14 +1427,20 @@ internal class FirebaseAccountController(
                         updateLabel()
                         followButton.isEnabled = true
                         refreshCounts()
+                        followButton.animate().cancel()
+                        followButton.scaleX = 0.97f
+                        followButton.scaleY = 0.97f
+                        followButton.animate().scaleX(1f).scaleY(1f).setDuration(150).start()
                     }
                     .addOnFailureListener {
+                        updateLabel()
                         followButton.isEnabled = true
                         toast("تعذرت مزامنة المتابعة. تحقق من الاتصال وحاول مجدداً.")
                     }
             }
         }.addOnFailureListener {
             followButton.text = translate("تعذر تحميل المتابعة")
+            followButton.contentDescription = translate("تعذر تحميل حالة المتابعة")
             followButton.isEnabled = false
         }
     }
