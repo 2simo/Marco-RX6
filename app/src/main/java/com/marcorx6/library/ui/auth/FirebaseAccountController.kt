@@ -200,28 +200,6 @@ internal class FirebaseAccountController(
                 gravity = Gravity.CENTER
                 bottomMargin = dp(8)
             })
-            // Prefer the user's saved profile image; otherwise load the Google/provider avatar.
-            user.photoUrl?.toString()?.takeIf { it.startsWith("https://") }?.let { photoUrl ->
-                Thread {
-                    val bitmap = runCatching {
-                        val connection = java.net.URL(photoUrl).openConnection().apply {
-                            connectTimeout = 6000
-                            readTimeout = 6000
-                            useCaches = true
-                        }
-                        connection.getInputStream().use { stream ->
-                            BitmapFactory.decodeStream(stream)
-                        }
-                    }.getOrNull()
-                    if (bitmap != null && !activity.isFinishing && !activity.isDestroyed) {
-                        photoView.post {
-                            photoView.setImageBitmap(bitmap)
-                            photoView.imageTintList = null
-                            photoView.clearColorFilter()
-                        }
-                    }
-                }.apply { name = "marco-profile-avatar-loader" }.start()
-            }
             action(page, translate("تغيير صورة الحساب"), translate("اختيار صورة من هاتفك وحفظها في ملفك السحابي"), dark, run = ::chooseProfilePhoto)
             if (!user.isEmailVerified && user.email != null) {
                 action(
@@ -348,10 +326,27 @@ internal class FirebaseAccountController(
                             photoView.clearColorFilter()
                         }
                     }
-                    if (profilePhotoData.isNullOrBlank() && user.photoUrl != null) {
-                        // The provider photo remains available as the account's fallback identity.
-                        photoView.setImageResource(com.marcorx6.library.R.drawable.ic_nav_profile)
-                        photoView.imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
+                    if (profilePhotoData.isNullOrBlank()) {
+                        // Load the provider avatar only when no user-selected cloud photo exists.
+                        user.photoUrl?.toString()?.takeIf { it.startsWith("https://") }?.let { photoUrl ->
+                            Thread {
+                                val bitmap = runCatching {
+                                    val connection = java.net.URL(photoUrl).openConnection().apply {
+                                        connectTimeout = 6000
+                                        readTimeout = 6000
+                                        useCaches = true
+                                    }
+                                    connection.getInputStream().use { stream -> BitmapFactory.decodeStream(stream) }
+                                }.getOrNull()
+                                if (bitmap != null && !activity.isFinishing && !activity.isDestroyed) {
+                                    photoView.post {
+                                        photoView.setImageBitmap(bitmap)
+                                        photoView.imageTintList = null
+                                        photoView.clearColorFilter()
+                                    }
+                                }
+                            }.apply { name = "marco-profile-avatar-loader" }.start()
+                        }
                     }
                     profileLoaded = true
                     saveButton.isEnabled = true
