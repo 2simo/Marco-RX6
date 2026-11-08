@@ -266,6 +266,6 @@ internal class ResumableDownloadWorker(
         const val KEY_ID = "download_id"
         private const val MAX_AUTOMATIC_RETRIES = 5
         private const val CHANNEL_ID = "marco_rx6_downloads"
-        private fun notificationId(downloadId: Long): Int = 6406 + (downloadId % 100000L).toInt()
+        private fun notificationId(downloadId: Long): Int = 1_000_000_000 + ((downloadId xor (downloadId ushr 32)).toInt() and 0x3fffffff)
     }
 }
