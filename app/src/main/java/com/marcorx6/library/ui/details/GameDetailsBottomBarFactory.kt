@@ -48,7 +48,7 @@ internal class GameDetailsBottomBarFactory(
             setTypeface(null, Typeface.BOLD)
             background = if (primary) android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(Color.argb(232, 190, 198, 210), Color.argb(215, 105, 113, 126))
+                intArrayOf(Color.argb(232, 76, 145, 235), Color.argb(215, 35, 91, 165))
             ).apply { cornerRadius = dp(11).toFloat() } else rounded(
                 if (isDarkMode()) Color.argb(205, 35, 38, 45) else Color.argb(210, 222, 226, 232),
                 11
@@ -57,7 +57,7 @@ internal class GameDetailsBottomBarFactory(
             minHeight = dp(48)
             if (android.os.Build.VERSION.SDK_INT >= 23) {
                 foreground = android.graphics.drawable.RippleDrawable(
-                    android.content.res.ColorStateList.valueOf(Color.argb(78, 190, 198, 210)),
+                    android.content.res.ColorStateList.valueOf(Color.argb(78, 76, 145, 235)),
                     null,
                     android.graphics.drawable.ColorDrawable(Color.WHITE)
                 )
