@@ -339,7 +339,23 @@ internal class FirebaseAccountController(
                     setStroke(dp(1), if (dark) Color.argb(120, 130, 138, 151) else Color.argb(160, 160, 168, 181))
                 }
             }
-            page.addView(bioInput, LinearLayout.LayoutParams(-1, dp(112)).apply { bottomMargin = dp(8) })
+            page.addView(bioInput, LinearLayout.LayoutParams(-1, dp(112)).apply { bottomMargin = dp(2) })
+            val bioCounter = TextView(activity).apply {
+                text = "0/160"
+                textSize = 10f
+                gravity = Gravity.END
+                setTextColor(if (dark) Color.rgb(135, 143, 156) else Color.rgb(112, 120, 132))
+                setPadding(0, dp(2), dp(4), dp(8))
+                contentDescription = translate("عدد أحرف النبذة")
+            }
+            page.addView(bioCounter, LinearLayout.LayoutParams(-1, -2))
+            bioInput.addTextChangedListener(object : android.text.TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    bioCounter.text = "${s?.length ?: 0}/160"
+                }
+                override fun afterTextChanged(s: android.text.Editable?) = Unit
+            })
 
             var profilePhotoData: String? = null
             var profileLoaded = false
