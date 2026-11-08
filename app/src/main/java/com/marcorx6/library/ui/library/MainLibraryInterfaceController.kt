@@ -58,7 +58,9 @@ internal class MainLibraryInterfaceController(
     private val showDetails: (Game) -> Unit,
     private val applyTypography: (View) -> Unit,
     private val applyUnifiedSkin: (View) -> Unit,
-    private val applyMotionPreferences: (View) -> Unit
+    private val applyMotionPreferences: (View) -> Unit,
+    private val showNotifications: () -> Unit,
+    private val showMessages: () -> Unit
 ) {
     private val mainHandler = Handler(Looper.getMainLooper())
     private var searchRenderRunnable: Runnable? = null
@@ -574,6 +576,8 @@ internal class MainLibraryInterfaceController(
             LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginEnd = dp(8) })
         header.addView(headerAction(R.drawable.ic_action_settings, tr("الإعدادات")) { showAppearanceSettings() },
             LinearLayout.LayoutParams(dp(48), dp(48)))
+        header.addView(headerAction(android.R.drawable.ic_popup_reminder, tr("الإشعارات")) { showNotifications() },
+            LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginStart = dp(8) })
 
         root.addView(header)
 
@@ -937,7 +941,7 @@ internal class MainLibraryInterfaceController(
             elevation = dp(14).toFloat()
             setPadding(dp(7), dp(7), dp(7), dp(7))
         }
-        if (activeDockTab !in setOf("HOME", "SEARCH", "FAVORITES", "DOWNLOADS", "PROFILE")) activeDockTab = "HOME"
+        if (activeDockTab !in setOf("HOME", "SEARCH", "FAVORITES", "DOWNLOADS", "MESSAGES", "PROFILE")) activeDockTab = "HOME"
         val dockItems = linkedMapOf<String, LinearLayout>()
         val dockLabels = linkedMapOf<String, String>()
         fun renderDockSelection() {
@@ -1020,6 +1024,7 @@ internal class MainLibraryInterfaceController(
             selected = "FAVORITES"; renderGames(); pageScroll.smoothScrollTo(0, 0)
         }
         dockItem("DOWNLOADS", R.drawable.ic_nav_downloads, tr("التنزيلات")) { showDownloads() }
+        dockItem("MESSAGES", android.R.drawable.ic_dialog_email, tr("الرسائل")) { showMessages() }
         dockItem("PROFILE", R.drawable.ic_nav_profile, tr("حسابي")) { showProfile() }
         renderDockSelection()
 
