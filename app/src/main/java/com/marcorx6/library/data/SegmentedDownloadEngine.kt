@@ -194,7 +194,7 @@ internal object SegmentedDownloadEngine {
         expectedEtag: String,
         expectedModified: String,
         isStopped: () -> Boolean,
-        speedLimiter: SharedSpeedLimiter,
+        speedLimiter: DownloadSpeedLimiter,
         onBytes: (Long) -> Unit
     ) {
         var offset = segment.length()
