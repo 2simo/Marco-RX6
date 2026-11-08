@@ -338,6 +338,7 @@ internal class DownloadUiController(
         )
         val rows = linkedMapOf<Long, RowViews>()
         val lastSpeedSample = mutableMapOf<Long, Pair<Long, Long>>()
+        val lastSegmentSpeedSample = mutableMapOf<Pair<Long, Int>, Pair<Long, Long>>()
         val handler = Handler(Looper.getMainLooper())
 
         // Poll more frequently only while a transfer is active. An idle download
@@ -427,6 +428,28 @@ internal class DownloadUiController(
                     }
                     details.append("  •  ").append(translate("متبقي")).append(" ").append(eta)
                 }
+            }
+            if (item.status == DownloadManager.STATUS_RUNNING && item.segmentBytes.any { it > 0L }) {
+                val segmentSpeeds = item.segmentBytes.mapIndexedNotNull { index, bytes ->
+                    if (bytes <= 0L) {
+                        lastSegmentSpeedSample.remove(item.id to index)
+                        null
+                    } else {
+                        val key = item.id to index
+                        val sample = lastSegmentSpeedSample[key]
+                        val partSpeed = if (sample != null && now > sample.second && bytes >= sample.first) {
+                            ((bytes - sample.first) * 1000L) / (now - sample.second).coerceAtLeast(1L)
+                        } else 0L
+                        lastSegmentSpeedSample[key] = bytes to now
+                        "P${index + 1}: ${android.text.format.Formatter.formatFileSize(activity, partSpeed)}/s"
+                    }
+                }
+                if (segmentSpeeds.isNotEmpty()) {
+                    details.append("\\n").append(translate("سرعة الاتصالات")).append("  •  ")
+                        .append(segmentSpeeds.joinToString("  |  "))
+                }
+            } else if (item.status != DownloadManager.STATUS_RUNNING) {
+                lastSegmentSpeedSample.keys.filter { it.first == item.id }.forEach { lastSegmentSpeedSample.remove(it) }
             }
             if (item.status == DownloadManager.STATUS_FAILED) {
                 details.append("\n").append(translate("تعذر إكمال التنزيل. يمكنك إعادة المحاولة أو تحديث رابط اللعبة."))
