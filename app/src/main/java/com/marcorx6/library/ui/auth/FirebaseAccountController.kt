@@ -510,12 +510,29 @@ internal class FirebaseAccountController(
                     bottomMargin = dp(16)
                 })
             }
-            action(page, translate("تسجيل الخروج"), translate("الخروج من حساب MARCO"), dark, run = {
-                authRepository.signOut()
-                signOutAdmin()
-                onAccountChanged()
-                toast("تم تسجيل الخروج بنجاح")
-            })
+            action(
+                page,
+                translate("تسجيل الخروج"),
+                translate("الخروج من حساب MARCO مع إبقاء جلسة Blogger وGoogle Drive منفصلة"),
+                dark,
+                run = {
+                    val logoutDialog = AlertDialog.Builder(activity)
+                        .setTitle(translate("تسجيل الخروج من MARCO؟"))
+                        .setMessage(
+                            translate("سيتم تسجيل الخروج من حساب MARCO فقط. ستبقى جلسة Google المستعملة في Blogger وGoogle Drive كما هي، ولن تُحذف مكتبتك أو ملفات التنزيل على هذا الهاتف.")
+                        )
+                        .setNegativeButton(translate("إلغاء"), null)
+                        .setPositiveButton(translate("تسجيل الخروج")) { _, _ ->
+                            authRepository.signOut()
+                            signOutAdmin()
+                            onAccountChanged()
+                            toast("تم تسجيل الخروج بنجاح")
+                        }
+                        .create()
+                    logoutDialog.show()
+                    styleDialog(logoutDialog)
+                }
+            )
             action(page, translate("مسح الحساب"), translate("حذف حسابك وبياناته السحابية نهائياً"), dark, run = { confirmAccountDeletion(user) })
         }
         page.addView(TextView(activity).apply {
