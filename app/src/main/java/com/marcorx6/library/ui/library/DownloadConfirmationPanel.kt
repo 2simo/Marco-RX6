@@ -107,7 +107,7 @@ internal class DownloadConfirmationPanel(
             gravity = Gravity.CENTER_VERTICAL
         }
         val headingBox = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
-        headingBox.addView(label("1DM STYLE  /  MARCO RX6", 9f, silver, true))
+        headingBox.addView(label("DOWNLOAD MANAGER  /  MARCO RX6", 9f, silver, true))
         headingBox.addView(label(translate("إضافة إلى التنزيلات"), 21f, heading, true).apply {
             setPadding(0, dp(4), 0, 0)
         })
