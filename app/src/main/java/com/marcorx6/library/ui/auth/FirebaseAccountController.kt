@@ -399,6 +399,8 @@ internal class FirebaseAccountController(
                     return@accountSubmitButton
                 }
                 button.isEnabled = false
+                button.text = translate("جارٍ حفظ التغييرات...")
+                val previousDisplayName = user.displayName
                 user.updateProfile(
                     UserProfileChangeRequest.Builder().setDisplayName(name).build()
                 ).addOnSuccessListener {
@@ -412,12 +414,22 @@ internal class FirebaseAccountController(
                         toast("تم حفظ معلومات الملف الشخصي")
                         show()
                     }.addOnFailureListener { error ->
-                        button.isEnabled = true
-                        toast("تعذر حفظ الملف الشخصي في السحابة")
+                        // Keep the edited fields on screen and restore the Firebase Auth name
+                        // so a cloud-write failure does not leave two conflicting profiles.
+                        user.updateProfile(
+                            UserProfileChangeRequest.Builder()
+                                .setDisplayName(previousDisplayName)
+                                .build()
+                        ).addOnCompleteListener {
+                            button.isEnabled = true
+                            button.text = translate("حفظ التغييرات")
+                            toast("تعذر حفظ الملف الشخصي في السحابة. بقيت تعديلاتك في الصفحة؛ حاول مجدداً.")
+                        }
                     }
                 }.addOnFailureListener { error ->
                     button.isEnabled = true
-                    toast("تعذر تحديث اسم الحساب")
+                    button.text = translate("حفظ التغييرات")
+                    toast("تعذر تحديث اسم الحساب. لم تُحذف تعديلاتك.")
                 }
             }
             saveButton.isEnabled = false
@@ -553,12 +565,19 @@ internal class FirebaseAccountController(
         launchProfilePhotoPicker(intent)
     }
 
+    private var profilePhotoUploadInProgress = false
+
     fun handleProfilePhotoSelected(uri: Uri) {
         val user = authRepository.currentUser
         if (user == null || user.isAnonymous) {
             toast("سجّل الدخول أولاً لإضافة صورة الحساب")
             return
         }
+        if (profilePhotoUploadInProgress) {
+            toast("جارٍ حفظ صورة الحساب بالفعل، انتظر قليلاً.")
+            return
+        }
+        profilePhotoUploadInProgress = true
         try {
             val encoded = compressProfilePhoto(uri)
             userDocuments.saveProfile(
@@ -568,13 +587,16 @@ internal class FirebaseAccountController(
                 photoUrl = user.photoUrl?.toString(),
                 photoData = encoded
             ).addOnSuccessListener {
+                profilePhotoUploadInProgress = false
                 toast("تم تحديث صورة الحساب")
                 show()
             }.addOnFailureListener { error ->
-                toast("تعذر حفظ صورة الحساب")
+                profilePhotoUploadInProgress = false
+                toast("تعذر حفظ صورة الحساب. بقيت صورتك السابقة كما هي؛ حاول مجدداً.")
             }
         } catch (error: Exception) {
-            toast("تعذرت قراءة الصورة المختارة")
+            profilePhotoUploadInProgress = false
+            toast("تعذرت قراءة الصورة المختارة؛ لم تتغير صورة حسابك.")
         }
     }
 
