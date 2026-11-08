@@ -1273,39 +1273,54 @@ internal class FirebaseAccountController(
             setPadding(dp(18), dp(16), dp(18), dp(24))
             setBackgroundColor(Color.rgb(7, 8, 10))
         }
-        val titleView = TextView(activity).apply {
+        val header = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        header.addView(TextView(activity).apply {
             text = translate("الإشعارات")
             textSize = 24f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(Color.WHITE)
-            setPadding(0, 0, 0, dp(14))
-        }
-        page.addView(titleView)
+        }, LinearLayout.LayoutParams(0, -2, 1f))
+        header.addView(ImageView(activity).apply {
+            setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
+            imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
+            contentDescription = translate("العودة إلى القائمة الرئيسية")
+            setPadding(dp(10), dp(10), dp(10), dp(10))
+            setOnClickListener {
+                notificationsListener?.remove()
+                notificationsListener = null
+                onBack()
+            }
+        }, LinearLayout.LayoutParams(dp(44), dp(44)))
+        page.addView(header)
         val list = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
-        val scroll = ScrollView(activity).apply { addView(list) }
-        page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
-        page.addView(TextView(activity).apply {
-            text = translate("رجوع إلى الحساب")
-            textSize = 13f
-            setTextColor(Color.rgb(190, 198, 210))
-            setPadding(dp(8), dp(14), dp(8), dp(14))
-            setOnClickListener { notificationsListener?.remove(); notificationsListener = null; show() }
-        })
-        showAccountPage(page)
-        notificationsListener = notifications.listen(user.uid, { items ->
-            if (activity.isFinishing || activity.isDestroyed) return@listen
+        var selectedSection = "game"
+        var allItems: List<com.google.firebase.firestore.DocumentSnapshot> = emptyList()
+        fun renderItems() {
             list.removeAllViews()
-            val unread = notifications.unreadCount(items)
-            titleView.text = if (unread > 0) "${translate("الإشعارات")} • $unread" else translate("الإشعارات")
-            if (items.isEmpty()) {
+            val filtered = allItems.filter { item ->
+                when (selectedSection) {
+                    "game" -> item.getString("type") == "game"
+                    "follow" -> item.getString("type") == "follow"
+                    "message" -> item.getString("type") == "message"
+                    else -> false
+                }
+            }
+            if (filtered.isEmpty()) {
                 list.addView(TextView(activity).apply {
-                    text = translate("لا توجد إشعارات بعد.")
+                    text = translate(when (selectedSection) {
+                        "game" -> "لا توجد ألعاب جديدة حالياً."
+                        "follow" -> "لا يوجد متابعون جدد حالياً."
+                        else -> "لا توجد رسائل جديدة حالياً."
+                    })
                     textSize = 13f
                     setTextColor(Color.rgb(165, 173, 185))
                     setPadding(dp(12), dp(28), dp(12), dp(28))
                 })
             }
-            items.forEach { item ->
+            filtered.forEach { item ->
                 val type = item.getString("type").orEmpty()
                 val actorUid = item.getString("actorUid").orEmpty()
                 val unread = item.getBoolean("read") != true
@@ -1339,14 +1354,62 @@ internal class FirebaseAccountController(
                                 if (game != null) openGameDetails(game)
                                 else toast("هذه اللعبة لم تعد متاحة في المكتبة.")
                             }
-                            else -> toast("نوع الإشعار غير معروف.")
                         }
                     }
                 }
-                list.addView(row, LinearLayout.LayoutParams(-1, -2).apply {
-                    bottomMargin = dp(9)
-                })
+                list.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(9) })
             }
+        }
+        val tabs = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            setPadding(0, dp(12), 0, dp(12))
+        }
+        fun addTab(label: String, key: String) {
+            val tab = TextView(activity).apply {
+                text = translate(label)
+                textSize = 11f
+                gravity = Gravity.CENTER
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(Color.rgb(205, 211, 220))
+                setPadding(dp(9), dp(11), dp(9), dp(11))
+                background = GradientDrawable().apply {
+                    cornerRadius = dp(13).toFloat()
+                    setColor(if (selectedSection == key) Color.rgb(55, 60, 70) else Color.rgb(20, 22, 27))
+                    setStroke(dp(1), Color.rgb(90, 98, 111))
+                }
+                setOnClickListener {
+                    selectedSection = key
+                    for (i in 0 until tabs.childCount) {
+                        val child = tabs.getChildAt(i) as? TextView ?: continue
+                        child.background = GradientDrawable().apply {
+                            cornerRadius = dp(13).toFloat()
+                            setColor(if (child.tag == key) Color.rgb(55, 60, 70) else Color.rgb(20, 22, 27))
+                            setStroke(dp(1), Color.rgb(90, 98, 111))
+                        }
+                    }
+                    renderItems()
+                }
+                tag = key
+            }
+            tabs.addView(tab, LinearLayout.LayoutParams(0, -2, 1f).apply {
+                marginEnd = dp(5)
+            })
+        }
+        addTab("الألعاب الجديدة", "game")
+        addTab("المتابعون", "follow")
+        addTab("الرسائل", "message")
+        page.addView(tabs)
+        val scroll = ScrollView(activity).apply { addView(list) }
+        page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
+        showAccountPage(page)
+        notificationsListener = notifications.listen(user.uid, { items ->
+            if (activity.isFinishing || activity.isDestroyed) return@listen
+            allItems = items
+            val unread = notifications.unreadCount(items)
+            (header.getChildAt(0) as? TextView)?.text =
+                if (unread > 0) "${translate("الإشعارات")} • $unread" else translate("الإشعارات")
+            renderItems()
         }, { error ->
             android.util.Log.e("MarcoNotifications", "Notification listener failed", error)
             toast(error.localizedMessage ?: "تعذر تحميل الإشعارات. تحقق من الاتصال.")
@@ -1367,13 +1430,32 @@ internal class FirebaseAccountController(
             setPadding(dp(18), dp(16), dp(18), dp(24))
             setBackgroundColor(Color.rgb(7, 8, 10))
         }
-        page.addView(TextView(activity).apply {
+        val inboxHeader = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        inboxHeader.addView(TextView(activity).apply {
             text = translate("الرسائل الخاصة")
             textSize = 23f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(Color.WHITE)
-            setPadding(0, 0, 0, dp(3))
-        })
+        }, LinearLayout.LayoutParams(0, -2, 1f))
+        inboxHeader.addView(ImageView(activity).apply {
+            setImageResource(android.R.drawable.ic_menu_add)
+            imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
+            contentDescription = translate("رسالة جديدة")
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
+            setPadding(dp(10), dp(10), dp(10), dp(10))
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(Color.rgb(29, 32, 39))
+                setStroke(dp(1), Color.rgb(100, 108, 120))
+            }
+            isClickable = true
+            isFocusable = true
+            setOnClickListener { showNewMessageSearch() }
+        }, LinearLayout.LayoutParams(dp(44), dp(44)))
+        page.addView(inboxHeader)
         page.addView(TextView(activity).apply {
             text = translate("اضغط مطولاً على المحادثة لحذفها من قائمتك فقط")
             textSize = 11f
@@ -1445,6 +1527,54 @@ internal class FirebaseAccountController(
             android.util.Log.e("MarcoMessages", "Inbox listener failed", error)
             toast(error.localizedMessage ?: translate("تعذر تحميل الرسائل. تحقق من الاتصال."))
         })
+    }
+
+    private fun showNewMessageSearch() {
+        val input = accountInput(
+            translate("اسم المستخدم أو @username"),
+            InputType.TYPE_CLASS_TEXT
+        )
+        val dialog = AlertDialog.Builder(activity)
+            .setTitle(translate("رسالة جديدة"))
+            .setMessage(translate("ابحث باسم المستخدم للعثور على الشخص."))
+            .setView(input)
+            .setNegativeButton(translate("إلغاء"), null)
+            .setPositiveButton(translate("بحث"), null)
+            .create()
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val username = input.text.toString().trim().removePrefix("@")
+                if (username.isBlank()) {
+                    input.error = translate("أدخل اسم المستخدم")
+                    return@setOnClickListener
+                }
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
+                userDocuments.loadUidByUsername(username)
+                    .addOnSuccessListener { uid ->
+                        if (uid.isNullOrBlank()) {
+                            dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true
+                            input.error = translate("لم يتم العثور على هذا المستخدم")
+                        } else {
+                            userDocuments.loadPublicProfile(uid)
+                                .addOnSuccessListener { profile ->
+                                    dialog.dismiss()
+                                    if (profile.exists()) openConversation(uid)
+                                    else toast("هذا المستخدم لا يملك ملفاً عاماً متاحاً.")
+                                }
+                                .addOnFailureListener { error ->
+                                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true
+                                    toast(error.localizedMessage ?: translate("تعذر تحميل الملف الشخصي."))
+                                }
+                        }
+                    }
+                    .addOnFailureListener { error ->
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true
+                        toast(error.localizedMessage ?: translate("تعذر البحث عن المستخدم."))
+                    }
+            }
+        }
+        dialog.show()
+        styleDialog(dialog)
     }
 
     private fun openConversation(otherUid: String) {
