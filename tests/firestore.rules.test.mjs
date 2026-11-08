@@ -23,7 +23,8 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
-  whereEqualTo,
+  query,
+  where,
 } from "firebase/firestore";
 
 const projectId = "demo-marco-rx6";
@@ -244,7 +245,7 @@ describe("Firestore user isolation rules", () => {
     await assertFails(getDoc(doc(charlie, "userFollows/alice/following/bob")));
     // Collection-group reads must be constrained to the signed-in user's incoming edges.
     await assertSucceeds(getDocs(
-      collectionGroup(bob, "following").where(whereEqualTo("targetUid", "bob")),
+      query(collectionGroup(bob, "following"), where("targetUid", "==", "bob")),
     ));
     await assertFails(getDocs(collectionGroup(bob, "following")));
     await assertFails(setDoc(doc(bob, "userFollows/alice/following/charlie"), {
