@@ -69,15 +69,11 @@ internal class FirebaseUserDocumentRepository(
         photoData?.takeIf(String::isNotBlank)?.let { data["photoData"] = it }
         publicProfile?.let { data["publicProfile"] = it }
         showFavorites?.let { data["showFavorites"] = it }
-        val privateSave = userDocument(uid).set(data, SetOptions.merge())
-        if (publicProfile == null) return privateSave
-
-        return privateSave.continueWithTask { task ->
-            if (!task.isSuccessful) {
-                throw task.exception ?: IllegalStateException("تعذر حفظ بيانات الحساب")
-            }
+        val batch = firestore.batch()
+        batch.set(userDocument(uid), data, SetOptions.merge())
+        if (publicProfile != null) {
             if (!publicProfile) {
-                publicProfileDocument(uid).delete()
+                batch.delete(publicProfileDocument(uid))
             } else {
                 val publicData = mutableMapOf<String, Any>(
                     "uid" to uid,
@@ -91,9 +87,10 @@ internal class FirebaseUserDocumentRepository(
                 } else {
                     favoriteGames?.let { publicData["favoriteGames"] = it.take(30) }
                 }
-                publicProfileDocument(uid).set(publicData, SetOptions.merge())
+                batch.set(publicProfileDocument(uid), publicData, SetOptions.merge())
             }
         }
+        return batch.commit()
     }
 
     /** Deletes the known user-owned settings document before removing the parent profile. */
