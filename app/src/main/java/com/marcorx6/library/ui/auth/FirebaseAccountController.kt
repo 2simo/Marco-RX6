@@ -294,12 +294,13 @@ internal class FirebaseAccountController(
             page.addView(profileBioPreview, LinearLayout.LayoutParams(-1, -2).apply {
                 bottomMargin = dp(14)
             })
-            page.addView(sectionCaption("إعدادات الملف الشخصي", dark))
+            page.addView(sectionCaption("ملخص المكتبة", dark))
         }
 
         if (user == null || user.isAnonymous) {
+            page.addView(sectionCaption("اختر طريقة المتابعة", dark))
             page.addView(TextView(activity).apply {
-                text = translate("استعمل التطبيق كزائر، أو سجّل الدخول لحفظ حسابك ومزامنة بياناتك.")
+                text = translate("استعمل التطبيق كزائر، أو سجّل الدخول لحفظ ملفك الشخصي والعودة إليه من أجهزتك.")
                 textSize = 13f
                 setTextColor(if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110))
                 setPadding(0, 0, 0, dp(18))
@@ -310,6 +311,7 @@ internal class FirebaseAccountController(
             action(page, translate("تسجيل الدخول بالبريد الإلكتروني"), translate("لديك حساب MARCO بالفعل؟"), dark, run = { showEmailForm(createAccount = false) })
             action(page, translate("نسيت كلمة المرور؟"), translate("استرجاع الوصول إلى حسابك"), dark, run = ::showPasswordResetForm)
         } else {
+            page.addView(sectionCaption("الأمان وإدارة الحساب", dark))
             action(page, translate("تغيير صورة الحساب"), translate("اختيار صورة من هاتفك وحفظها في ملفك السحابي"), dark, run = ::chooseProfilePhoto)
             if (!user.isEmailVerified && user.email != null) {
                 action(
@@ -338,6 +340,7 @@ internal class FirebaseAccountController(
                 )
             }
 
+            page.addView(sectionCaption("بيانات الملف الشخصي", dark))
             page.addView(TextView(activity).apply {
                 text = translate("الاسم")
                 textSize = 13f
@@ -504,6 +507,7 @@ internal class FirebaseAccountController(
                 }
 
             user.email?.let { email ->
+                page.addView(sectionCaption("معلومات الاتصال", dark))
                 val emailRow = LinearLayout(activity).apply {
                     orientation = LinearLayout.HORIZONTAL
                     gravity = Gravity.CENTER_VERTICAL
