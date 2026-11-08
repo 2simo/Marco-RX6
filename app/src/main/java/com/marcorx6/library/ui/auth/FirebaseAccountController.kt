@@ -1262,11 +1262,25 @@ internal class FirebaseAccountController(
                         })
                     }
                 }
-                .addOnFailureListener {
-                    if (dialog.isShowing) loading.text = translate("تعذر تحميل بيانات الحسابات حالياً.")
+                .addOnFailureListener { error ->
+                    android.util.Log.e("MarcoSocial", "Failed to load public profiles for social list", error)
+                    val code = (error as? com.google.firebase.firestore.FirebaseFirestoreException)?.code?.name
+                        ?: error.javaClass.simpleName
+                    if (dialog.isShowing) {
+                        loading.text = translate("تعذر تحميل بيانات الحسابات (") + code + ")"
+                    }
                 }
-        }.addOnFailureListener {
-            if (dialog.isShowing) loading.text = translate("تعذر تحميل القائمة. تحقق من الاتصال.")
+        }.addOnFailureListener { error ->
+            android.util.Log.e("MarcoSocial", "Failed to load social connection IDs for uid=$uid", error)
+            val code = (error as? com.google.firebase.firestore.FirebaseFirestoreException)?.code?.name
+                ?: error.javaClass.simpleName
+            val message = when (code) {
+                "PERMISSION_DENIED" -> "رفضت قواعد Firestore قراءة قائمة المتابعين (PERMISSION_DENIED)."
+                "FAILED_PRECONDITION" -> "استعلام المتابعين يحتاج إلى فهرس Firestore (FAILED_PRECONDITION)."
+                "UNAVAILABLE" -> "خدمة Firestore غير متاحة حالياً؛ تحقق من الاتصال."
+                else -> "تعذر تحميل القائمة (" + code + ")."
+            }
+            if (dialog.isShowing) loading.text = translate(message)
         }
     }
 
