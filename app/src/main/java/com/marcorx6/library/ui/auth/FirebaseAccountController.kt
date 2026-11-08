@@ -1198,6 +1198,75 @@ internal class FirebaseAccountController(
         }
     }
 
+
+    private fun showInbox() {
+        val user = authRepository.currentUser
+        if (user == null || user.isAnonymous) {
+            toast("سجّل الدخول لاستخدام الرسائل الخاصة.")
+            show()
+            return
+        }
+        inboxListener?.remove()
+        val page = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            setPadding(dp(18), dp(16), dp(18), dp(24))
+            setBackgroundColor(Color.rgb(7, 8, 10))
+        }
+        page.addView(TextView(activity).apply {
+            text = translate("الرسائل الخاصة")
+            textSize = 23f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(Color.WHITE)
+            setPadding(0, 0, 0, dp(16))
+        })
+        val list = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
+        val scroll = ScrollView(activity).apply { addView(list) }
+        page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
+        page.addView(TextView(activity).apply {
+            text = translate("رجوع إلى الحساب")
+            textSize = 13f
+            setTextColor(Color.rgb(190, 198, 210))
+            setPadding(dp(8), dp(14), dp(8), dp(14))
+            setOnClickListener { inboxListener?.remove(); inboxListener = null; show() }
+        })
+        showAccountPage(page)
+        inboxListener = messaging.listenInbox(user.uid, { conversations ->
+            if (activity.isFinishing || activity.isDestroyed) return@listenInbox
+            list.removeAllViews()
+            if (conversations.isEmpty()) {
+                list.addView(TextView(activity).apply {
+                    text = translate("لا توجد محادثات بعد. ابدأ محادثة مع شخص يتابعك وتتابعه.")
+                    setTextColor(Color.rgb(165, 173, 185))
+                    setPadding(dp(12), dp(24), dp(12), dp(24))
+                })
+            }
+            conversations.forEach { conversation ->
+                val otherUid = messaging.otherParticipant(conversation, user.uid) ?: return@forEach
+                userDocuments.loadPublicProfile(otherUid).addOnSuccessListener { profile ->
+                    if (!profile.exists() || activity.isFinishing || activity.isDestroyed) return@addOnSuccessListener
+                    val row = TextView(activity).apply {
+                        text = (profile.getString("displayName") ?: "MARCO") + "\n" +
+                            (conversation.getString("lastMessage") ?: "")
+                        textSize = 14f
+                        setTextColor(Color.rgb(220, 225, 232))
+                        setPadding(dp(16), dp(16), dp(16), dp(16))
+                        background = GradientDrawable().apply {
+                            cornerRadius = dp(14).toFloat()
+                            setColor(Color.rgb(25, 28, 34))
+                            setStroke(dp(1), Color.rgb(75, 83, 96))
+                        }
+                        setOnClickListener { openConversation(otherUid) }
+                    }
+                    list.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
+                }
+            }
+        }, { error ->
+            android.util.Log.e("MarcoMessages", "Inbox listener failed", error)
+            toast("تعذر تحميل الرسائل. تحقق من الاتصال.")
+        })
+    }
+
     private fun showSocialConnections(uid: String, showFollowers: Boolean) {
         val currentUser = authRepository.currentUser
         if (currentUser == null || currentUser.isAnonymous || currentUser.uid != uid) {
