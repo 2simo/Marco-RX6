@@ -511,202 +511,202 @@ internal class FirebaseAccountController(
             bottomMargin = dp(8)
         })
         action(page, translate("تغيير الصورة الشخصية"), translate("اختر صورة من هاتفك"), dark, run = ::chooseProfilePhoto)
-                    page.addView(sectionCaption("بيانات الملف الشخصي", dark))
-                    page.addView(TextView(activity).apply {
-                        text = translate("الاسم")
-                        textSize = 13f
-                        setTypeface(null, android.graphics.Typeface.BOLD)
-                        setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
-                        setPadding(0, dp(8), 0, dp(6))
-                    })
-                    val nameInput = accountInput(
-                        translate("اسم المستخدم"),
-                        InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS
-                    ).apply {
-                        filters = arrayOf(android.text.InputFilter.LengthFilter(40))
-                        setText(user.displayName.orEmpty())
-                        setSelection(text.length)
-                    }
-                    page.addView(nameInput, LinearLayout.LayoutParams(-1, dp(56)).apply { bottomMargin = dp(14) })
-        
-                    page.addView(TextView(activity).apply {
-                        text = translate("نبذة عنك")
-                        textSize = 13f
-                        setTypeface(null, android.graphics.Typeface.BOLD)
-                        setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
-                        setPadding(0, dp(4), 0, dp(6))
-                    })
-                    val bioInput = EditText(activity).apply {
-                        hint = translate("اكتب نبذة قصيرة عنك...")
-                        inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
-                        setSingleLine(false)
-                        filters = arrayOf(android.text.InputFilter.LengthFilter(160))
-                        minLines = 3
-                        maxLines = 5
-                        gravity = Gravity.TOP or Gravity.START
-                        textSize = 14f
-                        setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
-                        setHintTextColor(if (dark) Color.rgb(170, 176, 186) else Color.rgb(91, 98, 110))
-                        setPadding(dp(16), dp(12), dp(16), dp(12))
-                        background = GradientDrawable().apply {
-                            cornerRadius = dp(14).toFloat()
-                            setColor(if (dark) Color.argb(155, 25, 28, 34) else Color.argb(220, 255, 255, 255))
-                            setStroke(dp(1), if (dark) Color.argb(120, 130, 138, 151) else Color.argb(160, 160, 168, 181))
+            page.addView(sectionCaption("بيانات الملف الشخصي", dark))
+            page.addView(TextView(activity).apply {
+                text = translate("الاسم")
+                textSize = 13f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+                setPadding(0, dp(8), 0, dp(6))
+            })
+            val nameInput = accountInput(
+                translate("اسم المستخدم"),
+                InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS
+            ).apply {
+                filters = arrayOf(android.text.InputFilter.LengthFilter(40))
+                setText(user.displayName.orEmpty())
+                setSelection(text.length)
+            }
+            page.addView(nameInput, LinearLayout.LayoutParams(-1, dp(56)).apply { bottomMargin = dp(14) })
+
+            page.addView(TextView(activity).apply {
+                text = translate("نبذة عنك")
+                textSize = 13f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+                setPadding(0, dp(4), 0, dp(6))
+            })
+            val bioInput = EditText(activity).apply {
+                hint = translate("اكتب نبذة قصيرة عنك...")
+                inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+                setSingleLine(false)
+                filters = arrayOf(android.text.InputFilter.LengthFilter(160))
+                minLines = 3
+                maxLines = 5
+                gravity = Gravity.TOP or Gravity.START
+                textSize = 14f
+                setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+                setHintTextColor(if (dark) Color.rgb(170, 176, 186) else Color.rgb(91, 98, 110))
+                setPadding(dp(16), dp(12), dp(16), dp(12))
+                background = GradientDrawable().apply {
+                    cornerRadius = dp(14).toFloat()
+                    setColor(if (dark) Color.argb(155, 25, 28, 34) else Color.argb(220, 255, 255, 255))
+                    setStroke(dp(1), if (dark) Color.argb(120, 130, 138, 151) else Color.argb(160, 160, 168, 181))
+                }
+            }
+            page.addView(bioInput, LinearLayout.LayoutParams(-1, dp(124)).apply { bottomMargin = dp(2) })
+            val bioCounter = TextView(activity).apply {
+                text = "0/160"
+                textSize = 10f
+                gravity = Gravity.END
+                setTextColor(if (dark) Color.rgb(135, 143, 156) else Color.rgb(112, 120, 132))
+                setPadding(0, dp(2), dp(4), dp(8))
+                contentDescription = translate("عدد أحرف النبذة")
+            }
+            page.addView(bioCounter, LinearLayout.LayoutParams(-1, -2))
+            bioInput.addTextChangedListener(object : android.text.TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    bioCounter.text = "${s?.length ?: 0}/160"
+                }
+                override fun afterTextChanged(s: android.text.Editable?) = Unit
+            })
+
+            page.addView(sectionCaption("خصوصية الملف الشخصي", dark))
+            val publicProfileToggle = CheckBox(activity).apply {
+                text = translate("السماح للآخرين بمشاهدة ملفي الشخصي")
+                textSize = 13f
+                setTextColor(if (dark) Color.rgb(225, 229, 236) else Color.rgb(45, 52, 63))
+                buttonTintList = android.content.res.ColorStateList.valueOf(Color.rgb(180, 190, 205))
+                isEnabled = false
+            }
+            val showFavoritesToggle = CheckBox(activity).apply {
+                text = translate("إظهار ألعابي المفضلة في الملف العام")
+                textSize = 12f
+                setTextColor(if (dark) Color.rgb(190, 198, 210) else Color.rgb(75, 83, 96))
+                buttonTintList = android.content.res.ColorStateList.valueOf(Color.rgb(180, 190, 205))
+                isEnabled = false
+            }
+            page.addView(publicProfileToggle, LinearLayout.LayoutParams(-1, dp(48)))
+            page.addView(showFavoritesToggle, LinearLayout.LayoutParams(-1, dp(44)).apply {
+                bottomMargin = dp(10)
+            })
+
+            var profilePhotoData: String? = null
+            var profileLoaded = false
+            val saveButton = accountSubmitButton(translate("حفظ التغييرات")) { button ->
+                val name = nameInput.text.toString().trim()
+                val bio = bioInput.text.toString().trim()
+                if (name.isBlank() || name.length > 40) {
+                    toast("الاسم مطلوب ويجب ألا يتجاوز 40 حرفاً.")
+                    return@accountSubmitButton
+                }
+                if (bio.length > 160) {
+                    toast("يجب ألا تتجاوز النبذة 160 حرفاً.")
+                    return@accountSubmitButton
+                }
+                if (!profileLoaded) {
+                    toast("جارٍ تحميل معلومات الملف الشخصي، يُرجى المحاولة مجدداً بعد لحظة.")
+                    return@accountSubmitButton
+                }
+                button.isEnabled = false
+                button.text = translate("جارٍ حفظ التغييرات...")
+                val previousDisplayName = user.displayName
+                user.updateProfile(
+                    UserProfileChangeRequest.Builder().setDisplayName(name).build()
+                ).addOnSuccessListener {
+                    userDocuments.saveProfile(
+                        uid = user.uid,
+                        displayName = name,
+                        bio = bio,
+                        photoUrl = user.photoUrl?.toString(),
+                        photoData = profilePhotoData,
+                        publicProfile = publicProfileToggle.isChecked,
+                        showFavorites = showFavoritesToggle.isChecked,
+                        favoriteGames = games().filter { it.isFavorite }.take(30).map { game ->
+                            mapOf("name" to game.name, "platform" to game.platform, "coverUrl" to game.coverUrl)
                         }
-                    }
-                    page.addView(bioInput, LinearLayout.LayoutParams(-1, dp(124)).apply { bottomMargin = dp(2) })
-                    val bioCounter = TextView(activity).apply {
-                        text = "0/160"
-                        textSize = 10f
-                        gravity = Gravity.END
-                        setTextColor(if (dark) Color.rgb(135, 143, 156) else Color.rgb(112, 120, 132))
-                        setPadding(0, dp(2), dp(4), dp(8))
-                        contentDescription = translate("عدد أحرف النبذة")
-                    }
-                    page.addView(bioCounter, LinearLayout.LayoutParams(-1, -2))
-                    bioInput.addTextChangedListener(object : android.text.TextWatcher {
-                        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
-                        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                            bioCounter.text = "${s?.length ?: 0}/160"
-                        }
-                        override fun afterTextChanged(s: android.text.Editable?) = Unit
-                    })
-        
-                    page.addView(sectionCaption("خصوصية الملف الشخصي", dark))
-                    val publicProfileToggle = CheckBox(activity).apply {
-                        text = translate("السماح للآخرين بمشاهدة ملفي الشخصي")
-                        textSize = 13f
-                        setTextColor(if (dark) Color.rgb(225, 229, 236) else Color.rgb(45, 52, 63))
-                        buttonTintList = android.content.res.ColorStateList.valueOf(Color.rgb(180, 190, 205))
-                        isEnabled = false
-                    }
-                    val showFavoritesToggle = CheckBox(activity).apply {
-                        text = translate("إظهار ألعابي المفضلة في الملف العام")
-                        textSize = 12f
-                        setTextColor(if (dark) Color.rgb(190, 198, 210) else Color.rgb(75, 83, 96))
-                        buttonTintList = android.content.res.ColorStateList.valueOf(Color.rgb(180, 190, 205))
-                        isEnabled = false
-                    }
-                    page.addView(publicProfileToggle, LinearLayout.LayoutParams(-1, dp(48)))
-                    page.addView(showFavoritesToggle, LinearLayout.LayoutParams(-1, dp(44)).apply {
-                        bottomMargin = dp(10)
-                    })
-        
-                    var profilePhotoData: String? = null
-                    var profileLoaded = false
-                    val saveButton = accountSubmitButton(translate("حفظ التغييرات")) { button ->
-                        val name = nameInput.text.toString().trim()
-                        val bio = bioInput.text.toString().trim()
-                        if (name.isBlank() || name.length > 40) {
-                            toast("الاسم مطلوب ويجب ألا يتجاوز 40 حرفاً.")
-                            return@accountSubmitButton
-                        }
-                        if (bio.length > 160) {
-                            toast("يجب ألا تتجاوز النبذة 160 حرفاً.")
-                            return@accountSubmitButton
-                        }
-                        if (!profileLoaded) {
-                            toast("جارٍ تحميل معلومات الملف الشخصي، يُرجى المحاولة مجدداً بعد لحظة.")
-                            return@accountSubmitButton
-                        }
-                        button.isEnabled = false
-                        button.text = translate("جارٍ حفظ التغييرات...")
-                        val previousDisplayName = user.displayName
+                    ).addOnSuccessListener {
+                        toast("تم حفظ معلومات الملف الشخصي")
+                        show()
+                    }.addOnFailureListener { error ->
+                        // Keep the edited fields on screen and restore the Firebase Auth name
+                        // so a cloud-write failure does not leave two conflicting profiles.
                         user.updateProfile(
-                            UserProfileChangeRequest.Builder().setDisplayName(name).build()
-                        ).addOnSuccessListener {
-                            userDocuments.saveProfile(
-                                uid = user.uid,
-                                displayName = name,
-                                bio = bio,
-                                photoUrl = user.photoUrl?.toString(),
-                                photoData = profilePhotoData,
-                                publicProfile = publicProfileToggle.isChecked,
-                                showFavorites = showFavoritesToggle.isChecked,
-                                favoriteGames = games().filter { it.isFavorite }.take(30).map { game ->
-                                    mapOf("name" to game.name, "platform" to game.platform, "coverUrl" to game.coverUrl)
-                                }
-                            ).addOnSuccessListener {
-                                toast("تم حفظ معلومات الملف الشخصي")
-                                show()
-                            }.addOnFailureListener { error ->
-                                // Keep the edited fields on screen and restore the Firebase Auth name
-                                // so a cloud-write failure does not leave two conflicting profiles.
-                                user.updateProfile(
-                                    UserProfileChangeRequest.Builder()
-                                        .setDisplayName(previousDisplayName)
-                                        .build()
-                                ).addOnCompleteListener {
-                                    button.isEnabled = true
-                                    button.text = translate("حفظ التغييرات")
-                                    toast("تعذر حفظ الملف الشخصي في السحابة. بقيت تعديلاتك في الصفحة؛ حاول مجدداً.")
-                                }
-                            }
-                        }.addOnFailureListener { error ->
+                            UserProfileChangeRequest.Builder()
+                                .setDisplayName(previousDisplayName)
+                                .build()
+                        ).addOnCompleteListener {
                             button.isEnabled = true
                             button.text = translate("حفظ التغييرات")
-                            toast("تعذر تحديث اسم الحساب. لم تُحذف تعديلاتك.")
+                            toast("تعذر حفظ الملف الشخصي في السحابة. بقيت تعديلاتك في الصفحة؛ حاول مجدداً.")
                         }
                     }
-                    saveButton.isEnabled = false
-                    page.addView(saveButton, LinearLayout.LayoutParams(-1, dp(56)).apply { bottomMargin = dp(20) })
-        
-                    userDocuments.loadUser(user.uid)
-                        .addOnSuccessListener { snapshot ->
-                            profilePhotoData = snapshot.getString("photoData")
-                            val savedBio = snapshot.getString("bio").orEmpty().trim()
-                            publicProfileToggle.isChecked = snapshot.getBoolean("publicProfile") ?: false
-                            showFavoritesToggle.isChecked = snapshot.getBoolean("showFavorites") ?: true
-                            publicProfileToggle.isEnabled = true
-                            showFavoritesToggle.isEnabled = true
-                            bioInput.setText(savedBio)
-                            if (savedBio.isNotBlank()) {
-                                // Reflect the saved profile introduction in the account overview.
-                                page.findViewWithTag<TextView>("marco-profile-bio-preview")?.let { preview ->
-                                    preview.text = savedBio
-                                    preview.visibility = View.VISIBLE
-                                }
-                            }
-                            profilePhotoData?.let { encoded ->
-                                runCatching {
-                                    val bytes = Base64.decode(encoded, Base64.DEFAULT)
-                                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                                }.getOrNull()?.let { bitmap ->
-                                    photoView.setImageBitmap(bitmap)
-                                    photoView.imageTintList = null
-                                    photoView.clearColorFilter()
-                                }
-                            }
-                            if (profilePhotoData.isNullOrBlank()) {
-                                // Load the provider avatar only when no user-selected cloud photo exists.
-                                user.photoUrl?.toString()?.takeIf { it.startsWith("https://") }?.let { photoUrl ->
-                                    Thread {
-                                        val bitmap = runCatching {
-                                            val connection = java.net.URL(photoUrl).openConnection().apply {
-                                                connectTimeout = 6000
-                                                readTimeout = 6000
-                                                useCaches = true
-                                            }
-                                            connection.getInputStream().use { stream -> BitmapFactory.decodeStream(stream) }
-                                        }.getOrNull()
-                                        if (bitmap != null && !activity.isFinishing && !activity.isDestroyed) {
-                                            photoView.post {
-                                                photoView.setImageBitmap(bitmap)
-                                                photoView.imageTintList = null
-                                                photoView.clearColorFilter()
-                                            }
-                                        }
-                                    }.apply { name = "marco-profile-avatar-loader" }.start()
-                                }
-                            }
-                            profileLoaded = true
-                            saveButton.isEnabled = true
+                }.addOnFailureListener { error ->
+                    button.isEnabled = true
+                    button.text = translate("حفظ التغييرات")
+                    toast("تعذر تحديث اسم الحساب. لم تُحذف تعديلاتك.")
+                }
+            }
+            saveButton.isEnabled = false
+            page.addView(saveButton, LinearLayout.LayoutParams(-1, dp(56)).apply { bottomMargin = dp(20) })
+
+            userDocuments.loadUser(user.uid)
+                .addOnSuccessListener { snapshot ->
+                    profilePhotoData = snapshot.getString("photoData")
+                    val savedBio = snapshot.getString("bio").orEmpty().trim()
+                    publicProfileToggle.isChecked = snapshot.getBoolean("publicProfile") ?: false
+                    showFavoritesToggle.isChecked = snapshot.getBoolean("showFavorites") ?: true
+                    publicProfileToggle.isEnabled = true
+                    showFavoritesToggle.isEnabled = true
+                    bioInput.setText(savedBio)
+                    if (savedBio.isNotBlank()) {
+                        // Reflect the saved profile introduction in the account overview.
+                        page.findViewWithTag<TextView>("marco-profile-bio-preview")?.let { preview ->
+                            preview.text = savedBio
+                            preview.visibility = View.VISIBLE
                         }
-                        .addOnFailureListener { error ->
-                            toast("تعذر تحميل الملف الشخصي")
+                    }
+                    profilePhotoData?.let { encoded ->
+                        runCatching {
+                            val bytes = Base64.decode(encoded, Base64.DEFAULT)
+                            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                        }.getOrNull()?.let { bitmap ->
+                            photoView.setImageBitmap(bitmap)
+                            photoView.imageTintList = null
+                            photoView.clearColorFilter()
                         }
-        
-        
+                    }
+                    if (profilePhotoData.isNullOrBlank()) {
+                        // Load the provider avatar only when no user-selected cloud photo exists.
+                        user.photoUrl?.toString()?.takeIf { it.startsWith("https://") }?.let { photoUrl ->
+                            Thread {
+                                val bitmap = runCatching {
+                                    val connection = java.net.URL(photoUrl).openConnection().apply {
+                                        connectTimeout = 6000
+                                        readTimeout = 6000
+                                        useCaches = true
+                                    }
+                                    connection.getInputStream().use { stream -> BitmapFactory.decodeStream(stream) }
+                                }.getOrNull()
+                                if (bitmap != null && !activity.isFinishing && !activity.isDestroyed) {
+                                    photoView.post {
+                                        photoView.setImageBitmap(bitmap)
+                                        photoView.imageTintList = null
+                                        photoView.clearColorFilter()
+                                    }
+                                }
+                            }.apply { name = "marco-profile-avatar-loader" }.start()
+                        }
+                    }
+                    profileLoaded = true
+                    saveButton.isEnabled = true
+                }
+                .addOnFailureListener { error ->
+                    toast("تعذر تحميل الملف الشخصي")
+                }
+
+
         showAccountPage(page)
     }
 
