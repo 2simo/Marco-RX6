@@ -35,14 +35,14 @@ internal class AppearanceSettingsController(
         fun dp(value: Int) = (value * activity.resources.displayMetrics.density).toInt()
         val dark = preferences.getBoolean("dark_mode", true)
         val bg = if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247)
-        val silverAccent = Color.rgb(76, 145, 235)
+        val silverAccent = Color.rgb(190, 198, 210)
         val ink = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
         val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
         fun addGlassTouch(view: View) {
             if (android.os.Build.VERSION.SDK_INT >= 23) {
                 view.foreground = android.graphics.drawable.RippleDrawable(
                     android.content.res.ColorStateList.valueOf(
-                        if (dark) Color.argb(72, 76, 145, 235) else Color.argb(55, 130, 138, 151)
+                        if (dark) Color.argb(72, 190, 198, 210) else Color.argb(55, 130, 138, 151)
                     ),
                     null,
                     android.graphics.drawable.ColorDrawable(Color.WHITE)
@@ -118,13 +118,13 @@ internal class AppearanceSettingsController(
             setTextColor(ink)
         })
         colorCard.addView(TextView(activity).apply {
-            text = translate("أزرق ملكي  •  مع الأسود والفضي")
+            text = translate("فضي معدني  •  مع الأسود الفحمي")
             textSize = 12f
             setTextColor(muted)
             setPadding(0, dp(8), 0, dp(12))
         })
         colorCard.addView(TextView(activity).apply {
-            text = translate("●   أزرق")
+            text = translate("●   فضي")
             textSize = 14f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(Color.rgb(20, 23, 29))
@@ -163,7 +163,7 @@ internal class AppearanceSettingsController(
             setTextColor(if (preferences.getBoolean("animations", true)) Color.rgb(20, 23, 29) else silverAccent)
             setPadding(dp(14), dp(13), dp(14), dp(13))
             background = GradientDrawable().apply {
-                setColor(if (preferences.getBoolean("animations", true)) Color.argb(218, 76, 145, 235) else if (dark) Color.argb(190, 25, 28, 34) else Color.argb(210, 255, 255, 255))
+                setColor(if (preferences.getBoolean("animations", true)) Color.argb(218, 190, 198, 210) else if (dark) Color.argb(190, 25, 28, 34) else Color.argb(210, 255, 255, 255))
                 cornerRadius = dp(14).toFloat()
                 if (!preferences.getBoolean("animations", true)) setStroke(dp(1), silverAccent)
             }
@@ -177,7 +177,7 @@ internal class AppearanceSettingsController(
                 contentDescription = translate(if (enabled) "إيقاف حركات وانتقالات الواجهة" else "تفعيل حركات وانتقالات الواجهة")
                 setTextColor(if (enabled) Color.rgb(20, 23, 29) else silverAccent)
                 background = GradientDrawable().apply {
-                    setColor(if (enabled) Color.argb(218, 76, 145, 235) else if (dark) Color.argb(190, 25, 28, 34) else Color.argb(210, 255, 255, 255))
+                    setColor(if (enabled) Color.argb(218, 190, 198, 210) else if (dark) Color.argb(190, 25, 28, 34) else Color.argb(210, 255, 255, 255))
                     cornerRadius = dp(14).toFloat()
                     if (!enabled) setStroke(dp(1), silverAccent)
                 }
@@ -310,7 +310,7 @@ internal class AppearanceSettingsController(
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
 
         root.addView(TextView(activity).apply {
-            text = "MARCO  •  SILVER EXPERIENCE"
+            text = "MARCO  •  BLACK / SILVER EXPERIENCE"
             textSize = 9f
             gravity = Gravity.CENTER
             setTextColor(muted)
