@@ -146,6 +146,7 @@ internal class ResumableDownloadWorker(
                 FileOutputStream(partial, append).use { sink ->
                     val buffer = ByteArray(64 * 1024)
                     var lastUpdate = System.currentTimeMillis()
+                    var lastNotificationUpdate = 0L
                     while (true) {
                         if (isStopped) throw InterruptedException("Download paused or cancelled")
                         val count = input.read(buffer)
