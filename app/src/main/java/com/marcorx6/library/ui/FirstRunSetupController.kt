@@ -62,7 +62,7 @@ internal class FirstRunSetupController(
             gravity = Gravity.CENTER_VERTICAL
         }
         val brand = makeText("MARCO", 13f, Color.WHITE, true).apply { letterSpacing = 0.12f }
-        val stepCount = makeText("1 / ${steps.size}", 11f, Color.rgb(190, 198, 210), true)
+        val stepCount = makeText("1 / ${steps.size}", 11f, Color.rgb(76, 145, 235), true)
         top.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
         top.addView(stepCount)
         root.addView(top)
@@ -73,7 +73,7 @@ internal class FirstRunSetupController(
         }
         val progressFill = View(activity).apply {
             background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(Color.rgb(190, 198, 210), Color.rgb(137, 145, 158))).apply {
+                intArrayOf(Color.rgb(76, 145, 235), Color.rgb(137, 145, 158))).apply {
                 cornerRadius = dp(8).toFloat()
             }
         }
@@ -119,7 +119,7 @@ internal class FirstRunSetupController(
                 gravity = Gravity.TOP
                 setPadding(0, dp(8), 0, dp(8))
             }
-            page.addView(makeText(tr("خطوة ${step + 1}"), 10f, Color.rgb(190, 198, 210), true))
+            page.addView(makeText(tr("خطوة ${step + 1}"), 10f, Color.rgb(76, 145, 235), true))
             page.addView(makeText(tr(steps[step]), 27f, Color.WHITE, true).apply {
                 setPadding(0, dp(8), 0, dp(8))
             })
@@ -171,7 +171,7 @@ internal class FirstRunSetupController(
                 3 -> {
                     val card = viewFactory.optionCard(tr("فضي"), true, tr("اللون الرسمي المعتمد في MARCO"))
                     val dot = View(activity).apply {
-                        background = rounded(Color.rgb(190, 198, 210), 20)
+                        background = rounded(Color.rgb(76, 145, 235), 20)
                     }
                     card.addView(dot, LinearLayout.LayoutParams(dp(24), dp(24)).apply { topMargin = dp(9) })
                     choices.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(9) })
