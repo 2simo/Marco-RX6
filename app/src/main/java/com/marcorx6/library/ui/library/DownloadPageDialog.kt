@@ -252,7 +252,7 @@ internal class DownloadPageDialog(
             setTextColor(muted)
         })
         toolbar.addView(titleBox, LinearLayout.LayoutParams(0, -2, 1f))
-        toolbar.addView(toolbarAction("", { openBrowserHistory() }, com.marcorx6.library.R.drawable.ic_action_refresh))
+        toolbar.addView(toolbarAction("", { openBrowserHistory() }, com.marcorx6.library.R.drawable.ic_action_history))
         toolbar.addView(toolbarAction("▢", { openBrowserTabs() }))
 
         toolbar.addView(toolbarAction("", { dialog.dismiss() }, com.marcorx6.library.R.drawable.ic_action_close))
