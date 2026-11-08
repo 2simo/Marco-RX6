@@ -200,6 +200,28 @@ internal class FirebaseAccountController(
                 gravity = Gravity.CENTER
                 bottomMargin = dp(8)
             })
+            // Prefer the user's saved profile image; otherwise load the Google/provider avatar.
+            user.photoUrl?.toString()?.takeIf { it.startsWith("https://") }?.let { photoUrl ->
+                Thread {
+                    val bitmap = runCatching {
+                        val connection = java.net.URL(photoUrl).openConnection().apply {
+                            connectTimeout = 6000
+                            readTimeout = 6000
+                            useCaches = true
+                        }
+                        connection.getInputStream().use { stream ->
+                            BitmapFactory.decodeStream(stream)
+                        }
+                    }.getOrNull()
+                    if (bitmap != null && !activity.isFinishing && !activity.isDestroyed) {
+                        photoView.post {
+                            photoView.setImageBitmap(bitmap)
+                            photoView.imageTintList = null
+                            photoView.clearColorFilter()
+                        }
+                    }
+                }.apply { name = "marco-profile-avatar-loader" }.start()
+            }
             action(page, translate("تغيير صورة الحساب"), translate("اختيار صورة من هاتفك وحفظها في ملفك السحابي"), dark, run = ::chooseProfilePhoto)
             if (!user.isEmailVerified && user.email != null) {
                 action(
@@ -339,11 +361,39 @@ internal class FirebaseAccountController(
                 }
 
             user.email?.let { email ->
-                page.addView(TextView(activity).apply {
+                val emailRow = LinearLayout(activity).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                    setPadding(dp(12), dp(8), dp(12), dp(8))
+                    background = GradientDrawable().apply {
+                        cornerRadius = dp(12).toFloat()
+                        setColor(if (dark) Color.rgb(22, 24, 29) else Color.WHITE)
+                        setStroke(dp(1), if (dark) Color.rgb(76, 83, 94) else Color.rgb(205, 210, 218))
+                    }
+                }
+                emailRow.addView(TextView(activity).apply {
                     text = email
                     textSize = 12f
-                    setTextColor(if (dark) Color.rgb(160, 168, 181) else Color.rgb(91, 98, 110))
-                    setPadding(0, 0, 0, dp(16))
+                    setTextColor(if (dark) Color.rgb(190, 198, 210) else Color.rgb(65, 72, 84))
+                }, LinearLayout.LayoutParams(0, -2, 1f))
+                val copyEmail = TextView(activity).apply {
+                    text = translate("نسخ")
+                    textSize = 12f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    setTextColor(Color.rgb(190, 198, 210))
+                    setPadding(dp(12), dp(10), dp(12), dp(10))
+                    isClickable = true
+                    isFocusable = true
+                    setOnClickListener {
+                        val clipboard = activity.getSystemService(android.content.Context.CLIPBOARD_SERVICE)
+                            as android.content.ClipboardManager
+                        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("MARCO account email", email))
+                        toast("تم نسخ البريد الإلكتروني")
+                    }
+                }
+                emailRow.addView(copyEmail)
+                page.addView(emailRow, LinearLayout.LayoutParams(-1, -2).apply {
+                    bottomMargin = dp(16)
                 })
             }
             action(page, translate("تسجيل الخروج"), translate("الخروج من حساب MARCO"), dark, run = {
