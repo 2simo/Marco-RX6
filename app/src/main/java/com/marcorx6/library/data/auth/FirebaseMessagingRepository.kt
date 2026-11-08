@@ -153,7 +153,8 @@ internal class FirebaseMessagingRepository(
                     "title" to "رسالة جديدة",
                     "body" to body.take(120),
                     "createdAt" to FieldValue.serverTimestamp(),
-                    "read" to false
+                    "read" to false,
+                    "pushStatus" to "pending"
                 ))
                 batch.commit()
             }

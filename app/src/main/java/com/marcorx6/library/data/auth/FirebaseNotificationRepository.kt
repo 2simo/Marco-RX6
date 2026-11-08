@@ -54,7 +54,8 @@ internal class FirebaseNotificationRepository(
                 "title" to "لعبة جديدة في المكتبة",
                 "body" to "$name • $platform",
                 "createdAt" to FieldValue.serverTimestamp(),
-                "read" to false
+                "read" to false,
+                "pushStatus" to "pending"
             ))
         }
         return batch.commit()

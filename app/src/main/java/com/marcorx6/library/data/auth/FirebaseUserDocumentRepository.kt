@@ -247,7 +247,8 @@ internal class FirebaseUserDocumentRepository(
                 "title" to "متابع جديد",
                 "body" to "بدأ هذا المستخدم بمتابعتك",
                 "createdAt" to FieldValue.serverTimestamp(),
-                "read" to false
+                "read" to false,
+                "pushStatus" to "pending"
             ))
             batch.commit()
         } else edge.delete()

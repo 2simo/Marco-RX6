@@ -1,0 +1,6 @@
+name = "marco-rx6-notifications"
+main = "worker.js"
+compatibility_date = "2026-11-08"
+
+[triggers]
+crons = ["*/1 * * * *"]

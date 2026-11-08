@@ -94,10 +94,10 @@ service cloud.firestore {
         allow create: if !isAnonymous()
           && request.resource.data.keys().hasOnly([
             'type', 'actorUid', 'conversationId', 'messageId',
-            'gameName', 'platform', 'title', 'body', 'createdAt', 'read'
+            'gameName', 'platform', 'title', 'body', 'createdAt', 'read', 'pushStatus'
           ])
           && request.resource.data.keys().hasAll([
-            'type', 'actorUid', 'title', 'body', 'createdAt', 'read'
+            'type', 'actorUid', 'title', 'body', 'createdAt', 'read', 'pushStatus'
           ])
           && request.resource.data.actorUid is string
           && request.resource.data.title is string
@@ -106,6 +106,7 @@ service cloud.firestore {
           && request.resource.data.body.size() <= 160
           && request.resource.data.createdAt == request.time
           && request.resource.data.read == false
+          && request.resource.data.pushStatus == 'pending'
           && (
             (
               request.resource.data.type == 'game'

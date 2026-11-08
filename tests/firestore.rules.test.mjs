@@ -580,6 +580,7 @@ describe("Private notification inbox rules", () => {
       body: "بدأ هذا المستخدم بمتابعتك",
       createdAt: serverTimestamp(),
       read: false,
+      pushStatus: "pending",
     }));
     await assertSucceeds(updateDoc(doc(bob, "users/bob/notifications/follow-1"), {
       read: true,
@@ -598,6 +599,7 @@ describe("Private notification inbox rules", () => {
       body: "مزيف",
       createdAt: serverTimestamp(),
       read: false,
+      pushStatus: "pending",
     }));
     await assertFails(getDocs(collection(alice, "users/bob/notifications")));
     await assertFails(setDoc(doc(mallory, "users/bob/notifications/intrusion"), {
@@ -609,6 +611,7 @@ describe("Private notification inbox rules", () => {
       body: "Game • PS2",
       createdAt: serverTimestamp(),
       read: false,
+      pushStatus: "pending",
     }));
   });
 
@@ -624,6 +627,7 @@ describe("Private notification inbox rules", () => {
       body: "Example Game • PS2",
       createdAt: serverTimestamp(),
       read: false,
+      pushStatus: "pending",
     }));
     await assertSucceeds(getDoc(notice));
   });
