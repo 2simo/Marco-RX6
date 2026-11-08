@@ -402,7 +402,10 @@ describe("Firestore user isolation rules", () => {
     }
     // Either participant can delete a message, and it disappears for both.
     await assertSucceeds(deleteDoc(bobMessage));
-    await assertFails(getDoc(aliceMessage));
+    const deletedForAlice = await assertSucceeds(getDoc(aliceMessage));
+    if (deletedForAlice.exists()) {
+      throw new Error("A message deleted by either participant must disappear for both");
+    }
     await assertFails(getDoc(doc(outsider, "conversations/" + conversationId)));
     await assertFails(setDoc(doc(outsider, "conversations/" + conversationId + "/messages/intrusion"), {
       senderUid: "message-outsider", text: "Intrusion", createdAt: serverTimestamp(),
