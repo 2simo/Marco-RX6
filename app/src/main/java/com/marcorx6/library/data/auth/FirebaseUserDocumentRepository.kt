@@ -7,6 +7,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import java.util.Locale
 
 /**
  * Stores only non-secret account/profile metadata in the signed-in user's own Firestore path.
@@ -57,10 +58,17 @@ internal class FirebaseUserDocumentRepository(
         bio: String?,
         photoUrl: String?,
         photoData: String? = null,
+        username: String? = null,
         publicProfile: Boolean? = null,
         showFavorites: Boolean? = null,
         favoriteGames: List<Map<String, Any>>? = null
     ): Task<Void> {
+        if (username != null) {
+            return saveProfileWithUsername(
+                uid, username, displayName, bio, photoUrl, photoData,
+                publicProfile, showFavorites, favoriteGames
+            )
+        }
         val data = mutableMapOf<String, Any>(
             "updatedAt" to FieldValue.serverTimestamp()
         )
@@ -106,6 +114,113 @@ internal class FirebaseUserDocumentRepository(
         return batch.commit()
     }
 
+
+    
+    private fun usernameKey(value: String): String =
+        value.trim().removePrefix("@").lowercase(Locale.ROOT)
+
+    fun loadUidByUsername(username: String): Task<String?> {
+        val key = usernameKey(username)
+        if (!USERNAME_PATTERN.matches(key)) return Tasks.forResult(null)
+        return firestore.collection(USERNAMES_COLLECTION).document(key).get()
+            .continueWith { task ->
+                if (!task.isSuccessful) throw task.exception ?: IllegalStateException("تعذر البحث عن اسم المستخدم")
+                task.result.getString("uid")
+            }
+    }
+
+    private fun saveProfileWithUsername(
+        uid: String,
+        requestedUsername: String,
+        displayName: String?,
+        bio: String?,
+        photoUrl: String?,
+        photoData: String?,
+        publicProfile: Boolean?,
+        showFavorites: Boolean?,
+        favoriteGames: List<Map<String, Any>>?
+    ): Task<Void> {
+        val key = usernameKey(requestedUsername)
+        if (!USERNAME_PATTERN.matches(key)) {
+            return Tasks.forException(IllegalArgumentException("اسم المستخدم يجب أن يتكون من 3 إلى 20 حرفاً إنجليزياً أو رقماً أو _"))
+        }
+        val cleanUsername = requestedUsername.trim().removePrefix("@")
+        val userRef = userDocument(uid)
+        val claimRef = firestore.collection(USERNAMES_COLLECTION).document(key)
+        return firestore.runTransaction { transaction ->
+            val privateSnapshot = transaction.get(userRef)
+            val newClaim = transaction.get(claimRef)
+            val previousKey = privateSnapshot.getString("username")?.let(::usernameKey)
+            val previousClaimRef = previousKey?.takeIf { it != key }
+                ?.let { firestore.collection(USERNAMES_COLLECTION).document(it) }
+            val previousClaim = previousClaimRef?.let(transaction::get)
+            val claimedBy = newClaim.getString("uid")
+            if (newClaim.exists() && claimedBy != uid) {
+                throw IllegalStateException("اسم المستخدم مستخدم بالفعل. اختر اسماً آخر.")
+            }
+
+            val privateData = mutableMapOf<String, Any>(
+                "username" to cleanUsername,
+                "updatedAt" to FieldValue.serverTimestamp()
+            )
+            displayName?.trim()?.takeIf(String::isNotBlank)?.let { privateData["displayName"] = it }
+            bio?.trim()?.let { privateData["bio"] = it }
+            photoUrl?.trim()?.takeIf(String::isNotBlank)?.let { privateData["photoUrl"] = it }
+            photoData?.takeIf(String::isNotBlank)?.let { privateData["photoData"] = it }
+            publicProfile?.let { privateData["publicProfile"] = it }
+            showFavorites?.let { privateData["showFavorites"] = it }
+
+            val isPublic = publicProfile ?: (privateSnapshot.getBoolean("publicProfile") == true)
+            if (isPublic && photoData != null && photoData.length > MAX_PUBLIC_AVATAR_CHARS) {
+                throw IllegalArgumentException("الصورة العامة كبيرة جداً؛ اختر صورة أصغر.")
+            }
+
+            if (!newClaim.exists()) {
+                transaction.set(claimRef, mapOf(
+                    "uid" to uid,
+                    "username" to cleanUsername,
+                    "createdAt" to FieldValue.serverTimestamp()
+                ))
+            }
+            if (previousClaimRef != null && previousClaim?.getString("uid") == uid) {
+                transaction.delete(previousClaimRef)
+            }
+            transaction.set(userRef, privateData, SetOptions.merge())
+
+            val publicRef = publicProfileDocument(uid)
+            if (publicProfile == false) {
+                transaction.delete(publicRef)
+            } else if (isPublic) {
+                val publicData = mutableMapOf<String, Any>(
+                    "uid" to uid,
+                    "username" to cleanUsername,
+                    "updatedAt" to FieldValue.serverTimestamp(),
+                    "displayName" to (displayName?.trim()?.take(40)
+                        ?: privateSnapshot.getString("displayName") ?: "MARCO User"),
+                    "showFavorites" to (showFavorites
+                        ?: privateSnapshot.getBoolean("showFavorites") ?: true)
+                )
+                publicData["bio"] = bio?.trim()?.take(160)
+                    ?: privateSnapshot.getString("bio").orEmpty()
+                val resolvedPhotoUrl = photoUrl?.trim()?.takeIf(String::isNotBlank)
+                    ?: privateSnapshot.getString("photoUrl")
+                resolvedPhotoUrl?.let { publicData["photoUrl"] = it }
+                val resolvedAvatar = photoData?.takeIf(String::isNotBlank)
+                    ?: privateSnapshot.getString("photoData")
+                if (resolvedAvatar != null) publicData["photoData"] = resolvedAvatar
+                if ((showFavorites ?: privateSnapshot.getBoolean("showFavorites")) == false) {
+                    publicData["favoriteGames"] = FieldValue.delete()
+                } else {
+                    favoriteGames?.let { publicData["favoriteGames"] = it.take(30) }
+                }
+                transaction.set(publicRef, publicData, SetOptions.merge())
+            }
+            null
+        }.continueWithTask { task ->
+            if (!task.isSuccessful) throw task.exception ?: IllegalStateException("تعذر حجز اسم المستخدم")
+            Tasks.forResult<Void>(null)
+        }
+    }
 
     /** Follow edges are stored once under the follower UID; counts are derived from Firestore. */
     fun setFollowing(followerUid: String, targetUid: String, follow: Boolean): Task<Void> {
@@ -366,6 +481,8 @@ internal class FirebaseUserDocumentRepository(
     private companion object {
         const val MAX_PUBLIC_AVATAR_CHARS = 180_000
         const val USERS_COLLECTION = "users"
+        const val USERNAMES_COLLECTION = "usernames"
+        val USERNAME_PATTERN = Regex("[a-z0-9][a-z0-9_]{2,19}")
         const val PUBLIC_PROFILES_COLLECTION = "publicProfiles"
         const val SETTINGS_COLLECTION = "settings"
         const val PREFERENCES_DOCUMENT = "preferences"
