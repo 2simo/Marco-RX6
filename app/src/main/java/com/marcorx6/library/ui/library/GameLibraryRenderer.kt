@@ -493,6 +493,7 @@ internal class GameLibraryRenderer(
                 }
 
                 slot.addView(card, FrameLayout.LayoutParams(-1, -2))
+                ScrollRevealAnimator.reveal(card)
                 }
                 runWhenVisible(slot) { buildCard() }
 
