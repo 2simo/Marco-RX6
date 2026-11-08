@@ -103,17 +103,16 @@ internal object BloggerFeedParser {
         val categories = entry.optJSONArray("category")
             ?: return null
 
-        for (i in 0 until categories.length()) {
-
-            val term = categories.optJSONObject(i)
-                ?.optString("term", "") ?: continue
-
-            val platform = normalizePlatform(term)
-
-            if (platform != null) return platform
+        // Prefer the specific Blogger OS/category label over its broad console label.
+        // For example, a PS2 PORT PS4 post can carry both "PS2" and "ps2ps4".
+        val terms = (0 until categories.length()).mapNotNull { index ->
+            categories.optJSONObject(index)?.optString("term", "")?.takeIf { it.isNotBlank() }
         }
-
-        return null
+        val specific = terms.firstNotNullOfOrNull { term ->
+            normalizePlatform(term)?.takeIf { it in setOf("PS3_ARABIC", "PS2_ARABIC", "PS2_PORT_PS4", "PS2_PORT_PS3") }
+        }
+        if (specific != null) return specific
+        return terms.firstNotNullOfOrNull(::normalizePlatform)
     }
 
     fun normalizePlatform(value: String): String? =
@@ -216,51 +215,75 @@ internal object BloggerFeedParser {
     }
 
     fun extractDownloadLinks(html: String): String {
-
         val result = JSONArray()
+        if (html.isBlank()) return result.toString()
 
-        val pattern = Pattern.compile(
-            "(?is)<a[^>]+href=[\\\"']([^\\\"']+)[\\\"'][^>]*>(.*?)</a>"
+        // Blogger templates vary: href can appear anywhere in the anchor attributes,
+        // and download sections have several Arabic/English heading variants.
+        val sectionPattern = Regex(
+            "(?is)<h[1-6]\\b[^>]*>\\s*(?:روابط\\s*(?:التحميل|التنزيل)(?:\\s*المباشرة)?|تحميل\\s*اللعبة|download\\s*links?)\\s*:?\\s*</h[1-6]>(.*?)(?=<h[1-6]\\b|$)"
         )
-
-        val matcher = pattern.matcher(html)
+        val downloadSections = sectionPattern.findAll(html).map { it.groupValues[1] }.toList()
         val seenUrls = mutableSetOf<String>()
         val downloadTerms = listOf(
-            "تحميل", "download", "game", "update", "dlc",
-            "اللعبة", "التحديث", "الباتش", "باتش",
-            "mediafire", "mega", "google drive", "drive.google",
-            "pixeldrain", "1fichier", "uptobox", "rapidgator",
-            "uploaded", "filecrypt", "4shared"
+            "تحميل", "تنزيل", "download", "direct link", "رابط مباشر", "رابط التحميل",
+            "التحديث", "الباتش", "باتش", "ملف اللعبة", "رابط اللعبة",
+            "game", "update", "dlc", "mediafire", "mega", "google drive", "drive.google",
+            "pixeldrain", "1fichier", "uptobox", "rapidgator", "uploaded", "filecrypt",
+            "4shared", "gofile", "terabox", "send.cm", "katfile", "userscloud"
         )
+        val knownDownloadHosts = listOf(
+            "mediafire.com", "mega.nz", "mega.co.nz", "drive.google.com", "docs.google.com",
+            "pixeldrain.com", "1fichier.com", "uptobox.com", "rapidgator.net", "4shared.com",
+            "gofile.io", "terabox.com", "1024tera.com", "send.cm", "katfile.com",
+            "userscloud.com", "qiwi.gg", "krakenfiles.com", "filecrypt.cc"
+        )
+        val downloadableExtensions = setOf(
+            "zip", "7z", "rar", "iso", "apk", "xapk", "apks", "bin", "cue",
+            "chd", "pkg", "nsp", "xci", "torrent", "pdf", "exe", "mp4", "mkv"
+        )
+        val anchorPattern = Regex("(?is)<a\\b([^>]*)>(.*?)</a\\s*>")
+        val hrefPattern = Regex("(?is)\\bhref\\s*=\\s*(['\"])(.*?)\\1")
+        val titlePattern = Regex("(?is)\\b(?:title|aria-label)\\s*=\\s*(['\"])(.*?)\\1")
+        val imagePattern = Regex("\\.(?:jpe?g|png|gif|webp|bmp|svg|avif|jfif)(?:$|[?#])", RegexOption.IGNORE_CASE)
 
-        while (matcher.find()) {
-            val rawHref = matcher.group(1)?.trim().orEmpty()
-            val href = decodeHtmlEntities(rawHref).trim()
-            val labelHtml = matcher.group(2).orEmpty()
-            val label = decodeHtmlEntities(labelHtml.replace(Regex("(?is)<[^>]*>"), " "))
+        for (anchor in anchorPattern.findAll(html)) {
+            val attributes = anchor.groupValues[1]
+            val href = hrefPattern.find(attributes)?.groupValues?.getOrNull(2)
+                ?.let(::decodeHtmlEntities)?.trim().orEmpty()
+            if (!href.startsWith("https://", ignoreCase = true)) continue
+
+            val body = anchor.groupValues[2]
+            val visibleLabel = decodeHtmlEntities(body.replace(Regex("(?is)<[^>]*>"), " "))
                 .replace(Regex("\\s+"), " ").trim()
+            val attributeLabel = titlePattern.find(attributes)?.groupValues?.getOrNull(2)
+                ?.let(::decodeHtmlEntities)?.trim().orEmpty()
+            val imageAlt = Regex("(?is)\\balt\\s*=\\s*(['\"])(.*?)\\1")
+                .find(body)?.groupValues?.getOrNull(2).orEmpty()
+            val label = visibleLabel.ifBlank { attributeLabel.ifBlank { imageAlt } }
             val normalizedLabel = label.lowercase(Locale.ROOT)
-            val urlPath = href.substringBefore('?').substringBefore('#').lowercase(Locale.ROOT)
-            val isImageUrl = Regex("\\.(?:jpe?g|png|gif|webp|bmp|svg|avif|jfif)$")
-                .containsMatchIn(urlPath)
+            val normalizedUrl = href.lowercase(Locale.ROOT)
+            val urlPath = normalizedUrl.substringBefore('?').substringBefore('#')
+            val extension = urlPath.substringAfterLast('.', "").takeIf { urlPath.contains('.') }.orEmpty()
+            val isImageUrl = imagePattern.containsMatchIn(urlPath)
+            if (isImageUrl || !seenUrls.add(href)) continue
 
-            // Cover images are commonly wrapped in an anchor. Never expose image
-            // resources as download buttons, even if a stale/imported label resembles
-            // a file type such as OBJ.
-            // Keep links whose visible label identifies an actual game download.
-            val downloadSection = Regex(
-                "(?is)<h[1-6][^>]*>[^<]*روابط التحميل المباشرة[^<]*</h[1-6]>(.*?)(?:<h[1-6]\\b|$)"
-            ).find(html)?.groupValues?.getOrNull(1).orEmpty()
-            val insideDownloadSection = downloadSection.isNotBlank() &&
-                downloadSection.contains(matcher.group())
-            val isDownloadLink = insideDownloadSection || downloadTerms.any { term ->
-                normalizedLabel.contains(term)
-            }
-            if (!href.startsWith("https://", ignoreCase = true) ||
-                label.isBlank() || isImageUrl || !isDownloadLink || !seenUrls.add(href)
-            ) continue
+            // Parse the host from the URL string instead of android.net.Uri so this
+            // parser behaves identically in Android runtime and local JVM unit tests.
+            val host = Regex("^https://([^/:?#]+)", RegexOption.IGNORE_CASE)
+                .find(href)?.groupValues?.getOrNull(1)?.lowercase(Locale.ROOT).orEmpty()
+            val knownHost = knownDownloadHosts.any { host == it || host.endsWith(".$it") }
+            val isInsideDownloadSection = downloadSections.any { it.contains(anchor.value) }
+            val isFileUrl = extension in downloadableExtensions
+            val hasDownloadLabel = downloadTerms.any { normalizedLabel.contains(it) } ||
+                normalizedLabel == "اللعبة"
+            // A link in an explicitly named download section, a recognized file host,
+            // or a direct downloadable file is sufficient even when its button says
+            // only "اضغط هنا". Generic article/navigation links remain excluded.
+            if (!isInsideDownloadSection && !knownHost && !isFileUrl && !hasDownloadLabel) continue
 
-            result.put(JSONObject().put("label", label).put("url", href))
+            val safeLabel = label.ifBlank { "تحميل ${result.length() + 1}" }
+            result.put(JSONObject().put("label", safeLabel).put("url", href))
         }
 
         return result.toString()

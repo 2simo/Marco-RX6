@@ -5,20 +5,118 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.URLEncoder
 
 internal data class BloggerFeedResult(
     val blogId: String,
-    val games: List<Game>
+    val games: List<Game>,
+    val rawEntryCount: Int = 0
 )
 
 /**
- * Downloads and parses the public Blogger feed without depending on Android UI state.
+ * Downloads the main Blogger feed and dedicated OS-label feeds.
+ * Pagination is based on raw Blogger entries, not parsed games, because some
+ * posts may be intentionally skipped by the game parser.
  */
 internal class BloggerFeedClient(
     private val feedUrl: String
 ) {
+    private data class SectionFeed(
+        val label: String,
+        val platform: String,
+        val fallbackLabels: List<String> = emptyList()
+    )
+
+    private val dedicatedSections = listOf(
+        SectionFeed(
+            "بلايستيشن 3 معربة",
+            "PS3_ARABIC",
+            listOf("بلايستيشن 3 معربة", "ps3arabic", "PS3 Arabic")
+        ),
+    )
+
     fun fetch(): BloggerFeedResult {
-        val connection = URL(feedUrl).openConnection() as HttpURLConnection
+        val main = fetchAllPages(feedUrl)
+        val merged = LinkedHashMap<String, Game>()
+
+        main.games.forEach { game ->
+            val key = game.sourcePostUrl.ifBlank { game.url }
+            if (key.isNotBlank()) merged[key] = game
+        }
+
+        dedicatedSections.forEach { section ->
+            val labelsToTry = (listOf(section.label) + section.fallbackLabels).distinct()
+            var sectionGames = emptyList<Game>()
+            for (label in labelsToTry) {
+                val result = runCatching { fetchAllPages(labelFeedUrl(label)) }.getOrNull()
+                if (result != null && result.games.isNotEmpty()) {
+                    sectionGames = result.games
+                    break
+                }
+            }
+            sectionGames.forEach { game ->
+                val key = game.sourcePostUrl.ifBlank { game.url }
+                if (key.isNotBlank()) {
+                    merged[key] = game.copy(platform = section.platform)
+                }
+            }
+        }
+
+        return BloggerFeedResult(
+            blogId = main.blogId,
+            games = merged.values.toList(),
+            rawEntryCount = main.rawEntryCount
+        )
+    }
+
+    private fun labelFeedUrl(label: String): String {
+        val base = feedUrl.substringBefore('?').trimEnd('/')
+        val encodedLabel = URLEncoder.encode(label, "UTF-8").replace("+", "%20")
+        return "$base/-/$encodedLabel?alt=json&max-results=100"
+    }
+
+    /**
+     * Blogger returns up to 100 raw entries per page. Continue while the raw
+     * page is full even if the parser produced fewer Game objects from it.
+     */
+    private fun fetchAllPages(url: String): BloggerFeedResult {
+        val base = url.substringBefore('?')
+        val query = url.substringAfter('?', "")
+        val allGames = LinkedHashMap<String, Game>()
+        var blogId = ""
+        var totalRawEntries = 0
+
+        for (page in 0 until 50) {
+            val startIndex = page * 100 + 1
+            val pageUrl = buildString {
+                append(base)
+                append('?')
+                if (query.isNotBlank()) {
+                    append(query)
+                    append('&')
+                }
+                append("start-index=")
+                append(startIndex)
+            }
+            val result = fetchFeed(pageUrl)
+            if (blogId.isBlank()) blogId = result.blogId
+            totalRawEntries += result.rawEntryCount
+            result.games.forEach { game ->
+                val key = game.sourcePostUrl.ifBlank { game.url }
+                if (key.isNotBlank()) allGames[key] = game
+            }
+            if (result.rawEntryCount < 100) break
+        }
+
+        return BloggerFeedResult(
+            blogId = blogId,
+            games = allGames.values.toList(),
+            rawEntryCount = totalRawEntries
+        )
+    }
+
+    private fun fetchFeed(url: String): BloggerFeedResult {
+        val connection = URL(url).openConnection() as HttpURLConnection
         connection.requestMethod = "GET"
         connection.connectTimeout = 15000
         connection.readTimeout = 20000
@@ -26,7 +124,12 @@ internal class BloggerFeedClient(
         connection.setRequestProperty("Accept", "application/json")
 
         val body = try {
-            connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+            val status = connection.responseCode
+            val stream = if (status in 200..299) connection.inputStream else connection.errorStream
+            if (status !in 200..299) {
+                throw IllegalStateException("Blogger feed request failed: HTTP $status")
+            }
+            stream.bufferedReader(Charsets.UTF_8).use { it.readText() }
         } finally {
             connection.disconnect()
         }
@@ -45,6 +148,10 @@ internal class BloggerFeedClient(
                 BloggerFeedParser.parseBlogEntry(entry)?.let(::add)
             }
         }
-        return BloggerFeedResult(blogId = blogId, games = games)
+        return BloggerFeedResult(
+            blogId = blogId,
+            games = games,
+            rawEntryCount = entries.length()
+        )
     }
 }

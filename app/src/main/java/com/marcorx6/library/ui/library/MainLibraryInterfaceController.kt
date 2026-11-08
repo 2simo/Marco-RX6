@@ -16,8 +16,10 @@ import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.Gravity
+import android.graphics.Rect
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.*
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -75,6 +77,92 @@ internal class MainLibraryInterfaceController(
 
     private fun makeText(value: String, size: Float, color: Int, bold: Boolean = false): TextView =
         createText(value, size, color, bold)
+
+    private fun runWhenVisible(view: View, action: () -> Unit) {
+        var completed = false
+        var observer: ViewTreeObserver? = null
+        lateinit var checkVisibility: () -> Unit
+        val scrollListener = ViewTreeObserver.OnScrollChangedListener { checkVisibility() }
+
+        fun removeObserver() {
+            observer?.takeIf { it.isAlive }?.removeOnScrollChangedListener(scrollListener)
+            observer = null
+        }
+
+        val attachListener = object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(v: View) {
+                observer = v.viewTreeObserver
+                if (observer?.isAlive == true) observer?.addOnScrollChangedListener(scrollListener)
+                v.post { checkVisibility() }
+            }
+
+            override fun onViewDetachedFromWindow(v: View) {
+                removeObserver()
+            }
+        }
+
+        checkVisibility = {
+            if (!completed && view.isAttachedToWindow) {
+                val visible = Rect()
+                if (view.getGlobalVisibleRect(visible) && visible.width() > 0 && visible.height() > 0) {
+                    completed = true
+                    removeObserver()
+                    view.removeOnAttachStateChangeListener(attachListener)
+                    action()
+                }
+            }
+        }
+
+        view.addOnAttachStateChangeListener(attachListener)
+        if (view.isAttachedToWindow) {
+            observer = view.viewTreeObserver
+            if (observer?.isAlive == true) observer?.addOnScrollChangedListener(scrollListener)
+            view.post { checkVisibility() }
+        }
+    }
+
+    private fun loadCoverWhenVisible(image: ImageView, localPath: String, imageUrl: String) {
+        var requested = false
+        var observer: ViewTreeObserver? = null
+        lateinit var checkVisibility: () -> Unit
+        val scrollListener = ViewTreeObserver.OnScrollChangedListener { checkVisibility() }
+
+        fun removeObserver() {
+            observer?.takeIf { it.isAlive }?.removeOnScrollChangedListener(scrollListener)
+            observer = null
+        }
+
+        val attachListener = object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(view: View) {
+                observer = view.viewTreeObserver
+                if (observer?.isAlive == true) observer?.addOnScrollChangedListener(scrollListener)
+                view.post { checkVisibility() }
+            }
+
+            override fun onViewDetachedFromWindow(view: View) {
+                removeObserver()
+            }
+        }
+
+        checkVisibility = {
+            if (!requested && image.isAttachedToWindow) {
+                val visible = Rect()
+                if (image.getGlobalVisibleRect(visible) && visible.width() > 0 && visible.height() > 0) {
+                    requested = true
+                    removeObserver()
+                    image.removeOnAttachStateChangeListener(attachListener)
+                    loadCover(image, localPath, imageUrl)
+                }
+            }
+        }
+
+        image.addOnAttachStateChangeListener(attachListener)
+        if (image.isAttachedToWindow) {
+            observer = image.viewTreeObserver
+            if (observer?.isAlive == true) observer?.addOnScrollChangedListener(scrollListener)
+            image.post { checkVisibility() }
+        }
+    }
 
     fun dispose() {
         searchRenderRunnable?.let(mainHandler::removeCallbacks)
@@ -146,6 +234,8 @@ internal class MainLibraryInterfaceController(
                 return
             }
             matches.forEach { game ->
+                val slot = FrameLayout(context).apply { minimumHeight = dp(110) }
+                val buildCard = {
                 val card = LinearLayout(context).apply {
                     orientation = LinearLayout.HORIZONTAL
                     gravity = Gravity.CENTER_VERTICAL
@@ -165,7 +255,7 @@ internal class MainLibraryInterfaceController(
                     background = rounded(ink, 12)
                 }
                 if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) {
-                    loadCover(cover, game.coverLocalPath, game.coverUrl)
+                    loadCoverWhenVisible(cover, game.coverLocalPath, game.coverUrl)
                 } else {
                     cover.setImageResource(android.R.drawable.ic_menu_gallery)
                     cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
@@ -211,7 +301,11 @@ internal class MainLibraryInterfaceController(
                     setPadding(0, dp(5), 0, 0)
                 })
                 card.addView(details, LinearLayout.LayoutParams(0, -2, 1f))
-                results.addView(card, LinearLayout.LayoutParams(-1, -2).apply {
+                slot.addView(card, FrameLayout.LayoutParams(-1, -2))
+                ScrollRevealAnimator.reveal(card)
+                }
+                runWhenVisible(slot) { buildCard() }
+                results.addView(slot, LinearLayout.LayoutParams(-1, -2).apply {
                     bottomMargin = dp(9)
                 })
             }
@@ -257,9 +351,165 @@ internal class MainLibraryInterfaceController(
         searchBox.requestFocus()
     }
 
+    private fun showFullScreenSections() {
+        val ink = bg
+        val silver = if (isDarkMode()) Color.rgb(225, 228, 234) else Color.rgb(43, 47, 55)
+        val root = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutDirection = if (currentLanguage() == "ar") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
+            setPadding(dp(16), dp(12), dp(16), dp(20))
+            setBackgroundColor(ink)
+        }
+        val header = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val back = TextView(context).apply {
+            text = tr("رجوع")
+            textSize = 13f
+            setTextColor(silver)
+            gravity = Gravity.CENTER
+            setPadding(dp(16), dp(11), dp(16), dp(11))
+            background = rounded(panel, 14)
+            isClickable = true
+            isFocusable = true
+            setOnClickListener { create() }
+        }
+        header.addView(back)
+        header.addView(makeText(tr("الأقسام"), 23f, silver, true), LinearLayout.LayoutParams(0, -2, 1f).apply {
+            marginStart = dp(14)
+        })
+        root.addView(header, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(22) })
+        root.addView(makeText(tr("اختر القسم الذي تريد تصفحه"), 13f, gray, false),
+            LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(14) })
+
+        val available = listOf(
+            "PS4" to "PS4",
+            "PS3" to "PS3",
+            "PS2" to "PS2",
+            "PS3_ARABIC" to tr("PS3 Arabic"),
+            "FAVORITES" to tr("المفضلة")
+        ).mapNotNull { (key, label) ->
+            val count = GameLibraryManager.filterAndSort(games(), key, "", "", "", sortMode).size
+            if (count > 0) Triple(key, label, count) else null
+        }
+        val cards = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
+        available.forEach { (key, label, count) ->
+            val item = LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(17), dp(17), dp(17), dp(17))
+                background = rounded(panel, 18).apply {
+                    setStroke(dp(1), if (isDarkMode()) Color.argb(135, 130, 138, 151) else Color.argb(145, 160, 168, 181))
+                }
+                isClickable = true
+                isFocusable = true
+                setOnClickListener { showFullScreenCategory(key, label) }
+            }
+            val info = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
+            info.addView(makeText(label, 17f, silver, true))
+            info.addView(makeText("$count " + tr("لعبة"), 11f, gray, false).apply {
+                setPadding(0, dp(5), 0, 0)
+            })
+            item.addView(info, LinearLayout.LayoutParams(0, -2, 1f))
+            item.addView(makeText("‹", 27f, silver, true))
+            cards.addView(item, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(11) })
+            ScrollRevealAnimator.reveal(item)
+        }
+        if (available.isEmpty()) {
+            cards.addView(makeText(tr("لا توجد أقسام تحتوي على ألعاب حالياً"), 14f, gray, false).apply {
+                gravity = Gravity.CENTER
+                setPadding(dp(12), dp(45), dp(12), dp(45))
+            })
+        }
+        root.addView(cards, LinearLayout.LayoutParams(-1, -2))
+        val scroll = ScrollView(context).apply {
+            isFillViewport = true
+            isVerticalScrollBarEnabled = false
+            addView(root, ViewGroup.LayoutParams(-1, -2))
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(scroll) { _, insets ->
+            val safeTop = insets.getInsets(WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.displayCutout()).top
+            val safeBottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars() or WindowInsetsCompat.Type.mandatorySystemGestures()).bottom
+            root.setPadding(dp(16), dp(12) + safeTop, dp(16), dp(20) + safeBottom)
+            insets
+        }
+        applyTypography(scroll)
+        setContentView(scroll)
+        ViewCompat.requestApplyInsets(scroll)
+        applyUnifiedSkin(scroll)
+        applyMotionPreferences(scroll)
+    }
+
+    fun openCategoryFromSection(category: String, title: String) = showFullScreenCategory(category, title)
+
+    private fun showFullScreenCategory(category: String, title: String) {
+        selected = category
+        val ink = bg
+        val silver = if (isDarkMode()) Color.rgb(225, 228, 234) else Color.rgb(43, 47, 55)
+        val root = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutDirection = if (currentLanguage() == "ar") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
+            setPadding(dp(14), dp(10), dp(14), dp(18))
+            setBackgroundColor(ink)
+        }
+        val header = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val back = TextView(context).apply {
+            text = tr("رجوع إلى الأقسام")
+            textSize = 12f
+            setTextColor(silver)
+            gravity = Gravity.CENTER
+            setPadding(dp(14), dp(11), dp(14), dp(11))
+            background = rounded(panel, 14)
+            isClickable = true
+            isFocusable = true
+            setOnClickListener { selected = "ALL"; showFullScreenSections() }
+        }
+        header.addView(back)
+        header.addView(makeText(title, 20f, silver, true), LinearLayout.LayoutParams(0, -2, 1f).apply {
+            marginStart = dp(12)
+        })
+        root.addView(header, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(13) })
+
+        val sectionFilters = LinearLayout(context).apply { visibility = View.GONE }
+        val sectionCount = makeText("0 " + tr("لعبة"), 11f, gray, true)
+        val sectionGames = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(0, dp(4), 0, dp(18))
+        }
+        setFilters(sectionFilters)
+        setCountText(sectionCount)
+        setGameList(sectionGames)
+        renderGames()
+        root.addView(sectionCount, LinearLayout.LayoutParams(-1, -2).apply {
+            bottomMargin = dp(8)
+        })
+        root.addView(sectionGames, LinearLayout.LayoutParams(-1, -2))
+        val scroll = ScrollView(context).apply {
+            isFillViewport = true
+            isVerticalScrollBarEnabled = false
+            clipToPadding = false
+            addView(root, ViewGroup.LayoutParams(-1, -2))
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(scroll) { _, insets ->
+            val safeTop = insets.getInsets(WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.displayCutout()).top
+            val safeBottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars() or WindowInsetsCompat.Type.mandatorySystemGestures()).bottom
+            root.setPadding(dp(14), dp(10) + safeTop, dp(14), dp(18) + safeBottom)
+            insets
+        }
+        applyTypography(scroll)
+        setContentView(scroll)
+        ViewCompat.requestApplyInsets(scroll)
+        applyUnifiedSkin(scroll)
+        applyMotionPreferences(scroll)
+    }
+
     fun create() {
         // Blog posts are included in ALL; normalize any previously saved Blog filter.
-        if (selected == "BLOG") selected = "ALL"
+        if (selected in setOf("BLOG", "PS2_ARABIC", "PS2_PORT_PS4", "PS2_PORT_PS3")) selected = "ALL"
         activeDockTab = "HOME"
         // MARCO visual system: charcoal surfaces with brushed-silver accents.
         val silver = if (isDarkMode()) Color.rgb(225, 228, 234) else Color.rgb(43, 47, 55)
@@ -328,26 +578,163 @@ internal class MainLibraryInterfaceController(
         root.addView(header)
 
 
-        val welcomePanel = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(130, 138, 151), Color.rgb(35, 38, 45))).apply {
-                cornerRadius = dp(22).toFloat()
-            }
-            setPadding(dp(18), dp(17), dp(18), dp(17))
-            elevation = dp(3).toFloat()
+        // Featured cover-flow sits above platform filters and uses only real library entries.
+        val popularByPlatform = listOf("PS4", "PS3", "PS2").flatMap { platform ->
+            games().filter { GameLibraryManager.normalizePlatform(it.platform) == platform }
+                .sortedWith(compareByDescending<Game> { it.isFavorite }.thenBy { it.name.lowercase() })
+                .take(3)
         }
-        welcomePanel.addView(makeText(tr("YOUR NEXT GAME STARTS HERE"), 9f, Color.rgb(235, 238, 243), true).apply {
-            letterSpacing = 0.12f
-        })
-        welcomePanel.addView(makeText(tr("اكتشف عالم الألعاب"), 21f, Color.WHITE, true).apply {
-            setPadding(0, dp(5), 0, dp(3))
-        })
-        welcomePanel.addView(makeText(tr("تصفح مكتبتك واختر مغامرتك القادمة"), 11f, Color.rgb(218, 222, 229), false))
-        root.addView(welcomePanel, LinearLayout.LayoutParams(-1, -2).apply {
-            bottomMargin = dp(15)
-        })
+        if (popularByPlatform.isNotEmpty()) {
+            val popularHeader = LinearLayout(context).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER
+                setPadding(dp(2), dp(8), dp(2), dp(10))
+            }
+            popularHeader.addView(makeText(tr("الألعاب الأكثر شعبية"), 20f, silver, true).apply {
+                gravity = Gravity.CENTER
+                textAlignment = View.TEXT_ALIGNMENT_CENTER
+            })
+            root.addView(popularHeader, LinearLayout.LayoutParams(-1, -2).apply {
+                topMargin = dp(2)
+            })
 
+            val popularScroll = HorizontalScrollView(context).apply {
+                isHorizontalScrollBarEnabled = false
+                clipChildren = false
+                clipToPadding = false
+                overScrollMode = View.OVER_SCROLL_NEVER
+                setPadding(dp(12), dp(8), dp(12), dp(12))
+            }
+            val popularTrack = LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+            val popularCards = mutableListOf<View>()
+            popularByPlatform.forEachIndexed { index, game ->
+                val card = LinearLayout(context).apply {
+                    orientation = LinearLayout.VERTICAL
+                    gravity = Gravity.CENTER_HORIZONTAL
+                    setPadding(dp(7), dp(7), dp(7), dp(9))
+                    background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                        intArrayOf(Color.argb(150, 37, 40, 47), Color.argb(90, 16, 18, 23))).apply {
+                        cornerRadius = dp(20).toFloat()
+                        setStroke(dp(1), Color.argb(110, 145, 153, 166))
+                    }
+                    isClickable = true
+                    isFocusable = true
+                    setOnClickListener { showDetails(game) }
+                }
+                val cover = ImageView(context).apply {
+                    scaleType = ImageView.ScaleType.CENTER_CROP
+                    background = rounded(ink, 15)
+                    clipToOutline = true
+                }
+                if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) {
+                    loadCover(cover, game.coverLocalPath, game.coverUrl)
+                } else {
+                    cover.setImageResource(android.R.drawable.ic_menu_gallery)
+                    cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                }
+                val coverFrame = FrameLayout(context).apply {
+                    background = rounded(ink, 15)
+                    clipToOutline = true
+                    addView(cover, FrameLayout.LayoutParams(-1, -1))
+                }
+                val languageLabel = GameLanguageBadge.resolve(game)
+                if (languageLabel.isNotBlank()) {
+                    val languageBadge = TextView(context).apply {
+                        text = languageLabel
+                        textSize = 11f
+                        setTextColor(Color.WHITE)
+                        typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
+                        gravity = Gravity.CENTER
+                        setPadding(dp(12), dp(7), dp(12), dp(7))
+                        background = GradientDrawable().apply {
+                            setColor(Color.argb(232, 35, 38, 45))
+                            cornerRadius = dp(10).toFloat()
+                            setStroke(dp(1), Color.argb(225, 165, 175, 190))
+                        }
+                        elevation = dp(5).toFloat()
+                    }
+                    coverFrame.addView(
+                        languageBadge,
+                        FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
+                            bottomMargin = dp(12)
+                        }
+                    )
+                }
+                card.addView(coverFrame, LinearLayout.LayoutParams(dp(218), dp(276)))
+                card.addView(makeText(game.name, 13f, silver, true).apply {
+                    gravity = Gravity.CENTER
+                    maxLines = 2
+                    setPadding(dp(5), dp(8), dp(5), dp(2))
+                }, LinearLayout.LayoutParams(dp(218), -2))
+                card.addView(makeText(GameLibraryManager.normalizePlatform(game.platform) ?: game.platform,
+                    10f, muted, true).apply { gravity = Gravity.CENTER },
+                    LinearLayout.LayoutParams(-1, -2))
+                popularTrack.addView(card, LinearLayout.LayoutParams(dp(224), -2).apply {
+                    // Keep cards separated; the centered card is the primary featured game.
+                    marginStart = dp(6)
+                    marginEnd = dp(6)
+                })
+                popularCards.add(card)
+            }
+            popularScroll.addView(popularTrack)
+            var popularSnapRunnable: Runnable? = null
+            fun updatePopularFocus() {
+                val viewportCenter = popularScroll.scrollX +
+                    (popularScroll.width / 2f) - popularScroll.paddingLeft
+                val focusRange = (popularScroll.width * 0.72f).coerceAtLeast(1f)
+                popularCards.forEach { card ->
+                    val cardCenter = card.left + card.width / 2f
+                    val distance = kotlin.math.abs(viewportCenter - cardCenter)
+                    val focus = (1f - distance / focusRange).coerceIn(0f, 1f)
+                    card.alpha = 0.68f + (focus * 0.32f)
+                    val scale = 0.88f + (focus * 0.12f)
+                    card.scaleX = scale
+                    card.scaleY = scale
+                    card.translationZ = dp((focus * 10f).toInt()).toFloat()
+                }
+            }
+            fun snapPopularToNearest() {
+                if (popularCards.isEmpty() || popularScroll.width == 0) return
+                val viewportCenter = popularScroll.scrollX +
+                    (popularScroll.width / 2f) - popularScroll.paddingLeft
+                val nearest = popularCards.minByOrNull { card ->
+                    kotlin.math.abs((card.left + card.width / 2f) - viewportCenter)
+                } ?: return
+                val target = nearest.left + nearest.width / 2 -
+                    (popularScroll.width / 2 - popularScroll.paddingLeft)
+                val maxScroll = (popularTrack.width + popularScroll.paddingLeft +
+                    popularScroll.paddingRight - popularScroll.width).coerceAtLeast(0)
+                popularScroll.smoothScrollTo(target.coerceIn(0, maxScroll), 0)
+            }
+            popularScroll.setOnScrollChangeListener { _, _, _, _, _ ->
+                updatePopularFocus()
+                popularSnapRunnable?.let(mainHandler::removeCallbacks)
+                val pendingSnap = Runnable { snapPopularToNearest() }
+                popularSnapRunnable = pendingSnap
+                // Wait until the finger/fling stops, then settle the nearest cover exactly in the center.
+                mainHandler.postDelayed(pendingSnap, 150L)
+            }
+            root.addView(popularScroll, LinearLayout.LayoutParams(-1, -2).apply {
+                bottomMargin = dp(8)
+            })
+            popularScroll.post {
+                if (popularCards.isEmpty()) return@post
+                val sideInset = ((popularScroll.width - popularCards.first().width) / 2)
+                    .coerceAtLeast(dp(12))
+                popularScroll.setPadding(sideInset, dp(8), sideInset, dp(12))
+                // Start on a middle entry so neighboring covers are visible on BOTH sides.
+                val initial = popularCards[popularCards.size / 2]
+                val initialTarget = initial.left + initial.width / 2 -
+                    (popularScroll.width / 2 - popularScroll.paddingLeft)
+                val maxScroll = (popularTrack.width + popularScroll.paddingLeft +
+                    popularScroll.paddingRight - popularScroll.width).coerceAtLeast(0)
+                popularScroll.scrollTo(initialTarget.coerceIn(0, maxScroll), 0)
+                updatePopularFocus()
+            }
+        }
 
         val filterScroll = HorizontalScrollView(context).apply {
             isHorizontalScrollBarEnabled = false
@@ -358,13 +745,14 @@ internal class MainLibraryInterfaceController(
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        listOf("ALL", "PS4", "PS3", "PS2", "FAVORITES").forEach { category ->
+        listOf("ALL", "PS4", "PS3", "PS2", "PS3_ARABIC", "FAVORITES").forEach { category ->
             val chip = TextView(context).apply {
                 text = when (category) {
                     "ALL" -> tr("الكل")
                     "PS4" -> "PS4"
                     "PS3" -> "PS3"
                     "PS2" -> "PS2"
+                    "PS3_ARABIC" -> tr("PS3 Arabic")
                     "FAVORITES" -> tr("المفضلة")
                     else -> category
                 }
@@ -509,7 +897,7 @@ internal class MainLibraryInterfaceController(
                 isClickable = true
                 isFocusable = true
                 if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                    android.content.res.ColorStateList.valueOf(Color.argb(100, 225, 230, 237)),
+                    android.content.res.ColorStateList.valueOf(Color.argb(100, 145, 190, 255)),
                     null,
                     GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(15).toFloat() }
                 )
@@ -639,6 +1027,47 @@ internal class MainLibraryInterfaceController(
             leftMargin = dp(16); rightMargin = dp(16); bottomMargin = dp(12)
         }
         shell.addView(dock, dockParams)
+
+        // Hide the floating bottom dock while the user scrolls down and reveal it
+        // while scrolling up. Translation keeps the content layout stable (no jump).
+        var lastDockScrollY = 0
+        var dockHidden = false
+        fun setDockVisible(visible: Boolean) {
+            if (dockHidden == !visible) return
+            dockHidden = !visible
+            dock.animate().cancel()
+            if (visible) {
+                dock.isClickable = true
+                dock.isFocusable = true
+                dock.animate()
+                    .translationY(0f)
+                    .alpha(1f)
+                    .setDuration(190L)
+                    .setInterpolator(android.view.animation.DecelerateInterpolator())
+                    .start()
+            } else {
+                dock.isClickable = false
+                dock.isFocusable = false
+                dock.animate()
+                    .translationY((dock.height + dockParams.bottomMargin + dp(12)).toFloat())
+                    .alpha(0f)
+                    .setDuration(190L)
+                    .setInterpolator(android.view.animation.DecelerateInterpolator())
+                    .start()
+            }
+        }
+        pageScroll.setOnScrollChangeListener { _, _, scrollY, _, _ ->
+            val delta = scrollY - lastDockScrollY
+            if (scrollY <= dp(2)) {
+                setDockVisible(true)
+            } else if (delta >= dp(4)) {
+                setDockVisible(false)
+            } else if (delta <= -dp(4)) {
+                setDockVisible(true)
+            }
+            lastDockScrollY = scrollY
+        }
+
         // Apply the shared glass/ripple interaction layer after every screen control,
         // including the floating navigation dock, has been assembled.
         applyUnifiedSkin(shell)

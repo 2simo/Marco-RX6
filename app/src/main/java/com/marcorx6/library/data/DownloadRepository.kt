@@ -6,19 +6,11 @@ import android.net.Uri
 import android.webkit.CookieManager
 import android.provider.DocumentsContract
 import androidx.core.content.FileProvider
-import androidx.work.BackoffPolicy
-import androidx.work.Constraints
-import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.workDataOf
 import com.marcorx6.library.network.SecureUrlPolicy
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Locale
-import java.util.concurrent.TimeUnit
 
 internal data class DownloadEntry(
     val id: Long,
@@ -27,11 +19,14 @@ internal data class DownloadEntry(
     val downloadedBytes: Long,
     val totalBytes: Long,
     val mimeType: String?,
-    val sourcePostUrl: String
+    val sourcePostUrl: String,
+    val priority: Int,
+    val segmentBytes: List<Long>
 )
 
 internal sealed class DownloadStartResult {
     data class Enqueued(val title: String) : DownloadStartResult()
+    data class AlreadyQueued(val title: String) : DownloadStartResult()
     data class OpenInBrowser(val finalUrl: String) : DownloadStartResult()
     data class Failed(val message: String) : DownloadStartResult()
     data class RefreshSource(val sourcePostUrl: String) : DownloadStartResult()
@@ -41,7 +36,15 @@ internal sealed class DownloadStartResult {
 internal class DownloadRepository(context: Context) {
     private val appContext = context.applicationContext
     private val database = DownloadDatabase.get(appContext)
-    private val workManager = WorkManager.getInstance(appContext)
+    private val concurrencyPreferences = DownloadConcurrencyPreferences(appContext)
+
+    private companion object {
+        val probeExecutor = java.util.concurrent.Executors.newFixedThreadPool(2)
+    }
+
+    init {
+        DownloadWorkScheduler.schedule(appContext)
+    }
 
     fun enqueue(
         link: String,
@@ -53,7 +56,7 @@ internal class DownloadRepository(context: Context) {
         sourcePostUrl: String = "",
         onResult: (DownloadStartResult) -> Unit
     ) {
-        Thread {
+        probeExecutor.execute {
             val result = try {
                 val secureLink = SecureUrlPolicy.toHttpsUrl(link)
                     ?: throw SecurityException("رابط التنزيل غير آمن أو غير صالح؛ يجب استخدام HTTPS")
@@ -66,16 +69,23 @@ internal class DownloadRepository(context: Context) {
                     }
                     val finalTitle = probe.fileName ?: title.ifBlank { "MARCO" }
                     val cookie = CookieManager.getInstance().getCookie(probe.finalUrl).orEmpty()
-                    val previous = database.findFailedBySource(sourcePostUrl)
-                    if (previous != null) {
-                        database.refreshSource(previous.id, probe.finalUrl, userAgent, cookie, referrer, probe.mimeType)
-                        enqueueWork(previous.id, ExistingWorkPolicy.REPLACE)
-                    } else {
-                        val id = System.currentTimeMillis().coerceAtLeast(1L)
-                        database.insert(id, probe.finalUrl, finalTitle, userAgent, cookie, referrer, probe.mimeType, sourcePostUrl)
-                        enqueueWork(id, ExistingWorkPolicy.KEEP)
+                    synchronized(database) {
+                        val duplicate = database.findActiveDuplicate(probe.finalUrl, sourcePostUrl)
+                        if (duplicate != null) {
+                            DownloadStartResult.AlreadyQueued(duplicate.title)
+                        } else {
+                            val previous = database.findFailedBySource(sourcePostUrl)
+                            if (previous != null) {
+                                database.refreshSource(previous.id, probe.finalUrl, userAgent, cookie, referrer, probe.mimeType)
+                                File(appContext.filesDir, "MARCO_RX6_downloads/${previous.id}.part").delete()
+                            } else {
+                                val id = database.nextId()
+                                database.insert(id, probe.finalUrl, finalTitle, userAgent, cookie, referrer, probe.mimeType, sourcePostUrl)
+                            }
+                            DownloadWorkScheduler.schedule(appContext)
+                            DownloadStartResult.Enqueued(finalTitle)
+                        }
                     }
-                    DownloadStartResult.Enqueued(finalTitle)
                 }
             } catch (error: Exception) {
                 val message = error.message ?: "تعذر بدء تنزيل الملف"
@@ -84,21 +94,9 @@ internal class DownloadRepository(context: Context) {
                 } else DownloadStartResult.Failed(message)
             }
             onResult(result)
-        }.start()
+        }
     }
 
-    private fun enqueueWork(id: Long, policy: ExistingWorkPolicy) {
-        val request = OneTimeWorkRequestBuilder<ResumableDownloadWorker>()
-            .setInputData(workDataOf(ResumableDownloadWorker.KEY_ID to id))
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build()
-            )
-            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30L, TimeUnit.SECONDS)
-            .build()
-        workManager.enqueueUniqueWork(workName(id), policy, request)
-    }
 
     fun getDownloads(): List<DownloadEntry> = database.all().map { item ->
         DownloadEntry(
@@ -108,7 +106,13 @@ internal class DownloadRepository(context: Context) {
             downloadedBytes = item.downloadedBytes,
             totalBytes = item.totalBytes,
             mimeType = item.mimeType,
-            sourcePostUrl = item.sourcePostUrl
+            sourcePostUrl = item.sourcePostUrl,
+            priority = item.priority,
+            segmentBytes = (0 until 4).map { index ->
+                File(appContext.filesDir, "MARCO_RX6_downloads/${item.id}.seg$index").let { file ->
+                    if (file.isFile) file.length() else 0L
+                }
+            }
         )
     }
 
@@ -117,17 +121,75 @@ internal class DownloadRepository(context: Context) {
         if (item.status == DownloadManager.STATUS_SUCCESSFUL) return false
         // Request cancellation first, then persist PAUSED so the row remains visible
         // while WorkManager transitions the worker to its cancelled state.
-        workManager.cancelUniqueWork(workName(id))
+        DownloadWorkScheduler.cancel(appContext, id)
         database.status(id, DownloadManager.STATUS_PAUSED)
+        DownloadWorkScheduler.schedule(appContext)
         return true
     }
 
     fun resumeDownload(id: Long): Boolean {
         val item = database.get(id) ?: return false
-        if (item.status == DownloadManager.STATUS_SUCCESSFUL) return false
+        if (item.status != DownloadManager.STATUS_PAUSED &&
+            item.status != DownloadManager.STATUS_FAILED
+        ) return false
         database.status(id, DownloadManager.STATUS_PENDING)
-        enqueueWork(id, ExistingWorkPolicy.REPLACE)
+        DownloadWorkScheduler.schedule(appContext)
         return true
+    }
+
+    fun pauseAllDownloads(): Int {
+        val ids = database.pauseAllActive()
+        ids.forEach { id -> DownloadWorkScheduler.cancel(appContext, id) }
+        return ids.size
+    }
+
+    fun resumeAllDownloads(): Int {
+        val ids = database.pausedOrFailedIds()
+        ids.forEach { id -> database.status(id, DownloadManager.STATUS_PENDING) }
+        if (ids.isNotEmpty()) DownloadWorkScheduler.schedule(appContext)
+        return ids.size
+    }
+
+    fun setDownloadPriority(id: Long, priority: Int): Boolean {
+        if (database.get(id) == null) return false
+        database.setPriority(id, priority)
+        DownloadWorkScheduler.schedule(appContext)
+        return true
+    }
+
+    fun retryAllFailed(): Int {
+        val failed = database.all().filter { it.status == DownloadManager.STATUS_FAILED }
+        failed.forEach { database.status(it.id, DownloadManager.STATUS_PENDING) }
+        if (failed.isNotEmpty()) DownloadWorkScheduler.schedule(appContext)
+        return failed.size
+    }
+
+    fun clearCompletedDownloads(): Int = database.deleteCompleted()
+
+    fun wifiOnlyDownloads(): Boolean = concurrencyPreferences.wifiOnly()
+
+    fun setWifiOnlyDownloads(enabled: Boolean) {
+        concurrencyPreferences.setWifiOnly(enabled)
+        DownloadWorkScheduler.schedule(appContext)
+    }
+
+    fun maxConcurrentDownloads(): Int = concurrencyPreferences.maxConcurrent()
+
+    fun maxSegmentConnections(): Int = concurrencyPreferences.segmentConnections()
+
+    fun downloadSpeedLimitBytesPerSecond(): Long = concurrencyPreferences.speedLimitBytesPerSecond()
+
+    fun setDownloadSpeedLimitBytesPerSecond(value: Long) {
+        concurrencyPreferences.setSpeedLimitBytesPerSecond(value)
+    }
+
+    fun setMaxSegmentConnections(value: Int) {
+        concurrencyPreferences.setSegmentConnections(value)
+    }
+
+    fun setMaxConcurrentDownloads(value: Int) {
+        concurrencyPreferences.setMaxConcurrent(value)
+        DownloadWorkScheduler.schedule(appContext)
     }
 
     fun openDownloadedFile(id: Long): Uri? {
@@ -146,7 +208,7 @@ internal class DownloadRepository(context: Context) {
     fun deleteDownload(id: Long): Boolean {
         val item = database.get(id) ?: return false
         database.cancel(id)
-        workManager.cancelUniqueWork(workName(id))
+        DownloadWorkScheduler.cancel(appContext, id)
         if (item.localPath.startsWith("content://")) {
             runCatching { DocumentsContract.deleteDocument(appContext.contentResolver, Uri.parse(item.localPath)) }
         } else if (item.localPath.isNotBlank()) {
@@ -155,10 +217,9 @@ internal class DownloadRepository(context: Context) {
         val directory = File(appContext.filesDir, "MARCO_RX6_downloads")
         File(directory, "$id.part").delete()
         database.delete(id)
+        DownloadWorkScheduler.schedule(appContext)
         return true
     }
-
-    private fun workName(id: Long) = "marco_rx6_download_$id"
 
     private data class DownloadProbe(
         val finalUrl: String,
@@ -199,7 +260,7 @@ internal class DownloadRepository(context: Context) {
                 return DownloadProbe(finalUrl, mime, false, null)
             }
             val path = Uri.parse(finalUrl).lastPathSegment.orEmpty().lowercase(Locale.ROOT)
-            val hasFileExtension = Regex("""\.(apk|zip|7z|rar|iso|pkg|bin|cue|chd|img|pbp|cso|nsp|xci|pdf|mp4|mp3)$""").containsMatchIn(path)
+            val hasFileExtension = Regex("""\.(apk|zip|7z|rar|iso|pkg|bin|cue|chd|img|pbp|cso|nsp|xci|pdf|mp4|m4v|mkv|webm|mov|avi|flv|3gp|mp3|m4a|aac|wav|flac|ogg)$""").containsMatchIn(path)
             val responseFileName = DownloadFileNames.fromResponse(
                 connection.getHeaderField("Content-Disposition"),
                 finalUrl

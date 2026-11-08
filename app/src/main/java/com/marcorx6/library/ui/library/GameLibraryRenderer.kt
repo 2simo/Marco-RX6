@@ -2,9 +2,11 @@ package com.marcorx6.library.ui
 
 import android.app.Activity
 import android.graphics.Color
+import android.graphics.Rect
 import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
 import android.view.View
+import android.view.ViewTreeObserver
 import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.ImageView
@@ -25,9 +27,9 @@ internal class GameLibraryRenderer(
     private val loadCover: (ImageView, String, String) -> Unit,
     private val showDetails: (Game) -> Unit,
     private val loadEngagementSummary: (Game, (Long, Double, Long) -> Unit) -> Unit,
+    private val openCategory: (String, String) -> Unit,
 ) {
     private data class RenderSignature(
-        val games: List<Game>,
         val selected: String,
         val selectedGenre: String,
         val selectedYear: String,
@@ -38,7 +40,55 @@ internal class GameLibraryRenderer(
         val gameLabel: String
     )
 
+    /**
+     * Start expensive image/network and Firestore work only when the corresponding
+     * row actually intersects the visible screen. Off-screen cards keep placeholders.
+     */
+    private fun runWhenVisible(view: View, action: () -> Unit) {
+        var completed = false
+        var observer: ViewTreeObserver? = null
+        lateinit var checkVisibility: () -> Unit
+        val scrollListener = ViewTreeObserver.OnScrollChangedListener { checkVisibility() }
+
+        fun removeObserver() {
+            observer?.takeIf { it.isAlive }?.removeOnScrollChangedListener(scrollListener)
+            observer = null
+        }
+
+        val attachListener = object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(v: View) {
+                observer = v.viewTreeObserver
+                if (observer?.isAlive == true) observer?.addOnScrollChangedListener(scrollListener)
+                v.post { checkVisibility() }
+            }
+
+            override fun onViewDetachedFromWindow(v: View) {
+                removeObserver()
+            }
+        }
+
+        checkVisibility = {
+            if (!completed && view.isAttachedToWindow) {
+                val visible = Rect()
+                if (view.getGlobalVisibleRect(visible) && visible.width() > 0 && visible.height() > 0) {
+                    completed = true
+                    removeObserver()
+                    view.removeOnAttachStateChangeListener(attachListener)
+                    action()
+                }
+            }
+        }
+
+        view.addOnAttachStateChangeListener(attachListener)
+        if (view.isAttachedToWindow) {
+            observer = view.viewTreeObserver
+            if (observer?.isAlive == true) observer?.addOnScrollChangedListener(scrollListener)
+            view.post { checkVisibility() }
+        }
+    }
+
     private var lastRenderedContainer: LinearLayout? = null
+    private var lastRenderedGames: List<Game>? = null
     private var lastRenderSignature: RenderSignature? = null
 
     fun render(
@@ -56,8 +106,14 @@ internal class GameLibraryRenderer(
         white: Int,
         gray: Int
     ) {
+        // Game is a data class containing full Blogger HTML. Compare object identity
+        // instead of deep equality so a refresh does not repeatedly compare hundreds
+        // of potentially large article bodies just to decide whether to redraw cards.
+        val previousGames = lastRenderedGames
+        val sameGameInstances = previousGames != null &&
+            previousGames.size == games.size &&
+            previousGames.indices.all { previousGames[it] === games[it] }
         val signature = RenderSignature(
-            games = games.toList(),
             selected = selected,
             selectedGenre = selectedGenre,
             selectedYear = selectedYear,
@@ -73,11 +129,13 @@ internal class GameLibraryRenderer(
         // unchanged data and presentation state. This prevents card/cover flicker
         // and avoids re-issuing image and engagement requests on every refresh.
         if (lastRenderedContainer === gameList &&
+            sameGameInstances &&
             lastRenderSignature == signature &&
             gameList.childCount > 0
         ) return
 
         lastRenderedContainer = gameList
+        lastRenderedGames = games.toList()
         lastRenderSignature = signature
         gameList.removeAllViews()
         for (i in 0 until filters.childCount) {
@@ -115,7 +173,8 @@ internal class GameLibraryRenderer(
             return
         }
 
-        val sectioned = selected == "ALL" || selected == "BLOG" || selected == "FAVORITES"
+        val gridMode = selected in setOf("PS2", "PS3", "PS4", "PS3_ARABIC", "FAVORITES")
+        val sectioned = selected == "ALL" || selected == "BLOG"
         val priority = listOf("PS4", "PS3", "PS2")
         // Remove invisible bidi/zero-width marks before grouping so visually identical
         // platform names cannot produce duplicate sections in Arabic locale.
@@ -140,6 +199,10 @@ internal class GameLibraryRenderer(
         }
 
         sections.forEach { (platform, sectionGames) ->
+            val sectionTitle = when (platform) {
+                "PS3_ARABIC" -> tr("PS3 Arabic")
+                else -> platform
+            }
             val heading = LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
@@ -170,9 +233,38 @@ internal class GameLibraryRenderer(
                     setStroke(dp(1), if (isDarkMode()) Color.argb(120, 130, 138, 151) else Color.argb(130, 160, 168, 181))
                 }
             }
+            if (selected == "ALL") {
+                val openSection = TextView(activity).apply {
+                    text = tr("فتح")
+                    textSize = 10f
+                    typeface = android.graphics.Typeface.create(
+                        "sans-serif-medium", android.graphics.Typeface.BOLD
+                    )
+                    gravity = Gravity.CENTER
+                    setTextColor(if (isDarkMode()) Color.rgb(225, 228, 234) else Color.rgb(43, 47, 55))
+                    setPadding(dp(10), dp(6), dp(10), dp(6))
+                    background = GradientDrawable().apply {
+                        setColor(if (isDarkMode()) Color.argb(105, 35, 38, 45) else Color.argb(115, 222, 226, 232))
+                        cornerRadius = dp(11).toFloat()
+                        setStroke(dp(1), if (isDarkMode()) Color.argb(145, 130, 138, 151) else Color.argb(155, 160, 168, 181))
+                    }
+                    isClickable = true
+                    isFocusable = true
+                    contentDescription = tr("فتح قسم") + " " + sectionTitle
+                    setOnClickListener { openCategory(platform, sectionTitle) }
+                }
+                heading.addView(openSection, LinearLayout.LayoutParams(-2, -2).apply {
+                    marginEnd = dp(7)
+                })
+            }
             heading.addView(sectionCount)
-            gameList.addView(heading, LinearLayout.LayoutParams(-1, -2))
+            if (!gridMode) gameList.addView(heading, LinearLayout.LayoutParams(-1, -2))
 
+            val grid = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(0, dp(2), 0, dp(8))
+            }
+            var currentGridRow: LinearLayout? = null
             val horizontal = HorizontalScrollView(activity).apply {
                 isHorizontalScrollBarEnabled = false
                 overScrollMode = View.OVER_SCROLL_NEVER
@@ -188,6 +280,11 @@ internal class GameLibraryRenderer(
             }
 
             sectionGames.forEach { game ->
+                // Keep only a lightweight slot in the layout until this card approaches the viewport.
+                val slot = FrameLayout(activity).apply {
+                    minimumHeight = dp(if (gridMode) 300 else 258)
+                }
+                val buildCard = {
                 val card = LinearLayout(activity).apply {
                     orientation = LinearLayout.VERTICAL
                     val surface = GradientDrawable(
@@ -306,7 +403,9 @@ internal class GameLibraryRenderer(
                     )
                 }
                 if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) {
-                    loadCover(image, game.coverLocalPath, game.coverUrl)
+                    runWhenVisible(image) {
+                        loadCover(image, game.coverLocalPath, game.coverUrl)
+                    }
                 } else {
                     image.setImageResource(android.R.drawable.ic_menu_gallery)
                     image.scaleType = ImageView.ScaleType.CENTER_INSIDE
@@ -320,7 +419,7 @@ internal class GameLibraryRenderer(
                         else Color.argb(135, 160, 168, 181)
                     )
                 }
-                card.addView(imageFrame, LinearLayout.LayoutParams(-1, dp(164)))
+                card.addView(imageFrame, LinearLayout.LayoutParams(-1, dp(if (gridMode) 208 else 164)))
 
                 card.addView(makeText(game.name, 12f, white, true).apply {
                     maxLines = 2
@@ -368,7 +467,7 @@ internal class GameLibraryRenderer(
                         com.marcorx6.library.R.drawable.ic_engagement_rating,
                         tr("التقييمات"),
                         ratingValue,
-                        Color.rgb(255, 190, 55)
+                        Color.rgb(190, 198, 210)
                     ),
                     LinearLayout.LayoutParams(0, -2, 1f)
                 )
@@ -382,24 +481,54 @@ internal class GameLibraryRenderer(
                     LinearLayout.LayoutParams(0, -2, 1f)
                 )
                 card.addView(engagement)
-                loadEngagementSummary(game) { views, average, count ->
-                    activity.runOnUiThread {
-                        ratingValue.text = if (count == 0L) "—"
-                        else String.format(Locale.US, "%.1f", average)
-                        viewsValue.text = compactCount(views)
+                runWhenVisible(engagement) {
+                    loadEngagementSummary(game) { views, average, count ->
+                        activity.runOnUiThread {
+                            if (!engagement.isAttachedToWindow) return@runOnUiThread
+                            ratingValue.text = if (count == 0L) "—"
+                            else String.format(Locale.US, "%.1f", average)
+                            viewsValue.text = compactCount(views)
+                        }
                     }
                 }
 
-                carousel.addView(
-                    card,
-                    LinearLayout.LayoutParams(dp(158), -2).apply {
-                        marginStart = dp(5)
-                        marginEnd = dp(5)
+                slot.addView(card, FrameLayout.LayoutParams(-1, -2))
+                ScrollRevealAnimator.reveal(card)
+                }
+                runWhenVisible(slot) { buildCard() }
+
+                if (gridMode) {
+                    if (currentGridRow == null || currentGridRow!!.childCount == 2) {
+                        currentGridRow = LinearLayout(activity).apply {
+                            orientation = LinearLayout.HORIZONTAL
+                            gravity = Gravity.TOP
+                        }
+                        grid.addView(currentGridRow, LinearLayout.LayoutParams(-1, -2))
                     }
-                )
+                    currentGridRow!!.addView(
+                        slot,
+                        LinearLayout.LayoutParams(0, -2, 1f).apply {
+                            marginStart = dp(4)
+                            marginEnd = dp(4)
+                            bottomMargin = dp(10)
+                        }
+                    )
+                } else {
+                    carousel.addView(
+                        slot,
+                        LinearLayout.LayoutParams(dp(158), -2).apply {
+                            marginStart = dp(5)
+                            marginEnd = dp(5)
+                        }
+                    )
+                }
             }
-            horizontal.addView(carousel, FrameLayout.LayoutParams(-2, -2))
-            gameList.addView(horizontal, LinearLayout.LayoutParams(-1, -2))
+            if (gridMode) {
+                gameList.addView(grid, LinearLayout.LayoutParams(-1, -2))
+            } else {
+                horizontal.addView(carousel, FrameLayout.LayoutParams(-2, -2))
+                gameList.addView(horizontal, LinearLayout.LayoutParams(-1, -2))
+            }
         }
     }
 

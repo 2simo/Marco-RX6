@@ -9,6 +9,7 @@ on:
     branches:
       - main
       - maintenance/audit-8.16
+      - feature/next-development
 
 permissions:
   contents: read
@@ -98,4 +99,3 @@ jobs:
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 3
-

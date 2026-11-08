@@ -14,8 +14,10 @@ import {
 } from "@firebase/rules-unit-testing";
 import {
   collection,
+  collectionGroup,
   deleteDoc,
   doc,
+  FieldValue,
   getDoc,
   getDocs,
   serverTimestamp,
@@ -143,6 +145,56 @@ describe("Firestore user isolation rules", () => {
     );
   });
 
+  it("publishes only explicitly shared profile fields and keeps private account data private", async () => {
+    const ownerDb = testEnv.authenticatedContext("public-owner").firestore();
+    const visitorDb = testEnv.authenticatedContext("profile-visitor").firestore();
+    const publicProfile = doc(ownerDb, "publicProfiles/public-owner");
+    const privateProfile = doc(ownerDb, "users/public-owner");
+
+    await assertSucceeds(setDoc(privateProfile, {
+      email: "private@example.com",
+      displayName: "Public MARCO",
+      updatedAt: serverTimestamp(),
+    }));
+    await assertSucceeds(setDoc(publicProfile, {
+      uid: "public-owner",
+      displayName: "Public MARCO",
+      bio: "Retro games",
+      showFavorites: true,
+      favoriteGames: [{ name: "Game", platform: "PS2", coverUrl: "" }],
+      photoUrl: "https://example.com/avatar.jpg",
+      photoData: "a".repeat(1024),
+      updatedAt: serverTimestamp(),
+    }));
+    await assertSucceeds(getDoc(doc(visitorDb, "publicProfiles/public-owner")));
+    await assertFails(getDoc(doc(visitorDb, "users/public-owner")));
+    await assertFails(getDocs(collection(visitorDb, "publicProfiles")));
+
+    await assertSucceeds(updateDoc(publicProfile, {
+      showFavorites: false,
+      favoriteGames: FieldValue.delete(),
+    }));
+    await assertSucceeds(deleteDoc(publicProfile));
+  });
+
+  it("bounds the public favorite-game preview stored in a profile", async () => {
+    const db = testEnv.authenticatedContext("favorite-owner").firestore();
+    const profile = doc(db, "publicProfiles/favorite-owner");
+    const games = Array.from({ length: 31 }, (_, index) => ({
+      name: "Game " + index,
+      platform: "PS2",
+      coverUrl: "",
+    }));
+
+    await assertFails(setDoc(profile, {
+      uid: "favorite-owner",
+      displayName: "Favorite owner",
+      showFavorites: true,
+      favoriteGames: games,
+      updatedAt: serverTimestamp(),
+    }));
+  });
+
   it("denies access to another user's profile and nested data", async () => {
     const dbA = testEnv.authenticatedContext("user-a").firestore();
     const dbB = testEnv.authenticatedContext("user-b").firestore();
@@ -165,6 +217,39 @@ describe("Firestore user isolation rules", () => {
       getDoc(doc(dbA, "users/user-b/settings/preferences")),
     );
     await assertSucceeds(getDoc(doc(dbB, "users/user-b")));
+  });
+
+  it("allows users to create and remove only their own follow edges", async () => {
+    const alice = testEnv.authenticatedContext("alice").firestore();
+    const bob = testEnv.authenticatedContext("bob").firestore();
+    const aliceFollowingBob = doc(alice, "userFollows/alice/following/bob");
+
+    await assertSucceeds(setDoc(aliceFollowingBob, {
+      uid: "alice",
+      targetUid: "bob",
+      createdAt: serverTimestamp(),
+    }));
+    await assertSucceeds(getDoc(aliceFollowingBob));
+    await assertSucceeds(getDocs(collectionGroup(bob, "following")));
+    await assertFails(setDoc(doc(bob, "userFollows/alice/following/charlie"), {
+      uid: "bob",
+      targetUid: "charlie",
+      createdAt: serverTimestamp(),
+    }));
+    await assertFails(setDoc(doc(alice, "userFollows/alice/following/alice"), {
+      uid: "alice",
+      targetUid: "alice",
+      createdAt: serverTimestamp(),
+    }));
+    await assertFails(updateDoc(aliceFollowingBob, { targetUid: "charlie" }));
+    // The followed account may remove an incoming edge when deleting its profile.
+    await assertSucceeds(deleteDoc(doc(bob, "userFollows/alice/following/bob")));
+    await assertSucceeds(setDoc(aliceFollowingBob, {
+      uid: "alice",
+      targetUid: "bob",
+      createdAt: serverTimestamp(),
+    }));
+    await assertSucceeds(deleteDoc(aliceFollowingBob));
   });
 
   it("allows one immutable game view per authenticated guest installation", async () => {

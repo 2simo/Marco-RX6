@@ -2,6 +2,7 @@ package com.marcorx6.library.ui
 
 import android.app.Activity
 import android.app.Dialog
+import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
@@ -59,7 +60,7 @@ internal class DownloadPageDialog(
         val dark = appPreferences.getBoolean("dark_mode", true)
         val background = if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247)
         val surface = if (dark) Color.rgb(25, 28, 34) else Color.WHITE
-        val primary = if (dark) Color.rgb(205, 212, 222) else Color.rgb(105, 116, 132)
+        val primary = if (dark) Color.rgb(205, 212, 222) else Color.rgb(105, 113, 126)
         val border = if (dark) Color.rgb(70, 77, 89) else Color.rgb(205, 211, 220)
         val heading = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
         val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
@@ -71,28 +72,134 @@ internal class DownloadPageDialog(
             setPadding(dp(12), dp(10), dp(12), dp(10))
         }
         val webView = WebView(activity)
-        val toolbar = LinearLayout(activity).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
+        val browserHistory = mutableListOf<Pair<String, String>>()
+        val browserTabs = mutableListOf<Pair<String, String>>()
+        val browserTabStates = mutableListOf<android.os.Bundle?>()
+        var activeTabIndex = 0
+        fun saveActiveTabState() {
+            if (activeTabIndex !in browserTabStates.indices) return
+            val state = android.os.Bundle()
+            if (runCatching { webView.saveState(state) }.isSuccess) {
+                browserTabStates[activeTabIndex] = state
+            }
         }
-        val titleBox = LinearLayout(activity).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(2), dp(2), 0, dp(2))
+        fun restoreBrowserTab(index: Int) {
+            if (index !in browserTabs.indices) return
+            activeTabIndex = index
+            val savedState = browserTabStates.getOrNull(index)
+            val restored = savedState != null && runCatching {
+                webView.restoreState(savedState) != null
+            }.getOrDefault(false)
+            if (!restored) webView.loadUrl(browserTabs[index].second)
         }
-        titleBox.addView(TextView(activity).apply {
-            text = "MARCO"
-            textSize = 17f
-            letterSpacing = 0.12f
-            setTypeface(null, Typeface.BOLD)
-            setTextColor(heading)
-        })
-        titleBox.addView(TextView(activity).apply {
-            text = translate("متصفح التحميل")
-            textSize = 10f
-            setTextColor(muted)
-        })
-        toolbar.addView(titleBox, LinearLayout.LayoutParams(0, -2, 1f))
+        runCatching {
+            val saved = JSONArray(appPreferences.getString("download_browser_history", "[]"))
+            for (i in 0 until saved.length()) {
+                val item = saved.optJSONObject(i) ?: continue
+                val url = item.optString("url")
+                if (url.startsWith("https://")) browserHistory.add(item.optString("title") to url)
+            }
+        }
+        browserTabs.add(translate("التبويب 1") to safeStartUrl)
+        browserTabStates.add(null)
 
+        fun persistBrowserHistory() {
+            val json = JSONArray()
+            browserHistory.take(60).forEach { (title, url) ->
+                json.put(org.json.JSONObject().put("title", title).put("url", url))
+            }
+            appPreferences.edit().putString("download_browser_history", json.toString()).apply()
+        }
+
+        fun rememberPage(url: String, title: String) {
+            if (!url.startsWith("https://")) return
+            browserHistory.removeAll { it.second == url }
+            browserHistory.add(0, title.ifBlank { Uri.parse(url).host.orEmpty() } to url)
+            while (browserHistory.size > 60) browserHistory.removeAt(browserHistory.lastIndex)
+            persistBrowserHistory()
+            if (activeTabIndex in browserTabs.indices) {
+                browserTabs[activeTabIndex] = (title.ifBlank { browserTabs[activeTabIndex].first }) to url
+            }
+        }
+
+        fun openBrowserHistory() {
+            if (browserHistory.isEmpty()) {
+                Toast.makeText(activity, translate("لا يوجد سجل تصفح بعد"), Toast.LENGTH_SHORT).show()
+                return
+            }
+            val labels = browserHistory.map { (title, url) ->
+                (title.ifBlank { Uri.parse(url).host.orEmpty() }) + "\n" + url
+            }.toTypedArray()
+            AlertDialog.Builder(activity)
+                .setTitle(translate("سجل التصفح"))
+                .setItems(labels) { _, which ->
+                    browserHistory.getOrNull(which)?.second?.let { webView.loadUrl(it) }
+                }
+                .setNegativeButton(translate("إغلاق"), null)
+                .setNeutralButton(translate("مسح السجل")) { _, _ ->
+                    browserHistory.clear()
+                    persistBrowserHistory()
+                    Toast.makeText(activity, translate("تم مسح سجل التصفح"), Toast.LENGTH_SHORT).show()
+                }
+                .show()
+        }
+
+        fun openBrowserTabs() {
+            val labels = browserTabs.mapIndexed { index, tab ->
+                (if (index == activeTabIndex) "● " else "") +
+                    (tab.first.ifBlank { translate("تبويب") + " " + (index + 1) }) +
+                    "\n" + tab.second
+            }.toMutableList()
+            labels.add(translate("+ تبويب جديد"))
+            AlertDialog.Builder(activity)
+                .setTitle(translate("التبويبات المفتوحة") + " (" + browserTabs.size + "/8)")
+                .setItems(labels.toTypedArray()) { _, which ->
+                    if (which == browserTabs.size) {
+                        if (browserTabs.size >= 8) {
+                            Toast.makeText(activity, translate("الحد الأقصى 8 تبويبات"), Toast.LENGTH_SHORT).show()
+                        } else {
+                            val input = EditText(activity).apply {
+                                hint = translate("أدخل رابط الموقع")
+                                setSingleLine(true)
+                                inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
+                            }
+                            AlertDialog.Builder(activity)
+                                .setTitle(translate("فتح تبويب جديد"))
+                                .setView(input)
+                                .setNegativeButton(translate("إلغاء"), null)
+                                .setPositiveButton(translate("فتح")) { _, _ ->
+                                    val raw = input.text.toString().trim()
+                                    val candidate = if (raw.contains("://")) raw else "https://$raw"
+                                    val safe = SecureUrlPolicy.toHttpsUrl(candidate)
+                                    if (safe == null) {
+                                        Toast.makeText(activity, translate("الرابط غير صالح أو غير آمن"), Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        saveActiveTabState()
+                                        browserTabs.add(translate("تبويب") + " " + (browserTabs.size + 1) to safe)
+                                        browserTabStates.add(null)
+                                        restoreBrowserTab(browserTabs.lastIndex)
+                                    }
+                                }
+                                .show()
+                        }
+                    } else if (which in browserTabs.indices && which != activeTabIndex) {
+                        saveActiveTabState()
+                        restoreBrowserTab(which)
+                    }
+                }
+                .setNegativeButton(translate("إغلاق"), null)
+                .setNeutralButton(translate("إغلاق التبويب الحالي")) { _, _ ->
+                    if (browserTabs.size > 1) {
+                        webView.stopLoading()
+                        browserTabs.removeAt(activeTabIndex)
+                        browserTabStates.removeAt(activeTabIndex)
+                        restoreBrowserTab((activeTabIndex - 1).coerceAtLeast(0))
+                    } else {
+                        Toast.makeText(activity, translate("يجب إبقاء تبويب واحد على الأقل"), Toast.LENGTH_SHORT).show()
+                    }
+                }
+                .show()
+        }
         fun toolbarAction(label: String, onClick: () -> Unit, iconRes: Int = 0): TextView =
             TextView(activity).apply {
                 text = label
@@ -123,6 +230,30 @@ internal class DownloadPageDialog(
                 isFocusable = true
                 setOnClickListener { onClick() }
             }
+
+        val toolbar = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val titleBox = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(2), dp(2), 0, dp(2))
+        }
+        titleBox.addView(TextView(activity).apply {
+            text = "MARCO"
+            textSize = 17f
+            letterSpacing = 0.12f
+            setTypeface(null, Typeface.BOLD)
+            setTextColor(heading)
+        })
+        titleBox.addView(TextView(activity).apply {
+            text = translate("متصفح التحميل")
+            textSize = 10f
+            setTextColor(muted)
+        })
+        toolbar.addView(titleBox, LinearLayout.LayoutParams(0, -2, 1f))
+        toolbar.addView(toolbarAction("", { openBrowserHistory() }, com.marcorx6.library.R.drawable.ic_action_history))
+        toolbar.addView(toolbarAction("▢", { openBrowserTabs() }))
 
         toolbar.addView(toolbarAction("", { dialog.dismiss() }, com.marcorx6.library.R.drawable.ic_action_close))
         root.addView(toolbar, LinearLayout.LayoutParams(-1, -2))
@@ -165,10 +296,26 @@ internal class DownloadPageDialog(
         addressInput.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE) {
                 val entered = addressInput.text.toString().trim()
-                val candidate = if (entered.contains("://")) entered else "https://$entered"
-                val safeUrl = SecureUrlPolicy.toHttpsUrl(candidate)
-                if (safeUrl != null) {
-                    webView.loadUrl(safeUrl)
+                if (entered.isBlank()) {
+                    addressInput.error = translate("أدخل رابطاً أو عبارة للبحث")
+                    return@setOnEditorActionListener true
+                }
+                val looksLikeUrl = entered.contains("://") ||
+                    android.util.Patterns.WEB_URL.matcher(entered).matches()
+                val destination = if (looksLikeUrl) {
+                    val candidate = if (entered.contains("://")) entered else "https://$entered"
+                    SecureUrlPolicy.toHttpsUrl(candidate)
+                } else {
+                    Uri.Builder()
+                        .scheme("https")
+                        .authority("www.google.com")
+                        .appendPath("search")
+                        .appendQueryParameter("q", entered)
+                        .build()
+                        .toString()
+                }
+                if (destination != null) {
+                    webView.loadUrl(destination)
                     val imm = activity.getSystemService(Activity.INPUT_METHOD_SERVICE) as? android.view.inputmethod.InputMethodManager
                     imm?.hideSoftInputFromWindow(addressInput.windowToken, 0)
                     true
@@ -235,9 +382,55 @@ internal class DownloadPageDialog(
         }
         root.addView(candidateScroll, LinearLayout.LayoutParams(-1, dp(112)))
 
+        fun confirmDownload(
+            url: String,
+            label: String,
+            mimeType: String = "",
+            contentDisposition: String = ""
+        ) {
+            val safeUrl = SecureUrlPolicy.toHttpsUrl(url) ?: return
+            DownloadConfirmationPanel(activity, translate, dark).show(
+                url = safeUrl,
+                suggestedName = android.webkit.URLUtil.guessFileName(safeUrl, contentDisposition, mimeType)
+                    .ifBlank { label.ifBlank { gameTitle } },
+                mimeType = mimeType,
+                onConfirm = { fileName ->
+                    val safeName = fileName.trim()
+                        .replace(Regex("""[\\\\/:*?"<>|]"""), "_")
+                        .take(180)
+                        .ifBlank { android.webkit.URLUtil.guessFileName(safeUrl, null, mimeType) }
+                    val disposition = "attachment; filename=\"$safeName\""
+                    onDownload(
+                        safeUrl,
+                        safeName.ifBlank { gameTitle },
+                        webView.settings.userAgentString.orEmpty(),
+                        disposition,
+                        mimeType,
+                        webView.url.orEmpty()
+                    )
+                }
+            )
+        }
+
+        fun isDirectFileUrl(url: String): Boolean {
+            val uri = try { Uri.parse(url) } catch (_: Exception) { return false }
+            val path = uri.path.orEmpty().lowercase()
+            val knownExtension = Regex("""\.(zip|7z|rar|iso|pkg|bin|cue|chd|img|pbp|cso|nsp|xci|apk|pdf|mp4|m4v|mkv|webm|mov|avi|flv|3gp|mp3|m4a|aac|wav|flac|ogg)$""", RegexOption.IGNORE_CASE).containsMatchIn(path)
+            val downloadFlag = listOf("download", "attachment", "file", "export").any { key ->
+                uri.getQueryParameter(key)?.let { value ->
+                    value.equals("1", true) || value.equals("true", true) ||
+                        value.equals("yes", true) || value.equals("download", true)
+                } == true
+            }
+            val downloadPath = Regex("""(?:^|/)(?:download|attachment|export)(?:/|$)""", RegexOption.IGNORE_CASE)
+                .containsMatchIn(path)
+            return knownExtension || downloadFlag || downloadPath
+        }
+
+        val candidateUrls = mutableSetOf<String>()
         fun addCandidate(label: String, url: String) {
             val safeUrl = SecureUrlPolicy.toHttpsUrl(url) ?: return
-            if (candidates.childCount >= 5) return
+            if (!candidateUrls.add(safeUrl) || candidates.childCount >= 8) return
             candidates.addView(TextView(activity).apply {
                 text = "  " + label.take(70).ifBlank { translate("فتح رابط الملف المحتمل") }
                 setCompoundDrawablesRelativeWithIntrinsicBounds(com.marcorx6.library.R.drawable.ic_action_external, 0, 0, 0)
@@ -254,8 +447,7 @@ internal class DownloadPageDialog(
                 isClickable = true
                 isFocusable = true
                 setOnClickListener {
-                    status.text = translate("جارٍ فحص الرابط المحتمل…")
-                    webView.loadUrl(safeUrl)
+                    confirmDownload(safeUrl, label)
                 }
             }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(5) })
             candidateTitle.visibility = View.VISIBLE
@@ -263,7 +455,7 @@ internal class DownloadPageDialog(
         }
 
         fun scanForFileLinks() {
-            val script = """(function(){var out=[],seen={};document.querySelectorAll('a[href]').forEach(function(a){var h=a.href||'',t=(a.innerText||a.textContent||'').trim(),d=a.hasAttribute('download'),u=h.toLowerCase().split('?')[0];var ext=/\.(zip|7z|rar|iso|pkg|bin|cue|chd|img|pbp|cso|nsp|xci|apk|pdf|mp4|mp3)(?:$)/i.test(u);var words=/(download|تحميل|تنزيل|رابط مباشر|direct)/i.test(t);if((d||ext||words)&&h.indexOf('https://')===0&&!seen[h]){seen[h]=1;out.push({url:h,label:t||'رابط ملف محتمل',strong:d||ext});}});return JSON.stringify(out.slice(0,8));})()"""
+            val script = """(function(){var out=[],seen={};var ext=/\.(zip|7z|rar|iso|pkg|bin|cue|chd|img|pbp|cso|nsp|xci|apk|pdf|mp4|m4v|mkv|webm|mov|avi|flv|3gp|mp3|m4a|aac|wav|flac|ogg)$/i;var words=/(download|تحميل|تنزيل|رابط مباشر|direct|download file)/i;function add(raw,label,force){try{var u=new URL(raw,location.href);if(u.protocol!=='https:'||seen[u.href]||out.length>=12)return;var p=u.pathname.toLowerCase(),q=u.search.toLowerCase(),endpoint=/(?:^|\/)(download|attachment|file|export)(?:\/|$)/i.test(p)||/[?&](download|attachment|file|export)=(1|true|yes|download)(?:&|$)/i.test(q);if(force||ext.test(p)||endpoint){seen[u.href]=1;out.push({url:u.href,label:(label||'ملف مباشر محتمل').slice(0,90)});}}catch(e){}}document.querySelectorAll('a[href],a[data-href],a[data-url],[data-download-url],[data-file-url],form[action],video[src],video source[src],audio[src],audio source[src]').forEach(function(e){var h=e.href||e.getAttribute('data-href')||e.getAttribute('data-url')||e.getAttribute('data-download-url')||e.getAttribute('data-file-url')||e.action||e.src||e.getAttribute('src')||'',t=(e.innerText||e.textContent||e.getAttribute('aria-label')||'').trim(),d=e.hasAttribute('download'),p=h.toLowerCase().split('?')[0],media=e.tagName==='VIDEO'||e.tagName==='AUDIO'||e.tagName==='SOURCE';if(media||d||words.test(t)||ext.test(p)||/(?:download|attachment|file|export)/i.test(h))add(h,t,d||media);});return JSON.stringify(out);})()"""
             webView.evaluateJavascript(script) { raw ->
                 try {
                     val decoded = JSONTokener(raw ?: "[]").nextValue()
@@ -331,40 +523,75 @@ internal class DownloadPageDialog(
         browserActions.addView(adToggle, LinearLayout.LayoutParams(0, dp(42), 1f))
         root.addView(browserActions, LinearLayout.LayoutParams(-1, -2))
         val blockedRequests = AtomicInteger(0)
+        // Curated local filter rules: known ad networks plus common third-party ad endpoints.
+        // This is deliberately conservative for first-party pages so download controls keep working.
         val blockedAdHosts = setOf(
             "doubleclick.net", "googlesyndication.com", "googleadservices.com",
-            "adservice.google.com", "googletagservices.com", "googletagmanager.com",
+            "adservice.google.com", "googletagservices.com",
             "taboola.com", "outbrain.com", "popads.net", "popcash.net",
             "propellerads.com", "exoclick.com", "trafficjunky.com", "onclickads.net",
             "juicyads.com", "adsterra.com", "adform.net", "adnxs.com",
             "adsrvr.org", "criteo.com", "casalemedia.com", "rubiconproject.com",
             "openx.net", "pubmatic.com", "sharethrough.com", "lijit.com",
             "media.net", "revcontent.com", "mgid.com", "zemanta.com",
-            "smartadserver.com", "yieldmo.com", "bidswitch.net",
-            "advertising.com", "3lift.com", "contextweb.com", "sovrn.com",
-            "inmobi.com", "unityads.unity3d.com", "applovin.com",
-            "vungle.com", "chartboost.com", "ironsrc.com", "appsflyer.com",
-            "adjust.com", "branch.io", "scorecardresearch.com",
-            "adcolony.com", "adnxs-simple.com", "adsafeprotected.com",
-            "adroll.com", "advertising.com", "amplitude.com", "app-measurement.com",
-            "bidswitch.net", "bluekai.com", "bouncex.net", "casalemedia.com",
-            "clarity.ms", "connectad.io", "demdex.net",
-            "e-planning.net", "everesttech.net", "eyeota.net", "flashtalking.com",
-            "google-analytics.com", "hotjar.com", "ibillboard.com", "krxd.net",
-            "lijit.com", "mathtag.com", "moatads.com", "omnitagjs.com",
-            "pixel.quantserve.com", "quantserve.com", "rlcdn.com", "samba.tv",
-            "serving-sys.com", "sharethrough.com", "simpli.fi", "siteimproveanalytics.com",
-            "smartadserver.com", "sportradarserving.com", 
-            "teads.tv", "triplelift.com", "turn.com", "undertone.com",
-            "yieldlove.com", "zemanta.com"
+            "smartadserver.com", "yieldmo.com", "bidswitch.net", "advertising.com",
+            "3lift.com", "contextweb.com", "sovrn.com", "inmobi.com",
+            "unityads.unity3d.com", "applovin.com", "vungle.com", "chartboost.com",
+            "ironsrc.com", "adcolony.com", "adnxs-simple.com", "adsafeprotected.com",
+            "adroll.com", "bluekai.com", "bouncex.net", "clarity.ms", "connectad.io",
+            "demdex.net", "e-planning.net", "everesttech.net", "eyeota.net",
+            "flashtalking.com", "ibillboard.com", "krxd.net", "mathtag.com",
+            "moatads.com", "omnitagjs.com", "quantserve.com", "rlcdn.com",
+            "samba.tv", "serving-sys.com", "simpli.fi", "sportradarserving.com",
+            "teads.tv", "triplelift.com", "turn.com", "undertone.com", "yieldlove.com",
+            "adzerk.net", "adlightning.com", "admanmedia.com", "adpushup.com",
+            "adrecover.com", "adthrive.com", "carbonads.com", "ethicalads.io",
+            "buysellads.com", "optad360.com", "monetizemore.com", "snigel.com",
+            "shareasale.com", "impact.com", "awin1.com", "partnerize.com",
+            "amazon-adsystem.com", "advertising.amazon.com", "ads.google.com",
+            "ads.youtube.com", "pixel.facebook.com", "connect.facebook.net",
+            "analytics.tiktok.com", "bat.bing.com", "popunder.net",
+            "hilltopads.net", "hilltopads.com", "ad-maven.com", "ad-maven.net",
+            "monetag.com", "monetag.net",
+            "adcash.com", "yllix.com", "revenuehits.com",
+            "adnow.com", "adskeeper.co.uk", "adskeeper.com", "ad-delivery.net",
+            "ad.gt", "adfox.ru", "adition.com", "adkernel.com", "admatic.com.tr",
+            "adplugg.com", "adstir.com", "adtelligent.com", "adtng.com", "adwolf.com",
+            "adyoulike.com", "bidvertiser.com", "clickadu.com", "clickaine.com",
+            "evadav.com", "galaksion.com", "onclickmega.com", "pushground.com",
+            "richpush.co", "rollerads.com", "trafficstars.com", "zeropark.com",
+            "plugrush.com", "popmyads.com",
+            // Common third-party analytics and session-tracking endpoints.
+            "google-analytics.com", "analytics.google.com", "hotjar.com",
+            "segment.io", "mixpanel.com", "amplitude.com", "fullstory.com",
+            "mouseflow.com", "scorecardresearch.com", "chartbeat.com",
+            "parsely.com", "heap.io", "heapanalytics.com", "smartlook.com",
+            "luckyorange.com", "inspectlet.com", "nr-data.net", "newrelic.com",
+            "stats.wp.com"
+        )
+        val adEndpointPatterns = listOf(
+            Regex("""(?:^|/)(?:pagead|adsystem|adserver|adservice|adview|adclick|popunder|popup|bannerad|vast|vpaid|adrequest|adserve|adframe|adloader|adscript|adsby|adsense|prebid|gampad)(?:/|[._?=&-]|$)""", RegexOption.IGNORE_CASE),
+            Regex("""[?&](?:adunit|adslot|adtag|adzone|adserver|sponsorid|advert|advertising|ad_type|ad_format|ad_id)=([^&]*)""", RegexOption.IGNORE_CASE),
+            Regex("""(?:^|[./_-])(?:ads?|adserver|adservice|adnetwork|advert|sponsor|popunder|popup)(?:[./_-]|$)""", RegexOption.IGNORE_CASE)
         )
         fun hostIsAllowed(host: String): Boolean =
             allowedHosts.any { host == it || host.endsWith(".$it") }
         fun isBlockedAdRequest(url: String): Boolean {
             if (!adBlockerEnabled) return false
-            val host = try { Uri.parse(url).host?.lowercase() } catch (_: Exception) { null } ?: return false
+            val uri = try { Uri.parse(url) } catch (_: Exception) { return false }
+            val host = uri.host?.lowercase() ?: return false
             if (hostIsAllowed(host)) return false
-            return blockedAdHosts.any { host == it || host.endsWith(".$it") }
+            // Never classify an explicit file/download endpoint as an ad request.
+            // This protects direct game archives served from shared CDN domains.
+            if (isDirectFileUrl(url)) return false
+            if (blockedAdHosts.any { host == it || host.endsWith(".$it") }) return true
+            val pageHost = try { Uri.parse(webView.url ?: safeStartUrl).host?.lowercase() } catch (_: Exception) { null }
+            // Generic endpoint rules apply only to third-party requests, not the download site itself.
+            if (pageHost != null && host != pageHost && !host.endsWith(".$pageHost")) {
+                val target = (uri.encodedPath.orEmpty() + "?" + uri.encodedQuery.orEmpty())
+                if (adEndpointPatterns.any { it.containsMatchIn(target) }) return true
+            }
+            return false
         }
         fun recordBlocked() {
             val count = blockedRequests.incrementAndGet()
@@ -379,22 +606,43 @@ internal class DownloadPageDialog(
             val script = """(function(){try{
               var selectors=['iframe[src*="doubleclick"]','iframe[src*="googlesyndication"]',
                 'iframe[src*="adservice"]','iframe[src*="adnxs"]','iframe[src*="outbrain"]',
-                '[id^="google_ads"]','[id*="ad-container"]','[class*="ad-container"]',
-                '[class*="advertisement"]','[class*="advert-banner"]','[class*="ad-slot"]',
-                '[class*="sponsored"]','[data-ad]','[data-ad-unit]','[data-advertisement]',
-                'ins.adsbygoogle','amp-ad','amp-embed[type="taboola"]',
-                'div[id*="taboola"]','div[class*="taboola"]',
-                'div[id*="outbrain"]','div[class*="outbrain"]'];
+                'iframe[src*="taboola"]','iframe[src*="popads"]','iframe[src*="popcash"]',
+                'iframe[src*="propellerads"]','iframe[src*="exoclick"]','iframe[src*="adsterra"]',
+                'iframe[src*="ad-delivery"]','iframe[src*="clickadu"]','iframe[src*="trafficstars"]',
+                'iframe[src*="adnow"]','iframe[src*="adskeeper"]','iframe[src*="monetag"]',
+                '[id^="google_ads"]','[id*="ad-container"]','[id*="ad_wrapper"]','[id*="ad_banner"]',
+                '[id*="ad-popup"]','[id*="ad-overlay"]',
+                '[class*="ad-container"]','[class*="ad-wrapper"]','[class*="advertisement"]',
+                '[class*="advert-banner"]','[class*="ad-slot"]','[class*="ad-placement"]',
+                '[class*="sponsored"]','[class*="sponsor-box"]','[class*="ad-banner"]',
+                '[class*="ad-popup"]','[class*="ad-overlay"]','[class*="popunder"]',
+                '[data-ad]','[data-ad-unit]',
+                '[data-ad-slot]','[data-advertisement]','[data-google-query-id]',
+                '[aria-label="advertisement" i]','ins.adsbygoogle','amp-ad',
+                'amp-embed[type="taboola"]','div[id*="taboola"]','div[class*="taboola"]',
+                'div[id*="outbrain"]','div[class*="outbrain"]',
+                'a[href*="doubleclick.net"]','a[href*="popads.net"]','a[href*="popcash.net"]',
+                'a[href*="propellerads.com"]','a[href*="exoclick.com"]'];
               function hideAds(root){var n=0;selectors.forEach(function(s){
-                try{root.querySelectorAll(s).forEach(function(e){
-                  if(n<120){e.style.setProperty('display','none','important');n++;}
-                });}catch(ignore){}
+                try{
+                  if(root&&root.nodeType===1&&root.matches&&root.matches(s)){
+                    root.style.setProperty('display','none','important');root.setAttribute('data-marco-ad-hidden','1');n++;
+                  }
+                  root.querySelectorAll(s).forEach(function(e){
+                    if(n<240){e.style.setProperty('display','none','important');e.setAttribute('data-marco-ad-hidden','1');n++;}
+                  });
+                }catch(ignore){}
               });}
               hideAds(document);
               if(!window.__marcoAdObserver){
+                var pending=false;
                 window.__marcoAdObserver=new MutationObserver(function(records){
-                  records.forEach(function(record){record.addedNodes.forEach(function(node){
-                    if(node&&node.nodeType===1){hideAds(node);}});
+                  if(pending)return;pending=true;
+                  requestAnimationFrame(function(){
+                    pending=false;
+                    records.forEach(function(record){record.addedNodes.forEach(function(node){
+                      if(node&&node.nodeType===1){hideAds(node);}});
+                    });
                   });
                 });
                 window.__marcoAdObserver.observe(document.documentElement,{childList:true,subtree:true});
@@ -422,20 +670,29 @@ internal class DownloadPageDialog(
                     recordBlocked()
                     return true
                 }
+                if (isDirectFileUrl(request.url.toString())) {
+                    confirmDownload(request.url.toString(), request.url.lastPathSegment ?: translate("ملف مباشر"))
+                    return true
+                }
                 return false
             }
 
             override fun onPageStarted(view: WebView, url: String, favicon: android.graphics.Bitmap?) {
+                if (activeTabIndex in browserTabs.indices && url.startsWith("https://")) {
+                    browserTabs[activeTabIndex] = browserTabs[activeTabIndex].first to url
+                }
                 progress.visibility = View.VISIBLE
                 progress.progress = 0
                 status.text = Uri.parse(url).host ?: translate("جارٍ فتح صفحة التحميل…")
                 addressInput.setText(url)
                 candidates.removeAllViews()
+                candidateUrls.clear()
                 candidateTitle.visibility = View.GONE
                 candidateScroll.visibility = View.GONE
             }
 
             override fun onPageFinished(view: WebView, url: String) {
+                rememberPage(url, view.title.orEmpty())
                 progress.visibility = View.GONE
                 status.text = translate("إذا ظهرت خطوة تحقق أو مؤقت، أكملها داخل هذه الصفحة. الروابط المحتملة تظهر أسفلها.")
                 applyCosmeticFiltering()
@@ -466,7 +723,7 @@ internal class DownloadPageDialog(
             if (safeUrl == null) {
                 Toast.makeText(activity, translate("رابط الملف غير آمن؛ تم إيقاف التنزيل"), Toast.LENGTH_LONG).show()
             } else {
-                onDownload(safeUrl, gameTitle, userAgent.orEmpty(), contentDisposition.orEmpty(), mimeType.orEmpty(), webView.url.orEmpty())
+                confirmDownload(safeUrl, contentDisposition.ifBlank { gameTitle }, mimeType.orEmpty(), contentDisposition)
             }
         })
 

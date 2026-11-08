@@ -55,6 +55,11 @@ internal object GameLibraryManager {
             normalized == "ps2" || normalized.contains("playstation2") -> "PS2"
             normalized == "ps3" || normalized.contains("playstation3") -> "PS3"
             normalized == "ps4" || normalized.contains("playstation4") -> "PS4"
+            normalized == "ps3arabic" -> "PS3_ARABIC"
+            normalized == "ps2arabic" -> "PS2_ARABIC"
+            normalized == "ps2ps4" -> "PS2_PORT_PS4"
+            normalized == "ps2ps3" || normalized == "ps2portps3" -> "PS2_PORT_PS3"
+            normalized == "ps2portps4" -> "PS2_PORT_PS4"
             normalized == "3ds" || normalized.contains("nintendo3ds") -> "3DS"
             normalized == "gba" || normalized.contains("gameboyadvance") -> "GBA"
             else -> null

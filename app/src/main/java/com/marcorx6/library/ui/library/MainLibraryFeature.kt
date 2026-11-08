@@ -83,6 +83,7 @@ internal class MainLibraryFeature(
         applyMotionPreferences = applyMotionPreferences
     )
 
+    fun openCategoryFromSection(category: String, title: String) = controller.openCategoryFromSection(category, title)
     fun create() = controller.create()
     fun dispose() = controller.dispose()
 }

@@ -30,8 +30,8 @@ internal class GameArticleWebViewFactory(
             // Remote article content cannot access local files or content providers.
             settings.allowFileAccess = false
             settings.allowContentAccess = false
-            settings.allowFileAccessFromFileURLs = false
-            settings.allowUniversalAccessFromFileURLs = false
+            // File-URL cross-origin access remains disabled by Android defaults.
+            // Do not opt into deprecated file-URL access flags.
             settings.cacheMode = android.webkit.WebSettings.LOAD_DEFAULT
             settings.loadsImagesAutomatically = true
             settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW

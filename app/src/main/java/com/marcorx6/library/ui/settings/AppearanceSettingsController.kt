@@ -118,7 +118,7 @@ internal class AppearanceSettingsController(
             setTextColor(ink)
         })
         colorCard.addView(TextView(activity).apply {
-            text = translate("فضي معدني  •  اللون الرسمي للتطبيق")
+            text = translate("فضي معدني  •  مع الأسود الفحمي")
             textSize = 12f
             setTextColor(muted)
             setPadding(0, dp(8), 0, dp(12))
@@ -310,7 +310,7 @@ internal class AppearanceSettingsController(
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
 
         root.addView(TextView(activity).apply {
-            text = "MARCO  •  SILVER EXPERIENCE"
+            text = "MARCO  •  BLACK / BLACK / SILVER EXPERIENCE"
             textSize = 9f
             gravity = Gravity.CENTER
             setTextColor(muted)

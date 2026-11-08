@@ -21,11 +21,12 @@ internal data class StoredDownload(
     val lastModified: String,
     val localPath: String,
     val error: String,
-    val sourcePostUrl: String
+    val sourcePostUrl: String,
+    val priority: Int
 )
 
 internal class DownloadDatabase private constructor(context: Context) :
-    SQLiteOpenHelper(context.applicationContext, "marco_downloads.db", null, 2) {
+    SQLiteOpenHelper(context.applicationContext, "marco_downloads.db", null, 3) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -44,13 +45,15 @@ internal class DownloadDatabase private constructor(context: Context) :
                 last_modified TEXT NOT NULL DEFAULT '',
                 local_path TEXT NOT NULL DEFAULT '',
                 error TEXT NOT NULL DEFAULT '',
-                source_post_url TEXT NOT NULL DEFAULT ''
+                source_post_url TEXT NOT NULL DEFAULT '',
+                priority INTEGER NOT NULL DEFAULT 0
             )"""
         )
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         if (oldVersion < 2) db.execSQL("ALTER TABLE downloads ADD COLUMN source_post_url TEXT NOT NULL DEFAULT ''")
+        if (oldVersion < 3) db.execSQL("ALTER TABLE downloads ADD COLUMN priority INTEGER NOT NULL DEFAULT 0")
     }
 
     @Synchronized
@@ -62,6 +65,96 @@ internal class DownloadDatabase private constructor(context: Context) :
             put("source_post_url", sourcePostUrl)
         }
         writableDatabase.insertOrThrow("downloads", null, values)
+    }
+
+    @Synchronized
+    fun findActiveDuplicate(url: String, sourcePostUrl: String): StoredDownload? {
+        val activeStatuses = intArrayOf(
+            DownloadManager.STATUS_PENDING,
+            DownloadManager.STATUS_RUNNING,
+            STATUS_SCHEDULED,
+            DownloadManager.STATUS_PAUSED
+        )
+        val byUrl = readableDatabase.query(
+            "downloads", null,
+            "url=? AND status IN (?,?,?,?)",
+            arrayOf(url, *activeStatuses.map(Int::toString).toTypedArray()),
+            null, null, "id DESC", "1"
+        ).use { if (it.moveToFirst()) it.toRecord() else null }
+        if (byUrl != null) return byUrl
+        if (sourcePostUrl.isBlank()) return null
+        return readableDatabase.query(
+            "downloads", null,
+            "source_post_url=? AND status IN (?,?,?,?)",
+            arrayOf(sourcePostUrl, *activeStatuses.map(Int::toString).toTypedArray()),
+            null, null, "id DESC", "1"
+        ).use { if (it.moveToFirst()) it.toRecord() else null }
+    }
+
+
+    /**
+     * Atomically reserves free download slots before WorkManager is notified.
+     * STATUS_SCHEDULED counts as an occupied slot, preventing concurrent enqueue
+     * calls from exceeding the user's configured limit.
+     */
+    @Synchronized
+    fun claimPending(maxConcurrent: Int): List<Long> {
+        val db = writableDatabase
+        db.beginTransaction()
+        try {
+            val active = db.rawQuery(
+                "SELECT COUNT(*) FROM downloads WHERE status IN (?,?)",
+                arrayOf(DownloadManager.STATUS_RUNNING.toString(), STATUS_SCHEDULED.toString())
+            ).use { if (it.moveToFirst()) it.getInt(0) else 0 }
+            val available = (maxConcurrent.coerceIn(1, 5) - active).coerceAtLeast(0)
+            if (available == 0) {
+                db.setTransactionSuccessful()
+                return emptyList()
+            }
+            val ids = db.query(
+                "downloads", arrayOf("id"), "status=?",
+                arrayOf(DownloadManager.STATUS_PENDING.toString()),
+                null, null, "priority DESC, id ASC", available.toString()
+            ).use { cursor ->
+                buildList { while (cursor.moveToNext()) add(cursor.getLong(0)) }
+            }
+            ids.forEach { id ->
+                db.update(
+                    "downloads",
+                    ContentValues().apply { put("status", STATUS_SCHEDULED) },
+                    "id=? AND status=?",
+                    arrayOf(id.toString(), DownloadManager.STATUS_PENDING.toString())
+                )
+            }
+            db.setTransactionSuccessful()
+            return ids
+        } finally {
+            db.endTransaction()
+        }
+    }
+
+    @Synchronized
+    fun markRunning(id: Long): Boolean {
+        val changed = writableDatabase.update(
+            "downloads",
+            ContentValues().apply { put("status", DownloadManager.STATUS_RUNNING) },
+            "id=? AND status IN (?,?,?)",
+            arrayOf(
+                id.toString(),
+                DownloadManager.STATUS_PENDING.toString(),
+                STATUS_SCHEDULED.toString(),
+                DownloadManager.STATUS_RUNNING.toString()
+            )
+        )
+        return changed > 0
+    }
+
+    @Synchronized
+    fun nextId(): Long {
+        val current = readableDatabase.rawQuery("SELECT MAX(id) FROM downloads", null).use {
+            if (it.moveToFirst()) it.getLong(0) else 0L
+        }
+        return maxOf(System.currentTimeMillis(), current + 1L, 1L)
     }
 
     @Synchronized
@@ -77,6 +170,9 @@ internal class DownloadDatabase private constructor(context: Context) :
             put("url", url); put("user_agent", userAgent); put("cookie", cookie)
             put("referrer", referrer); put("mime_type", mime)
             put("status", DownloadManager.STATUS_PENDING); put("error", "")
+            put("downloaded", 0L); put("total", -1L)
+            put("etag", ""); put("last_modified", "")
+            put("local_path", "")
         }, "id=?", arrayOf(id.toString()))
     }
 
@@ -91,11 +187,57 @@ internal class DownloadDatabase private constructor(context: Context) :
             .use { cursor -> buildList { while (cursor.moveToNext()) add(cursor.toRecord()) } }
 
     @Synchronized
+    fun pauseAllActive(): List<Long> {
+        val db = writableDatabase
+        db.beginTransaction()
+        try {
+            val ids = db.query(
+                "downloads", arrayOf("id"), "status IN (?,?,?)",
+                arrayOf(
+                    DownloadManager.STATUS_PENDING.toString(),
+                    DownloadManager.STATUS_RUNNING.toString(),
+                    STATUS_SCHEDULED.toString()
+                ), null, null, "id ASC"
+            ).use { cursor -> buildList { while (cursor.moveToNext()) add(cursor.getLong(0)) } }
+            db.update(
+                "downloads",
+                ContentValues().apply { put("status", DownloadManager.STATUS_PAUSED) },
+                "status IN (?,?,?)",
+                arrayOf(
+                    DownloadManager.STATUS_PENDING.toString(),
+                    DownloadManager.STATUS_RUNNING.toString(),
+                    STATUS_SCHEDULED.toString()
+                )
+            )
+            db.setTransactionSuccessful()
+            return ids
+        } finally {
+            db.endTransaction()
+        }
+    }
+
+    @Synchronized
+    fun pausedOrFailedIds(): List<Long> =
+        readableDatabase.query(
+            "downloads", arrayOf("id"), "status IN (?,?)",
+            arrayOf(DownloadManager.STATUS_PAUSED.toString(), DownloadManager.STATUS_FAILED.toString()),
+            null, null, "id ASC"
+        ).use { cursor -> buildList { while (cursor.moveToNext()) add(cursor.getLong(0)) } }
+
+    @Synchronized
     fun status(id: Long, status: Int, error: String = "") {
         writableDatabase.update("downloads", ContentValues().apply {
             put("status", status); put("error", error)
         }, "id=?", arrayOf(id.toString()))
     }
+
+    @Synchronized
+    fun setPriority(id: Long, priority: Int) {
+        writableDatabase.update("downloads", ContentValues().apply { put("priority", priority.coerceIn(0, 2)) }, "id=?", arrayOf(id.toString()))
+    }
+
+    @Synchronized
+    fun deleteCompleted(): Int = writableDatabase.delete("downloads", "status=?", arrayOf(DownloadManager.STATUS_SUCCESSFUL.toString()))
 
     @Synchronized
     fun renameTitle(id: Long, title: String) {
@@ -145,11 +287,13 @@ internal class DownloadDatabase private constructor(context: Context) :
         lastModified = getString(getColumnIndexOrThrow("last_modified")),
         localPath = getString(getColumnIndexOrThrow("local_path")),
         error = getString(getColumnIndexOrThrow("error")),
-        sourcePostUrl = getString(getColumnIndexOrThrow("source_post_url"))
+        sourcePostUrl = getString(getColumnIndexOrThrow("source_post_url")),
+        priority = getInt(getColumnIndexOrThrow("priority"))
     )
 
     companion object {
         const val STATUS_CANCELLED = 6
+        const val STATUS_SCHEDULED = 7
         @Volatile private var instance: DownloadDatabase? = null
         fun get(context: Context): DownloadDatabase =
             instance ?: synchronized(this) {

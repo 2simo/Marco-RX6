@@ -75,7 +75,7 @@ internal class GameDownloadLinksViewFactory(
                     setStroke(dp(1), Color.argb(145, 210, 216, 225))
                 }
                 if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                    android.content.res.ColorStateList.valueOf(Color.argb(100, 225, 230, 237)),
+                    android.content.res.ColorStateList.valueOf(Color.argb(100, 145, 190, 255)),
                     null,
                     GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(13).toFloat() }
                 )

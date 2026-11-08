@@ -14,6 +14,12 @@ class BloggerFeedParserTest {
         assertEquals("PS2", BloggerFeedParser.normalizePlatform("PS-2"))
         assertEquals("PS3", BloggerFeedParser.normalizePlatform("PlayStation3"))
         assertEquals("PS4", BloggerFeedParser.normalizePlatform("ps4"))
+        assertEquals("PS3_ARABIC", BloggerFeedParser.normalizePlatform("ps3arabic"))
+        assertEquals("PS2_ARABIC", BloggerFeedParser.normalizePlatform("ps2arabic"))
+        assertEquals("PS2_PORT_PS4", BloggerFeedParser.normalizePlatform("ps2ps4"))
+        assertEquals("PS2_PORT_PS3", BloggerFeedParser.normalizePlatform("ps2ps3"))
+        assertEquals("PS2_PORT_PS4", BloggerFeedParser.normalizePlatform("PS2 Port PS4"))
+        assertEquals("PS2_PORT_PS3", BloggerFeedParser.normalizePlatform("PS2 Port PS3"))
         assertEquals("3DS", BloggerFeedParser.normalizePlatform("Nintendo 3DS"))
         assertEquals("3DS", BloggerFeedParser.normalizePlatform("3DS"))
         assertEquals("GBA", BloggerFeedParser.normalizePlatform("Game Boy Advance"))
@@ -61,6 +67,17 @@ class BloggerFeedParserTest {
         )
 
         assertEquals("PS2", BloggerFeedParser.platformFromCategories(entry))
+    }
+
+    @Test
+    fun prioritizesSpecificOsCategoryOverBroadConsoleCategory() {
+        val entry = JSONObject().put(
+            "category",
+            org.json.JSONArray()
+                .put(JSONObject().put("term", "PS2"))
+                .put(JSONObject().put("term", "ps2ps4"))
+        )
+        assertEquals("PS2_PORT_PS4", BloggerFeedParser.platformFromCategories(entry))
     }
 
     @Test
@@ -134,6 +151,54 @@ class BloggerFeedParserTest {
             "https://example.com/download?id=1&part=2",
             links.getJSONObject(0).getString("url")
         )
+    }
+
+    @Test
+    fun detectsDownloadLinksInsideArabicDownloadSectionWithGenericButtonText() {
+        val html = """
+            <h2>روابط التحميل</h2>
+            <div>
+              <a class="download" title="رابط اللعبة" href="https://example.org/files/game">
+                اضغط هنا
+              </a>
+              <a href="https://example.org/files/update">الرابط الأول</a>
+            </div>
+            <h2>معلومات إضافية</h2>
+            <a href="https://example.org/author">الكاتب</a>
+        """.trimIndent()
+
+        val links = org.json.JSONArray(BloggerFeedParser.extractDownloadLinks(html))
+        assertEquals(2, links.length())
+        assertEquals("https://example.org/files/game", links.getJSONObject(0).getString("url"))
+        assertEquals("https://example.org/files/update", links.getJSONObject(1).getString("url"))
+    }
+
+    @Test
+    fun detectsDirectFileLinksEvenWhenButtonLabelIsGeneric() {
+        val html = """
+            <a href="https://files.example.org/archive/game.7z?token=abc">اضغط هنا</a>
+            <a href="https://example.org/images/cover.jpg">تحميل اللعبة</a>
+            <a href="https://example.org/about">حول اللعبة</a>
+        """.trimIndent()
+
+        val links = org.json.JSONArray(BloggerFeedParser.extractDownloadLinks(html))
+        assertEquals(1, links.length())
+        assertEquals(
+            "https://files.example.org/archive/game.7z?token=abc",
+            links.getJSONObject(0).getString("url")
+        )
+    }
+
+    @Test
+    fun detectsCommonDownloadHostEvenWithNonDescriptiveButtonText() {
+        val html = """
+            <a title="ملف اللعبة" href="https://gofile.io/d/AbCd">فتح الرابط</a>
+            <a href="https://example.org/contact">اتصل بنا</a>
+        """.trimIndent()
+
+        val links = org.json.JSONArray(BloggerFeedParser.extractDownloadLinks(html))
+        assertEquals(1, links.length())
+        assertEquals("https://gofile.io/d/AbCd", links.getJSONObject(0).getString("url"))
     }
 
 }

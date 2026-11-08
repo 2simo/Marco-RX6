@@ -25,6 +25,11 @@
 
 المكتبة تعرض ألعاب **PS2 وPS3 وPS4**. لا يعلن التطبيق عن توفير محاكيات ألعاب مدمجة.
 
+## تنظيم المشروع وجودة الإصدار
+
+- [دليل بنية المشروع وحدود مسؤوليات الحزم](docs/ARCHITECTURE.md)
+- [قائمة التحقق قبل إصدار APK](docs/RELEASE_QUALITY_CHECKLIST.md)
+
 ## التقنيات
 
 - Kotlin وAndroid SDK (minSdk 24، targetSdk 36).

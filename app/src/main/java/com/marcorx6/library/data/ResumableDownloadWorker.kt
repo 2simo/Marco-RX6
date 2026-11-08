@@ -29,20 +29,27 @@ internal class ResumableDownloadWorker(
         val id = inputData.getLong(KEY_ID, -1L)
         if (id <= 0L) return Result.failure()
         val database = DownloadDatabase.get(applicationContext)
-        val item = database.get(id) ?: return Result.failure()
+        val item = database.get(id) ?: run {
+            DownloadWorkScheduler.schedule(applicationContext)
+            return Result.failure()
+        }
         if (item.status == DownloadManager.STATUS_PAUSED) {
             DownloadWorkScheduler.schedule(applicationContext)
             return Result.success()
         }
         return try {
-            setForeground(createForegroundInfo(item.title, id))
-            database.status(id, DownloadManager.STATUS_RUNNING)
-            download(item, database)
+            if (!database.markRunning(id)) {
+                Result.success()
+            } else {
+                setForeground(createForegroundInfo(item.title, id))
+                download(item, database)
+            }
         } catch (error: Exception) {
             val latest = database.get(id)
             if (latest == null || latest.status == DownloadDatabase.STATUS_CANCELLED) {
                 val directory = File(applicationContext.filesDir, "MARCO_RX6_downloads")
                 File(directory, "$id.part").delete()
+                (0 until 4).forEach { File(directory, "$id.seg$it").delete() }
                 Result.success()
             } else if (latest.status == DownloadManager.STATUS_PAUSED) {
                 Result.success()
@@ -64,7 +71,19 @@ internal class ResumableDownloadWorker(
     private fun download(item: StoredDownload, database: DownloadDatabase): Result {
         val directory = File(applicationContext.filesDir, "MARCO_RX6_downloads").apply { mkdirs() }
         val partial = File(directory, "${item.id}.part")
+        val segmented = SegmentedDownloadEngine.download(
+            applicationContext,
+            item,
+            database,
+            isStopped = { isStopped || database.get(item.id)?.status == DownloadManager.STATUS_PAUSED ||
+                database.get(item.id)?.status == DownloadDatabase.STATUS_CANCELLED },
+            onProgress = { downloaded, total ->
+                updateProgressNotification(item.title, item.id, downloaded, total)
+            }
+        )
+        if (segmented) return Result.success()
         var offset = if (partial.exists()) partial.length() else 0L
+        val speedLimiter = DownloadSpeedLimiter(DownloadConcurrencyPreferences(applicationContext).speedLimitBytesPerSecond())
         var connection: HttpURLConnection? = null
         try {
             connection = (URL(item.url).openConnection() as HttpURLConnection).apply {
@@ -140,10 +159,12 @@ internal class ResumableDownloadWorker(
                 FileOutputStream(partial, append).use { sink ->
                     val buffer = ByteArray(64 * 1024)
                     var lastUpdate = System.currentTimeMillis()
+                    var lastNotificationUpdate = 0L
                     while (true) {
                         if (isStopped) throw InterruptedException("Download paused or cancelled")
                         val count = input.read(buffer)
                         if (count < 0) break
+                        speedLimiter.acquire(count)
                         sink.write(buffer, 0, count)
                         offset += count
                         val now = System.currentTimeMillis()
@@ -152,6 +173,10 @@ internal class ResumableDownloadWorker(
                             sink.fd.sync()
                             database.progress(item.id, offset, total, etag, modified)
                             lastUpdate = now
+                            if (now - lastNotificationUpdate >= 1_500L) {
+                                updateProgressNotification(item.title, item.id, offset, total)
+                                lastNotificationUpdate = now
+                            }
                         }
                     }
                     sink.fd.sync()
@@ -204,6 +229,24 @@ internal class ResumableDownloadWorker(
         }
     }
 
+    private fun updateProgressNotification(title: String, downloadId: Long, downloaded: Long, total: Long) {
+        val language = applicationContext.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+            .getString("language", "ar") ?: "ar"
+        val localize: (String) -> String = { LanguageTranslator.translate(it, language) }
+        val percent = if (total > 0L) (downloaded * 100L / total).coerceIn(0L, 100L).toInt() else 0
+        val text = if (total > 0L) "$percent%" else localize("قيد التنزيل")
+        val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher)
+            .setContentTitle(title.ifBlank { "MARCO" })
+            .setContentText(text)
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setProgress(100, percent, total <= 0L)
+            .build()
+        val manager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.notify(notificationId(downloadId), notification)
+    }
+
     private fun createForegroundInfo(title: String, downloadId: Long): ForegroundInfo {
         val manager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val language = applicationContext.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
@@ -227,9 +270,9 @@ internal class ResumableDownloadWorker(
             .setProgress(0, 0, true)
             .build()
         return if (Build.VERSION.SDK_INT >= 29) {
-            ForegroundInfo(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+            ForegroundInfo(notificationId(downloadId), notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
         } else {
-            ForegroundInfo(NOTIFICATION_ID, notification)
+            ForegroundInfo(notificationId(downloadId), notification)
         }
     }
 
@@ -237,6 +280,6 @@ internal class ResumableDownloadWorker(
         const val KEY_ID = "download_id"
         private const val MAX_AUTOMATIC_RETRIES = 5
         private const val CHANNEL_ID = "marco_rx6_downloads"
-        private fun notificationId(downloadId: Long): Int = 6406 + (downloadId % 100000L).toInt()
+        private fun notificationId(downloadId: Long): Int = 1_000_000_000 + ((downloadId xor (downloadId ushr 32)).toInt() and 0x3fffffff)
     }
 }

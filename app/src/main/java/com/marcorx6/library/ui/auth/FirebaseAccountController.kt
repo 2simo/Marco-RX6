@@ -16,11 +16,15 @@ import android.view.Gravity
 import android.view.View
 import android.util.Patterns
 import android.widget.EditText
+import android.widget.CheckBox
 import android.widget.ImageView
+import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import com.marcorx6.library.data.Game
+import com.marcorx6.library.data.GameEngagementRepository
 import com.marcorx6.library.data.auth.FirebaseAuthRepository
 import com.marcorx6.library.data.auth.FirebaseUserDocumentRepository
 import com.google.firebase.auth.FirebaseUser
@@ -52,12 +56,18 @@ internal class FirebaseAccountController(
     private val isDarkMode: () -> Boolean,
     private val applyUnifiedSkin: (View) -> Unit,
     private val launchProfilePhotoPicker: (Intent) -> Unit,
-    private val translate: (String) -> String
+    private val translate: (String) -> String,
+    private val games: () -> List<Game>,
+    private val loadCover: (ImageView, String, String) -> Unit,
+    private val openGameDetails: (Game) -> Unit,
+    private val gameEngagementRepository: GameEngagementRepository
 ) {
     private val userDocuments = FirebaseUserDocumentRepository()
     private var pendingDeletionUid: String? = null
+    private var returnToProfileEditorAfterPhotoPick = false
 
     fun show() {
+        returnToProfileEditorAfterPhotoPick = false
         val dark = isDarkMode()
         val page = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
@@ -88,9 +98,339 @@ internal class FirebaseAccountController(
             setPadding(dp(8), 0, 0, dp(8))
         }, LinearLayout.LayoutParams(0, -2, 1f))
         page.addView(header)
+        page.addView(TextView(activity).apply {
+            text = translate("ملفك الشخصي • MARCO RX6")
+            textSize = 11f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            letterSpacing = 0.08f
+            setTextColor(if (dark) Color.rgb(135, 145, 160) else Color.rgb(105, 114, 128))
+            setPadding(dp(56), 0, 0, dp(8))
+        })
+
+        // Keep the avatar and account identity together as one profile header.
+        val photoView = ImageView(activity).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(if (dark) Color.rgb(35, 38, 45) else Color.rgb(222, 226, 232))
+                setStroke(dp(2), Color.rgb(190, 198, 210))
+            }
+            clipToOutline = true
+            contentDescription = translate("صورة الحساب")
+            setImageResource(com.marcorx6.library.R.drawable.ic_nav_profile)
+            imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
+        }
+        // A compact identity panel makes the account state immediately clear.
+        val identityCard = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            setPadding(dp(20), dp(22), dp(20), dp(20))
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                if (dark) intArrayOf(Color.rgb(34, 38, 46), Color.rgb(15, 17, 22))
+                else intArrayOf(Color.WHITE, Color.rgb(229, 233, 239))
+            ).apply {
+                cornerRadius = dp(24).toFloat()
+                setStroke(dp(1), if (dark) Color.rgb(105, 115, 130) else Color.rgb(180, 189, 202))
+            }
+        }
+        if (user != null && !user.isAnonymous) {
+            identityCard.addView(photoView, LinearLayout.LayoutParams(dp(100), dp(100)).apply {
+                gravity = Gravity.CENTER_HORIZONTAL
+                bottomMargin = dp(14)
+            })
+        }
         if (user == null || user.isAnonymous) {
+            identityCard.addView(TextView(activity).apply {
+                text = translate("MARCO RX6")
+                textSize = 11f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                letterSpacing = 0.16f
+                setTextColor(Color.rgb(190, 198, 210))
+            })
+            identityCard.addView(TextView(activity).apply {
+                text = translate("مرحباً بك في مجتمع MARCO")
+                textSize = 19f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+                setPadding(0, dp(7), 0, dp(4))
+            })
+            identityCard.addView(TextView(activity).apply {
+                text = translate("أنت تستخدم التطبيق كزائر. أنشئ حساباً لحفظ ملفك الشخصي والوصول إليه لاحقاً.")
+                textSize = 12f
+                setTextColor(if (dark) Color.rgb(175, 182, 193) else Color.rgb(91, 98, 110))
+            })
+        } else {
+            identityCard.addView(TextView(activity).apply {
+                text = translate("ملف MARCO الشخصي")
+                textSize = 11f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                letterSpacing = 0.12f
+                setTextColor(Color.rgb(190, 198, 210))
+            })
+            identityCard.addView(TextView(activity).apply {
+                text = user.displayName?.takeIf { it.isNotBlank() } ?: translate("مستخدم MARCO")
+                textSize = 22f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                gravity = Gravity.CENTER
+                setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+                setPadding(0, dp(7), 0, dp(5))
+            })
+
+            val createdAt = user.metadata?.creationTimestamp ?: 0L
+            if (createdAt > 0L) {
+                val memberDate = java.text.DateFormat.getDateInstance(java.text.DateFormat.MEDIUM)
+                    .format(java.util.Date(createdAt))
+                identityCard.addView(TextView(activity).apply {
+                    text = translate("عضو منذ") + "  " + memberDate
+                    textSize = 11f
+                    setTextColor(if (dark) Color.rgb(150, 158, 171) else Color.rgb(105, 112, 124))
+                    setPadding(0, dp(7), 0, 0)
+                })
+            }
+        }
+        page.addView(identityCard, LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(12)
+            bottomMargin = dp(16)
+        })
+
+        if (user != null && !user.isAnonymous) {
+            addPublicFollowControls(page, user.uid, dark)
+            // These figures describe the locally available library, not cloud-account-wide activity.
+            val libraryGames = games()
+            userDocuments.syncPublicFavorites(
+                uid = user.uid,
+                displayName = user.displayName,
+                bio = null,
+                photoUrl = user.photoUrl?.toString(),
+                photoData = null,
+                favoriteGames = libraryGames.filter { it.isFavorite }.take(30).map { game ->
+                    mapOf("name" to game.name, "platform" to game.platform, "coverUrl" to game.coverUrl)
+                }
+            ).addOnFailureListener { /* The local library remains usable offline. */ }
+            val favoriteCount = libraryGames.count { it.isFavorite }
+            page.addView(sectionCaption("نظرة عامة على مكتبتك", dark))
+            val statsCard = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(17), dp(16), dp(17), dp(16))
+                background = GradientDrawable().apply {
+                    cornerRadius = dp(20).toFloat()
+                    setColor(if (dark) Color.rgb(21, 24, 30) else Color.WHITE)
+                    setStroke(dp(1), if (dark) Color.rgb(82, 91, 105) else Color.rgb(199, 207, 218))
+                }
+                elevation = dp(2).toFloat()
+            }
+            statsCard.addView(TextView(activity).apply {
+                text = translate("مكتبتك على هذا الجهاز")
+                textSize = 12f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(if (dark) Color.rgb(190, 198, 210) else Color.rgb(75, 83, 96))
+                setPadding(0, 0, 0, dp(10))
+            })
+            val metrics = LinearLayout(activity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+            fun addMetric(value: Int, label: String) {
+                val metric = LinearLayout(activity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    gravity = Gravity.CENTER
+                    setPadding(dp(8), dp(8), dp(8), dp(8))
+                }
+                metric.addView(TextView(activity).apply {
+                    text = value.toString()
+                    textSize = 23f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+                })
+                metric.addView(TextView(activity).apply {
+                    text = translate(label)
+                    textSize = 11f
+                    setTextColor(if (dark) Color.rgb(150, 158, 171) else Color.rgb(105, 112, 124))
+                })
+                metrics.addView(metric, LinearLayout.LayoutParams(0, -2, 1f))
+            }
+            addMetric(libraryGames.size, "الألعاب")
+            addMetric(favoriteCount, "المفضلة")
+            statsCard.addView(metrics)
+            page.addView(statsCard, LinearLayout.LayoutParams(-1, -2).apply {
+                bottomMargin = dp(14)
+            })
+
+            val favoritesCard = profileSectionCard(dark)
+            val favoritePreview = libraryGames.filter { it.isFavorite }.take(8)
+            favoritesCard.addView(TextView(activity).apply {
+                text = translate("ألعابك المفضلة")
+                textSize = 16f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+            })
+            favoritesCard.addView(TextView(activity).apply {
+                text = if (favoriteCount > 8) translate("عرض 8 من " + favoriteCount + " لعبة مفضلة")
+                    else translate(favoriteCount.toString() + " لعبة محفوظة في المفضلة")
+                textSize = 11f
+                setTextColor(if (dark) Color.rgb(145, 154, 168) else Color.rgb(105, 114, 128))
+                setPadding(0, dp(4), 0, dp(10))
+            })
+            if (favoritePreview.isEmpty()) {
+                favoritesCard.addView(TextView(activity).apply {
+                    text = translate("لا توجد ألعاب مفضلة بعد. أضف الألعاب التي تحبها باستخدام زر النجمة في صفحة التفاصيل.")
+                    textSize = 12f
+                    setTextColor(if (dark) Color.rgb(160, 168, 181) else Color.rgb(91, 98, 110))
+                    setPadding(dp(12), dp(18), dp(12), dp(18))
+                    gravity = Gravity.CENTER
+                    background = GradientDrawable().apply {
+                        cornerRadius = dp(14).toFloat()
+                        setColor(if (dark) Color.rgb(29, 32, 39) else Color.rgb(244, 246, 249))
+                    }
+                })
+            } else {
+                val favoritesScroll = HorizontalScrollView(activity).apply {
+                    isHorizontalScrollBarEnabled = false
+                    overScrollMode = View.OVER_SCROLL_NEVER
+                    clipToPadding = false
+                    layoutDirection = View.LAYOUT_DIRECTION_RTL
+                    setPadding(0, dp(2), 0, dp(6))
+                }
+                val favoritesTrack = LinearLayout(activity).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    layoutDirection = View.LAYOUT_DIRECTION_RTL
+                }
+                favoritePreview.forEach { game ->
+                    favoritesTrack.addView(profileGameCard(game, dark, ""), LinearLayout.LayoutParams(dp(130), -2).apply {
+                        marginEnd = dp(9)
+                    })
+                }
+                favoritesScroll.addView(favoritesTrack)
+                favoritesCard.addView(favoritesScroll, LinearLayout.LayoutParams(-1, -2))
+            }
+            page.addView(favoritesCard, LinearLayout.LayoutParams(-1, -2).apply {
+                bottomMargin = dp(14)
+            })
+
+            val ratingsCard = profileSectionCard(dark)
+            val ratingsHeading = TextView(activity).apply {
+                text = translate("تقييماتي")
+                textSize = 16f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+            }
+            ratingsCard.addView(ratingsHeading)
+            val ratingsContent = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(0, dp(9), 0, 0)
+            }
+            ratingsContent.addView(TextView(activity).apply {
+                text = translate("جارٍ تحميل تقييماتك...")
+                textSize = 12f
+                setTextColor(if (dark) Color.rgb(150, 158, 171) else Color.rgb(105, 112, 124))
+            })
+            ratingsCard.addView(ratingsContent)
+            page.addView(ratingsCard, LinearLayout.LayoutParams(-1, -2).apply {
+                bottomMargin = dp(14)
+            })
+            gameEngagementRepository.loadMyRatings(libraryGames, onSuccess = { ratings ->
+                ratingsContent.removeAllViews()
+                ratingsHeading.text = translate("تقييماتي • " + ratings.size)
+                if (ratings.isEmpty()) {
+                    ratingsContent.addView(TextView(activity).apply {
+                        text = translate("لم تقيّم أي لعبة بعد. افتح تفاصيل لعبة وأضف تقييمك لتظهر هنا.")
+                        textSize = 12f
+                        setTextColor(if (dark) Color.rgb(150, 158, 171) else Color.rgb(105, 112, 124))
+                        setPadding(0, dp(5), 0, dp(4))
+                    })
+                } else {
+                    val ratingsScroll = HorizontalScrollView(activity).apply {
+                        isHorizontalScrollBarEnabled = false
+                        overScrollMode = View.OVER_SCROLL_NEVER
+                        layoutDirection = View.LAYOUT_DIRECTION_RTL
+                    }
+                    val ratingsTrack = LinearLayout(activity).apply {
+                        orientation = LinearLayout.HORIZONTAL
+                        layoutDirection = View.LAYOUT_DIRECTION_RTL
+                    }
+                    ratings.take(12).forEach { entry ->
+                        ratingsTrack.addView(
+                            profileGameCard(entry.game, dark, "★ " + entry.rating + "/5"),
+                            LinearLayout.LayoutParams(dp(130), -2).apply { marginEnd = dp(9) }
+                        )
+                    }
+                    ratingsScroll.addView(ratingsTrack)
+                    ratingsContent.addView(ratingsScroll)
+                }
+            }, onFailure = {
+                ratingsContent.removeAllViews()
+                ratingsContent.addView(TextView(activity).apply {
+                    text = translate("تعذر تحميل تقييماتك الآن. تحقق من الاتصال وحاول لاحقاً.")
+                    textSize = 12f
+                    setTextColor(if (dark) Color.rgb(180, 150, 150) else Color.rgb(140, 75, 75))
+                })
+            })
+
+            val profileBioPreview = TextView(activity).apply {
+                textSize = 13f
+                setTextColor(if (dark) Color.rgb(190, 198, 210) else Color.rgb(75, 83, 96))
+                setPadding(dp(15), dp(12), dp(15), dp(12))
+                background = GradientDrawable().apply {
+                    cornerRadius = dp(14).toFloat()
+                    setColor(if (dark) Color.rgb(22, 24, 29) else Color.WHITE)
+                    setStroke(dp(1), if (dark) Color.rgb(76, 83, 94) else Color.rgb(205, 210, 218))
+                }
+                visibility = View.GONE
+                contentDescription = translate("نبذة الحساب")
+                tag = "marco-profile-bio-preview"
+            }
+            page.addView(profileBioPreview, LinearLayout.LayoutParams(-1, -2).apply {
+                bottomMargin = dp(14)
+            })
+            userDocuments.loadUser(user.uid)
+                .addOnSuccessListener { snapshot ->
+                    snapshot.getString("photoData")?.takeIf { it.isNotBlank() }?.let { encoded ->
+                        runCatching {
+                            val bytes = Base64.decode(encoded, Base64.DEFAULT)
+                            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                        }.getOrNull()?.let { bitmap ->
+                            photoView.setImageBitmap(bitmap)
+                            photoView.imageTintList = null
+                            photoView.clearColorFilter()
+                        }
+                    }
+                    snapshot.getString("bio")?.trim()?.takeIf { it.isNotBlank() }?.let { bio ->
+                        profileBioPreview.text = bio
+                        profileBioPreview.visibility = View.VISIBLE
+                    }
+                    if (snapshot.getString("photoData").isNullOrBlank()) {
+                        user.photoUrl?.toString()?.takeIf { it.startsWith("https://") }?.let { photoUrl ->
+                            Thread {
+                                val bitmap = runCatching {
+                                    val connection = java.net.URL(photoUrl).openConnection().apply {
+                                        connectTimeout = 6000
+                                        readTimeout = 6000
+                                        useCaches = true
+                                    }
+                                    connection.getInputStream().use { stream -> BitmapFactory.decodeStream(stream) }
+                                }.getOrNull()
+                                if (bitmap != null && !activity.isFinishing && !activity.isDestroyed) {
+                                    photoView.post {
+                                        photoView.setImageBitmap(bitmap)
+                                        photoView.imageTintList = null
+                                        photoView.clearColorFilter()
+                                    }
+                                }
+                            }.apply { name = "marco-profile-avatar-preview-loader" }.start()
+                        }
+                    }
+                }
+                .addOnFailureListener {
+                    // Keep the provider avatar and the rest of the profile usable if
+                    // the private profile document is temporarily unavailable.
+                }
+        }
+
+        if (user == null || user.isAnonymous) {
+            page.addView(sectionCaption("اختر طريقة المتابعة", dark))
             page.addView(TextView(activity).apply {
-                text = translate("استعمل التطبيق كزائر، أو سجّل الدخول لحفظ حسابك ومزامنة بياناتك.")
+                text = translate("استعمل التطبيق كزائر، أو سجّل الدخول لحفظ ملفك الشخصي والعودة إليه من أجهزتك.")
                 textSize = 13f
                 setTextColor(if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110))
                 setPadding(0, 0, 0, dp(18))
@@ -101,24 +441,73 @@ internal class FirebaseAccountController(
             action(page, translate("تسجيل الدخول بالبريد الإلكتروني"), translate("لديك حساب MARCO بالفعل؟"), dark, run = { showEmailForm(createAccount = false) })
             action(page, translate("نسيت كلمة المرور؟"), translate("استرجاع الوصول إلى حسابك"), dark, run = ::showPasswordResetForm)
         } else {
-            val photoView = ImageView(activity).apply {
-                scaleType = ImageView.ScaleType.CENTER_CROP
-                background = GradientDrawable().apply {
-                    shape = GradientDrawable.OVAL
-                    setColor(if (dark) Color.rgb(35, 38, 45) else Color.rgb(222, 226, 232))
-                    setStroke(dp(2), Color.rgb(190, 198, 210))
-                }
-                clipToOutline = true
-                contentDescription = translate("صورة الحساب")
-                setImageResource(com.marcorx6.library.R.drawable.ic_nav_profile)
-                imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
-            }
-            page.addView(photoView, LinearLayout.LayoutParams(dp(104), dp(104)).apply {
-                gravity = Gravity.CENTER
-                bottomMargin = dp(8)
-            })
-            action(page, translate("تغيير صورة الحساب"), translate("اختيار صورة من هاتفك وحفظها في ملفك السحابي"), dark, run = ::chooseProfilePhoto)
+            page.addView(sectionCaption("ملفك الشخصي", dark))
+            action(
+                page,
+                translate("تعديل الملف الشخصي"),
+                translate("غيّر صورتك واسمك ونبذتك وإعدادات ظهور ملفك"),
+                dark,
+                primary = true,
+                run = ::showEditProfile
+            )
+            action(
+                page,
+                translate("إعدادات الحساب"),
+                translate("البريد الإلكتروني والأمان وتسجيل الخروج"),
+                dark,
+                run = ::showAccountSettings
+            )
+            action(
+                page,
+                translate("فتح ملف شخصي آخر"),
+                translate("تصفح ملف مستخدم شارك معك معرّفه"),
+                dark,
+                run = ::promptPublicProfile
+            )
+        }
+        page.addView(TextView(activity).apply {
+            text = "MARCO  •  SECURE ACCOUNT"
+            textSize = 9f
+            gravity = Gravity.CENTER
+            setTextColor(if (dark) Color.rgb(145, 153, 166) else Color.rgb(91, 98, 110))
+            setPadding(0, dp(18), 0, dp(8))
+        })
+        showAccountPage(page)
+    }
 
+    private fun showEditProfile() {
+        val user = authRepository.currentUser
+        if (user == null || user.isAnonymous) {
+            toast("سجّل الدخول أولاً لتعديل ملفك الشخصي")
+            show()
+            return
+        }
+        val dark = isDarkMode()
+        val page = createAccountFormPage(
+            translate("تعديل الملف الشخصي"),
+            translate("حدّث معلوماتك بالطريقة التي تظهر بها للآخرين في MARCO")
+        )
+        val photoView = ImageView(activity).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(if (dark) Color.rgb(35, 38, 45) else Color.rgb(222, 226, 232))
+                setStroke(dp(2), Color.rgb(190, 198, 210))
+            }
+            clipToOutline = true
+            contentDescription = translate("صورة الحساب")
+            setImageResource(com.marcorx6.library.R.drawable.ic_nav_profile)
+            imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
+        }
+        page.addView(photoView, LinearLayout.LayoutParams(dp(104), dp(104)).apply {
+            gravity = Gravity.CENTER_HORIZONTAL
+            bottomMargin = dp(8)
+        })
+        action(page, translate("تغيير الصورة الشخصية"), translate("اختر صورة من هاتفك"), dark, run = {
+            returnToProfileEditorAfterPhotoPick = true
+            chooseProfilePhoto()
+        })
+            page.addView(sectionCaption("بيانات الملف الشخصي", dark))
             page.addView(TextView(activity).apply {
                 text = translate("الاسم")
                 textSize = 13f
@@ -130,10 +519,11 @@ internal class FirebaseAccountController(
                 translate("اسم المستخدم"),
                 InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS
             ).apply {
+                filters = arrayOf(android.text.InputFilter.LengthFilter(40))
                 setText(user.displayName.orEmpty())
                 setSelection(text.length)
             }
-            page.addView(nameInput, LinearLayout.LayoutParams(-1, dp(54)).apply { bottomMargin = dp(12) })
+            page.addView(nameInput, LinearLayout.LayoutParams(-1, dp(56)).apply { bottomMargin = dp(14) })
 
             page.addView(TextView(activity).apply {
                 text = translate("نبذة عنك")
@@ -146,6 +536,7 @@ internal class FirebaseAccountController(
                 hint = translate("اكتب نبذة قصيرة عنك...")
                 inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
                 setSingleLine(false)
+                filters = arrayOf(android.text.InputFilter.LengthFilter(160))
                 minLines = 3
                 maxLines = 5
                 gravity = Gravity.TOP or Gravity.START
@@ -159,7 +550,43 @@ internal class FirebaseAccountController(
                     setStroke(dp(1), if (dark) Color.argb(120, 130, 138, 151) else Color.argb(160, 160, 168, 181))
                 }
             }
-            page.addView(bioInput, LinearLayout.LayoutParams(-1, dp(112)).apply { bottomMargin = dp(8) })
+            page.addView(bioInput, LinearLayout.LayoutParams(-1, dp(124)).apply { bottomMargin = dp(2) })
+            val bioCounter = TextView(activity).apply {
+                text = "0/160"
+                textSize = 10f
+                gravity = Gravity.END
+                setTextColor(if (dark) Color.rgb(135, 143, 156) else Color.rgb(112, 120, 132))
+                setPadding(0, dp(2), dp(4), dp(8))
+                contentDescription = translate("عدد أحرف النبذة")
+            }
+            page.addView(bioCounter, LinearLayout.LayoutParams(-1, -2))
+            bioInput.addTextChangedListener(object : android.text.TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    bioCounter.text = "${s?.length ?: 0}/160"
+                }
+                override fun afterTextChanged(s: android.text.Editable?) = Unit
+            })
+
+            page.addView(sectionCaption("خصوصية الملف الشخصي", dark))
+            val publicProfileToggle = CheckBox(activity).apply {
+                text = translate("السماح للآخرين بمشاهدة ملفي الشخصي")
+                textSize = 13f
+                setTextColor(if (dark) Color.rgb(225, 229, 236) else Color.rgb(45, 52, 63))
+                buttonTintList = android.content.res.ColorStateList.valueOf(Color.rgb(180, 190, 205))
+                isEnabled = false
+            }
+            val showFavoritesToggle = CheckBox(activity).apply {
+                text = translate("إظهار ألعابي المفضلة في الملف العام")
+                textSize = 12f
+                setTextColor(if (dark) Color.rgb(190, 198, 210) else Color.rgb(75, 83, 96))
+                buttonTintList = android.content.res.ColorStateList.valueOf(Color.rgb(180, 190, 205))
+                isEnabled = false
+            }
+            page.addView(publicProfileToggle, LinearLayout.LayoutParams(-1, dp(48)))
+            page.addView(showFavoritesToggle, LinearLayout.LayoutParams(-1, dp(44)).apply {
+                bottomMargin = dp(10)
+            })
 
             var profilePhotoData: String? = null
             var profileLoaded = false
@@ -179,6 +606,8 @@ internal class FirebaseAccountController(
                     return@accountSubmitButton
                 }
                 button.isEnabled = false
+                button.text = translate("جارٍ حفظ التغييرات...")
+                val previousDisplayName = user.displayName
                 user.updateProfile(
                     UserProfileChangeRequest.Builder().setDisplayName(name).build()
                 ).addOnSuccessListener {
@@ -187,26 +616,53 @@ internal class FirebaseAccountController(
                         displayName = name,
                         bio = bio,
                         photoUrl = user.photoUrl?.toString(),
-                        photoData = profilePhotoData
+                        photoData = profilePhotoData,
+                        publicProfile = publicProfileToggle.isChecked,
+                        showFavorites = showFavoritesToggle.isChecked,
+                        favoriteGames = games().filter { it.isFavorite }.take(30).map { game ->
+                            mapOf("name" to game.name, "platform" to game.platform, "coverUrl" to game.coverUrl)
+                        }
                     ).addOnSuccessListener {
                         toast("تم حفظ معلومات الملف الشخصي")
                         show()
                     }.addOnFailureListener { error ->
-                        button.isEnabled = true
-                        toast("تعذر حفظ الملف الشخصي في السحابة")
+                        // Keep the edited fields on screen and restore the Firebase Auth name
+                        // so a cloud-write failure does not leave two conflicting profiles.
+                        user.updateProfile(
+                            UserProfileChangeRequest.Builder()
+                                .setDisplayName(previousDisplayName)
+                                .build()
+                        ).addOnCompleteListener {
+                            button.isEnabled = true
+                            button.text = translate("حفظ التغييرات")
+                            toast("تعذر حفظ الملف الشخصي في السحابة. بقيت تعديلاتك في الصفحة؛ حاول مجدداً.")
+                        }
                     }
                 }.addOnFailureListener { error ->
                     button.isEnabled = true
-                    toast("تعذر تحديث اسم الحساب")
+                    button.text = translate("حفظ التغييرات")
+                    toast("تعذر تحديث اسم الحساب. لم تُحذف تعديلاتك.")
                 }
             }
             saveButton.isEnabled = false
-            page.addView(saveButton, LinearLayout.LayoutParams(-1, dp(52)).apply { bottomMargin = dp(18) })
+            page.addView(saveButton, LinearLayout.LayoutParams(-1, dp(56)).apply { bottomMargin = dp(20) })
 
             userDocuments.loadUser(user.uid)
                 .addOnSuccessListener { snapshot ->
                     profilePhotoData = snapshot.getString("photoData")
-                    bioInput.setText(snapshot.getString("bio").orEmpty())
+                    val savedBio = snapshot.getString("bio").orEmpty().trim()
+                    publicProfileToggle.isChecked = snapshot.getBoolean("publicProfile") ?: false
+                    showFavoritesToggle.isChecked = snapshot.getBoolean("showFavorites") ?: true
+                    publicProfileToggle.isEnabled = true
+                    showFavoritesToggle.isEnabled = true
+                    bioInput.setText(savedBio)
+                    if (savedBio.isNotBlank()) {
+                        // Reflect the saved profile introduction in the account overview.
+                        page.findViewWithTag<TextView>("marco-profile-bio-preview")?.let { preview ->
+                            preview.text = savedBio
+                            preview.visibility = View.VISIBLE
+                        }
+                    }
                     profilePhotoData?.let { encoded ->
                         runCatching {
                             val bytes = Base64.decode(encoded, Base64.DEFAULT)
@@ -217,10 +673,27 @@ internal class FirebaseAccountController(
                             photoView.clearColorFilter()
                         }
                     }
-                    if (profilePhotoData.isNullOrBlank() && user.photoUrl != null) {
-                        // The provider photo remains available as the account's fallback identity.
-                        photoView.setImageResource(com.marcorx6.library.R.drawable.ic_nav_profile)
-                        photoView.imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
+                    if (profilePhotoData.isNullOrBlank()) {
+                        // Load the provider avatar only when no user-selected cloud photo exists.
+                        user.photoUrl?.toString()?.takeIf { it.startsWith("https://") }?.let { photoUrl ->
+                            Thread {
+                                val bitmap = runCatching {
+                                    val connection = java.net.URL(photoUrl).openConnection().apply {
+                                        connectTimeout = 6000
+                                        readTimeout = 6000
+                                        useCaches = true
+                                    }
+                                    connection.getInputStream().use { stream -> BitmapFactory.decodeStream(stream) }
+                                }.getOrNull()
+                                if (bitmap != null && !activity.isFinishing && !activity.isDestroyed) {
+                                    photoView.post {
+                                        photoView.setImageBitmap(bitmap)
+                                        photoView.imageTintList = null
+                                        photoView.clearColorFilter()
+                                    }
+                                }
+                            }.apply { name = "marco-profile-avatar-loader" }.start()
+                        }
                     }
                     profileLoaded = true
                     saveButton.isEnabled = true
@@ -229,30 +702,464 @@ internal class FirebaseAccountController(
                     toast("تعذر تحميل الملف الشخصي")
                 }
 
-            user.email?.let { email ->
-                page.addView(TextView(activity).apply {
-                    text = email
-                    textSize = 12f
-                    setTextColor(if (dark) Color.rgb(160, 168, 181) else Color.rgb(91, 98, 110))
-                    setPadding(0, 0, 0, dp(16))
-                })
-            }
-            action(page, translate("تسجيل الخروج"), translate("الخروج من حساب MARCO"), dark, run = {
-                authRepository.signOut()
-                signOutAdmin()
-                onAccountChanged()
-                toast("تم تسجيل الخروج بنجاح")
-            })
-            action(page, translate("مسح الحساب"), translate("حذف حسابك وبياناته السحابية نهائياً"), dark, run = { confirmAccountDeletion(user) })
+
+        showAccountPage(page)
+    }
+
+    private fun showAccountSettings() {
+        val user = authRepository.currentUser
+        if (user == null || user.isAnonymous) {
+            show()
+            return
         }
-        page.addView(TextView(activity).apply {
-            text = "MARCO  •  SECURE ACCOUNT"
-            textSize = 9f
-            gravity = Gravity.CENTER
-            setTextColor(if (dark) Color.rgb(145, 153, 166) else Color.rgb(91, 98, 110))
-            setPadding(0, dp(18), 0, dp(8))
+        val dark = isDarkMode()
+        val page = createAccountFormPage(
+            translate("إعدادات الحساب"),
+            translate("إدارة البريد الإلكتروني وأمان حساب MARCO")
+        )
+        page.addView(sectionCaption("معلومات الاتصال", dark))
+        user.email?.let { email ->
+            val emailRow = LinearLayout(activity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(12), dp(8), dp(12), dp(8))
+                background = GradientDrawable().apply {
+                    cornerRadius = dp(12).toFloat()
+                    setColor(if (dark) Color.rgb(22, 24, 29) else Color.WHITE)
+                    setStroke(dp(1), if (dark) Color.rgb(76, 83, 94) else Color.rgb(205, 210, 218))
+                }
+            }
+            emailRow.addView(TextView(activity).apply {
+                text = email
+                textSize = 12f
+                setTextColor(if (dark) Color.rgb(190, 198, 210) else Color.rgb(65, 72, 84))
+            }, LinearLayout.LayoutParams(0, -2, 1f))
+            val copyEmail = TextView(activity).apply {
+                text = translate("نسخ")
+                textSize = 12f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(Color.rgb(190, 198, 210))
+                setPadding(dp(12), dp(10), dp(12), dp(10))
+                isClickable = true
+                isFocusable = true
+                setOnClickListener {
+                    val clipboard = activity.getSystemService(android.content.Context.CLIPBOARD_SERVICE)
+                        as android.content.ClipboardManager
+                    clipboard.setPrimaryClip(android.content.ClipData.newPlainText("MARCO account email", email))
+                    toast("تم نسخ البريد الإلكتروني")
+                }
+            }
+            emailRow.addView(copyEmail)
+            page.addView(emailRow, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(14) })
+        }
+        page.addView(sectionCaption("الخصوصية والملف العام", dark))
+        action(page, translate("تعديل الخصوصية"), translate("تحديد من يستطيع مشاهدة ملفك ومفضلاتك"), dark, run = ::showEditProfile)
+        page.addView(sectionCaption("الأمان", dark))
+        if (!user.isEmailVerified && user.email != null) {
+            action(page, translate("تأكيد البريد الإلكتروني"), translate("إرسال رسالة تحقق جديدة إلى بريدك"), dark, run = {
+                user.sendEmailVerification()
+                    .addOnSuccessListener { toast("تم إرسال رسالة تأكيد البريد الإلكتروني") }
+                    .addOnFailureListener { toast("تعذر إرسال رسالة التأكيد") }
+            })
+        }
+        if (user.email != null && user.providerData.any { it.providerId == "password" }) {
+            action(page, translate("إعادة تعيين كلمة المرور"), translate("إرسال رابط آمن لتغيير كلمة مرور الحساب"), dark, run = {
+                authRepository.sendPasswordReset(user.email!!)
+                    .addOnSuccessListener { toast("إذا كان الحساب موجوداً، فستصلك رسالة إعادة التعيين.") }
+                    .addOnFailureListener { toast("تعذر إرسال رابط إعادة تعيين كلمة المرور") }
+            })
+        }
+        action(page, translate("نسخ معرّف ملفي الشخصي"), translate("شارك المعرّف مع مستخدم آخر لفتح ملفك العام"), dark, run = {
+            val clipboard = activity.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+            clipboard.setPrimaryClip(android.content.ClipData.newPlainText("MARCO profile ID", user.uid))
+            toast("تم نسخ معرّف الملف الشخصي")
+        })
+        page.addView(sectionCaption("إدارة الحساب", dark))
+        action(page, translate("تسجيل الخروج"), translate("الخروج من حساب MARCO مع إبقاء جلسة Blogger وGoogle Drive منفصلة"), dark, run = {
+            val logoutDialog = AlertDialog.Builder(activity)
+                .setTitle(translate("تسجيل الخروج من MARCO؟"))
+                .setMessage(translate("سيتم تسجيل الخروج من حساب MARCO فقط. ستبقى جلسة Google المستعملة في Blogger وGoogle Drive كما هي، ولن تُحذف مكتبتك أو ملفات التنزيل على هذا الهاتف."))
+                .setNegativeButton(translate("إلغاء"), null)
+                .setPositiveButton(translate("تسجيل الخروج")) { _, _ ->
+                    authRepository.signOut()
+                    signOutAdmin()
+                    onAccountChanged()
+                    toast("تم تسجيل الخروج بنجاح")
+                }
+                .create()
+            logoutDialog.show()
+            styleDialog(logoutDialog)
+        })
+        action(page, translate("حذف الحساب"), translate("حذف حساب MARCO وبياناته السحابية نهائياً"), dark, run = {
+            confirmAccountDeletion(user)
         })
         showAccountPage(page)
+    }
+
+    private fun promptPublicProfile() {
+        val uidInput = EditText(activity).apply {
+            hint = translate("معرّف الملف الشخصي")
+            setSingleLine(true)
+        }
+        val dialog = AlertDialog.Builder(activity)
+            .setTitle(translate("فتح ملف شخصي"))
+            .setMessage(translate("أدخل معرّف المستخدم الذي شاركه معك صاحب الحساب."))
+            .setView(uidInput)
+            .setNegativeButton(translate("إلغاء"), null)
+            .setPositiveButton(translate("فتح"), null)
+            .create()
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val uid = uidInput.text.toString().trim()
+                if (uid.length < 10 || uid.length > 128) {
+                    toast("معرّف الملف الشخصي غير صالح")
+                    return@setOnClickListener
+                }
+                dialog.dismiss()
+                showPublicProfile(uid)
+            }
+        }
+        dialog.show()
+        styleDialog(dialog)
+    }
+
+    private fun showPublicProfile(uid: String) {
+        userDocuments.loadPublicProfile(uid).addOnSuccessListener { snapshot ->
+            if (!snapshot.exists()) {
+                toast("هذا الملف الشخصي غير متاح أو لم يسمح صاحبه بعرضه")
+                return@addOnSuccessListener
+            }
+            val dark = isDarkMode()
+            val page = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutDirection = View.LAYOUT_DIRECTION_RTL
+                setPadding(dp(20), dp(22), dp(20), dp(28))
+                setBackgroundColor(if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247))
+            }
+            val header = LinearLayout(activity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+            header.addView(TextView(activity).apply {
+                text = translate("رجوع")
+                textSize = 15f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(Color.rgb(190, 198, 210))
+                setPadding(dp(8), dp(12), dp(18), dp(12))
+                isClickable = true
+                isFocusable = true
+                setOnClickListener { show() }
+            })
+            header.addView(TextView(activity).apply {
+                text = translate("ملف مستخدم MARCO")
+                textSize = 21f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+            })
+            page.addView(header)
+            val identity = profileSectionCard(dark)
+            identity.gravity = Gravity.CENTER_HORIZONTAL
+            addPublicAvatar(identity, snapshot, dark)
+            identity.addView(TextView(activity).apply {
+                text = snapshot.getString("displayName")?.takeIf { it.isNotBlank() } ?: translate("مستخدم MARCO")
+                textSize = 22f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+            })
+            snapshot.getString("bio")?.takeIf { it.isNotBlank() }?.let { bio ->
+                identity.addView(TextView(activity).apply {
+                    text = bio
+                    textSize = 13f
+                    gravity = Gravity.CENTER
+                    setTextColor(if (dark) Color.rgb(185, 193, 205) else Color.rgb(75, 83, 96))
+                    setPadding(0, dp(8), 0, dp(3))
+                })
+            }
+            page.addView(identity, LinearLayout.LayoutParams(-1, -2).apply {
+                topMargin = dp(14)
+                bottomMargin = dp(14)
+            })
+            addPublicFollowControls(page, uid, dark)
+            if (snapshot.getBoolean("showFavorites") == true) {
+                page.addView(sectionCaption("الألعاب المفضلة", dark))
+                val values = snapshot.get("favoriteGames") as? List<*>
+                val favorites = values.orEmpty().mapNotNull { value ->
+                    val item = value as? Map<*, *> ?: return@mapNotNull null
+                    val name = item["name"] as? String ?: return@mapNotNull null
+                    val platform = item["platform"] as? String ?: return@mapNotNull null
+                    val coverUrl = item["coverUrl"] as? String ?: ""
+                    Game(name, platform, "", "", coverUrl = coverUrl)
+                }
+                if (favorites.isEmpty()) {
+                    page.addView(TextView(activity).apply {
+                        text = translate("لم يشارك هذا المستخدم ألعاباً مفضلة بعد.")
+                        textSize = 12f
+                        setTextColor(if (dark) Color.rgb(150, 158, 171) else Color.rgb(105, 114, 128))
+                        setPadding(dp(12), dp(14), dp(12), dp(14))
+                    })
+                } else {
+                    val scroll = HorizontalScrollView(activity).apply {
+                        isHorizontalScrollBarEnabled = false
+                        layoutDirection = View.LAYOUT_DIRECTION_RTL
+                    }
+                    val track = LinearLayout(activity).apply {
+                        orientation = LinearLayout.HORIZONTAL
+                        layoutDirection = View.LAYOUT_DIRECTION_RTL
+                    }
+                    favorites.forEach { game ->
+                        track.addView(profileGameCard(game, dark, ""), LinearLayout.LayoutParams(dp(130), -2).apply {
+                            marginEnd = dp(9)
+                        })
+                    }
+                    scroll.addView(track)
+                    page.addView(scroll)
+                }
+            }
+            page.addView(sectionCaption("تقييمات هذا المستخدم", dark))
+            val publicRatings = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(0, dp(6), 0, dp(8))
+            }
+            publicRatings.addView(TextView(activity).apply {
+                text = translate("جارٍ تحميل التقييمات...")
+                textSize = 12f
+                setTextColor(if (dark) Color.rgb(150, 158, 171) else Color.rgb(105, 114, 128))
+            })
+            page.addView(publicRatings)
+            gameEngagementRepository.loadRatingsForUser(uid, games(), onSuccess = { ratings ->
+                publicRatings.removeAllViews()
+                if (ratings.isEmpty()) {
+                    publicRatings.addView(TextView(activity).apply {
+                        text = translate("لا توجد تقييمات عامة متاحة لهذا المستخدم بعد.")
+                        textSize = 12f
+                        setTextColor(if (dark) Color.rgb(150, 158, 171) else Color.rgb(105, 114, 128))
+                    })
+                } else {
+                    val scroll = HorizontalScrollView(activity).apply {
+                        isHorizontalScrollBarEnabled = false
+                        layoutDirection = View.LAYOUT_DIRECTION_RTL
+                    }
+                    val track = LinearLayout(activity).apply {
+                        orientation = LinearLayout.HORIZONTAL
+                        layoutDirection = View.LAYOUT_DIRECTION_RTL
+                    }
+                    ratings.take(20).forEach { entry ->
+                        track.addView(
+                            profileGameCard(entry.game, dark, "★ " + entry.rating + "/5"),
+                            LinearLayout.LayoutParams(dp(130), -2).apply { marginEnd = dp(9) }
+                        )
+                    }
+                    scroll.addView(track)
+                    publicRatings.addView(scroll)
+                }
+            }, onFailure = {
+                publicRatings.removeAllViews()
+                publicRatings.addView(TextView(activity).apply {
+                    text = translate("تعذر تحميل التقييمات حالياً.")
+                    textSize = 12f
+                    setTextColor(if (dark) Color.rgb(180, 150, 150) else Color.rgb(140, 75, 75))
+                })
+            })
+            showAccountPage(page)
+        }.addOnFailureListener {
+            toast("تعذر تحميل الملف الشخصي. تحقق من المعرّف والاتصال.")
+        }
+    }
+
+    private fun addPublicAvatar(identity: LinearLayout, snapshot: com.google.firebase.firestore.DocumentSnapshot, dark: Boolean) {
+        val avatar = ImageView(activity).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(if (dark) Color.rgb(35, 38, 45) else Color.rgb(222, 226, 232))
+                setStroke(dp(2), Color.rgb(190, 198, 210))
+            }
+            clipToOutline = true
+            setImageResource(com.marcorx6.library.R.drawable.ic_nav_profile)
+            imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
+        }
+        identity.addView(avatar, LinearLayout.LayoutParams(dp(92), dp(92)).apply {
+            gravity = Gravity.CENTER_HORIZONTAL
+            bottomMargin = dp(12)
+        })
+        val encoded = snapshot.getString("photoData")
+        if (!encoded.isNullOrBlank()) {
+            runCatching {
+                val bytes = Base64.decode(encoded, Base64.DEFAULT)
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            }.getOrNull()?.let {
+                avatar.setImageBitmap(it)
+                avatar.imageTintList = null
+            }
+        } else {
+            snapshot.getString("photoUrl")?.takeIf { it.startsWith("https://") }?.let { photoUrl ->
+                Thread {
+                    val bitmap = runCatching {
+                        java.net.URL(photoUrl).openConnection().apply {
+                            connectTimeout = 6000
+                            readTimeout = 6000
+                            useCaches = true
+                        }.getInputStream().use { BitmapFactory.decodeStream(it) }
+                    }.getOrNull()
+                    if (bitmap != null && !activity.isFinishing && !activity.isDestroyed) {
+                        avatar.post {
+                            avatar.setImageBitmap(bitmap)
+                            avatar.imageTintList = null
+                        }
+                    }
+                }.apply { name = "marco-public-avatar-loader" }.start()
+            }
+        }
+    }
+
+    private fun addPublicFollowControls(page: LinearLayout, targetUid: String, dark: Boolean) {
+        val currentUser = authRepository.currentUser
+        val isOwnProfile = currentUser?.uid == targetUid
+        val stats = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+        }
+        val followers = TextView(activity).apply {
+            text = "—  " + translate("المتابعون")
+            gravity = Gravity.CENTER
+            textSize = 12f
+            setTextColor(if (dark) Color.rgb(205, 212, 222) else Color.rgb(65, 72, 84))
+            setPadding(dp(16), dp(10), dp(16), dp(10))
+        }
+        val following = TextView(activity).apply {
+            text = "—  " + translate("يتابع")
+            gravity = Gravity.CENTER
+            textSize = 12f
+            setTextColor(if (dark) Color.rgb(205, 212, 222) else Color.rgb(65, 72, 84))
+            setPadding(dp(16), dp(10), dp(16), dp(10))
+        }
+        stats.addView(followers)
+        stats.addView(following)
+        page.addView(stats, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
+        fun refreshCounts() {
+            userDocuments.loadFollowCounts(targetUid).addOnSuccessListener { counts ->
+                followers.text = counts.first.toString() + "  " + translate("المتابعون")
+                following.text = counts.second.toString() + "  " + translate("يتابع")
+            }
+        }
+        refreshCounts()
+        if (isOwnProfile) return
+        if (currentUser == null || currentUser.isAnonymous) {
+            action(
+                page,
+                translate("سجّل الدخول للمتابعة"),
+                translate("أنشئ حساب MARCO لمتابعة هذا الملف الشخصي"),
+                dark,
+                run = ::show
+            )
+            return
+        }
+        val followButton = TextView(activity).apply {
+            text = translate("جارٍ التحقق...")
+            gravity = Gravity.CENTER
+            textSize = 14f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(Color.rgb(20, 23, 29))
+            setPadding(dp(18), dp(14), dp(18), dp(14))
+            background = GradientDrawable().apply {
+                cornerRadius = dp(16).toFloat()
+                setColor(Color.rgb(190, 198, 210))
+            }
+            isEnabled = false
+        }
+        page.addView(followButton, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(14) })
+        userDocuments.isFollowing(currentUser.uid, targetUid).addOnSuccessListener { initialFollowing ->
+            var followingState = initialFollowing
+            fun updateLabel() {
+                followButton.text = translate(if (followingState) "إلغاء المتابعة" else "متابعة")
+            }
+            updateLabel()
+            followButton.isEnabled = true
+            followButton.setOnClickListener {
+                followButton.isEnabled = false
+                val nextState = !followingState
+                userDocuments.setFollowing(currentUser.uid, targetUid, nextState)
+                    .addOnSuccessListener {
+                        followingState = nextState
+                        updateLabel()
+                        followButton.isEnabled = true
+                        refreshCounts()
+                    }
+                    .addOnFailureListener {
+                        followButton.isEnabled = true
+                        toast("تعذرت مزامنة المتابعة. تحقق من الاتصال وحاول مجدداً.")
+                    }
+            }
+        }.addOnFailureListener {
+            followButton.text = translate("تعذر تحميل المتابعة")
+            followButton.isEnabled = false
+        }
+    }
+
+    private fun profileSectionCard(dark: Boolean): LinearLayout = LinearLayout(activity).apply {
+        orientation = LinearLayout.VERTICAL
+        setPadding(dp(16), dp(15), dp(16), dp(14))
+        background = GradientDrawable().apply {
+            cornerRadius = dp(20).toFloat()
+            setColor(if (dark) Color.rgb(19, 22, 28) else Color.WHITE)
+            setStroke(dp(1), if (dark) Color.rgb(82, 91, 105) else Color.rgb(199, 207, 218))
+        }
+        elevation = dp(2).toFloat()
+    }
+
+    private fun profileGameCard(game: Game, dark: Boolean, footer: String): LinearLayout {
+        val card = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            isClickable = true
+            isFocusable = true
+            setPadding(dp(8), dp(8), dp(8), dp(9))
+            background = GradientDrawable().apply {
+                cornerRadius = dp(15).toFloat()
+                setColor(if (dark) Color.rgb(30, 33, 40) else Color.rgb(247, 248, 250))
+                setStroke(dp(1), if (dark) Color.rgb(76, 84, 97) else Color.rgb(205, 211, 220))
+            }
+            if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
+                android.content.res.ColorStateList.valueOf(Color.argb(55, 190, 198, 210)),
+                null,
+                android.graphics.drawable.ColorDrawable(Color.WHITE)
+            )
+            contentDescription = game.name + "، " + translate(game.platform)
+            setOnClickListener { openGameDetails(game) }
+        }
+        val cover = ImageView(activity).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            background = GradientDrawable().apply {
+                cornerRadius = dp(10).toFloat()
+                setColor(if (dark) Color.rgb(42, 46, 55) else Color.rgb(225, 229, 235))
+            }
+            clipToOutline = true
+            contentDescription = translate("غلاف اللعبة") + " " + game.name
+        }
+        if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) {
+            loadCover(cover, game.coverLocalPath, game.coverUrl)
+        } else {
+            cover.setImageResource(android.R.drawable.ic_menu_gallery)
+            cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
+        }
+        card.addView(cover, LinearLayout.LayoutParams(dp(112), dp(132)))
+        card.addView(TextView(activity).apply {
+            text = game.name
+            textSize = 11f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            maxLines = 2
+            ellipsize = android.text.TextUtils.TruncateAt.END
+            setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+            setPadding(dp(2), dp(8), dp(2), dp(3))
+        }, LinearLayout.LayoutParams(dp(112), -2))
+        card.addView(TextView(activity).apply {
+            text = if (footer.isBlank()) game.platform else game.platform + "  •  " + footer
+            textSize = 10f
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+            setTextColor(if (dark) Color.rgb(165, 174, 188) else Color.rgb(100, 108, 120))
+            setPadding(dp(2), 0, dp(2), 0)
+        }, LinearLayout.LayoutParams(dp(112), -2))
+        return card
     }
 
     private fun chooseProfilePhoto() {
@@ -263,28 +1170,52 @@ internal class FirebaseAccountController(
         launchProfilePhotoPicker(intent)
     }
 
+    private var profilePhotoUploadInProgress = false
+
     fun handleProfilePhotoSelected(uri: Uri) {
         val user = authRepository.currentUser
         if (user == null || user.isAnonymous) {
             toast("سجّل الدخول أولاً لإضافة صورة الحساب")
             return
         }
+        if (profilePhotoUploadInProgress) {
+            toast("جارٍ حفظ صورة الحساب بالفعل، انتظر قليلاً.")
+            return
+        }
+        profilePhotoUploadInProgress = true
         try {
             val encoded = compressProfilePhoto(uri)
-            userDocuments.saveProfile(
-                uid = user.uid,
-                displayName = user.displayName,
-                bio = null,
-                photoUrl = user.photoUrl?.toString(),
-                photoData = encoded
-            ).addOnSuccessListener {
+            userDocuments.loadUser(user.uid).continueWithTask { profileTask ->
+                if (!profileTask.isSuccessful) {
+                    throw profileTask.exception ?: IllegalStateException("تعذر تحميل إعدادات الملف")
+                }
+                val profile = profileTask.result
+                userDocuments.saveProfile(
+                    uid = user.uid,
+                    displayName = user.displayName,
+                    bio = profile.getString("bio"),
+                    photoUrl = user.photoUrl?.toString(),
+                    photoData = encoded,
+                    publicProfile = profile.getBoolean("publicProfile") ?: false,
+                    showFavorites = profile.getBoolean("showFavorites") ?: true,
+                    favoriteGames = games().filter { it.isFavorite }.take(30).map { game ->
+                        mapOf("name" to game.name, "platform" to game.platform, "coverUrl" to game.coverUrl)
+                    }
+                )
+            }.addOnSuccessListener {
+                profilePhotoUploadInProgress = false
                 toast("تم تحديث صورة الحساب")
-                show()
+                val returnToEditor = returnToProfileEditorAfterPhotoPick
+                returnToProfileEditorAfterPhotoPick = false
+                if (returnToEditor) showEditProfile() else show()
             }.addOnFailureListener { error ->
-                toast("تعذر حفظ صورة الحساب")
+                profilePhotoUploadInProgress = false
+                returnToProfileEditorAfterPhotoPick = false
+                toast("تعذر حفظ صورة الحساب. بقيت صورتك السابقة كما هي؛ حاول مجدداً.")
             }
         } catch (error: Exception) {
-            toast("تعذرت قراءة الصورة المختارة")
+            profilePhotoUploadInProgress = false
+            toast("تعذرت قراءة الصورة المختارة؛ لم تتغير صورة حسابك.")
         }
     }
 
@@ -331,12 +1262,22 @@ internal class FirebaseAccountController(
             orientation = LinearLayout.VERTICAL
             isClickable = true
             isFocusable = true
-            setPadding(dp(17), dp(14), dp(17), dp(14))
-            background = GradientDrawable().apply {
-                cornerRadius = dp(16).toFloat()
-                setColor(if (primary) Color.rgb(190, 198, 210) else if (dark) Color.rgb(25, 28, 34) else Color.WHITE)
-                setStroke(dp(1), if (primary) Color.rgb(145, 153, 166) else if (dark) Color.rgb(75, 80, 90) else Color.rgb(160, 168, 181))
+            setPadding(dp(18), dp(16), dp(18), dp(16))
+            background = GradientDrawable(
+                if (primary) GradientDrawable.Orientation.LEFT_RIGHT else GradientDrawable.Orientation.TL_BR,
+                if (primary) intArrayOf(Color.rgb(218, 224, 233), Color.rgb(155, 166, 182))
+                else if (dark) intArrayOf(Color.rgb(31, 35, 43), Color.rgb(20, 23, 29))
+                else intArrayOf(Color.WHITE, Color.rgb(239, 242, 247))
+            ).apply {
+                cornerRadius = dp(19).toFloat()
+                setStroke(dp(1), if (primary) Color.rgb(145, 156, 173) else if (dark) Color.rgb(83, 92, 106) else Color.rgb(194, 202, 214))
             }
+            elevation = dp(1).toFloat()
+            if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
+                android.content.res.ColorStateList.valueOf(Color.argb(55, 190, 198, 210)),
+                null,
+                android.graphics.drawable.ColorDrawable(Color.WHITE)
+            )
             setOnClickListener { run() }
         }
         card.addView(TextView(activity).apply {
@@ -351,8 +1292,17 @@ internal class FirebaseAccountController(
             setTextColor(if (primary) Color.rgb(20, 23, 29) else if (dark) Color.rgb(160, 168, 181) else Color.rgb(91, 98, 110))
             setPadding(0, dp(5), 0, 0)
         })
-        page.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
+        page.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
     }
+
+    private fun sectionCaption(label: String, dark: Boolean): TextView =
+        TextView(activity).apply {
+            text = translate(label)
+            textSize = 13f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(if (dark) Color.rgb(205, 212, 222) else Color.rgb(65, 73, 86))
+            setPadding(dp(2), dp(4), dp(2), dp(10))
+        }
 
     /**
      * Clear the Firebase Google client's cached account before opening account selection.
