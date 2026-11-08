@@ -79,6 +79,7 @@ dependencies {
     implementation("com.google.firebase:firebase-appcheck-playintegrity")
     implementation("com.google.firebase:firebase-appcheck-debug")
     implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-messaging")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20240303")
     implementation("androidx.activity:activity-ktx:1.10.1")
