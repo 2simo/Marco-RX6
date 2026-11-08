@@ -23,19 +23,16 @@ service cloud.firestore {
     // Anonymous sessions may keep only a minimal, self-owned profile and a
     // bounded preferences map. They cannot create arbitrary nested documents.
     match /users/{userId} {
-      allow get: if signedInAs(userId) || resource.data.publicProfile == true;
-      allow list: if false;
-      allow delete: if signedInAs(userId);
+      allow read, delete: if signedInAs(userId);
       allow create, update: if signedInAs(userId)
         && (
           (isAnonymous() && validGuestProfile())
           || (!isAnonymous()
             && request.resource.data.keys().hasOnly([
               'uid', 'isAnonymous', 'createdAt', 'updatedAt',
-              'email', 'displayName', 'photoUrl', 'bio', 'photoData',
-              'publicProfile', 'showFavorites', 'favoriteGames'
+              'email', 'displayName', 'photoUrl', 'bio', 'photoData'
             ])
-            && request.resource.data.keys().size() <= 12
+            && request.resource.data.keys().size() <= 9
             && (!('displayName' in request.resource.data)
               || (request.resource.data.displayName is string
                 && request.resource.data.displayName.size() <= 40))
@@ -45,13 +42,7 @@ service cloud.firestore {
             && (!('photoData' in request.resource.data)
               || (request.resource.data.photoData is string
                 && request.resource.data.photoData.size() <= 600000))
-            && (!('publicProfile' in request.resource.data)
-              || request.resource.data.publicProfile is bool)
-            && (!('showFavorites' in request.resource.data)
-              || request.resource.data.showFavorites is bool)
-            && (!('favoriteGames' in request.resource.data)
-              || (request.resource.data.favoriteGames is list
-                && request.resource.data.favoriteGames.size() <= 30)))
+            )
         );
 
       match /settings/preferences {
@@ -69,6 +60,31 @@ service cloud.firestore {
       }
 
       // No other nested collections/documents are writable.
+    }
+
+    // Public profile documents contain only fields explicitly approved for sharing.
+    // Private email addresses and profile-photo base64 data remain in /users/{uid}.
+    match /publicProfiles/{userId} {
+      allow get: if true;
+      allow list: if false;
+      allow delete: if signedInAs(userId);
+      allow create, update: if signedInAs(userId)
+        && !isAnonymous()
+        && request.resource.data.keys().hasOnly([
+          'uid', 'displayName', 'bio', 'showFavorites', 'favoriteGames', 'updatedAt'
+        ])
+        && request.resource.data.keys().hasAll(['uid', 'displayName', 'showFavorites', 'updatedAt'])
+        && request.resource.data.uid == userId
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 40
+        && request.resource.data.showFavorites is bool
+        && request.resource.data.updatedAt == request.time
+        && (!('bio' in request.resource.data)
+          || (request.resource.data.bio is string
+            && request.resource.data.bio.size() <= 160))
+        && (!('favoriteGames' in request.resource.data)
+          || (request.resource.data.favoriteGames is list
+            && request.resource.data.favoriteGames.size() <= 30));
     }
 
     // Game IDs are SHA-256 hashes generated from stable game identity fields.
