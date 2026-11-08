@@ -374,6 +374,9 @@ describe("Firestore user isolation rules", () => {
       text: "Hello",
       createdAt: serverTimestamp(),
       readBy: ["message-alice"],
+      replyToMessageId: "previous-message",
+      replyToText: "Earlier message",
+      replyToSenderUid: "message-bob",
     }));
     const bobMessage = doc(bob, "conversations/" + conversationId + "/messages/first");
     const aliceMessage = doc(alice, "conversations/" + conversationId + "/messages/first");
@@ -390,6 +393,16 @@ describe("Firestore user isolation rules", () => {
       readAt: serverTimestamp(),
     }));
     await assertSucceeds(getDoc(bobMessage));
+    // Hiding a conversation is private to the participant who hides it.
+    await assertSucceeds(updateDoc(conversation, { deletedFor: ["message-alice"] }));
+    await assertFails(updateDoc(conversation, { deletedFor: ["message-bob"] }));
+    const hiddenState = await assertSucceeds(getDoc(doc(bob, "conversations/" + conversationId)));
+    if (hiddenState.data()?.deletedFor?.includes("message-alice") !== true) {
+      throw new Error("Conversation hiding should be recorded for the deleting participant only");
+    }
+    // Either participant can delete a message, and it disappears for both.
+    await assertSucceeds(deleteDoc(bobMessage));
+    await assertFails(getDoc(aliceMessage));
     await assertFails(getDoc(doc(outsider, "conversations/" + conversationId)));
     await assertFails(setDoc(doc(outsider, "conversations/" + conversationId + "/messages/intrusion"), {
       senderUid: "message-outsider", text: "Intrusion", createdAt: serverTimestamp(),
