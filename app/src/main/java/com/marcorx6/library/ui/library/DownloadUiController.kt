@@ -430,7 +430,8 @@ internal class DownloadUiController(
             views.actionState = signature
             views.actions.removeAllViews()
             fun addAction(view: View, start: Boolean = false) {
-                views.actions.addView(view, LinearLayout.LayoutParams(0, -2, 1f).apply {
+                view.minimumWidth = dp(96)
+                views.actions.addView(view, LinearLayout.LayoutParams(-2, -2).apply {
                     if (start) marginStart = dp(6) else marginEnd = dp(6)
                 })
             }
@@ -612,7 +613,12 @@ internal class DownloadUiController(
             card.addView(statusView)
             card.addView(detailsView)
             card.addView(progressView, LinearLayout.LayoutParams(-1, dp(7)).apply { topMargin = dp(10) })
-            card.addView(actions)
+            val actionScroll = android.widget.HorizontalScrollView(activity).apply {
+                isHorizontalScrollBarEnabled = false
+                overScrollMode = View.OVER_SCROLL_NEVER
+                addView(actions, android.widget.HorizontalScrollView.LayoutParams(-2, -2))
+            }
+            card.addView(actionScroll)
             return RowViews(card, titleView, statusView, detailsView, progressView, actions)
         }
 
