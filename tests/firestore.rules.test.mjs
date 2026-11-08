@@ -23,6 +23,7 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
+  whereEqualTo,
 } from "firebase/firestore";
 
 const projectId = "demo-marco-rx6";
@@ -237,7 +238,15 @@ describe("Firestore user isolation rules", () => {
       createdAt: serverTimestamp(),
     }));
     await assertSucceeds(getDoc(aliceFollowingBob));
-    await assertSucceeds(getDocs(collectionGroup(bob, "following")));
+    // The followed account can see its incoming edge; unrelated users cannot.
+    await assertSucceeds(getDoc(doc(bob, "userFollows/alice/following/bob")));
+    const charlie = testEnv.authenticatedContext("charlie").firestore();
+    await assertFails(getDoc(doc(charlie, "userFollows/alice/following/bob")));
+    // Collection-group reads must be constrained to the signed-in user's incoming edges.
+    await assertSucceeds(getDocs(
+      collectionGroup(bob, "following").where(whereEqualTo("targetUid", "bob")),
+    ));
+    await assertFails(getDocs(collectionGroup(bob, "following")));
     await assertFails(setDoc(doc(bob, "userFollows/alice/following/charlie"), {
       uid: "bob",
       targetUid: "charlie",
