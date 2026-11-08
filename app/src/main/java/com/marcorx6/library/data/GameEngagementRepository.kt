@@ -193,6 +193,39 @@ internal class GameEngagementRepository(
             }
     }
 
+    data class UserRating(val game: Game, val rating: Int)
+
+    /** Loads this account's ratings in one collection-group request, then maps them
+     * back to the locally available game metadata without issuing one read per game.
+     */
+    fun loadMyRatings(
+        games: List<Game>,
+        onSuccess: (List<UserRating>) -> Unit,
+        onFailure: (Exception) -> Unit = {}
+    ) {
+        val user = auth.currentUser
+        if (user == null || user.isAnonymous) {
+            onSuccess(emptyList())
+            return
+        }
+        val gamesById = games.associateBy(::gameId)
+        firestore.collectionGroup("ratings")
+            .whereEqualTo("uid", user.uid)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val ratings = snapshot.documents.mapNotNull { document ->
+                    val value = document.getLong("rating")?.toInt()?.takeIf { it in 1..5 }
+                        ?: return@mapNotNull null
+                    val parentGameId = document.reference.parent.parent?.id
+                        ?: return@mapNotNull null
+                    val game = gamesById[parentGameId] ?: return@mapNotNull null
+                    UserRating(game, value)
+                }.sortedBy { it.game.name.lowercase() }
+                onSuccess(ratings)
+            }
+            .addOnFailureListener(onFailure)
+    }
+
     fun loadMyRating(game: Game, callback: (Int?) -> Unit) {
         val user = auth.currentUser
         if (user == null || user.isAnonymous) {
