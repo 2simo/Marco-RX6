@@ -408,6 +408,12 @@ internal class FirebaseAccountController(
             action(page, translate("نسيت كلمة المرور؟"), translate("استرجاع الوصول إلى حسابك"), dark, run = ::showPasswordResetForm)
         } else {
             page.addView(sectionCaption("الأمان وإدارة الحساب", dark))
+            action(page, translate("نسخ معرّف ملفي الشخصي"), translate("شارك المعرّف مع مستخدم آخر لفتح ملفك العام"), dark, run = {
+                val clipboard = activity.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                clipboard.setPrimaryClip(android.content.ClipData.newPlainText("MARCO profile ID", user.uid))
+                toast("تم نسخ معرّف الملف الشخصي")
+            })
+            action(page, translate("فتح ملف شخصي آخر"), translate("أدخل معرّف MARCO لمستخدم سمح بعرض ملفه"), dark, run = ::promptPublicProfile)
             action(page, translate("تغيير صورة الحساب"), translate("اختيار صورة من هاتفك وحفظها في ملفك السحابي"), dark, run = ::chooseProfilePhoto)
             if (!user.isEmailVerified && user.email != null) {
                 action(
@@ -701,6 +707,129 @@ internal class FirebaseAccountController(
             setPadding(0, dp(18), 0, dp(8))
         })
         showAccountPage(page)
+    }
+
+    private fun promptPublicProfile() {
+        val uidInput = EditText(activity).apply {
+            hint = translate("معرّف الملف الشخصي")
+            setSingleLine(true)
+        }
+        val dialog = AlertDialog.Builder(activity)
+            .setTitle(translate("فتح ملف شخصي"))
+            .setMessage(translate("أدخل معرّف المستخدم الذي شاركه معك صاحب الحساب."))
+            .setView(uidInput)
+            .setNegativeButton(translate("إلغاء"), null)
+            .setPositiveButton(translate("فتح"), null)
+            .create()
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val uid = uidInput.text.toString().trim()
+                if (uid.length < 10 || uid.length > 128) {
+                    toast("معرّف الملف الشخصي غير صالح")
+                    return@setOnClickListener
+                }
+                dialog.dismiss()
+                showPublicProfile(uid)
+            }
+        }
+        dialog.show()
+        styleDialog(dialog)
+    }
+
+    private fun showPublicProfile(uid: String) {
+        userDocuments.loadPublicProfile(uid).addOnSuccessListener { snapshot ->
+            if (!snapshot.exists() || snapshot.getBoolean("publicProfile") != true) {
+                toast("هذا الملف الشخصي غير متاح أو لم يسمح صاحبه بعرضه")
+                return@addOnSuccessListener
+            }
+            val dark = isDarkMode()
+            val page = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutDirection = View.LAYOUT_DIRECTION_RTL
+                setPadding(dp(20), dp(22), dp(20), dp(28))
+                setBackgroundColor(if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247))
+            }
+            val header = LinearLayout(activity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+            header.addView(TextView(activity).apply {
+                text = translate("رجوع")
+                textSize = 15f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(Color.rgb(190, 198, 210))
+                setPadding(dp(8), dp(12), dp(18), dp(12))
+                isClickable = true
+                isFocusable = true
+                setOnClickListener { show() }
+            })
+            header.addView(TextView(activity).apply {
+                text = translate("ملف مستخدم MARCO")
+                textSize = 21f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+            })
+            page.addView(header)
+            val identity = profileSectionCard(dark)
+            identity.gravity = Gravity.CENTER_HORIZONTAL
+            identity.addView(TextView(activity).apply {
+                text = snapshot.getString("displayName")?.takeIf { it.isNotBlank() } ?: translate("مستخدم MARCO")
+                textSize = 22f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+            })
+            snapshot.getString("bio")?.takeIf { it.isNotBlank() }?.let { bio ->
+                identity.addView(TextView(activity).apply {
+                    text = bio
+                    textSize = 13f
+                    gravity = Gravity.CENTER
+                    setTextColor(if (dark) Color.rgb(185, 193, 205) else Color.rgb(75, 83, 96))
+                    setPadding(0, dp(8), 0, dp(3))
+                })
+            }
+            page.addView(identity, LinearLayout.LayoutParams(-1, -2).apply {
+                topMargin = dp(14)
+                bottomMargin = dp(14)
+            })
+            if (snapshot.getBoolean("showFavorites") == true) {
+                page.addView(sectionCaption("الألعاب المفضلة", dark))
+                val values = snapshot.get("favoriteGames") as? List<*>
+                val favorites = values.orEmpty().mapNotNull { value ->
+                    val item = value as? Map<*, *> ?: return@mapNotNull null
+                    val name = item["name"] as? String ?: return@mapNotNull null
+                    val platform = item["platform"] as? String ?: return@mapNotNull null
+                    val coverUrl = item["coverUrl"] as? String ?: ""
+                    Game(name, platform, "", "", coverUrl = coverUrl)
+                }
+                if (favorites.isEmpty()) {
+                    page.addView(TextView(activity).apply {
+                        text = translate("لم يشارك هذا المستخدم ألعاباً مفضلة بعد.")
+                        textSize = 12f
+                        setTextColor(if (dark) Color.rgb(150, 158, 171) else Color.rgb(105, 114, 128))
+                        setPadding(dp(12), dp(14), dp(12), dp(14))
+                    })
+                } else {
+                    val scroll = HorizontalScrollView(activity).apply {
+                        isHorizontalScrollBarEnabled = false
+                        layoutDirection = View.LAYOUT_DIRECTION_RTL
+                    }
+                    val track = LinearLayout(activity).apply {
+                        orientation = LinearLayout.HORIZONTAL
+                        layoutDirection = View.LAYOUT_DIRECTION_RTL
+                    }
+                    favorites.forEach { game ->
+                        track.addView(profileGameCard(game, dark, ""), LinearLayout.LayoutParams(dp(130), -2).apply {
+                            marginEnd = dp(9)
+                        })
+                    }
+                    scroll.addView(track)
+                    page.addView(scroll)
+                }
+            }
+            showAccountPage(page)
+        }.addOnFailureListener {
+            toast("تعذر تحميل الملف الشخصي. تحقق من المعرّف والاتصال.")
+        }
     }
 
     private fun profileSectionCard(dark: Boolean): LinearLayout = LinearLayout(activity).apply {
