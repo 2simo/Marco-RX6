@@ -14,6 +14,7 @@ import {
 } from "@firebase/rules-unit-testing";
 import {
   collection,
+  collectionGroup,
   deleteDoc,
   doc,
   FieldValue,
@@ -161,6 +162,8 @@ describe("Firestore user isolation rules", () => {
       bio: "Retro games",
       showFavorites: true,
       favoriteGames: [{ name: "Game", platform: "PS2", coverUrl: "" }],
+      photoUrl: "https://example.com/avatar.jpg",
+      photoData: "a".repeat(1024),
       updatedAt: serverTimestamp(),
     }));
     await assertSucceeds(getDoc(doc(visitorDb, "publicProfiles/public-owner")));
@@ -214,6 +217,32 @@ describe("Firestore user isolation rules", () => {
       getDoc(doc(dbA, "users/user-b/settings/preferences")),
     );
     await assertSucceeds(getDoc(doc(dbB, "users/user-b")));
+  });
+
+  it("allows users to create and remove only their own follow edges", async () => {
+    const alice = testEnv.authenticatedContext("alice").firestore();
+    const bob = testEnv.authenticatedContext("bob").firestore();
+    const aliceFollowingBob = doc(alice, "userFollows/alice/following/bob");
+
+    await assertSucceeds(setDoc(aliceFollowingBob, {
+      uid: "alice",
+      targetUid: "bob",
+      createdAt: serverTimestamp(),
+    }));
+    await assertSucceeds(getDoc(aliceFollowingBob));
+    await assertSucceeds(getDocs(collectionGroup(bob, "following")));
+    await assertFails(setDoc(doc(bob, "userFollows/alice/following/charlie"), {
+      uid: "bob",
+      targetUid: "charlie",
+      createdAt: serverTimestamp(),
+    }));
+    await assertFails(setDoc(doc(alice, "userFollows/alice/following/alice"), {
+      uid: "alice",
+      targetUid: "alice",
+      createdAt: serverTimestamp(),
+    }));
+    await assertFails(updateDoc(aliceFollowingBob, { targetUid: "charlie" }));
+    await assertSucceeds(deleteDoc(aliceFollowingBob));
   });
 
   it("allows one immutable game view per authenticated guest installation", async () => {
