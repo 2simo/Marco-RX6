@@ -1396,6 +1396,7 @@ internal class FirebaseAccountController(
                 })
             }
             conversations.forEach { conversation ->
+                if ((conversation.get("deletedFor") as? List<*>)?.contains(user.uid) == true) return@forEach
                 val otherUid = messaging.otherParticipant(conversation, user.uid) ?: return@forEach
                 userDocuments.loadPublicProfile(otherUid).addOnSuccessListener { profile ->
                     if (!profile.exists() || activity.isFinishing || activity.isDestroyed) return@addOnSuccessListener
@@ -1411,6 +1412,18 @@ internal class FirebaseAccountController(
                             setStroke(dp(1), Color.rgb(75, 83, 96))
                         }
                         setOnClickListener { openConversation(otherUid) }
+                        setOnLongClickListener {
+                            AlertDialog.Builder(activity)
+                                .setMessage("حذف المحادثة من قائمتك فقط؟")
+                                .setNegativeButton("إلغاء", null)
+                                .setPositiveButton("حذف") { _, _ ->
+                                    messaging.hideConversation(user.uid, otherUid)
+                                        .addOnFailureListener { error ->
+                                            toast(error.localizedMessage ?: "تعذر حذف المحادثة.")
+                                        }
+                                }.show()
+                            true
+                        }
                     }
                     list.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
                 }.addOnFailureListener { error ->
@@ -1466,6 +1479,15 @@ internal class FirebaseAccountController(
                     val messages = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
                     val scroll = ScrollView(activity).apply { isFillViewport = true; addView(messages) }
                     page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
+                    var selectedReply: com.google.firebase.firestore.DocumentSnapshot? = null
+                    val replyPreview = TextView(activity).apply {
+                        visibility = View.GONE
+                        textSize = 12f
+                        setTextColor(Color.rgb(125, 190, 255))
+                        setPadding(dp(10), dp(7), dp(10), dp(7))
+                        setOnClickListener { selectedReply = null; visibility = View.GONE }
+                    }
+                    page.addView(replyPreview)
                     val composer = LinearLayout(activity).apply {
                         orientation = LinearLayout.HORIZONTAL
                         gravity = Gravity.CENTER_VERTICAL
@@ -1502,8 +1524,18 @@ internal class FirebaseAccountController(
                         val body = input.text.toString().trim()
                         if (body.isEmpty()) return@setOnClickListener
                         send.isEnabled = false
-                        messaging.sendMessage(user.uid, otherUid, body)
-                            .addOnSuccessListener { input.text.clear(); send.isEnabled = true }
+                        val reply = selectedReply
+                        messaging.sendMessage(
+                            user.uid, otherUid, body,
+                            reply?.id,
+                            reply?.getString("text"),
+                            reply?.getString("senderUid")
+                        ).addOnSuccessListener {
+                            input.text.clear()
+                            selectedReply = null
+                            replyPreview.visibility = View.GONE
+                            send.isEnabled = true
+                        }
                             .addOnFailureListener { error ->
                                 send.isEnabled = true
                                 android.util.Log.e("MarcoMessages", "Send message failed", error)
@@ -1530,8 +1562,12 @@ internal class FirebaseAccountController(
                                 if (timeLabel.isNotBlank()) append("\n").append(timeLabel)
                                 if (mine) append(if (recipientRead) "  ✓✓" else "  ✓")
                             }
+                            val replyText = snapshot.getString("replyToText")
                             val bubble = TextView(activity).apply {
-                                text = messageText
+                                text = buildString {
+                                    if (!replyText.isNullOrBlank()) append("↪ ").append(replyText).append("\\n")
+                                    append(messageText)
+                                }
                                 textSize = 14f
                                 setTextColor(if (mine) Color.rgb(18, 20, 24) else Color.WHITE)
                                 setPadding(dp(13), dp(10), dp(13), dp(10))
@@ -1539,6 +1575,24 @@ internal class FirebaseAccountController(
                                     cornerRadius = dp(15).toFloat()
                                     setColor(if (mine) Color.rgb(190, 198, 210) else Color.rgb(35, 39, 46))
                                 }
+                            }
+                            bubble.setOnClickListener {
+                                selectedReply = snapshot
+                                replyPreview.text = "رد على: " + snapshot.getString("text").orEmpty().take(100) + "  ×"
+                                replyPreview.visibility = View.VISIBLE
+                                input.requestFocus()
+                            }
+                            bubble.setOnLongClickListener {
+                                AlertDialog.Builder(activity)
+                                    .setMessage("حذف هذه الرسالة لدى الطرفين؟")
+                                    .setNegativeButton("إلغاء", null)
+                                    .setPositiveButton("حذف") { _, _ ->
+                                        messaging.deleteMessage(user.uid, otherUid, snapshot.id)
+                                            .addOnFailureListener { error ->
+                                                toast(error.localizedMessage ?: "تعذر حذف الرسالة.")
+                                            }
+                                    }.show()
+                                true
                             }
                             val line = LinearLayout(activity).apply {
                                 gravity = if (mine) Gravity.END else Gravity.START
