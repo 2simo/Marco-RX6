@@ -2,6 +2,7 @@ package com.marcorx6.library.ui
 
 import android.app.Activity
 import android.app.Dialog
+import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
@@ -235,6 +236,30 @@ internal class DownloadPageDialog(
         }
         root.addView(candidateScroll, LinearLayout.LayoutParams(-1, dp(112)))
 
+        fun confirmDownload(url: String, label: String, mimeType: String = "") {
+            val safeUrl = SecureUrlPolicy.toHttpsUrl(url) ?: return
+            AlertDialog.Builder(activity)
+                .setTitle(translate("إضافة تنزيل"))
+                .setMessage(label.take(100) + "\n\n" + safeUrl)
+                .setNegativeButton(translate("إلغاء"), null)
+                .setPositiveButton(translate("تنزيل الآن")) { _, _ ->
+                    onDownload(
+                        safeUrl,
+                        gameTitle,
+                        webView.settings.userAgentString.orEmpty(),
+                        "",
+                        mimeType,
+                        webView.url.orEmpty()
+                    )
+                }
+                .show()
+        }
+
+        fun isDirectFileUrl(url: String): Boolean {
+            val path = try { Uri.parse(url).path.orEmpty().lowercase() } catch (_: Exception) { "" }
+            return path.matches(Regex(""".+\\.(zip|7z|rar|iso|pkg|bin|cue|chd|img|pbp|cso|nsp|xci|apk|pdf|mp4|m4v|mkv|webm|mov|avi|flv|3gp|mp3|m4a|aac|wav|flac|ogg)$"""))
+        }
+
         fun addCandidate(label: String, url: String) {
             val safeUrl = SecureUrlPolicy.toHttpsUrl(url) ?: return
             if (candidates.childCount >= 5) return
@@ -254,8 +279,7 @@ internal class DownloadPageDialog(
                 isClickable = true
                 isFocusable = true
                 setOnClickListener {
-                    status.text = translate("جارٍ فحص الرابط المحتمل…")
-                    webView.loadUrl(safeUrl)
+                    confirmDownload(safeUrl, label)
                 }
             }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(5) })
             candidateTitle.visibility = View.VISIBLE
@@ -450,6 +474,10 @@ internal class DownloadPageDialog(
                     recordBlocked()
                     return true
                 }
+                if (isDirectFileUrl(request.url.toString())) {
+                    confirmDownload(request.url.toString(), request.url.lastPathSegment ?: translate("ملف مباشر"))
+                    return true
+                }
                 return false
             }
 
@@ -494,7 +522,7 @@ internal class DownloadPageDialog(
             if (safeUrl == null) {
                 Toast.makeText(activity, translate("رابط الملف غير آمن؛ تم إيقاف التنزيل"), Toast.LENGTH_LONG).show()
             } else {
-                onDownload(safeUrl, gameTitle, userAgent.orEmpty(), contentDisposition.orEmpty(), mimeType.orEmpty(), webView.url.orEmpty())
+                confirmDownload(safeUrl, contentDisposition.ifBlank { gameTitle }, mimeType.orEmpty())
             }
         })
 
