@@ -467,7 +467,7 @@ internal class GameLibraryRenderer(
                         com.marcorx6.library.R.drawable.ic_engagement_rating,
                         tr("التقييمات"),
                         ratingValue,
-                        Color.rgb(255, 190, 55)
+                        Color.rgb(190, 198, 210)
                     ),
                     LinearLayout.LayoutParams(0, -2, 1f)
                 )
