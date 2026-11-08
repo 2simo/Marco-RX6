@@ -1,5 +1,7 @@
 package com.marcorx6.library.data
 
+import android.util.Log
+
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
@@ -237,7 +239,10 @@ internal class GameEngagementRepository(
                 }.sortedBy { it.game.name.lowercase() }
                 onSuccess(ratings)
             }
-            .addOnFailureListener { error -> onFailure(error) }
+            .addOnFailureListener { error ->
+                Log.e("GameEngagementRepository", "loadRatingsForUser failed for uid=$uid", error)
+                onFailure(error)
+            }
     }
 
     fun loadMyRating(game: Game, callback: (Int?) -> Unit) {
