@@ -207,7 +207,10 @@ internal class FirebaseUserDocumentRepository(
                 }
                 val documents = task.result.flatMap { it.documents }.distinctBy { it.reference.path }
                 documents.chunked(450).fold(Tasks.forResult<Void>(null)) { previous, chunk ->
-                    previous.continueWithTask {
+                    previous.continueWithTask { previousTask ->
+                        if (!previousTask.isSuccessful) {
+                            throw previousTask.exception ?: IllegalStateException("تعذر حذف علاقات المتابعة")
+                        }
                         val batch = firestore.batch()
                         chunk.forEach { batch.delete(it.reference) }
                         batch.commit()
