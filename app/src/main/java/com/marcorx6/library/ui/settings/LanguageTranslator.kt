@@ -687,6 +687,18 @@ internal object LanguageTranslator {
             "قيّم هذه اللعبة من نجمة إلى خمس نجوم" to listOf("Rate this game from one to five stars", "Évaluez ce jeu de une à cinq étoiles", "Califica este juego de una a cinco estrellas"),
             "تم حفظ تقييمك" to listOf("Your rating has been saved", "Votre évaluation a été enregistrée", "Tu valoración se ha guardado"),
             "تعذر حفظ التقييم" to listOf("Could not save the rating", "Impossible d’enregistrer l’évaluation", "No se pudo guardar la valoración"),
+            "اضغط مطولاً على المحادثة لحذفها من قائمتك فقط" to listOf("Long-press a conversation to remove it from your list only", "Maintenez une conversation appuyée pour la retirer uniquement de votre liste", "Mantén pulsada una conversación para quitarla solo de tu lista"),
+            "حذف المحادثة من قائمتك فقط؟" to listOf("Remove this conversation from your list only?", "Retirer cette conversation uniquement de votre liste ?", "¿Quitar esta conversación solo de tu lista?"),
+            "اضغط على الرسالة للرد، واضغط مطولاً لحذفها لدى الطرفين" to listOf("Tap a message to reply; long-press to delete it for both people", "Touchez un message pour répondre ; maintenez-le appuyé pour le supprimer chez les deux personnes", "Toca un mensaje para responder; mantenlo pulsado para eliminarlo para ambos"),
+            "حذف هذه الرسالة لدى الطرفين؟" to listOf("Delete this message for both people?", "Supprimer ce message pour les deux personnes ?", "¿Eliminar este mensaje para ambas personas?"),
+            "رد على:" to listOf("Reply to:", "Répondre à :", "Responder a:"),
+            "تعذر حذف المحادثة." to listOf("Could not remove the conversation.", "Impossible de retirer la conversation.", "No se pudo quitar la conversación."),
+            "تعذر حذف الرسالة." to listOf("Could not delete the message.", "Impossible de supprimer le message.", "No se pudo eliminar el mensaje."),
+            "تعذر تحميل الرسائل. تحقق من الاتصال." to listOf("Could not load messages. Check your connection.", "Impossible de charger les messages. Vérifiez votre connexion.", "No se pudieron cargar los mensajes. Comprueba tu conexión."),
+            "المراسلة متاحة فقط عندما يتابع كل منكما الآخر." to listOf("Messaging is available only when you follow each other.", "La messagerie est disponible uniquement si vous vous suivez mutuellement.", "La mensajería solo está disponible cuando se siguen mutuamente."),
+            "الملف الشخصي غير متاح." to listOf("Profile unavailable.", "Profil indisponible.", "Perfil no disponible."),
+            "تعذر إرسال الرسالة." to listOf("Could not send the message.", "Impossible d’envoyer le message.", "No se pudo enviar el mensaje."),
+            "تعذر تحديث المحادثة. تحقق من الاتصال." to listOf("Could not update the conversation. Check your connection.", "Impossible de mettre à jour la conversation. Vérifiez votre connexion.", "No se pudo actualizar la conversación. Comprueba tu conexión."),
         )
 
     fun translate(ar: String, lang: String): String {
