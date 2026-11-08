@@ -301,7 +301,7 @@ internal class GameLibraryRenderer(
                     }
                     background = android.graphics.drawable.RippleDrawable(
                         android.content.res.ColorStateList.valueOf(
-                            if (isDarkMode()) Color.argb(86, 190, 198, 210)
+                            if (isDarkMode()) Color.argb(86, 76, 145, 235)
                             else Color.argb(62, 140, 148, 160)
                         ),
                         surface,
@@ -342,7 +342,7 @@ internal class GameLibraryRenderer(
                     gravity = Gravity.CENTER
                     setPadding(dp(8), dp(4), dp(8), dp(4))
                     background = GradientDrawable().apply {
-                        setColor(Color.rgb(190, 198, 210))
+                        setColor(Color.rgb(76, 145, 235))
                         cornerRadius = dp(9).toFloat()
                     }
                 }
@@ -390,7 +390,7 @@ internal class GameLibraryRenderer(
                         importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
                         setPadding(dp(6), dp(6), dp(6), dp(6))
                         background = GradientDrawable().apply {
-                            setColor(Color.rgb(190, 198, 210))
+                            setColor(Color.rgb(76, 145, 235))
                             cornerRadius = dp(17).toFloat()
                         }
                     }
@@ -476,7 +476,7 @@ internal class GameLibraryRenderer(
                         com.marcorx6.library.R.drawable.ic_engagement_views,
                         tr("المشاهدات"),
                         viewsValue,
-                        Color.rgb(190, 198, 210)
+                        Color.rgb(76, 145, 235)
                     ),
                     LinearLayout.LayoutParams(0, -2, 1f)
                 )
