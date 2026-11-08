@@ -238,8 +238,9 @@ internal object BloggerFeedParser {
             "gofile.io", "terabox.com", "1024tera.com", "send.cm", "katfile.com",
             "userscloud.com", "qiwi.gg", "krakenfiles.com", "filecrypt.cc"
         )
-        val fileExtension = Regex(
-            "(?i)\\.(?:zip|7z|rar|iso|apk|xapk|apks|bin|cue|chd|pkg|nsp|xci|torrent|pdf|exe|mp4|mkv)(?:$|[?#])"
+        val downloadableExtensions = setOf(
+            "zip", "7z", "rar", "iso", "apk", "xapk", "apks", "bin", "cue",
+            "chd", "pkg", "nsp", "xci", "torrent", "pdf", "exe", "mp4", "mkv"
         )
         val anchorPattern = Regex("(?is)<a\\b([^>]*)>(.*?)</a\\s*>")
         val hrefPattern = Regex("(?is)\\bhref\\s*=\\s*(['\"])(.*?)\\1")
@@ -262,13 +263,18 @@ internal object BloggerFeedParser {
             val label = visibleLabel.ifBlank { attributeLabel.ifBlank { imageAlt } }
             val normalizedLabel = label.lowercase(Locale.ROOT)
             val normalizedUrl = href.lowercase(Locale.ROOT)
-            val isImageUrl = imagePattern.containsMatchIn(normalizedUrl)
+            val urlPath = normalizedUrl.substringBefore('?').substringBefore('#')
+            val extension = urlPath.substringAfterLast('.', "").takeIf { urlPath.contains('.') }.orEmpty()
+            val isImageUrl = imagePattern.containsMatchIn(urlPath)
             if (isImageUrl || !seenUrls.add(href)) continue
 
-            val host = try { Uri.parse(href).host.orEmpty().lowercase(Locale.ROOT) } catch (_: Exception) { "" }
+            // Parse the host from the URL string instead of android.net.Uri so this
+            // parser behaves identically in Android runtime and local JVM unit tests.
+            val host = Regex("^https://([^/:?#]+)", RegexOption.IGNORE_CASE)
+                .find(href)?.groupValues?.getOrNull(1)?.lowercase(Locale.ROOT).orEmpty()
             val knownHost = knownDownloadHosts.any { host == it || host.endsWith(".$it") }
             val isInsideDownloadSection = downloadSections.any { it.contains(anchor.value) }
-            val isFileUrl = fileExtension.containsMatchIn(normalizedUrl)
+            val isFileUrl = extension in downloadableExtensions
             val hasDownloadLabel = downloadTerms.any { normalizedLabel.contains(it) }
             // A link in an explicitly named download section, a recognized file host,
             // or a direct downloadable file is sufficient even when its button says
