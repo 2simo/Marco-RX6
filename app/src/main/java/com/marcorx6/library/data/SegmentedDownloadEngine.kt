@@ -85,6 +85,7 @@ internal object SegmentedDownloadEngine {
                 if (start >= total) 0L else minOf(File(directory, "${item.id}.seg$index").length(), minOf(total - start, segmentSize))
             }
         )
+        database.progress(item.id, completedBytes.get(), total, etag, modified)
         onProgress(completedBytes.get(), total)
         try {
             val jobs = (0 until CONNECTIONS).mapNotNull { index ->
@@ -95,6 +96,7 @@ internal object SegmentedDownloadEngine {
                 Callable {
                     downloadRange(item, segment, start, end, total, etag, modified, isStopped) { delta ->
                         val current = completedBytes.addAndGet(delta).coerceAtMost(total)
+                        database.progress(item.id, current, total, etag, modified)
                         onProgress(current, total)
                     }
                 }
