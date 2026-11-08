@@ -128,11 +128,11 @@ internal class FirebaseMessagingRepository(
     ): ListenerRegistration {
         return firestore.collection(CONVERSATIONS).document(conversationId)
             .collection(MESSAGES)
-            .orderBy("createdAt", Query.Direction.ASCENDING)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
             .limit(100)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) onError(error)
-                else onChange(snapshot?.documents.orEmpty())
+                else onChange(snapshot?.documents.orEmpty()?.reversed().orEmpty())
             }
     }
 
