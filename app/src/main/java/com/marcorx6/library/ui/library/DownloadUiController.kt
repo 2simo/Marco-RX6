@@ -173,6 +173,79 @@ internal class DownloadUiController(
             setTextColor(muted)
             setPadding(0, dp(7), 0, dp(18))
         })
+        var selectedFilter = "all"
+        val filterButtons = linkedMapOf<String, TextView>()
+        fun filterButton(key: String, label: String): TextView = TextView(activity).apply {
+            text = translate(label)
+            textSize = 11f
+            gravity = Gravity.CENTER
+            setPadding(dp(12), dp(9), dp(12), dp(9))
+            isClickable = true
+            isFocusable = true
+            addGlassTouch(this)
+            setOnClickListener {
+                selectedFilter = key
+                filterButtons.forEach { (filterKey, button) ->
+                    val active = filterKey == selectedFilter
+                    button.setTextColor(if (active) Color.rgb(20, 23, 29) else primary)
+                    (button.background as? GradientDrawable)?.setColor(
+                        if (active) primary else surface
+                    )
+                }
+                render?.invoke()
+            }
+            background = GradientDrawable().apply {
+                cornerRadius = dp(13).toFloat()
+                setColor(surface)
+                setStroke(dp(1), if (dark) Color.rgb(78, 85, 98) else Color.rgb(210, 216, 225))
+            }
+            setTextColor(primary)
+        }
+        val filterRow = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        listOf("all" to "الكل", "active" to "النشطة", "completed" to "المكتملة", "failed" to "الفاشلة").forEach { (key, label) ->
+            val button = filterButton(key, label)
+            filterButtons[key] = button
+            filterRow.addView(button, LinearLayout.LayoutParams(0, dp(40), 1f).apply {
+                if (key != "all") marginStart = dp(5)
+            })
+        }
+        val bulkRow = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, dp(9), 0, dp(10))
+        }
+        fun bulkButton(label: String, onClick: () -> Unit) = TextView(activity).apply {
+            text = translate(label)
+            textSize = 11f
+            gravity = Gravity.CENTER
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            setTextColor(primary)
+            background = GradientDrawable().apply {
+                setColor(surface)
+                cornerRadius = dp(12).toFloat()
+                setStroke(dp(1), if (dark) Color.rgb(78, 85, 98) else Color.rgb(210, 216, 225))
+            }
+            isClickable = true
+            isFocusable = true
+            addGlassTouch(this)
+            setOnClickListener { onClick() }
+        }
+        bulkRow.addView(bulkButton("إيقاف الكل") {
+            val count = downloadRepository.pauseAllDownloads()
+            Toast.makeText(activity, translate("تم إيقاف") + " $count " + translate("تنزيلات مؤقتاً"), Toast.LENGTH_SHORT).show()
+            render?.invoke()
+        }, LinearLayout.LayoutParams(0, dp(42), 1f))
+        bulkRow.addView(bulkButton("استكمال الكل") {
+            val count = downloadRepository.resumeAllDownloads()
+            Toast.makeText(activity, translate("تم استكمال") + " $count " + translate("تنزيلات"), Toast.LENGTH_SHORT).show()
+            render?.invoke()
+        }, LinearLayout.LayoutParams(0, dp(42), 1f).apply { marginStart = dp(8) })
+        root.addView(filterRow)
+        root.addView(bulkRow)
+
         val list = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
         class RowViews(
             val card: LinearLayout,
@@ -418,16 +491,28 @@ internal class DownloadUiController(
 
         render = renderBlock@{
             if (activity.isFinishing || activity.isDestroyed) return@renderBlock
-            val entries = try { downloadRepository.getDownloads() } catch (error: Exception) {
+            val allEntries = try { downloadRepository.getDownloads() } catch (error: Exception) {
                 Toast.makeText(activity, translate("تعذر قراءة التنزيلات") + (error.message?.takeIf { it.isNotBlank() }?.let { ": ${translate(it)}" } ?: ""), Toast.LENGTH_LONG).show()
                 return@renderBlock
             }
-            refreshIntervalMillis = if (entries.any {
+            refreshIntervalMillis = if (allEntries.any {
                 it.status == DownloadManager.STATUS_RUNNING ||
                     it.status == DownloadManager.STATUS_PENDING ||
                     it.status == com.marcorx6.library.data.DownloadDatabase.STATUS_SCHEDULED
             }) 1_200L else 5_000L
-            val currentIds = entries.map { it.id }.toSet()
+            val activeStatuses = setOf(
+                DownloadManager.STATUS_PENDING,
+                DownloadManager.STATUS_RUNNING,
+                DownloadManager.STATUS_PAUSED,
+                com.marcorx6.library.data.DownloadDatabase.STATUS_SCHEDULED
+            )
+            val visibleEntries = when (selectedFilter) {
+                "active" -> allEntries.filter { it.status in activeStatuses }
+                "completed" -> allEntries.filter { it.status == DownloadManager.STATUS_SUCCESSFUL }
+                "failed" -> allEntries.filter { it.status == DownloadManager.STATUS_FAILED }
+                else -> allEntries
+            }
+            val currentIds = visibleEntries.map { it.id }.toSet()
             val removedIds = rows.keys.filter { it !in currentIds }
             removedIds.forEach { id ->
                 rows.remove(id)?.let { list.removeView(it.card) }
@@ -435,7 +520,7 @@ internal class DownloadUiController(
             }
             emptyState.visibility = if (entries.isEmpty()) View.VISIBLE else View.GONE
             if (emptyState.parent == null) list.addView(emptyState, LinearLayout.LayoutParams(-1, -2))
-            entries.forEachIndexed { index, item ->
+            visibleEntries.forEachIndexed { index, item ->
                 val row = rows[item.id] ?: createRow(item).also { created ->
                     rows[item.id] = created
                     val insertAt = index.coerceAtMost(list.childCount)
