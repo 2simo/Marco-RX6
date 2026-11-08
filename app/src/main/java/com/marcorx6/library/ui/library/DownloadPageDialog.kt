@@ -267,13 +267,24 @@ internal class DownloadPageDialog(
         }
 
         fun isDirectFileUrl(url: String): Boolean {
-            val path = try { Uri.parse(url).path.orEmpty().lowercase() } catch (_: Exception) { "" }
-            return path.matches(Regex(""".+\.(zip|7z|rar|iso|pkg|bin|cue|chd|img|pbp|cso|nsp|xci|apk|pdf|mp4|m4v|mkv|webm|mov|avi|flv|3gp|mp3|m4a|aac|wav|flac|ogg)$"""))
+            val uri = try { Uri.parse(url) } catch (_: Exception) { return false }
+            val path = uri.path.orEmpty().lowercase()
+            val knownExtension = path.matches(Regex(""" .+ """.trim()))
+            val downloadFlag = listOf("download", "attachment", "file", "export").any { key ->
+                uri.getQueryParameter(key)?.let { value ->
+                    value.equals("1", true) || value.equals("true", true) ||
+                        value.equals("yes", true) || value.equals("download", true)
+                } == true
+            }
+            val downloadPath = Regex("""(?:^|/)(?:download|attachment|file|export)(?:/|$)""", RegexOption.IGNORE_CASE)
+                .containsMatchIn(path)
+            return knownExtension || downloadFlag || downloadPath
         }
 
+        val candidateUrls = mutableSetOf<String>()
         fun addCandidate(label: String, url: String) {
             val safeUrl = SecureUrlPolicy.toHttpsUrl(url) ?: return
-            if (candidates.childCount >= 5) return
+            if (!candidateUrls.add(safeUrl) || candidates.childCount >= 8) return
             candidates.addView(TextView(activity).apply {
                 text = "  " + label.take(70).ifBlank { translate("فتح رابط الملف المحتمل") }
                 setCompoundDrawablesRelativeWithIntrinsicBounds(com.marcorx6.library.R.drawable.ic_action_external, 0, 0, 0)
@@ -516,6 +527,7 @@ internal class DownloadPageDialog(
                 status.text = Uri.parse(url).host ?: translate("جارٍ فتح صفحة التحميل…")
                 addressInput.setText(url)
                 candidates.removeAllViews()
+                candidateUrls.clear()
                 candidateTitle.visibility = View.GONE
                 candidateScroll.visibility = View.GONE
             }
