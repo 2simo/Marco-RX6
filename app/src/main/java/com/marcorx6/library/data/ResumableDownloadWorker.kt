@@ -49,6 +49,7 @@ internal class ResumableDownloadWorker(
             if (latest == null || latest.status == DownloadDatabase.STATUS_CANCELLED) {
                 val directory = File(applicationContext.filesDir, "MARCO_RX6_downloads")
                 File(directory, "$id.part").delete()
+                (0 until 4).forEach { File(directory, "$id.seg$it").delete() }
                 Result.success()
             } else if (latest.status == DownloadManager.STATUS_PAUSED) {
                 Result.success()
@@ -70,6 +71,18 @@ internal class ResumableDownloadWorker(
     private fun download(item: StoredDownload, database: DownloadDatabase): Result {
         val directory = File(applicationContext.filesDir, "MARCO_RX6_downloads").apply { mkdirs() }
         val partial = File(directory, "${item.id}.part")
+        val segmented = SegmentedDownloadEngine.download(
+            applicationContext,
+            item,
+            database,
+            isStopped = { isStopped || database.get(item.id)?.status == DownloadManager.STATUS_PAUSED ||
+                database.get(item.id)?.status == DownloadDatabase.STATUS_CANCELLED },
+            onProgress = { downloaded, total ->
+                database.progress(item.id, downloaded, total, item.etag, item.lastModified)
+                updateProgressNotification(item.title, item.id, downloaded, total)
+            }
+        )
+        if (segmented) return Result.success()
         var offset = if (partial.exists()) partial.length() else 0L
         var connection: HttpURLConnection? = null
         try {
