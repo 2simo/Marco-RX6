@@ -110,7 +110,8 @@ service cloud.firestore {
         && request.resource.data.uid == followerUid
         && request.resource.data.targetUid == targetUid
         && request.resource.data.createdAt == request.time;
-      allow delete: if signedInAs(followerUid);
+      allow delete: if signedInAs(followerUid)
+        || (request.auth != null && resource.data.targetUid == request.auth.uid);
       allow update: if false;
     }
 
