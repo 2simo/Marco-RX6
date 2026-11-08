@@ -211,6 +211,9 @@ internal class FirebaseAccountController(
                 visibility = View.GONE
             }
             identityCard.addView(accountHandleView)
+            accountHandleView.isClickable = true
+            accountHandleView.isFocusable = true
+            accountHandleView.setOnClickListener { showEditProfile() }
             user.email?.takeIf { it.isNotBlank() }?.let { emailAddress ->
                 identityCard.addView(TextView(activity).apply {
                     text = emailAddress
@@ -500,10 +503,13 @@ internal class FirebaseAccountController(
             })
             userDocuments.loadUser(user.uid)
                 .addOnSuccessListener { snapshot ->
-                    snapshot.getString("username")?.takeIf { it.isNotBlank() }?.let { handle ->
-                        accountHandleView.text = "@$handle"
-                        accountHandleView.visibility = View.VISIBLE
+                    val savedHandle = snapshot.getString("username")
+                    accountHandleView.text = if (savedHandle.isNullOrBlank()) {
+                        translate("＋ اختر اسم مستخدم فريداً")
+                    } else {
+                        "@$savedHandle"
                     }
+                    accountHandleView.visibility = View.VISIBLE
                     snapshot.getString("photoData")?.takeIf { it.isNotBlank() }?.let { encoded ->
                         runCatching {
                             val bytes = Base64.decode(encoded, Base64.DEFAULT)
@@ -963,7 +969,7 @@ internal class FirebaseAccountController(
 
     private fun promptPublicProfile() {
         val uidInput = EditText(activity).apply {
-            hint = translate("معرّف الملف الشخصي")
+            hint = translate("@اسم_المستخدم أو معرّف الملف الشخصي")
             setSingleLine(true)
         }
         val dialog = AlertDialog.Builder(activity)
@@ -1365,7 +1371,7 @@ internal class FirebaseAccountController(
                 messagesListener = messaging.listenMessages(id, { snapshots ->
                     if (activity.isFinishing || activity.isDestroyed) return@listenMessages
                     messages.removeAllViews()
-                    messaging.markMessagesRead(id, user.uid, snapshots).addOnFailureListener { error ->
+                    messaging.markMessagesRead(user.uid, snapshots).addOnFailureListener { error ->
                         android.util.Log.w("MarcoMessages", "Read receipt update failed", error)
                     }
                     snapshots.forEach { snapshot ->
