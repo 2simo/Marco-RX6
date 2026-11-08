@@ -148,8 +148,8 @@ internal class DownloadUiController(
                     }
                     .setNegativeButton(translate("إلغاء"), null)
                     .create()
-                styleDialog(picker)
                 picker.show()
+                styleDialog(picker)
             }
         }
         header.addView(concurrencyButton, LinearLayout.LayoutParams(-2, dp(44)).apply { marginEnd = dp(7) })
@@ -424,7 +424,8 @@ internal class DownloadUiController(
             }
             refreshIntervalMillis = if (entries.any {
                 it.status == DownloadManager.STATUS_RUNNING ||
-                    it.status == DownloadManager.STATUS_PENDING
+                    it.status == DownloadManager.STATUS_PENDING ||
+                    it.status == com.marcorx6.library.data.DownloadDatabase.STATUS_SCHEDULED
             }) 1_200L else 5_000L
             val currentIds = entries.map { it.id }.toSet()
             val removedIds = rows.keys.filter { it !in currentIds }
