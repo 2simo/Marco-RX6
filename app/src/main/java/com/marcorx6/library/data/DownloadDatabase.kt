@@ -45,7 +45,8 @@ internal class DownloadDatabase private constructor(context: Context) :
                 last_modified TEXT NOT NULL DEFAULT '',
                 local_path TEXT NOT NULL DEFAULT '',
                 error TEXT NOT NULL DEFAULT '',
-                source_post_url TEXT NOT NULL DEFAULT ''
+                source_post_url TEXT NOT NULL DEFAULT '',
+                priority INTEGER NOT NULL DEFAULT 0
             )"""
         )
     }
