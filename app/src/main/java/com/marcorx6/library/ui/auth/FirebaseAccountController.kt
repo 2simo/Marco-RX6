@@ -1420,12 +1420,13 @@ internal class FirebaseAccountController(
                         setOnClickListener { openConversation(otherUid) }
                         setOnLongClickListener {
                             AlertDialog.Builder(activity)
-                                .setMessage("حذف المحادثة من قائمتك فقط؟")
-                                .setNegativeButton("إلغاء", null)
-                                .setPositiveButton("حذف") { _, _ ->
+                                .setIcon(com.marcorx6.library.R.drawable.ic_action_delete)
+                                .setMessage(translate("حذف المحادثة من قائمتك فقط؟"))
+                                .setNegativeButton(translate("إلغاء"), null)
+                                .setPositiveButton(translate("حذف")) { _, _ ->
                                     messaging.hideConversation(user.uid, otherUid)
                                         .addOnFailureListener { error ->
-                                            toast(error.localizedMessage ?: "تعذر حذف المحادثة.")
+                                            toast(error.localizedMessage ?: translate("تعذر حذف المحادثة."))
                                         }
                                 }.show()
                             true
@@ -1438,7 +1439,7 @@ internal class FirebaseAccountController(
             }
         }, { error ->
             android.util.Log.e("MarcoMessages", "Inbox listener failed", error)
-            toast(error.localizedMessage ?: "تعذر تحميل الرسائل. تحقق من الاتصال.")
+            toast(error.localizedMessage ?: translate("تعذر تحميل الرسائل. تحقق من الاتصال."))
         })
     }
 
@@ -1449,14 +1450,14 @@ internal class FirebaseAccountController(
         inboxListener?.remove()
         messaging.canMessage(user.uid, otherUid).addOnSuccessListener { allowed ->
             if (!allowed) {
-                toast("المراسلة متاحة فقط عندما يتابع كل منكما الآخر.")
+                toast(translate("المراسلة متاحة فقط عندما يتابع كل منكما الآخر."))
                 showPublicProfile(otherUid)
                 return@addOnSuccessListener
             }
             messaging.ensureConversation(user.uid, otherUid).addOnSuccessListener {
                 userDocuments.loadPublicProfile(otherUid).addOnSuccessListener { profile ->
                     if (!profile.exists()) {
-                        toast("الملف الشخصي غير متاح.")
+                        toast(translate("الملف الشخصي غير متاح."))
                         return@addOnSuccessListener
                     }
                     val page = LinearLayout(activity).apply {
@@ -1577,7 +1578,7 @@ internal class FirebaseAccountController(
                             val replyText = snapshot.getString("replyToText")
                             val bubble = TextView(activity).apply {
                                 text = buildString {
-                                    if (!replyText.isNullOrBlank()) append("↪ ").append(replyText).append("\n")
+                                    if (!replyText.isNullOrBlank()) append(replyText).append("\n")
                                     append(messageText)
                                 }
                                 textSize = 14f
@@ -1590,18 +1591,19 @@ internal class FirebaseAccountController(
                             }
                             bubble.setOnClickListener {
                                 selectedReply = snapshot
-                                replyPreview.text = "رد على: " + snapshot.getString("text").orEmpty().take(100) + "  ×"
+                                replyPreview.text = translate("رد على:") + " " + snapshot.getString("text").orEmpty().take(100) + "  ×"
                                 replyPreview.visibility = View.VISIBLE
                                 input.requestFocus()
                             }
                             bubble.setOnLongClickListener {
                                 AlertDialog.Builder(activity)
-                                    .setMessage("حذف هذه الرسالة لدى الطرفين؟")
+                                    .setIcon(com.marcorx6.library.R.drawable.ic_action_delete)
+                                    .setMessage(translate("حذف هذه الرسالة لدى الطرفين؟"))
                                     .setNegativeButton("إلغاء", null)
                                     .setPositiveButton("حذف") { _, _ ->
                                         messaging.deleteMessage(user.uid, otherUid, snapshot.id)
                                             .addOnFailureListener { error ->
-                                                toast(error.localizedMessage ?: "تعذر حذف الرسالة.")
+                                                toast(error.localizedMessage ?: translate("تعذر حذف الرسالة."))
                                             }
                                     }.show()
                                 true
