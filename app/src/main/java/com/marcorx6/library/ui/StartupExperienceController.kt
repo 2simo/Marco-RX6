@@ -118,7 +118,7 @@ internal class StartupExperienceController(
             WindowInsetsControllerCompat(window, window.decorView).apply {
                 isAppearanceLightStatusBars = false
                 isAppearanceLightNavigationBars = false
-                show(WindowInsetsCompat.Type.systemBars())
+                hide(WindowInsetsCompat.Type.statusBars())
             }
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
                 window.isStatusBarContrastEnforced = false
