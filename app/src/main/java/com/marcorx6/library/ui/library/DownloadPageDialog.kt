@@ -72,6 +72,114 @@ internal class DownloadPageDialog(
             setPadding(dp(12), dp(10), dp(12), dp(10))
         }
         val webView = WebView(activity)
+        val browserHistory = mutableListOf<Pair<String, String>>()
+        val browserTabs = mutableListOf<Pair<String, String>>()
+        var activeTabIndex = 0
+        runCatching {
+            val saved = JSONArray(appPreferences.getString("download_browser_history", "[]"))
+            for (i in 0 until saved.length()) {
+                val item = saved.optJSONObject(i) ?: continue
+                val url = item.optString("url")
+                if (url.startsWith("https://")) browserHistory.add(item.optString("title") to url)
+            }
+        }
+        browserTabs.add(translate("التبويب 1") to safeStartUrl)
+
+        fun persistBrowserHistory() {
+            val json = JSONArray()
+            browserHistory.take(60).forEach { (title, url) ->
+                json.put(org.json.JSONObject().put("title", title).put("url", url))
+            }
+            appPreferences.edit().putString("download_browser_history", json.toString()).apply()
+        }
+
+        fun rememberPage(url: String, title: String) {
+            if (!url.startsWith("https://")) return
+            browserHistory.removeAll { it.second == url }
+            browserHistory.add(0, title.ifBlank { Uri.parse(url).host.orEmpty() } to url)
+            while (browserHistory.size > 60) browserHistory.removeAt(browserHistory.lastIndex)
+            persistBrowserHistory()
+            if (activeTabIndex in browserTabs.indices) {
+                browserTabs[activeTabIndex] = (title.ifBlank { browserTabs[activeTabIndex].first }) to url
+            }
+        }
+
+        fun openBrowserHistory() {
+            if (browserHistory.isEmpty()) {
+                Toast.makeText(activity, translate("لا يوجد سجل تصفح بعد"), Toast.LENGTH_SHORT).show()
+                return
+            }
+            val labels = browserHistory.map { (title, url) ->
+                (title.ifBlank { Uri.parse(url).host.orEmpty() }) + "\\n" + url
+            }.toTypedArray()
+            AlertDialog.Builder(activity)
+                .setTitle(translate("سجل التصفح"))
+                .setItems(labels) { _, which ->
+                    browserHistory.getOrNull(which)?.second?.let { webView.loadUrl(it) }
+                }
+                .setNegativeButton(translate("إغلاق"), null)
+                .setNeutralButton(translate("مسح السجل")) { _, _ ->
+                    browserHistory.clear()
+                    persistBrowserHistory()
+                    Toast.makeText(activity, translate("تم مسح سجل التصفح"), Toast.LENGTH_SHORT).show()
+                }
+                .show()
+        }
+
+        fun openBrowserTabs() {
+            val labels = browserTabs.mapIndexed { index, tab ->
+                (if (index == activeTabIndex) "● " else "") +
+                    (tab.first.ifBlank { translate("تبويب") + " " + (index + 1) }) +
+                    "\\n" + tab.second
+            }.toMutableList()
+            labels.add(translate("+ تبويب جديد"))
+            AlertDialog.Builder(activity)
+                .setTitle(translate("التبويبات المفتوحة") + " (" + browserTabs.size + "/8)")
+                .setItems(labels.toTypedArray()) { _, which ->
+                    if (which == browserTabs.size) {
+                        if (browserTabs.size >= 8) {
+                            Toast.makeText(activity, translate("الحد الأقصى 8 تبويبات"), Toast.LENGTH_SHORT).show()
+                        } else {
+                            val input = EditText(activity).apply {
+                                hint = translate("أدخل رابط الموقع")
+                                setSingleLine(true)
+                                inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
+                            }
+                            AlertDialog.Builder(activity)
+                                .setTitle(translate("فتح تبويب جديد"))
+                                .setView(input)
+                                .setNegativeButton(translate("إلغاء"), null)
+                                .setPositiveButton(translate("فتح")) { _, _ ->
+                                    val raw = input.text.toString().trim()
+                                    val candidate = if (raw.contains("://")) raw else "https://$raw"
+                                    val safe = SecureUrlPolicy.toHttpsUrl(candidate)
+                                    if (safe == null) {
+                                        Toast.makeText(activity, translate("الرابط غير صالح أو غير آمن"), Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        browserTabs.add(translate("تبويب") + " " + (browserTabs.size + 1) to safe)
+                                        activeTabIndex = browserTabs.lastIndex
+                                        webView.loadUrl(safe)
+                                    }
+                                }
+                                .show()
+                        }
+                    } else if (which in browserTabs.indices) {
+                        activeTabIndex = which
+                        webView.loadUrl(browserTabs[which].second)
+                    }
+                }
+                .setNegativeButton(translate("إغلاق"), null)
+                .setNeutralButton(translate("إغلاق التبويب الحالي")) { _, _ ->
+                    if (browserTabs.size > 1) {
+                        browserTabs.removeAt(activeTabIndex)
+                        activeTabIndex = (activeTabIndex - 1).coerceAtLeast(0)
+                        webView.loadUrl(browserTabs[activeTabIndex].second)
+                    } else {
+                        Toast.makeText(activity, translate("يجب إبقاء تبويب واحد على الأقل"), Toast.LENGTH_SHORT).show()
+                    }
+                }
+                .show()
+        }
         val toolbar = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -93,6 +201,8 @@ internal class DownloadPageDialog(
             setTextColor(muted)
         })
         toolbar.addView(titleBox, LinearLayout.LayoutParams(0, -2, 1f))
+        toolbar.addView(toolbarAction("", { openBrowserHistory() }, com.marcorx6.library.R.drawable.ic_action_refresh))
+        toolbar.addView(toolbarAction("8", { openBrowserTabs() }))
 
         fun toolbarAction(label: String, onClick: () -> Unit, iconRes: Int = 0): TextView =
             TextView(activity).apply {
@@ -532,6 +642,9 @@ internal class DownloadPageDialog(
             }
 
             override fun onPageStarted(view: WebView, url: String, favicon: android.graphics.Bitmap?) {
+                if (activeTabIndex in browserTabs.indices && url.startsWith("https://")) {
+                    browserTabs[activeTabIndex] = browserTabs[activeTabIndex].first to url
+                }
                 progress.visibility = View.VISIBLE
                 progress.progress = 0
                 status.text = Uri.parse(url).host ?: translate("جارٍ فتح صفحة التحميل…")
@@ -543,6 +656,7 @@ internal class DownloadPageDialog(
             }
 
             override fun onPageFinished(view: WebView, url: String) {
+                rememberPage(url, view.title.orEmpty())
                 progress.visibility = View.GONE
                 status.text = translate("إذا ظهرت خطوة تحقق أو مؤقت، أكملها داخل هذه الصفحة. الروابط المحتملة تظهر أسفلها.")
                 applyCosmeticFiltering()
