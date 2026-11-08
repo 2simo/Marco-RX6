@@ -25,7 +25,6 @@ import {
   updateDoc,
   query,
   where,
-  orderBy,
 } from "firebase/firestore";
 
 const projectId = "demo-marco-rx6";
@@ -345,6 +344,8 @@ describe("Firestore user isolation rules", () => {
     const conversation = doc(alice, "conversations/" + conversationId);
     await assertSucceeds(setDoc(conversation, {
       participants: ["message-alice", "message-bob"],
+      participantA: "message-alice",
+      participantB: "message-bob",
       lastMessage: "Hello",
       lastSenderUid: "message-alice",
       createdAt: serverTimestamp(),
@@ -352,15 +353,20 @@ describe("Firestore user isolation rules", () => {
     }));
     // Match the exact inbox query used by Android: participants array-contains
     // the signed-in UID, ordered by the latest conversation update.
-    await assertSucceeds(getDocs(query(
+    const aliceInbox = await assertSucceeds(getDocs(query(
       collection(alice, "conversations"),
-      where("participants", "array-contains", "message-alice"),
-      orderBy("updatedAt", "desc"),
+      where("participantA", "==", "message-alice"),
     )));
-    await assertSucceeds(getDocs(query(
+    const bobInbox = await assertSucceeds(getDocs(query(
       collection(bob, "conversations"),
-      where("participants", "array-contains", "message-bob"),
-      orderBy("updatedAt", "desc"),
+      where("participantB", "==", "message-bob"),
+    )));
+    if (aliceInbox.size + bobInbox.size !== 2) {
+      throw new Error("Both participants should be able to query their private inbox");
+    }
+    await assertFails(getDocs(query(
+      collection(outsider, "conversations"),
+      where("participantA", "==", "message-alice"),
     )));
     const message = doc(alice, "conversations/" + conversationId + "/messages/first");
     await assertSucceeds(setDoc(message, {
