@@ -88,9 +88,6 @@ internal class GameDetailsIdentityViewFactory(
             gravity = android.view.Gravity.CENTER_VERTICAL
             layoutDirection = android.view.View.LAYOUT_DIRECTION_LOCALE
         }
-        titleRow.addView(favoriteToggleFactory.create(game), LinearLayout.LayoutParams(dp(48), dp(48)).apply {
-            marginEnd = dp(7)
-        })
         val titleColumn = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             gravity = android.view.Gravity.CENTER_VERTICAL
@@ -111,6 +108,9 @@ internal class GameDetailsIdentityViewFactory(
             }, LinearLayout.LayoutParams(-1, -2))
         }
         titleRow.addView(titleColumn, LinearLayout.LayoutParams(0, -2, 1f))
+        titleRow.addView(favoriteToggleFactory.create(game), LinearLayout.LayoutParams(dp(48), dp(48)).apply {
+            marginStart = dp(20)
+        })
         identityInfo.addView(titleRow, LinearLayout.LayoutParams(-1, -2))
 
         val downloadRow = LinearLayout(activity).apply {
