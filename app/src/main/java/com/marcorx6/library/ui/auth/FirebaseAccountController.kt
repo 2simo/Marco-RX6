@@ -358,10 +358,14 @@ internal class FirebaseAccountController(
                     ratingsScroll.addView(ratingsTrack)
                     ratingsContent.addView(ratingsScroll)
                 }
-            }, onFailure = {
+            }, onFailure = { error ->
+                android.util.Log.e("FirebaseAccountController", "Failed to load account ratings", error)
                 ratingsContent.removeAllViews()
+                val details = (error.localizedMessage ?: error.javaClass.simpleName)
+                    .replace(Regex("\\s+"), " ")
+                    .take(180)
                 ratingsContent.addView(TextView(activity).apply {
-                    text = translate("تعذر تحميل تقييماتك الآن. تحقق من الاتصال وحاول لاحقاً.")
+                    text = translate("تعذر تحميل تقييماتك الآن. ") + details
                     textSize = 12f
                     setTextColor(if (dark) Color.rgb(180, 150, 150) else Color.rgb(140, 75, 75))
                 })
