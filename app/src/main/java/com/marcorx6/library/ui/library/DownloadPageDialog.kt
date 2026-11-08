@@ -60,7 +60,7 @@ internal class DownloadPageDialog(
         val dark = appPreferences.getBoolean("dark_mode", true)
         val background = if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247)
         val surface = if (dark) Color.rgb(25, 28, 34) else Color.WHITE
-        val primary = if (dark) Color.rgb(205, 212, 222) else Color.rgb(105, 116, 132)
+        val primary = if (dark) Color.rgb(91, 157, 242) else Color.rgb(105, 116, 132)
         val border = if (dark) Color.rgb(70, 77, 89) else Color.rgb(205, 211, 220)
         val heading = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
         val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
@@ -116,7 +116,7 @@ internal class DownloadPageDialog(
                     compoundDrawableTintList = android.content.res.ColorStateList.valueOf(primary)
                     foreground = android.graphics.drawable.RippleDrawable(
                         android.content.res.ColorStateList.valueOf(
-                            if (dark) Color.argb(70, 205, 212, 222) else Color.argb(45, 105, 116, 132)
+                            if (dark) Color.argb(70, 91, 157, 242) else Color.argb(45, 105, 116, 132)
                         ), null, android.graphics.drawable.ColorDrawable(Color.WHITE)
                     )
                 }
@@ -263,7 +263,7 @@ internal class DownloadPageDialog(
             prompt.getButton(AlertDialog.BUTTON_POSITIVE)?.apply {
                 setTextColor(if (dark) Color.rgb(20, 23, 29) else Color.WHITE)
                 this.background = GradientDrawable().apply {
-                    setColor(if (dark) Color.rgb(205, 212, 222) else Color.rgb(75, 86, 103))
+                    setColor(if (dark) Color.rgb(91, 157, 242) else Color.rgb(75, 86, 103))
                     cornerRadius = dp(11).toFloat()
                 }
                 setPadding(dp(14), dp(4), dp(14), dp(4))
