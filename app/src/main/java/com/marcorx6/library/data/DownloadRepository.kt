@@ -169,6 +169,12 @@ internal class DownloadRepository(context: Context) {
 
     fun maxConcurrentDownloads(): Int = concurrencyPreferences.maxConcurrent()
 
+    fun maxSegmentConnections(): Int = concurrencyPreferences.segmentConnections()
+
+    fun setMaxSegmentConnections(value: Int) {
+        concurrencyPreferences.setSegmentConnections(value)
+    }
+
     fun setMaxConcurrentDownloads(value: Int) {
         concurrencyPreferences.setMaxConcurrent(value)
         DownloadWorkScheduler.schedule(appContext)
