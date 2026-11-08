@@ -219,6 +219,27 @@ internal class FirebaseUserDocumentRepository(
             }
     }
 
+    private fun deleteOwnedRatings(uid: String): Task<Void> {
+        return firestore.collectionGroup("ratings")
+            .whereEqualTo("uid", uid)
+            .get()
+            .continueWithTask { queryTask ->
+                if (!queryTask.isSuccessful) {
+                    throw queryTask.exception ?: IllegalStateException("تعذر تحميل تقييمات الحساب")
+                }
+                queryTask.result.documents.chunked(450).fold(Tasks.forResult<Void>(null)) { previous, chunk ->
+                    previous.continueWithTask { previousTask ->
+                        if (!previousTask.isSuccessful) {
+                            throw previousTask.exception ?: IllegalStateException("تعذر حذف تقييمات الحساب")
+                        }
+                        val batch = firestore.batch()
+                        chunk.forEach { batch.delete(it.reference) }
+                        batch.commit()
+                    }
+                }
+            }
+    }
+
     /** Remove social edges and profile documents before the Firebase Auth account is deleted. */
     fun deleteUserData(uid: String): Task<Void> =
         userDocument(uid)
@@ -234,6 +255,12 @@ internal class FirebaseUserDocumentRepository(
             .continueWithTask { task ->
                 if (!task.isSuccessful) {
                     throw task.exception ?: IllegalStateException("تعذر حذف علاقات المتابعة")
+                }
+                deleteOwnedRatings(uid)
+            }
+            .continueWithTask { task ->
+                if (!task.isSuccessful) {
+                    throw task.exception ?: IllegalStateException("تعذر حذف تقييمات الحساب")
                 }
                 publicProfileDocument(uid).delete()
             }
