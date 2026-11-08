@@ -390,6 +390,48 @@ internal class FirebaseAccountController(
             page.addView(profileBioPreview, LinearLayout.LayoutParams(-1, -2).apply {
                 bottomMargin = dp(14)
             })
+            userDocuments.loadUser(user.uid)
+                .addOnSuccessListener { snapshot ->
+                    snapshot.getString("photoData")?.takeIf { it.isNotBlank() }?.let { encoded ->
+                        runCatching {
+                            val bytes = Base64.decode(encoded, Base64.DEFAULT)
+                            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                        }.getOrNull()?.let { bitmap ->
+                            photoView.setImageBitmap(bitmap)
+                            photoView.imageTintList = null
+                            photoView.clearColorFilter()
+                        }
+                    }
+                    snapshot.getString("bio")?.trim()?.takeIf { it.isNotBlank() }?.let { bio ->
+                        profileBioPreview.text = bio
+                        profileBioPreview.visibility = View.VISIBLE
+                    }
+                    if (snapshot.getString("photoData").isNullOrBlank()) {
+                        user.photoUrl?.toString()?.takeIf { it.startsWith("https://") }?.let { photoUrl ->
+                            Thread {
+                                val bitmap = runCatching {
+                                    val connection = java.net.URL(photoUrl).openConnection().apply {
+                                        connectTimeout = 6000
+                                        readTimeout = 6000
+                                        useCaches = true
+                                    }
+                                    connection.getInputStream().use { stream -> BitmapFactory.decodeStream(stream) }
+                                }.getOrNull()
+                                if (bitmap != null && !activity.isFinishing && !activity.isDestroyed) {
+                                    photoView.post {
+                                        photoView.setImageBitmap(bitmap)
+                                        photoView.imageTintList = null
+                                        photoView.clearColorFilter()
+                                    }
+                                }
+                            }.apply { name = "marco-profile-avatar-preview-loader" }.start()
+                        }
+                    }
+                }
+                .addOnFailureListener {
+                    // Keep the provider avatar and the rest of the profile usable if
+                    // the private profile document is temporarily unavailable.
+                }
         }
 
         if (user == null || user.isAnonymous) {
