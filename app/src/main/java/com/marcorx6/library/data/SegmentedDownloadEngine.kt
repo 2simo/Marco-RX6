@@ -1,7 +1,6 @@
 package com.marcorx6.library.data
 
 import android.app.DownloadManager
-import android.net.Uri
 import android.provider.DocumentsContract
 import android.content.Context
 import java.io.File
@@ -82,7 +81,12 @@ internal object SegmentedDownloadEngine {
         val completedBytes = java.util.concurrent.atomic.AtomicLong(
             (0 until CONNECTIONS).sumOf { index ->
                 val start = index * segmentSize
-                if (start >= total) 0L else minOf(File(directory, "${item.id}.seg$index").length(), minOf(total - start, segmentSize))
+                if (start >= total) 0L else {
+                    val segment = File(directory, "${item.id}.seg$index")
+                    val limit = minOf(total - start, segmentSize)
+                    if (segment.length() > limit) segment.delete()
+                    segment.length()
+                }
             }
         )
         database.progress(item.id, completedBytes.get(), total, etag, modified)
@@ -207,8 +211,8 @@ internal object SegmentedDownloadEngine {
             }
             val responseEtag = connection.getHeaderField("ETag").orEmpty()
             val responseModified = connection.getHeaderField("Last-Modified").orEmpty()
-            if ((expectedEtag.isNotBlank() && responseEtag.isNotBlank() && expectedEtag != responseEtag) ||
-                (expectedModified.isNotBlank() && responseModified.isNotBlank() && expectedModified != responseModified)
+            if ((expectedEtag.isNotBlank() && responseEtag != expectedEtag) ||
+                (expectedEtag.isBlank() && expectedModified.isNotBlank() && responseModified != expectedModified)
             ) {
                 throw IOException("File changed during segmented download; retry with a fresh source")
             }
