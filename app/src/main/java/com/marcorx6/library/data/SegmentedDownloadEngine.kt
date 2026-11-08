@@ -63,7 +63,10 @@ internal object SegmentedDownloadEngine {
             probe.disconnect()
         }
 
-        if (item.etag.isNotBlank() && etag.isNotBlank() && item.etag != etag) {
+        if ((item.etag.isNotBlank() && etag.isNotBlank() && item.etag != etag) ||
+            (item.totalBytes > 0L && item.totalBytes != total) ||
+            (item.lastModified.isNotBlank() && modified.isNotBlank() && item.lastModified != modified)
+        ) {
             clearSegments(directory, item.id)
             target.delete()
             database.progress(item.id, 0L, total, etag, modified)
@@ -71,6 +74,13 @@ internal object SegmentedDownloadEngine {
 
         val segmentSize = (total + CONNECTIONS - 1L) / CONNECTIONS
         val executor = Executors.newFixedThreadPool(CONNECTIONS)
+        val completedBytes = java.util.concurrent.atomic.AtomicLong(
+            (0 until CONNECTIONS).sumOf { index ->
+                val start = index * segmentSize
+                if (start >= total) 0L else minOf(File(directory, "${item.id}.seg$index").length(), minOf(total - start, segmentSize))
+            }
+        )
+        onProgress(completedBytes.get(), total)
         try {
             val jobs = (0 until CONNECTIONS).mapNotNull { index ->
                 val start = index * segmentSize
@@ -78,7 +88,10 @@ internal object SegmentedDownloadEngine {
                 val end = minOf(total - 1L, start + segmentSize - 1L)
                 val segment = File(directory, "${item.id}.seg$index")
                 Callable {
-                    downloadRange(item, segment, start, end, total, etag, isStopped)
+                    downloadRange(item, segment, start, end, total, etag, modified, isStopped) { delta ->
+                        val current = completedBytes.addAndGet(delta).coerceAtMost(total)
+                        onProgress(current, total)
+                    }
                 }
             }
             val futures = executor.invokeAll(jobs)
@@ -157,7 +170,9 @@ internal object SegmentedDownloadEngine {
         rangeEnd: Long,
         total: Long,
         expectedEtag: String,
-        isStopped: () -> Boolean
+        expectedModified: String,
+        isStopped: () -> Boolean,
+        onBytes: (Long) -> Unit
     ) {
         var offset = segment.length()
         val segmentLength = rangeEnd - rangeStart + 1L
@@ -184,7 +199,10 @@ internal object SegmentedDownloadEngine {
                 throw IOException("Server returned an invalid byte range")
             }
             val responseEtag = connection.getHeaderField("ETag").orEmpty()
-            if (expectedEtag.isNotBlank() && responseEtag.isNotBlank() && expectedEtag != responseEtag) {
+            val responseModified = connection.getHeaderField("Last-Modified").orEmpty()
+            if ((expectedEtag.isNotBlank() && responseEtag.isNotBlank() && expectedEtag != responseEtag) ||
+                (expectedModified.isNotBlank() && responseModified.isNotBlank() && expectedModified != responseModified)
+            ) {
                 throw IOException("File changed during segmented download; retry with a fresh source")
             }
             connection.inputStream.use { input ->
@@ -197,6 +215,7 @@ internal object SegmentedDownloadEngine {
                         val count = input.read(buffer)
                         if (count < 0) break
                         output.write(buffer, 0, count)
+                        onBytes(count.toLong())
                     }
                     output.fd.sync()
                 }
