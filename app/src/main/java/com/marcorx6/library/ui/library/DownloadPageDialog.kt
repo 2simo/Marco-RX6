@@ -74,7 +74,24 @@ internal class DownloadPageDialog(
         val webView = WebView(activity)
         val browserHistory = mutableListOf<Pair<String, String>>()
         val browserTabs = mutableListOf<Pair<String, String>>()
+        val browserTabStates = mutableListOf<android.os.Bundle?>()
         var activeTabIndex = 0
+        fun saveActiveTabState() {
+            if (activeTabIndex !in browserTabStates.indices) return
+            val state = android.os.Bundle()
+            if (runCatching { webView.saveState(state) }.isSuccess) {
+                browserTabStates[activeTabIndex] = state
+            }
+        }
+        fun restoreBrowserTab(index: Int) {
+            if (index !in browserTabs.indices) return
+            activeTabIndex = index
+            val savedState = browserTabStates.getOrNull(index)
+            val restored = savedState != null && runCatching {
+                webView.restoreState(savedState) != null
+            }.getOrDefault(false)
+            if (!restored) webView.loadUrl(browserTabs[index].second)
+        }
         runCatching {
             val saved = JSONArray(appPreferences.getString("download_browser_history", "[]"))
             for (i in 0 until saved.length()) {
@@ -84,6 +101,7 @@ internal class DownloadPageDialog(
             }
         }
         browserTabs.add(translate("التبويب 1") to safeStartUrl)
+        browserTabStates.add(null)
 
         fun persistBrowserHistory() {
             val json = JSONArray()
@@ -156,24 +174,26 @@ internal class DownloadPageDialog(
                                     if (safe == null) {
                                         Toast.makeText(activity, translate("الرابط غير صالح أو غير آمن"), Toast.LENGTH_SHORT).show()
                                     } else {
+                                        saveActiveTabState()
                                         browserTabs.add(translate("تبويب") + " " + (browserTabs.size + 1) to safe)
-                                        activeTabIndex = browserTabs.lastIndex
-                                        webView.loadUrl(safe)
+                                        browserTabStates.add(null)
+                                        restoreBrowserTab(browserTabs.lastIndex)
                                     }
                                 }
                                 .show()
                         }
-                    } else if (which in browserTabs.indices) {
-                        activeTabIndex = which
-                        webView.loadUrl(browserTabs[which].second)
+                    } else if (which in browserTabs.indices && which != activeTabIndex) {
+                        saveActiveTabState()
+                        restoreBrowserTab(which)
                     }
                 }
                 .setNegativeButton(translate("إغلاق"), null)
                 .setNeutralButton(translate("إغلاق التبويب الحالي")) { _, _ ->
                     if (browserTabs.size > 1) {
+                        webView.stopLoading()
                         browserTabs.removeAt(activeTabIndex)
-                        activeTabIndex = (activeTabIndex - 1).coerceAtLeast(0)
-                        webView.loadUrl(browserTabs[activeTabIndex].second)
+                        browserTabStates.removeAt(activeTabIndex)
+                        restoreBrowserTab((activeTabIndex - 1).coerceAtLeast(0))
                     } else {
                         Toast.makeText(activity, translate("يجب إبقاء تبويب واحد على الأقل"), Toast.LENGTH_SHORT).show()
                     }
@@ -202,7 +222,7 @@ internal class DownloadPageDialog(
         })
         toolbar.addView(titleBox, LinearLayout.LayoutParams(0, -2, 1f))
         toolbar.addView(toolbarAction("", { openBrowserHistory() }, com.marcorx6.library.R.drawable.ic_action_refresh))
-        toolbar.addView(toolbarAction("8", { openBrowserTabs() }))
+        toolbar.addView(toolbarAction("▢", { openBrowserTabs() }))
 
         fun toolbarAction(label: String, onClick: () -> Unit, iconRes: Int = 0): TextView =
             TextView(activity).apply {
