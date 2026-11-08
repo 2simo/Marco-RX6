@@ -43,7 +43,7 @@ internal class AppearanceUiFactory(
     private fun glassRipple(): android.graphics.drawable.Drawable =
         android.graphics.drawable.RippleDrawable(
             android.content.res.ColorStateList.valueOf(
-                if (isDarkMode()) Color.argb(78, 190, 198, 210) else Color.argb(58, 140, 148, 160)
+                if (isDarkMode()) Color.argb(78, 76, 145, 235) else Color.argb(58, 140, 148, 160)
             ),
             null,
             android.graphics.drawable.ColorDrawable(Color.WHITE)
@@ -66,7 +66,7 @@ internal class AppearanceUiFactory(
             val base = view.background.constantState?.newDrawable()?.mutate() ?: view.background.mutate()
             view.background = android.graphics.drawable.RippleDrawable(
                 android.content.res.ColorStateList.valueOf(
-                    if (isDarkMode()) Color.argb(78, 190, 198, 210) else Color.argb(58, 140, 148, 160)
+                    if (isDarkMode()) Color.argb(78, 76, 145, 235) else Color.argb(58, 140, 148, 160)
                 ),
                 base,
                 android.graphics.drawable.ColorDrawable(Color.WHITE)
@@ -76,11 +76,11 @@ internal class AppearanceUiFactory(
 
     fun stylePrimaryButton(button: Button, primary: Boolean = false) {
         button.background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-            if (primary) intArrayOf(Color.argb(232, 190, 198, 210), Color.argb(218, 112, 120, 133))
+            if (primary) intArrayOf(Color.argb(232, 76, 145, 235), Color.argb(218, 112, 120, 133))
             else if (isDarkMode()) intArrayOf(Color.argb(205, 34, 37, 44), Color.argb(190, 15, 17, 22))
             else intArrayOf(Color.argb(218, 255, 255, 255), Color.argb(205, 225, 228, 234))).apply {
             cornerRadius = dp(16).toFloat()
-            setStroke(dp(1), if (primary) Color.argb(170, 190, 198, 210)
+            setStroke(dp(1), if (primary) Color.argb(170, 76, 145, 235)
                 else if (isDarkMode()) Color.argb(165, 130, 138, 151) else Color.argb(175, 160, 168, 181))
         }
         button.setTextColor(if (primary) accentForeground() else white())
@@ -215,7 +215,7 @@ internal class AppearanceUiFactory(
                 intArrayOf(Color.WHITE, Color.rgb(225, 228, 234))
             }
             val normalStroke = if (isDarkMode()) Color.rgb(130, 138, 151) else Color.rgb(160, 168, 181)
-            val focusedStroke = Color.rgb(190, 198, 210)
+            val focusedStroke = Color.rgb(76, 145, 235)
             addState(intArrayOf(android.R.attr.state_focused), GradientDrawable(
                 GradientDrawable.Orientation.TL_BR, fill
             ).apply {
