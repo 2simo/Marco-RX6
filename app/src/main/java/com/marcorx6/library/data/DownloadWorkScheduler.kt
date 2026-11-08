@@ -21,7 +21,9 @@ internal object DownloadWorkScheduler {
         val appContext = context.applicationContext
         synchronized(lock) {
             val database = DownloadDatabase.get(appContext)
-            val limit = DownloadConcurrencyPreferences(appContext).maxConcurrent()
+            val preferences = DownloadConcurrencyPreferences(appContext)
+            val limit = preferences.maxConcurrent()
+            val requiredNetwork = if (preferences.wifiOnly()) NetworkType.UNMETERED else NetworkType.CONNECTED
             val ids = database.claimPending(limit)
             if (ids.isEmpty()) return
             val manager = WorkManager.getInstance(appContext)
@@ -30,7 +32,7 @@ internal object DownloadWorkScheduler {
                     .setInputData(workDataOf(ResumableDownloadWorker.KEY_ID to id))
                     .setConstraints(
                         Constraints.Builder()
-                            .setRequiredNetworkType(NetworkType.CONNECTED)
+                            .setRequiredNetworkType(requiredNetwork)
                             .build()
                     )
                     .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30L, TimeUnit.SECONDS)
