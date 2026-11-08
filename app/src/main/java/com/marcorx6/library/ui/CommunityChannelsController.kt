@@ -50,15 +50,15 @@ internal class CommunityChannelsController(
             gravity = Gravity.CENTER
             setPadding(0, 0, 0, dp(28))
         })
-        fun channelButton(label: String, detail: String, url: String, color: Int) {
+        fun channelButton(label: String, detail: String, url: String) {
             val button = Button(activity).apply {
                 text = "$label\n$detail"
                 isAllCaps = false
                 textSize = 14f
-                setTextColor(Color.WHITE)
+                setTextColor(Color.rgb(20, 23, 29))
                 gravity = Gravity.CENTER
                 background = GradientDrawable().apply {
-                    setColor(color)
+                    setColor(Color.rgb(190, 198, 210))
                     cornerRadius = dp(16).toFloat()
                     setStroke(dp(1), Color.argb(100, 145, 153, 166))
                 }
@@ -73,8 +73,8 @@ internal class CommunityChannelsController(
             }
             root.addView(button, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
         }
-        channelButton("Telegram", "MARCO RX1", TELEGRAM_URL, Color.rgb(27, 133, 190))
-        channelButton("YouTube", "MARCO RX7", YOUTUBE_URL, Color.rgb(190, 35, 45))
+        channelButton("Telegram", "MARCO RX1", TELEGRAM_URL)
+        channelButton("YouTube", "MARCO RX7", YOUTUBE_URL)
         val continueButton = Button(activity).apply {
             text = translate("متابعة إلى التطبيق")
             isAllCaps = false
