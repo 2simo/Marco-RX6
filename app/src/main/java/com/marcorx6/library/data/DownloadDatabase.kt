@@ -21,11 +21,12 @@ internal data class StoredDownload(
     val lastModified: String,
     val localPath: String,
     val error: String,
-    val sourcePostUrl: String
+    val sourcePostUrl: String,
+    val priority: Int
 )
 
 internal class DownloadDatabase private constructor(context: Context) :
-    SQLiteOpenHelper(context.applicationContext, "marco_downloads.db", null, 2) {
+    SQLiteOpenHelper(context.applicationContext, "marco_downloads.db", null, 3) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -51,6 +52,7 @@ internal class DownloadDatabase private constructor(context: Context) :
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         if (oldVersion < 2) db.execSQL("ALTER TABLE downloads ADD COLUMN source_post_url TEXT NOT NULL DEFAULT ''")
+        if (oldVersion < 3) db.execSQL("ALTER TABLE downloads ADD COLUMN priority INTEGER NOT NULL DEFAULT 0")
     }
 
     @Synchronized
@@ -111,7 +113,7 @@ internal class DownloadDatabase private constructor(context: Context) :
             val ids = db.query(
                 "downloads", arrayOf("id"), "status=?",
                 arrayOf(DownloadManager.STATUS_PENDING.toString()),
-                null, null, "id ASC", available.toString()
+                null, null, "priority DESC, id ASC", available.toString()
             ).use { cursor ->
                 buildList { while (cursor.moveToNext()) add(cursor.getLong(0)) }
             }
@@ -229,6 +231,14 @@ internal class DownloadDatabase private constructor(context: Context) :
     }
 
     @Synchronized
+    fun setPriority(id: Long, priority: Int) {
+        writableDatabase.update("downloads", ContentValues().apply { put("priority", priority.coerceIn(0, 2)) }, "id=?", arrayOf(id.toString()))
+    }
+
+    @Synchronized
+    fun deleteCompleted(): Int = writableDatabase.delete("downloads", "status=?", arrayOf(DownloadManager.STATUS_SUCCESSFUL.toString()))
+
+    @Synchronized
     fun renameTitle(id: Long, title: String) {
         writableDatabase.update("downloads", ContentValues().apply { put("title", title) }, "id=?", arrayOf(id.toString()))
     }
@@ -276,7 +286,8 @@ internal class DownloadDatabase private constructor(context: Context) :
         lastModified = getString(getColumnIndexOrThrow("last_modified")),
         localPath = getString(getColumnIndexOrThrow("local_path")),
         error = getString(getColumnIndexOrThrow("error")),
-        sourcePostUrl = getString(getColumnIndexOrThrow("source_post_url"))
+        sourcePostUrl = getString(getColumnIndexOrThrow("source_post_url")),
+        priority = getInt(getColumnIndexOrThrow("priority"))
     )
 
     companion object {
