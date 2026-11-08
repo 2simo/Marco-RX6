@@ -223,7 +223,7 @@ internal class GameEngagementRepository(
                 }.sortedBy { it.game.name.lowercase() }
                 onSuccess(ratings)
             }
-            .addOnFailureListener(onFailure)
+            .addOnFailureListener { error -> onFailure(error) }
     }
 
     fun loadMyRating(game: Game, callback: (Int?) -> Unit) {
