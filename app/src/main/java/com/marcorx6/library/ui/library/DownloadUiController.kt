@@ -160,7 +160,7 @@ internal class DownloadUiController(
             setTextColor(primary)
             gravity = Gravity.CENTER
             setPadding(dp(10), dp(10), dp(10), dp(10))
-            background = GradientDrawable().apply {
+            this.background = GradientDrawable().apply {
                 setColor(surface)
                 cornerRadius = dp(12).toFloat()
                 setStroke(dp(1), if (dark) Color.rgb(78, 85, 98) else Color.rgb(210, 216, 225))
@@ -216,7 +216,7 @@ internal class DownloadUiController(
                 }
                 render?.invoke()
             }
-            background = GradientDrawable().apply {
+            this.background = GradientDrawable().apply {
                 cornerRadius = dp(13).toFloat()
                 setColor(surface)
                 setStroke(dp(1), if (dark) Color.rgb(78, 85, 98) else Color.rgb(210, 216, 225))
@@ -586,7 +586,7 @@ internal class DownloadUiController(
                 rows.remove(id)?.let { list.removeView(it.card) }
                 lastSpeedSample.remove(id)
             }
-            emptyState.visibility = if (entries.isEmpty()) View.VISIBLE else View.GONE
+            emptyState.visibility = if (visibleEntries.isEmpty()) View.VISIBLE else View.GONE
             if (emptyState.parent == null) list.addView(emptyState, LinearLayout.LayoutParams(-1, -2))
             visibleEntries.forEachIndexed { index, item ->
                 val row = rows[item.id] ?: createRow(item).also { created ->
