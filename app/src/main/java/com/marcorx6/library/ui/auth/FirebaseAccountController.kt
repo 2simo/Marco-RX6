@@ -83,6 +83,7 @@ internal class FirebaseAccountController(
             setBackgroundColor(Color.rgb(7, 8, 10))
         }
         val user = authRepository.currentUser
+        if (user != null && !user.isAnonymous) syncNewGameNotifications(user.uid)
         val header = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -1225,6 +1226,32 @@ internal class FirebaseAccountController(
     }
 
 
+    private fun syncNewGameNotifications(uid: String) {
+        val catalog = games()
+        if (uid.isBlank() || catalog.isEmpty()) return
+        val preferences = activity.getSharedPreferences("marco_notification_state", Activity.MODE_PRIVATE)
+        val key = "known_games_$uid"
+        val current = catalog.map { "${it.platform.trim().lowercase()}::${it.name.trim().lowercase()}" }
+            .filter { it != "::" }.toSet()
+        val previous = preferences.getStringSet(key, null)
+        if (previous == null) {
+            preferences.edit().putStringSet(key, current).apply()
+            return
+        }
+        val addedKeys = current - previous
+        if (addedKeys.isEmpty()) return
+        val addedGames = catalog.filter {
+            "${it.platform.trim().lowercase()}::${it.name.trim().lowercase()}" in addedKeys
+        }.distinctBy { "${it.platform}::${it.name}" }.take(30)
+        notifications.addNewGameNotifications(uid, addedGames.map { it.name to it.platform })
+            .addOnSuccessListener {
+                preferences.edit().putStringSet(key, current).apply()
+            }
+            .addOnFailureListener { error ->
+                android.util.Log.w("MarcoNotifications", "New-game notification sync failed", error)
+            }
+    }
+
     private fun showNotifications() {
         val user = authRepository.currentUser
         if (user == null || user.isAnonymous) {
@@ -1232,6 +1259,7 @@ internal class FirebaseAccountController(
             show()
             return
         }
+        syncNewGameNotifications(user.uid)
         notificationsListener?.remove()
         val page = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
