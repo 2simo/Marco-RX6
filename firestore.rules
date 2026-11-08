@@ -23,16 +23,19 @@ service cloud.firestore {
     // Anonymous sessions may keep only a minimal, self-owned profile and a
     // bounded preferences map. They cannot create arbitrary nested documents.
     match /users/{userId} {
-      allow read, delete: if signedInAs(userId);
+      allow get: if signedInAs(userId) || resource.data.publicProfile == true;
+      allow list: if false;
+      allow delete: if signedInAs(userId);
       allow create, update: if signedInAs(userId)
         && (
           (isAnonymous() && validGuestProfile())
           || (!isAnonymous()
             && request.resource.data.keys().hasOnly([
               'uid', 'isAnonymous', 'createdAt', 'updatedAt',
-              'email', 'displayName', 'photoUrl', 'bio', 'photoData'
+              'email', 'displayName', 'photoUrl', 'bio', 'photoData',
+              'publicProfile', 'showFavorites', 'favoriteGames'
             ])
-            && request.resource.data.keys().size() <= 9
+            && request.resource.data.keys().size() <= 12
             && (!('displayName' in request.resource.data)
               || (request.resource.data.displayName is string
                 && request.resource.data.displayName.size() <= 40))
@@ -41,7 +44,14 @@ service cloud.firestore {
                 && request.resource.data.bio.size() <= 160))
             && (!('photoData' in request.resource.data)
               || (request.resource.data.photoData is string
-                && request.resource.data.photoData.size() <= 600000)))
+                && request.resource.data.photoData.size() <= 600000))
+            && (!('publicProfile' in request.resource.data)
+              || request.resource.data.publicProfile is bool)
+            && (!('showFavorites' in request.resource.data)
+              || request.resource.data.showFavorites is bool)
+            && (!('favoriteGames' in request.resource.data)
+              || (request.resource.data.favoriteGames is list
+                && request.resource.data.favoriteGames.size() <= 30)))
         );
 
       match /settings/preferences {
