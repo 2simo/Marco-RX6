@@ -291,6 +291,79 @@ describe("Firestore user isolation rules", () => {
     await assertSucceeds(deleteDoc(aliceFollowingBob));
   });
 
+
+  it("reserves usernames uniquely and prevents case-insensitive duplicates", async () => {
+    const alice = testEnv.authenticatedContext("username-alice").firestore();
+    const bob = testEnv.authenticatedContext("username-bob").firestore();
+    const claim = doc(alice, "usernames/marco_rx6");
+    await assertSucceeds(setDoc(claim, {
+      uid: "username-alice",
+      username: "Marco_RX6",
+      createdAt: serverTimestamp(),
+    }));
+    await assertFails(setDoc(doc(bob, "usernames/marco_rx6"), {
+      uid: "username-bob",
+      username: "marco_rx6",
+      createdAt: serverTimestamp(),
+    }));
+    await assertFails(updateDoc(claim, { uid: "username-bob" }));
+    await assertFails(setDoc(doc(bob, "usernames/invalid-name"), {
+      uid: "username-bob",
+      username: "invalid-name",
+      createdAt: serverTimestamp(),
+    }));
+    await assertSucceeds(deleteDoc(claim));
+  });
+
+  it("allows private messages only between mutually-following registered accounts", async () => {
+    const alice = testEnv.authenticatedContext("message-alice").firestore();
+    const bob = testEnv.authenticatedContext("message-bob").firestore();
+    const outsider = testEnv.authenticatedContext("message-outsider").firestore();
+
+    await assertSucceeds(setDoc(doc(alice, "userFollows/message-alice/following/message-bob"), {
+      uid: "message-alice", targetUid: "message-bob", createdAt: serverTimestamp(),
+    }));
+    await assertSucceeds(setDoc(doc(bob, "userFollows/message-bob/following/message-alice"), {
+      uid: "message-bob", targetUid: "message-alice", createdAt: serverTimestamp(),
+    }));
+
+    const conversationId = "mutual-follow-conversation";
+    const conversation = doc(alice, "conversations/" + conversationId);
+    await assertSucceeds(setDoc(conversation, {
+      participants: ["message-alice", "message-bob"],
+      lastMessage: "Hello",
+      lastSenderUid: "message-alice",
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }));
+    const message = doc(alice, "conversations/" + conversationId + "/messages/first");
+    await assertSucceeds(setDoc(message, {
+      senderUid: "message-alice",
+      text: "Hello",
+      createdAt: serverTimestamp(),
+    }));
+    await assertSucceeds(getDoc(doc(bob, "conversations/" + conversationId + "/messages/first")));
+    await assertFails(getDoc(doc(outsider, "conversations/" + conversationId)));
+    await assertFails(setDoc(doc(outsider, "conversations/" + conversationId + "/messages/intrusion"), {
+      senderUid: "message-outsider", text: "Intrusion", createdAt: serverTimestamp(),
+    }));
+  });
+
+  it("denies starting a conversation when the follow relationship is one-way", async () => {
+    const alice = testEnv.authenticatedContext("oneway-alice").firestore();
+    const bob = testEnv.authenticatedContext("oneway-bob").firestore();
+    await assertSucceeds(setDoc(doc(alice, "userFollows/oneway-alice/following/oneway-bob"), {
+      uid: "oneway-alice", targetUid: "oneway-bob", createdAt: serverTimestamp(),
+    }));
+    await assertFails(setDoc(doc(alice, "conversations/oneway-conversation"), {
+      participants: ["oneway-alice", "oneway-bob"],
+      lastMessage: "Hello",
+      lastSenderUid: "oneway-alice",
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }));
+  });
+
   it("allows one immutable game view per authenticated guest installation", async () => {
     const uid = "guest-viewer";
     const db = testEnv.authenticatedContext(uid, {
