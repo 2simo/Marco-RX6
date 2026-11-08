@@ -131,7 +131,8 @@ class MainActivity : ComponentActivity() {
             translate = ::tr,
             games = { games },
             loadCover = coverRuntimeFeature::load,
-            openGameDetails = { game -> gameExperienceFeature.showDetails(game) }
+            openGameDetails = { game -> gameExperienceFeature.showDetails(game) },
+            gameEngagementRepository = gameEngagementRepository
         )
     }
 
