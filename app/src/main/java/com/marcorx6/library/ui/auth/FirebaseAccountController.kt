@@ -292,6 +292,7 @@ internal class FirebaseAccountController(
                 translate("اسم المستخدم"),
                 InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS
             ).apply {
+                filters = arrayOf(android.text.InputFilter.LengthFilter(40))
                 setText(user.displayName.orEmpty())
                 setSelection(text.length)
             }
@@ -308,6 +309,7 @@ internal class FirebaseAccountController(
                 hint = translate("اكتب نبذة قصيرة عنك...")
                 inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
                 setSingleLine(false)
+                filters = arrayOf(android.text.InputFilter.LengthFilter(160))
                 minLines = 3
                 maxLines = 5
                 gravity = Gravity.TOP or Gravity.START
