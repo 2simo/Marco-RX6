@@ -389,7 +389,7 @@ internal class FirebaseAccountController(
             page.addView(profileBioPreview, LinearLayout.LayoutParams(-1, -2).apply {
                 bottomMargin = dp(14)
             })
-            page.addView(sectionCaption("ملخص المكتبة", dark))
+            page.addView(sectionCaption("إعدادات الملف الشخصي", dark))
         }
 
         if (user == null || user.isAnonymous) {
