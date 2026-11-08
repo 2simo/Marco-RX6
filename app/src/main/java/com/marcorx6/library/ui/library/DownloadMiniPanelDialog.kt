@@ -167,10 +167,14 @@ internal class DownloadMiniPanelDialog(
                 })
                 return
             }
-            entries.forEach { item ->
+            entries.forEachIndexed { index, item ->
                 val row = rows[item.id] ?: makeRow(item.title).also {
                     rows[item.id] = it
-                    list.addView(it.card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(7) })
+                    list.addView(it.card, index.coerceAtMost(list.childCount), LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(7) })
+                }
+                if (list.indexOfChild(row.card) != index) {
+                    list.removeView(row.card)
+                    list.addView(row.card, index.coerceAtMost(list.childCount))
                 }
                 if (row.title.text.toString() != item.title) row.title.text = item.title
                 val statusLabel = when (item.status) {
@@ -192,7 +196,13 @@ internal class DownloadMiniPanelDialog(
                 val downloaded = android.text.format.Formatter.formatFileSize(activity, item.downloadedBytes.coerceAtLeast(0L))
                 val total = if (item.totalBytes > 0L) android.text.format.Formatter.formatFileSize(activity, item.totalBytes) else translate("حجم غير معروف")
                 val speedText = if (item.status == DownloadManager.STATUS_RUNNING) " • " + android.text.format.Formatter.formatFileSize(activity, speed) + "/s" else ""
-                row.details.text = "$downloaded / $total$speedText"
+                val etaText = if (speed > 0L && item.totalBytes > item.downloadedBytes) {
+                    val seconds = ((item.totalBytes - item.downloadedBytes) / speed).coerceAtLeast(0L)
+                    val eta = if (seconds >= 3600L) "${seconds / 3600L}h ${(seconds % 3600L) / 60L}m"
+                        else if (seconds >= 60L) "${seconds / 60L}m ${seconds % 60L}s" else "${seconds}s"
+                    " • " + translate("متبقي") + " " + eta
+                } else ""
+                row.details.text = "$downloaded / $total$speedText$etaText"
                 row.progress.isIndeterminate = item.status == DownloadManager.STATUS_RUNNING && item.totalBytes <= 0L
                 if (!row.progress.isIndeterminate) row.progress.progress = percent
                 row.progress.visibility = if (item.status == DownloadManager.STATUS_SUCCESSFUL || item.status == DownloadManager.STATUS_FAILED) View.GONE else View.VISIBLE
