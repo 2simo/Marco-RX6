@@ -153,6 +153,39 @@ internal class DownloadUiController(
             }
         }
         header.addView(concurrencyButton, LinearLayout.LayoutParams(-2, dp(44)).apply { marginEnd = dp(7) })
+        val segmentConnectionsButton = TextView(activity).apply {
+            text = "${downloadRepository.maxSegmentConnections()}×"
+            textSize = 11f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(primary)
+            gravity = Gravity.CENTER
+            setPadding(dp(10), dp(10), dp(10), dp(10))
+            this.background = GradientDrawable().apply {
+                setColor(surface)
+                cornerRadius = dp(12).toFloat()
+                setStroke(dp(1), if (dark) Color.rgb(78, 85, 98) else Color.rgb(210, 216, 225))
+            }
+            contentDescription = translate("عدد الاتصالات لكل ملف")
+            setOnClickListener {
+                val options = arrayOf("1", "2", "3", "4")
+                val selected = downloadRepository.maxSegmentConnections() - 1
+                val picker = AlertDialog.Builder(activity)
+                    .setTitle(translate("اتصالات الملف الواحد"))
+                    .setMessage(translate("عدد أجزاء الملف التي سيتم تنزيلها بالتوازي. الملفات القديمة تحتفظ بأجزائها ويمكن استكمالها بأمان."))
+                    .setSingleChoiceItems(options, selected) { dialog, which ->
+                        val value = which + 1
+                        downloadRepository.setMaxSegmentConnections(value)
+                        text = "${value}×"
+                        Toast.makeText(activity, translate("سيُطبّق عدد الاتصالات على التنزيلات الجديدة أو المستأنفة"), Toast.LENGTH_LONG).show()
+                        dialog.dismiss()
+                    }
+                    .setNegativeButton(translate("إلغاء"), null)
+                    .create()
+                picker.show()
+                styleDialog(picker)
+            }
+        }
+        header.addView(segmentConnectionsButton, LinearLayout.LayoutParams(-2, dp(44)).apply { marginEnd = dp(7) })
         val wifiOnlyButton = TextView(activity).apply {
             text = if (downloadRepository.wifiOnlyDownloads()) "Wi-Fi" else "ALL"
             textSize = 10f
