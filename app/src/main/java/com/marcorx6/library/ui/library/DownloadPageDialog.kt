@@ -200,30 +200,6 @@ internal class DownloadPageDialog(
                 }
                 .show()
         }
-        val toolbar = LinearLayout(activity).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-        }
-        val titleBox = LinearLayout(activity).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(2), dp(2), 0, dp(2))
-        }
-        titleBox.addView(TextView(activity).apply {
-            text = "MARCO"
-            textSize = 17f
-            letterSpacing = 0.12f
-            setTypeface(null, Typeface.BOLD)
-            setTextColor(heading)
-        })
-        titleBox.addView(TextView(activity).apply {
-            text = translate("متصفح التحميل")
-            textSize = 10f
-            setTextColor(muted)
-        })
-        toolbar.addView(titleBox, LinearLayout.LayoutParams(0, -2, 1f))
-        toolbar.addView(toolbarAction("", { openBrowserHistory() }, com.marcorx6.library.R.drawable.ic_action_refresh))
-        toolbar.addView(toolbarAction("▢", { openBrowserTabs() }))
-
         fun toolbarAction(label: String, onClick: () -> Unit, iconRes: Int = 0): TextView =
             TextView(activity).apply {
                 text = label
@@ -254,6 +230,30 @@ internal class DownloadPageDialog(
                 isFocusable = true
                 setOnClickListener { onClick() }
             }
+
+        val toolbar = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val titleBox = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(2), dp(2), 0, dp(2))
+        }
+        titleBox.addView(TextView(activity).apply {
+            text = "MARCO"
+            textSize = 17f
+            letterSpacing = 0.12f
+            setTypeface(null, Typeface.BOLD)
+            setTextColor(heading)
+        })
+        titleBox.addView(TextView(activity).apply {
+            text = translate("متصفح التحميل")
+            textSize = 10f
+            setTextColor(muted)
+        })
+        toolbar.addView(titleBox, LinearLayout.LayoutParams(0, -2, 1f))
+        toolbar.addView(toolbarAction("", { openBrowserHistory() }, com.marcorx6.library.R.drawable.ic_action_refresh))
+        toolbar.addView(toolbarAction("▢", { openBrowserTabs() }))
 
         toolbar.addView(toolbarAction("", { dialog.dismiss() }, com.marcorx6.library.R.drawable.ic_action_close))
         root.addView(toolbar, LinearLayout.LayoutParams(-1, -2))
