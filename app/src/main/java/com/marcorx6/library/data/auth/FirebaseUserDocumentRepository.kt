@@ -160,6 +160,40 @@ internal class FirebaseUserDocumentRepository(
             }
     }
 
+    /** Refreshes cached public counts from server aggregates, only for the profile owner. */
+    fun refreshPublicFollowCounts(uid: String): Task<Void> {
+        if (uid.isBlank()) return Tasks.forResult(null)
+        return loadUser(uid).continueWithTask { userTask ->
+            if (!userTask.isSuccessful) {
+                throw userTask.exception ?: IllegalStateException("تعذر قراءة إعدادات الملف")
+            }
+            if (userTask.result.getBoolean("publicProfile") != true) {
+                return@continueWithTask Tasks.forResult<Void>(null)
+            }
+            loadFollowCounts(uid).continueWithTask { countsTask ->
+                if (!countsTask.isSuccessful) {
+                    throw countsTask.exception ?: IllegalStateException("تعذر تحديث إحصائيات المتابعة")
+                }
+                loadPublicProfile(uid).continueWithTask { profileTask ->
+                    if (!profileTask.isSuccessful) {
+                        throw profileTask.exception ?: IllegalStateException("تعذر قراءة الملف العام")
+                    }
+                    if (!profileTask.result.exists()) {
+                        return@continueWithTask Tasks.forResult<Void>(null)
+                    }
+                    val counts = countsTask.result
+                    publicProfileDocument(uid).update(
+                        mapOf(
+                            "followerCount" to counts.first,
+                            "followingCount" to counts.second,
+                            "updatedAt" to FieldValue.serverTimestamp()
+                        )
+                    )
+                }
+            }
+        }
+    }
+
     /** Lists follower UIDs for the signed-in account only; Firestore rules enforce this boundary. */
     fun loadFollowerIds(uid: String): Task<List<String>> {
         if (uid.isBlank()) return Tasks.forResult(emptyList())
