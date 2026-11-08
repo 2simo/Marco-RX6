@@ -74,7 +74,7 @@ internal class DownloadDatabase private constructor(context: Context) :
         )
         val byUrl = readableDatabase.query(
             "downloads", null,
-            "url=? AND status IN (?,?,?)",
+            "url=? AND status IN (?,?,?,?)",
             arrayOf(url, *activeStatuses.map(Int::toString).toTypedArray()),
             null, null, "id DESC", "1"
         ).use { if (it.moveToFirst()) it.toRecord() else null }
@@ -82,7 +82,7 @@ internal class DownloadDatabase private constructor(context: Context) :
         if (sourcePostUrl.isBlank()) return null
         return readableDatabase.query(
             "downloads", null,
-            "source_post_url=? AND status IN (?,?,?)",
+            "source_post_url=? AND status IN (?,?,?,?)",
             arrayOf(sourcePostUrl, *activeStatuses.map(Int::toString).toTypedArray()),
             null, null, "id DESC", "1"
         ).use { if (it.moveToFirst()) it.toRecord() else null }
