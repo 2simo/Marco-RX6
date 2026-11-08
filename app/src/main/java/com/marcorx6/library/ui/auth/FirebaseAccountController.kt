@@ -1405,23 +1405,30 @@ internal class FirebaseAccountController(
             followers.text = followerCount.toString() + "  " + translate("المتابعون")
             following.text = followingCount.toString() + "  " + translate("يتابع")
         }
-        if (isOwnProfile) {
-            userDocuments.refreshPublicFollowCounts(targetUid)
-                .addOnFailureListener { error ->
-                    android.util.Log.w("MarcoSocial", "Public follow-count refresh failed", error)
-                }
-        }
-        userDocuments.loadPublicProfile(targetUid).addOnSuccessListener { profile ->
-            if (profile.exists()) {
-                renderCounts(
-                    profile.getLong("followerCount") ?: 0L,
-                    profile.getLong("followingCount") ?: 0L
-                )
-            } else if (isOwnProfile) {
-                userDocuments.loadFollowCounts(targetUid).addOnSuccessListener { counts ->
-                    renderCounts(counts.first, counts.second)
+        fun loadCachedPublicCounts() {
+            userDocuments.loadPublicProfile(targetUid).addOnSuccessListener { profile ->
+                if (profile.exists()) {
+                    renderCounts(
+                        profile.getLong("followerCount") ?: 0L,
+                        profile.getLong("followingCount") ?: 0L
+                    )
+                } else if (isOwnProfile) {
+                    userDocuments.loadFollowCounts(targetUid).addOnSuccessListener { counts ->
+                        renderCounts(counts.first, counts.second)
+                    }
                 }
             }
+        }
+        if (isOwnProfile) {
+            userDocuments.refreshPublicFollowCounts(targetUid)
+                .addOnCompleteListener { task ->
+                    if (!task.isSuccessful) {
+                        android.util.Log.w("MarcoSocial", "Public follow-count refresh failed", task.exception)
+                    }
+                    loadCachedPublicCounts()
+                }
+        } else {
+            loadCachedPublicCounts()
         }
         if (isOwnProfile) return
         if (currentUser == null || currentUser.isAnonymous) {
@@ -1483,7 +1490,7 @@ internal class FirebaseAccountController(
                         followingState = nextState
                         updateLabel()
                         followButton.isEnabled = true
-                        refreshCounts()
+                        userDocuments.refreshPublicFollowCounts(currentUser.uid)
                         followButton.animate().cancel()
                         followButton.scaleX = 0.97f
                         followButton.scaleY = 0.97f
