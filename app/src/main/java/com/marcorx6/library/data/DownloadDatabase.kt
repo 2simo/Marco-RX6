@@ -167,6 +167,9 @@ internal class DownloadDatabase private constructor(context: Context) :
             put("url", url); put("user_agent", userAgent); put("cookie", cookie)
             put("referrer", referrer); put("mime_type", mime)
             put("status", DownloadManager.STATUS_PENDING); put("error", "")
+            put("downloaded", 0L); put("total", -1L)
+            put("etag", ""); put("last_modified", "")
+            put("local_path", "")
         }, "id=?", arrayOf(id.toString()))
     }
 
