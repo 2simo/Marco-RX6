@@ -191,14 +191,29 @@ internal class FirebaseMessagingRepository(
         val conversation = firestore.collection(CONVERSATIONS)
             .document(conversationId(currentUid, otherUid))
         val message = conversation.collection(MESSAGES).document(messageId)
-        val batch = firestore.batch()
-        batch.delete(message)
-        batch.update(conversation, mapOf(
-            "lastMessage" to "تم حذف رسالة",
-            "lastSenderUid" to currentUid,
-            "updatedAt" to FieldValue.serverTimestamp()
-        ))
-        return batch.commit()
+        return message.get().continueWithTask { messageTask ->
+            if (!messageTask.isSuccessful) {
+                throw messageTask.exception ?: IllegalStateException("تعذر تحميل الرسالة")
+            }
+            conversation.get().continueWithTask { conversationTask ->
+                if (!conversationTask.isSuccessful) {
+                    throw conversationTask.exception ?: IllegalStateException("تعذر تحميل المحادثة")
+                }
+                val batch = firestore.batch()
+                batch.delete(message)
+                val deletedText = messageTask.result.getString("text").orEmpty().take(180)
+                if (conversationTask.result.getString("lastMessage") == deletedText &&
+                    conversationTask.result.getString("lastSenderUid") == messageTask.result.getString("senderUid")
+                ) {
+                    batch.update(conversation, mapOf(
+                        "lastMessage" to "تم حذف رسالة",
+                        "lastSenderUid" to currentUid,
+                        "updatedAt" to FieldValue.serverTimestamp()
+                    ))
+                }
+                batch.commit()
+            }
+        }
     }
 
     fun markMessagesRead(
