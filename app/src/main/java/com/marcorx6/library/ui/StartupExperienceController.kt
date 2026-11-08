@@ -52,7 +52,7 @@ internal class StartupExperienceController(
             background = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
                 setColor(Color.rgb(25, 28, 34))
-                setStroke(dp(3), Color.rgb(190, 198, 210))
+                setStroke(dp(3), Color.rgb(76, 145, 235))
             }
             elevation = dp(18).toFloat()
         }
@@ -76,7 +76,7 @@ internal class StartupExperienceController(
             gravity = Gravity.CENTER
             letterSpacing = 0.16f
         })
-        center.addView(makeText("GAME LIBRARY", 10f, Color.rgb(190, 198, 210), true).apply {
+        center.addView(makeText("GAME LIBRARY", 10f, Color.rgb(76, 145, 235), true).apply {
             gravity = Gravity.CENTER
             letterSpacing = 0.28f
             setPadding(0, dp(9), 0, 0)
@@ -89,17 +89,17 @@ internal class StartupExperienceController(
         val progress = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
             max = 100
             this.progress = 1
-            progressTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
+            progressTintList = android.content.res.ColorStateList.valueOf(Color.rgb(76, 145, 235))
             progressBackgroundTintList = android.content.res.ColorStateList.valueOf(Color.rgb(57, 61, 70))
             progressDrawable = progressDrawable.mutate().apply {
                 if (this is android.graphics.drawable.LayerDrawable) {
                     findDrawableByLayerId(android.R.id.background)?.let { it.setTint(Color.rgb(57, 61, 70)) }
-                    findDrawableByLayerId(android.R.id.progress)?.let { it.setTint(Color.rgb(190, 198, 210)) }
+                    findDrawableByLayerId(android.R.id.progress)?.let { it.setTint(Color.rgb(76, 145, 235)) }
                 }
             }
         }
         center.addView(progress, LinearLayout.LayoutParams(dp(238), dp(7)).apply { topMargin = dp(18) })
-        val percent = makeText("1%", 12f, Color.rgb(190, 198, 210), true).apply {
+        val percent = makeText("1%", 12f, Color.rgb(76, 145, 235), true).apply {
             gravity = Gravity.CENTER
             setPadding(0, dp(9), 0, 0)
         }
