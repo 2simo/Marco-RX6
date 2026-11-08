@@ -302,11 +302,24 @@ service cloud.firestore {
         && (
           (
             request.resource.data.diff(resource.data).affectedKeys()
-              .hasOnly(['lastMessage', 'lastSenderUid', 'updatedAt', 'participantA', 'participantB'])
+              .hasOnly(['lastMessage', 'lastSenderUid', 'updatedAt', 'participantA', 'participantB', 'deletedFor'])
             && request.resource.data.lastSenderUid == request.auth.uid
             && request.resource.data.lastMessage is string
             && request.resource.data.lastMessage.size() <= 180
             && request.resource.data.updatedAt == request.time
+            && (!('deletedFor' in request.resource.data)
+              || (request.resource.data.deletedFor is list
+                && request.resource.data.deletedFor.size() <= 2
+                && resource.data.participants.hasAll(request.resource.data.deletedFor)))
+          )
+          ||
+          (
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deletedFor'])
+            && request.resource.data.deletedFor is list
+            && request.resource.data.deletedFor.size() <= 2
+            && resource.data.participants.hasAll(request.resource.data.deletedFor)
+            && request.resource.data.deletedFor.hasAll(resource.data.deletedFor)
+            && request.resource.data.deletedFor.hasAny([request.auth.uid])
           )
           ||
           (
@@ -335,8 +348,18 @@ service cloud.firestore {
             conversationParticipants()[0],
             conversationParticipants()[1]
           )
-          && request.resource.data.keys().hasOnly(['senderUid', 'text', 'createdAt', 'readBy'])
+          && request.resource.data.keys().hasOnly([
+            'senderUid', 'text', 'createdAt', 'readBy',
+            'replyToMessageId', 'replyToText', 'replyToSenderUid'
+          ])
           && request.resource.data.keys().hasAll(['senderUid', 'text', 'createdAt', 'readBy'])
+          && (!('replyToMessageId' in request.resource.data)
+            || (request.resource.data.replyToMessageId is string
+              && request.resource.data.replyToMessageId.size() <= 128
+              && request.resource.data.replyToText is string
+              && request.resource.data.replyToText.size() <= 180
+              && request.resource.data.replyToSenderUid is string
+              && conversationParticipants().hasAny([request.resource.data.replyToSenderUid])))
           && request.resource.data.senderUid == request.auth.uid
           && request.resource.data.text is string
           && request.resource.data.text.size() > 0
@@ -356,7 +379,9 @@ service cloud.firestore {
           && request.resource.data.readBy.hasAll([resource.data.senderUid, request.auth.uid])
           && request.resource.data.readAt == request.time
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy', 'readAt']);
-        allow delete: if false;
+        allow delete: if request.auth != null
+          && get(/databases/$(database)/documents/conversations/$(conversationId))
+            .data.participants.hasAny([request.auth.uid]);
       }
     }
 
