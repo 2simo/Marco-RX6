@@ -110,7 +110,7 @@ internal class DownloadPageDialog(
                 return
             }
             val labels = browserHistory.map { (title, url) ->
-                (title.ifBlank { Uri.parse(url).host.orEmpty() }) + "\\n" + url
+                (title.ifBlank { Uri.parse(url).host.orEmpty() }) + "\n" + url
             }.toTypedArray()
             AlertDialog.Builder(activity)
                 .setTitle(translate("سجل التصفح"))
@@ -130,7 +130,7 @@ internal class DownloadPageDialog(
             val labels = browserTabs.mapIndexed { index, tab ->
                 (if (index == activeTabIndex) "● " else "") +
                     (tab.first.ifBlank { translate("تبويب") + " " + (index + 1) }) +
-                    "\\n" + tab.second
+                    "\n" + tab.second
             }.toMutableList()
             labels.add(translate("+ تبويب جديد"))
             AlertDialog.Builder(activity)
