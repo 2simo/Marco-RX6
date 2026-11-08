@@ -573,7 +573,7 @@ describe("Private notification inbox rules", () => {
       targetUid: "bob",
       createdAt: serverTimestamp(),
     }));
-    await assertSucceeds(setDoc(doc(bob, "users/bob/notifications/follow-1"), {
+    await assertSucceeds(setDoc(doc(alice, "users/bob/notifications/follow-1"), {
       type: "follow",
       actorUid: "alice",
       title: "متابع جديد",
