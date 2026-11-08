@@ -76,7 +76,7 @@ service cloud.firestore {
       allow create, update: if signedInAs(userId)
         && !isAnonymous()
         && request.resource.data.keys().hasOnly([
-          'uid', 'displayName', 'bio', 'photoUrl', 'showFavorites', 'favoriteGames', 'updatedAt'
+          'uid', 'displayName', 'bio', 'photoUrl', 'photoData', 'showFavorites', 'favoriteGames', 'updatedAt'
         ])
         && request.resource.data.keys().hasAll(['uid', 'displayName', 'showFavorites', 'updatedAt'])
         && request.resource.data.uid == userId
@@ -90,6 +90,9 @@ service cloud.firestore {
         && (!('photoUrl' in request.resource.data)
           || (request.resource.data.photoUrl is string
             && request.resource.data.photoUrl.size() <= 2048))
+        && (!('photoData' in request.resource.data)
+          || (request.resource.data.photoData is string
+            && request.resource.data.photoData.size() <= 180000))
         && (!('favoriteGames' in request.resource.data)
           || (request.resource.data.favoriteGames is list
             && request.resource.data.favoriteGames.size() <= 30));
