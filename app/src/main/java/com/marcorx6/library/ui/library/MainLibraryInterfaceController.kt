@@ -173,7 +173,7 @@ internal class MainLibraryInterfaceController(
 
     private fun showSmartSearch() {
         val ink = bg
-        val accent = Color.rgb(190, 198, 210)
+        val accent = Color.rgb(76, 145, 235)
         val searchBaseTop = dp(18)
         val searchBaseBottom = dp(18)
         val root = LinearLayout(context).apply {
@@ -540,7 +540,7 @@ internal class MainLibraryInterfaceController(
             setPadding(dp(2), dp(3), dp(2), dp(17))
         }
         val brand = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
-        brand.addView(makeText(tr("MARCO  /  مركز الألعاب الرسمي"), 9f, if (isDarkMode()) Color.rgb(190, 198, 210) else Color.rgb(130, 138, 151), true).apply { letterSpacing = 0.08f })
+        brand.addView(makeText(tr("MARCO  /  مركز الألعاب الرسمي"), 9f, if (isDarkMode()) Color.rgb(76, 145, 235) else Color.rgb(130, 138, 151), true).apply { letterSpacing = 0.08f })
         brand.addView(makeText("مكتبة الألعاب", 21f, silver, true).apply {
             typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
             letterSpacing = 0.01f
@@ -562,7 +562,7 @@ internal class MainLibraryInterfaceController(
             isClickable = true
             isFocusable = true
             if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                android.content.res.ColorStateList.valueOf(Color.argb(92, 190, 198, 210)),
+                android.content.res.ColorStateList.valueOf(Color.argb(92, 76, 145, 235)),
                 null,
                 GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(14).toFloat() }
             )
@@ -775,7 +775,7 @@ internal class MainLibraryInterfaceController(
                 minimumHeight = dp(56)
                 contentDescription = text.toString()
                 if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                    android.content.res.ColorStateList.valueOf(Color.argb(75, 190, 198, 210)),
+                    android.content.res.ColorStateList.valueOf(Color.argb(75, 76, 145, 235)),
                     null,
                     GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(18).toFloat() }
                 )
@@ -815,7 +815,7 @@ internal class MainLibraryInterfaceController(
             isClickable = true
             isFocusable = true
             if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                android.content.res.ColorStateList.valueOf(Color.argb(78, 190, 198, 210)),
+                android.content.res.ColorStateList.valueOf(Color.argb(78, 76, 145, 235)),
                 null,
                 GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(13).toFloat() }
             )
@@ -850,7 +850,7 @@ internal class MainLibraryInterfaceController(
             isClickable = true
             isFocusable = true
             if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                android.content.res.ColorStateList.valueOf(Color.argb(78, 190, 198, 210)),
+                android.content.res.ColorStateList.valueOf(Color.argb(78, 76, 145, 235)),
                 null,
                 GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(13).toFloat() }
             )
@@ -888,14 +888,14 @@ internal class MainLibraryInterfaceController(
                 typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
                 gravity = Gravity.CENTER
                 background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-                    intArrayOf(Color.rgb(190, 198, 210), Color.rgb(105, 113, 126))).apply {
+                    intArrayOf(Color.rgb(76, 145, 235), Color.rgb(35, 91, 165))).apply {
                     cornerRadius = dp(15).toFloat()
                     setStroke(dp(1), Color.argb(190, 210, 216, 225))
                 }
                 isClickable = true
                 isFocusable = true
                 if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                    android.content.res.ColorStateList.valueOf(Color.argb(100, 225, 230, 237)),
+                    android.content.res.ColorStateList.valueOf(Color.argb(100, 145, 190, 255)),
                     null,
                     GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(15).toFloat() }
                 )
@@ -928,7 +928,7 @@ internal class MainLibraryInterfaceController(
                 cornerRadius = dp(23).toFloat()
                 setStroke(dp(1), Color.rgb(130, 138, 151))
             } else GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.argb(245, 245, 247, 250), Color.argb(230, 215, 220, 228), Color.argb(220, 190, 198, 210))).apply {
+                intArrayOf(Color.argb(245, 245, 247, 250), Color.argb(230, 215, 220, 228), Color.argb(220, 76, 145, 235))).apply {
                 cornerRadius = dp(23).toFloat()
                 setStroke(dp(1), Color.rgb(160, 168, 181))
             }
@@ -946,8 +946,8 @@ internal class MainLibraryInterfaceController(
                 item.background = GradientDrawable(
                     GradientDrawable.Orientation.TL_BR,
                     if (active) {
-                        if (isDarkMode()) intArrayOf(Color.rgb(190, 198, 210), Color.rgb(105, 113, 126))
-                        else intArrayOf(Color.rgb(190, 198, 210), Color.rgb(105, 113, 126))
+                        if (isDarkMode()) intArrayOf(Color.rgb(76, 145, 235), Color.rgb(35, 91, 165))
+                        else intArrayOf(Color.rgb(76, 145, 235), Color.rgb(35, 91, 165))
                     } else {
                         if (isDarkMode()) intArrayOf(Color.argb(70, 34, 37, 44), Color.argb(45, 15, 17, 22))
                         else intArrayOf(Color.argb(75, 255, 255, 255), Color.argb(45, 222, 226, 232))
@@ -977,7 +977,7 @@ internal class MainLibraryInterfaceController(
                 isClickable = true
                 isFocusable = true
                 if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                    android.content.res.ColorStateList.valueOf(Color.argb(88, 190, 198, 210)),
+                    android.content.res.ColorStateList.valueOf(Color.argb(88, 76, 145, 235)),
                     null,
                     GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(15).toFloat() }
                 )
