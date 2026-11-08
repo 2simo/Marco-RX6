@@ -360,10 +360,8 @@ internal class DownloadPageDialog(
             "ads.youtube.com", "pixel.facebook.com", "connect.facebook.net",
             "analytics.tiktok.com", "bat.bing.com", "popunder.net", "understanding.com",
             "hilltopads.net", "hilltopads.com", "ad-maven.com", "ad-maven.net",
-            " Monetag.com".trim().lowercase(), "monetag.com", " monetag.net".trim().lowercase(),
-            "adcash.com", "yllix.com", " RevenueHits.com".trim().lowercase(),
-            "revenuehits.com", "adf.ly", "shorte.st", "linkvertise.com",
-            "clk.sh", "ouo.io", "ouo.press", "bc.vc", "za.gl", "shrinkme.io"
+            "monetag.com", "monetag.net",
+            "adcash.com", "yllix.com", "revenuehits.com"
         )
         val adEndpointPatterns = listOf(
             Regex("""(?:^|/)(?:pagead|adsystem|adserver|adservice|adview|adclick|popunder|popup|bannerad|vast|vpaid)(?:/|[._?=&-]|$)""", RegexOption.IGNORE_CASE),
