@@ -170,7 +170,7 @@ internal class DownloadConfirmationPanel(
             details.addView(line)
         }
         detailLine(translate("نوع الملف"), mimeType.ifBlank { extension })
-        detailLine(translate("مكان الحفظ"), "Download/MARCO RX6")
+        detailLine(translate("مكان الحفظ"), translate("مجلد التنزيلات"))
         detailLine(translate("طريقة التنزيل"), translate("في الخلفية"))
         root.addView(details, LinearLayout.LayoutParams(-1, -2).apply {
             topMargin = dp(14)
