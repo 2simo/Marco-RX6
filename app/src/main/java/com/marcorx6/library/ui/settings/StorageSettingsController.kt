@@ -51,7 +51,7 @@ internal class StorageSettingsController(
         val bg = if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247)
         val ink = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
         val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
-        val silverAccent = Color.rgb(190, 198, 210)
+        val silverAccent = Color.rgb(76, 145, 235)
 
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
