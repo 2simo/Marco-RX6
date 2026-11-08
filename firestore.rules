@@ -96,16 +96,18 @@ service cloud.firestore {
     }
 
 
-    // A follow edge is owned by its follower. Public read access exposes only
-    // the social graph metadata, never private account documents.
-    // Collection-group queries over the `following` subcollection require a
-    // recursive wildcard match. Keep reads limited to signed-in users.
+    // Follow edges are visible only to the follower and the followed account.
+    // The recursive rule supports the app's collection-group query filtered by
+    // targetUid == request.auth.uid, without exposing the entire social graph.
     match /{path=**}/following/{targetUid} {
-      allow read: if request.auth != null;
+      allow read: if request.auth != null
+        && (resource.data.uid == request.auth.uid
+          || resource.data.targetUid == request.auth.uid);
     }
 
     match /userFollows/{followerUid}/following/{targetUid} {
-      allow read: if request.auth != null;
+      allow read: if signedInAs(followerUid)
+        || (request.auth != null && resource.data.targetUid == request.auth.uid);
       allow create: if signedInAs(followerUid)
         && followerUid != targetUid
         && request.resource.data.keys().hasOnly(['uid', 'targetUid', 'createdAt'])
