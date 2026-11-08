@@ -1430,32 +1430,13 @@ internal class FirebaseAccountController(
             setPadding(dp(18), dp(16), dp(18), dp(24))
             setBackgroundColor(Color.rgb(7, 8, 10))
         }
-        val inboxHeader = LinearLayout(activity).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-        }
-        inboxHeader.addView(TextView(activity).apply {
+        page.addView(TextView(activity).apply {
             text = translate("الرسائل الخاصة")
             textSize = 23f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(Color.WHITE)
-        }, LinearLayout.LayoutParams(0, -2, 1f))
-        inboxHeader.addView(ImageView(activity).apply {
-            setImageResource(android.R.drawable.ic_menu_add)
-            imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
-            contentDescription = translate("رسالة جديدة")
-            scaleType = ImageView.ScaleType.CENTER_INSIDE
-            setPadding(dp(10), dp(10), dp(10), dp(10))
-            background = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setColor(Color.rgb(29, 32, 39))
-                setStroke(dp(1), Color.rgb(100, 108, 120))
-            }
-            isClickable = true
-            isFocusable = true
-            setOnClickListener { showNewMessageSearch() }
-        }, LinearLayout.LayoutParams(dp(44), dp(44)))
-        page.addView(inboxHeader)
+            setPadding(0, 0, 0, dp(3))
+        })
         page.addView(TextView(activity).apply {
             text = translate("اضغط مطولاً على المحادثة لحذفها من قائمتك فقط")
             textSize = 11f
@@ -1465,6 +1446,23 @@ internal class FirebaseAccountController(
         val list = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
         val scroll = ScrollView(activity).apply { addView(list) }
         page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
+        page.addView(TextView(activity).apply {
+            text = translate("رسالة جديدة  +")
+            textSize = 14f
+            gravity = Gravity.CENTER
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(Color.rgb(225, 230, 237))
+            setPadding(dp(14), dp(15), dp(14), dp(15))
+            background = GradientDrawable().apply {
+                cornerRadius = dp(16).toFloat()
+                setColor(Color.rgb(38, 42, 50))
+                setStroke(dp(1), Color.rgb(115, 124, 138))
+            }
+            setOnClickListener { showFollowersForNewMessage() }
+        }, LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(10)
+            bottomMargin = dp(6)
+        })
         page.addView(TextView(activity).apply {
             text = translate("العودة إلى القائمة الرئيسية")
             textSize = 13f
@@ -1529,52 +1527,115 @@ internal class FirebaseAccountController(
         })
     }
 
-    private fun showNewMessageSearch() {
-        val input = accountInput(
-            translate("اسم المستخدم أو @username"),
-            InputType.TYPE_CLASS_TEXT
-        )
-        val dialog = AlertDialog.Builder(activity)
-            .setTitle(translate("رسالة جديدة"))
-            .setMessage(translate("ابحث باسم المستخدم للعثور على الشخص."))
-            .setView(input)
-            .setNegativeButton(translate("إلغاء"), null)
-            .setPositiveButton(translate("بحث"), null)
-            .create()
-        dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val username = input.text.toString().trim().removePrefix("@")
-                if (username.isBlank()) {
-                    input.error = translate("أدخل اسم المستخدم")
-                    return@setOnClickListener
-                }
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
-                userDocuments.loadUidByUsername(username)
-                    .addOnSuccessListener { uid ->
-                        if (uid.isNullOrBlank()) {
-                            dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true
-                            input.error = translate("لم يتم العثور على هذا المستخدم")
-                        } else {
-                            userDocuments.loadPublicProfile(uid)
-                                .addOnSuccessListener { profile ->
-                                    dialog.dismiss()
-                                    if (profile.exists()) openConversation(uid)
-                                    else toast("هذا المستخدم لا يملك ملفاً عاماً متاحاً.")
-                                }
-                                .addOnFailureListener { error ->
-                                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true
-                                    toast(error.localizedMessage ?: translate("تعذر تحميل الملف الشخصي."))
-                                }
-                        }
-                    }
-                    .addOnFailureListener { error ->
-                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true
-                        toast(error.localizedMessage ?: translate("تعذر البحث عن المستخدم."))
-                    }
-            }
+    private fun showFollowersForNewMessage() {
+        val user = authRepository.currentUser ?: return
+        val dialogContent = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(8), dp(16), dp(8))
         }
+        val scroll = ScrollView(activity).apply {
+            addView(dialogContent)
+            isFillViewport = true
+        }
+        val dialog = AlertDialog.Builder(activity)
+            .setTitle(translate("اختر متابعاً لإرسال رسالة"))
+            .setView(scroll)
+            .setNegativeButton(translate("إغلاق"), null)
+            .create()
         dialog.show()
         styleDialog(dialog)
+        dialogContent.addView(TextView(activity).apply {
+            text = translate("جارٍ تحميل المتابعين...")
+            textSize = 13f
+            setTextColor(Color.rgb(170, 178, 190))
+            setPadding(dp(8), dp(18), dp(8), dp(18))
+        })
+        userDocuments.loadFollowerIds(user.uid)
+            .addOnSuccessListener { followerIds ->
+                if (activity.isFinishing || activity.isDestroyed || !dialog.isShowing) return@addOnSuccessListener
+                dialogContent.removeAllViews()
+                if (followerIds.isEmpty()) {
+                    dialogContent.addView(TextView(activity).apply {
+                        text = translate("لا يوجد متابعون حتى الآن.")
+                        setTextColor(Color.rgb(170, 178, 190))
+                        setPadding(dp(8), dp(20), dp(8), dp(20))
+                    })
+                    return@addOnSuccessListener
+                }
+                var pending = followerIds.size
+                val eligibleProfiles = java.util.Collections.synchronizedList(
+                    mutableListOf<Pair<String, com.google.firebase.firestore.DocumentSnapshot>>()
+                )
+                followerIds.forEach { followerUid ->
+                    userDocuments.isFollowing(user.uid, followerUid)
+                        .addOnSuccessListener { followsBack ->
+                            if (followsBack) {
+                                userDocuments.loadPublicProfile(followerUid)
+                                    .addOnSuccessListener { profile ->
+                                        if (profile.exists()) eligibleProfiles.add(followerUid to profile)
+                                        pending--
+                                        renderEligible()
+                                    }
+                                    .addOnFailureListener {
+                                        pending--
+                                        renderEligible()
+                                    }
+                            } else {
+                                pending--
+                                renderEligible()
+                            }
+                        }
+                        .addOnFailureListener {
+                            pending--
+                            renderEligible()
+                        }
+                }
+                fun unused() = Unit
+                fun renderEligible() {
+                    if (pending != 0 || activity.isFinishing || activity.isDestroyed || !dialog.isShowing) return
+                    dialogContent.removeAllViews()
+                    val profiles = eligibleProfiles.sortedBy {
+                        it.second.getString("displayName").orEmpty().lowercase()
+                    }
+                    if (profiles.isEmpty()) {
+                        dialogContent.addView(TextView(activity).apply {
+                            text = translate("لا يوجد متابعون متبادلون يمكن مراسلتهم حالياً.")
+                            setTextColor(Color.rgb(170, 178, 190))
+                            setPadding(dp(8), dp(20), dp(8), dp(20))
+                        })
+                    }
+                    profiles.forEach { (followerUid, profile) ->
+                        val row = TextView(activity).apply {
+                            text = (profile.getString("displayName") ?: profile.getString("username") ?: "MARCO") +
+                                (profile.getString("username")?.let { "\n@$it" } ?: "")
+                            textSize = 14f
+                            setTextColor(Color.rgb(225, 230, 237))
+                            setPadding(dp(14), dp(14), dp(14), dp(14))
+                            background = GradientDrawable().apply {
+                                cornerRadius = dp(13).toFloat()
+                                setColor(Color.rgb(25, 28, 34))
+                                setStroke(dp(1), Color.rgb(75, 83, 96))
+                            }
+                            setOnClickListener {
+                                dialog.dismiss()
+                                openConversation(followerUid)
+                            }
+                        }
+                        dialogContent.addView(row, LinearLayout.LayoutParams(-1, -2).apply {
+                            bottomMargin = dp(7)
+                        })
+                    }
+                }
+            }
+            .addOnFailureListener { error ->
+                if (!dialog.isShowing) return@addOnFailureListener
+                dialogContent.removeAllViews()
+                dialogContent.addView(TextView(activity).apply {
+                    text = error.localizedMessage ?: translate("تعذر تحميل المتابعين.")
+                    setTextColor(Color.rgb(210, 170, 170))
+                    setPadding(dp(8), dp(18), dp(8), dp(18))
+                })
+            }
     }
 
     private fun openConversation(otherUid: String) {
