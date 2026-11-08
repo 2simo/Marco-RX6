@@ -16,6 +16,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  FieldValue,
   getDoc,
   getDocs,
   serverTimestamp,
@@ -166,7 +167,10 @@ describe("Firestore user isolation rules", () => {
     await assertFails(getDoc(doc(visitorDb, "users/public-owner")));
     await assertFails(getDocs(collection(visitorDb, "publicProfiles")));
 
-    await assertSucceeds(updateDoc(publicProfile, { showFavorites: false }));
+    await assertSucceeds(updateDoc(publicProfile, {
+      showFavorites: false,
+      favoriteGames: FieldValue.delete(),
+    }));
     await assertSucceeds(deleteDoc(publicProfile));
   });
 
