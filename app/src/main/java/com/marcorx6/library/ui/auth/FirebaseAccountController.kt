@@ -1688,7 +1688,28 @@ internal class FirebaseAccountController(
             contentDescription = translate("جارٍ التحقق من حالة المتابعة")
             isEnabled = false
         }
-        page.addView(followButton, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(14) })
+        page.addView(followButton, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
+        val messageButton = TextView(activity).apply {
+            text = translate("رسالة")
+            gravity = Gravity.CENTER
+            textSize = 14f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(Color.rgb(18, 20, 24))
+            setPadding(dp(18), dp(13), dp(18), dp(13))
+            background = GradientDrawable().apply {
+                cornerRadius = dp(15).toFloat()
+                setColor(Color.rgb(190, 198, 210))
+                setStroke(dp(1), Color.rgb(145, 153, 166))
+            }
+            visibility = View.GONE
+            setOnClickListener { openConversation(targetUid) }
+        }
+        page.addView(messageButton, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(14) })
+        fun refreshMessageAvailability() {
+            messaging.canMessage(currentUser.uid, targetUid).addOnSuccessListener { allowed ->
+                messageButton.visibility = if (allowed) View.VISIBLE else View.GONE
+            }
+        }
         userDocuments.isFollowing(currentUser.uid, targetUid).addOnSuccessListener { initialFollowing ->
             var followingState = initialFollowing
             fun updateLabel() {
@@ -1712,6 +1733,7 @@ internal class FirebaseAccountController(
                 )
             }
             updateLabel()
+            refreshMessageAvailability()
             followButton.isEnabled = true
             followButton.setOnClickListener {
                 followButton.isEnabled = false
@@ -1722,6 +1744,7 @@ internal class FirebaseAccountController(
                         followingState = nextState
                         updateLabel()
                         followButton.isEnabled = true
+                        refreshMessageAvailability()
                         userDocuments.refreshPublicFollowCounts(currentUser.uid)
                         followButton.animate().cancel()
                         followButton.scaleX = 0.97f
