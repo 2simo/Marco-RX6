@@ -84,7 +84,11 @@ internal class FirebaseUserDocumentRepository(
                     "showFavorites" to (showFavorites ?: true)
                 )
                 bio?.trim()?.takeIf(String::isNotBlank)?.let { publicData["bio"] = it.take(160) }
-                favoriteGames?.let { publicData["favoriteGames"] = it.take(30) }
+                if (showFavorites == false) {
+                    publicData["favoriteGames"] = FieldValue.delete()
+                } else {
+                    favoriteGames?.let { publicData["favoriteGames"] = it.take(30) }
+                }
                 publicProfileDocument(uid).set(publicData, SetOptions.merge())
             }
         }
