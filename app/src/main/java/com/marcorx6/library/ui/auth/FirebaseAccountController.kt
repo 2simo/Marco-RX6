@@ -738,7 +738,7 @@ internal class FirebaseAccountController(
 
     private fun showPublicProfile(uid: String) {
         userDocuments.loadPublicProfile(uid).addOnSuccessListener { snapshot ->
-            if (!snapshot.exists() || snapshot.getBoolean("publicProfile") != true) {
+            if (!snapshot.exists()) {
                 toast("هذا الملف الشخصي غير متاح أو لم يسمح صاحبه بعرضه")
                 return@addOnSuccessListener
             }
