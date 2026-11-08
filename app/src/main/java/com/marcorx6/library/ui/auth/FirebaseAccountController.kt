@@ -1267,6 +1267,117 @@ internal class FirebaseAccountController(
         })
     }
 
+
+    private fun openConversation(otherUid: String) {
+        val user = authRepository.currentUser ?: return
+        if (user.isAnonymous) return
+        messagesListener?.remove()
+        inboxListener?.remove()
+        messaging.canMessage(user.uid, otherUid).addOnSuccessListener { allowed ->
+            if (!allowed) {
+                toast("المراسلة متاحة فقط عندما يتابع كل منكما الآخر.")
+                showPublicProfile(otherUid)
+                return@addOnSuccessListener
+            }
+            userDocuments.loadPublicProfile(otherUid).addOnSuccessListener { profile ->
+                val page = LinearLayout(activity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    layoutDirection = View.LAYOUT_DIRECTION_RTL
+                    setPadding(dp(14), dp(12), dp(14), dp(12))
+                    setBackgroundColor(Color.rgb(7, 8, 10))
+                }
+                val header = LinearLayout(activity).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                }
+                header.addView(TextView(activity).apply {
+                    text = translate("رجوع")
+                    setTextColor(Color.rgb(190, 198, 210))
+                    setPadding(dp(8), dp(12), dp(16), dp(12))
+                    setOnClickListener { messagesListener?.remove(); messagesListener = null; showInbox() }
+                })
+                header.addView(TextView(activity).apply {
+                    text = profile.getString("displayName") ?: translate("محادثة")
+                    textSize = 19f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    setTextColor(Color.WHITE)
+                })
+                page.addView(header)
+                val messages = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
+                val scroll = ScrollView(activity).apply { isFillViewport = true; addView(messages) }
+                page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
+                val composer = LinearLayout(activity).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                    setPadding(0, dp(8), 0, 0)
+                }
+                val input = EditText(activity).apply {
+                    hint = translate("اكتب رسالة...")
+                    textSize = 14f
+                    maxLines = 4
+                    setTextColor(Color.WHITE)
+                    setHintTextColor(Color.rgb(130, 138, 151))
+                    setPadding(dp(12), dp(10), dp(12), dp(10))
+                    background = GradientDrawable().apply {
+                        cornerRadius = dp(16).toFloat()
+                        setColor(Color.rgb(24, 27, 33))
+                        setStroke(dp(1), Color.rgb(80, 88, 101))
+                    }
+                }
+                composer.addView(input, LinearLayout.LayoutParams(0, -2, 1f))
+                val send = TextView(activity).apply {
+                    text = translate("إرسال")
+                    gravity = Gravity.CENTER
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    setTextColor(Color.rgb(18, 20, 24))
+                    setPadding(dp(14), dp(14), dp(14), dp(14))
+                    background = GradientDrawable().apply {
+                        cornerRadius = dp(15).toFloat()
+                        setColor(Color.rgb(190, 198, 210))
+                    }
+                }
+                composer.addView(send, LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(7) })
+                page.addView(composer)
+                send.setOnClickListener {
+                    val body = input.text.toString().trim()
+                    if (body.isEmpty()) return@setOnClickListener
+                    send.isEnabled = false
+                    messaging.sendMessage(user.uid, otherUid, body)
+                        .addOnSuccessListener { input.text.clear(); send.isEnabled = true }
+                        .addOnFailureListener { error ->
+                            send.isEnabled = true
+                            toast(error.localizedMessage ?: "تعذر إرسال الرسالة.")
+                        }
+                }
+                showAccountPage(page)
+                val id = messaging.conversationId(user.uid, otherUid)
+                messagesListener = messaging.listenMessages(id, { snapshots ->
+                    if (activity.isFinishing || activity.isDestroyed) return@listenMessages
+                    messages.removeAllViews()
+                    snapshots.forEach { snapshot ->
+                        val mine = snapshot.getString("senderUid") == user.uid
+                        val bubble = TextView(activity).apply {
+                            text = snapshot.getString("text").orEmpty()
+                            textSize = 14f
+                            setTextColor(if (mine) Color.rgb(18, 20, 24) else Color.WHITE)
+                            setPadding(dp(13), dp(10), dp(13), dp(10))
+                            background = GradientDrawable().apply {
+                                cornerRadius = dp(15).toFloat()
+                                setColor(if (mine) Color.rgb(190, 198, 210) else Color.rgb(35, 39, 46))
+                            }
+                        }
+                        val line = LinearLayout(activity).apply {
+                            gravity = if (mine) Gravity.END else Gravity.START
+                            addView(bubble)
+                        }
+                        messages.addView(line, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(7) })
+                    }
+                    scroll.post { scroll.fullScroll(View.FOCUS_DOWN) }
+                }, { error -> toast("تعذر تحديث المحادثة. تحقق من الاتصال.") })
+            }.addOnFailureListener { toast("تعذر فتح ملف المستخدم.") }
+        }.addOnFailureListener { toast("تعذر التحقق من صلاحية المراسلة.") }
+    }
+
     private fun showSocialConnections(uid: String, showFollowers: Boolean) {
         val currentUser = authRepository.currentUser
         if (currentUser == null || currentUser.isAnonymous || currentUser.uid != uid) {
