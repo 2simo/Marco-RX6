@@ -506,11 +506,11 @@ internal class DownloadUiController(
                 ) else translate("الحجم غير معروف")
                 val details = buildString {
                     append(translate("الحالة")).append(": ").append(status)
-                    append("\\n").append(translate("الحجم المحمّل")).append(": ")
+                    append("\n").append(translate("الحجم المحمّل")).append(": ")
                         .append(downloaded).append(" / ").append(total)
-                    append("\\n").append(translate("نوع الملف")).append(": ")
+                    append("\n").append(translate("نوع الملف")).append(": ")
                         .append(item.mimeType?.takeIf { it.isNotBlank() } ?: "—")
-                    append("\\n").append(translate("الأولوية")).append(": ").append(
+                    append("\n").append(translate("الأولوية")).append(": ").append(
                         translate(when (item.priority) {
                             2 -> "عالية"
                             1 -> "متوسطة"
@@ -518,7 +518,7 @@ internal class DownloadUiController(
                         })
                     )
                     if (item.sourcePostUrl.isNotBlank()) {
-                        append("\\n").append(translate("المصدر")).append(": ")
+                        append("\n").append(translate("المصدر")).append(": ")
                             .append(item.sourcePostUrl)
                     }
                 }
