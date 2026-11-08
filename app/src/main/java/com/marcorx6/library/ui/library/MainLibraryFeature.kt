@@ -44,7 +44,9 @@ internal class MainLibraryFeature(
     showDetails: (Game) -> Unit,
     applyTypography: (android.view.View) -> Unit,
     applyUnifiedSkin: (android.view.View) -> Unit,
-    applyMotionPreferences: (android.view.View) -> Unit
+    applyMotionPreferences: (android.view.View) -> Unit,
+    showNotifications: () -> Unit,
+    showMessages: () -> Unit
 ) {
     private val controller = MainLibraryInterfaceController(
         context = context,
@@ -80,7 +82,9 @@ internal class MainLibraryFeature(
         showDetails = showDetails,
         applyTypography = applyTypography,
         applyUnifiedSkin = applyUnifiedSkin,
-        applyMotionPreferences = applyMotionPreferences
+        applyMotionPreferences = applyMotionPreferences,
+        showNotifications = showNotifications,
+        showMessages = showMessages
     )
 
     fun openCategoryFromSection(category: String, title: String) = controller.openCategoryFromSection(category, title)
