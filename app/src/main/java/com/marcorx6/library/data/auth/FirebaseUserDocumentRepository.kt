@@ -76,6 +76,12 @@ internal class FirebaseUserDocumentRepository(
             if (!publicProfile) {
                 batch.delete(publicProfileDocument(uid))
             } else {
+                val publicAvatar = photoData?.takeIf(String::isNotBlank)
+                if (publicAvatar != null && publicAvatar.length > MAX_PUBLIC_AVATAR_CHARS) {
+                    return Tasks.forException<Void>(
+                        IllegalArgumentException("الصورة العامة كبيرة جداً؛ اختر صورة أصغر.")
+                    )
+                }
                 val publicData = mutableMapOf<String, Any>(
                     "uid" to uid,
                     "updatedAt" to FieldValue.serverTimestamp(),
@@ -84,6 +90,11 @@ internal class FirebaseUserDocumentRepository(
                 )
                 publicData["bio"] = bio?.trim()?.take(160).orEmpty()
                 photoUrl?.trim()?.takeIf(String::isNotBlank)?.let { publicData["photoUrl"] = it }
+                if (publicAvatar != null) {
+                    publicData["photoData"] = publicAvatar
+                } else {
+                    publicData["photoData"] = FieldValue.delete()
+                }
                 if (showFavorites == false) {
                     publicData["favoriteGames"] = FieldValue.delete()
                 } else {
@@ -195,19 +206,29 @@ internal class FirebaseUserDocumentRepository(
                 if (!publicTask.isSuccessful) {
                     throw publicTask.exception ?: IllegalStateException("تعذر قراءة الملف العام")
                 }
-                val existing = publicTask.result.get("favoriteGames") as? List<*>
+                val existing = publicTask.result
                 val normalized = favoriteGames.take(30)
-                if (existing == normalized) {
+                val privateName = privateProfile.getString("displayName") ?: displayName
+                val privateBio = privateProfile.getString("bio") ?: bio
+                val privatePhotoUrl = photoUrl ?: privateProfile.getString("photoUrl")
+                val privatePhotoData = privateProfile.getString("photoData") ?: photoData
+                val needsSync =
+                    (existing.get("favoriteGames") as? List<*>) != normalized ||
+                    existing.getString("displayName") != privateName ||
+                    existing.getString("bio").orEmpty() != privateBio.orEmpty() ||
+                    existing.getString("photoUrl") != privatePhotoUrl ||
+                    existing.getString("photoData") != privatePhotoData
+                if (!needsSync) {
                     return@continueWithTask Tasks.forResult<Void>(null)
                 }
                 saveProfile(
                     uid = uid,
-                    displayName = privateProfile.getString("displayName") ?: displayName,
-                    bio = privateProfile.getString("bio") ?: bio,
-                    photoUrl = photoUrl ?: privateProfile.getString("photoUrl"),
-                    photoData = privateProfile.getString("photoData") ?: photoData,
+                    displayName = privateName,
+                    bio = privateBio,
+                    photoUrl = privatePhotoUrl,
+                    photoData = privatePhotoData,
                     publicProfile = true,
-                    showFavorites = true,
+                    showFavorites = privateProfile.getBoolean("showFavorites") != false,
                     favoriteGames = normalized
                 )
             }
@@ -306,6 +327,7 @@ internal class FirebaseUserDocumentRepository(
             )
 
     private companion object {
+        const val MAX_PUBLIC_AVATAR_CHARS = 180_000
         const val USERS_COLLECTION = "users"
         const val PUBLIC_PROFILES_COLLECTION = "publicProfiles"
         const val SETTINGS_COLLECTION = "settings"
