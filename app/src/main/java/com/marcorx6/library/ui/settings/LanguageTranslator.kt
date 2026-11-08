@@ -699,6 +699,12 @@ internal object LanguageTranslator {
             "الملف الشخصي غير متاح." to listOf("Profile unavailable.", "Profil indisponible.", "Perfil no disponible."),
             "تعذر إرسال الرسالة." to listOf("Could not send the message.", "Impossible d’envoyer le message.", "No se pudo enviar el mensaje."),
             "تعذر تحديث المحادثة. تحقق من الاتصال." to listOf("Could not update the conversation. Check your connection.", "Impossible de mettre à jour la conversation. Vérifiez votre connexion.", "No se pudo actualizar la conversación. Comprueba tu conexión."),
+            "الرسائل الخاصة" to listOf("Private messages", "Messages privés", "Mensajes privados"),
+            "رجوع إلى الحساب" to listOf("Back to account", "Retour au compte", "Volver a la cuenta"),
+            "لا توجد محادثات بعد. ابدأ محادثة مع شخص يتابعك وتتابعه." to listOf("No conversations yet. Start a conversation with someone who follows you and whom you follow.", "Aucune conversation pour le moment. Commencez avec une personne qui vous suit et que vous suivez.", "Aún no hay conversaciones. Inicia una conversación con alguien que te siga y a quien sigas."),
+            "محادثة" to listOf("Conversation", "Conversation", "Conversación"),
+            "اكتب رسالة..." to listOf("Write a message...", "Écrivez un message...", "Escribe un mensaje..."),
+            "إرسال" to listOf("Send", "Envoyer", "Enviar"),
         )
 
     fun translate(ar: String, lang: String): String {
