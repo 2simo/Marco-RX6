@@ -1306,7 +1306,7 @@ internal class FirebaseAccountController(
                 val title = item.getString("title") ?: "إشعار جديد"
                 val body = item.getString("body").orEmpty()
                 val row = TextView(activity).apply {
-                    text = (if (unread) "●  " else "○  ") + title + "\\n" + body
+                    text = (if (unread) "●  " else "○  ") + title + "\n" + body
                     textSize = 13f
                     setTextColor(if (unread) Color.WHITE else Color.rgb(170, 177, 188))
                     setPadding(dp(15), dp(14), dp(15), dp(14))
