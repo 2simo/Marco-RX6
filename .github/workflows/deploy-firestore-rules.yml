@@ -1,4 +1,4 @@
-name: Test and Deploy Firestore Rules
+name: Test and Deploy Firestore
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
     paths:
       - "firestore.rules"
       - "firebase.json"
+      - "firestore.indexes.json"
       - ".firebaserc"
       - "tests/firestore.rules.test.mjs"
   workflow_dispatch:
@@ -70,9 +71,9 @@ jobs:
           chmod 600 "$credentials_file"
           echo "GOOGLE_APPLICATION_CREDENTIALS=$credentials_file" >> "$GITHUB_ENV"
 
-      - name: Deploy Firestore rules only
+      - name: Deploy Firestore rules and indexes
         if: steps.credentials.outputs.configured == 'true'
-        run: npx firebase deploy --only firestore:rules --project marco-rx6-v2 --non-interactive
+        run: npx firebase deploy --only firestore --project marco-rx6-v2 --non-interactive
 
       - name: Remove temporary credentials
         if: always()
