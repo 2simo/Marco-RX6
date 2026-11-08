@@ -23,6 +23,7 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import com.marcorx6.library.data.Game
+import com.marcorx6.library.data.GameEngagementRepository
 import com.marcorx6.library.data.auth.FirebaseAuthRepository
 import com.marcorx6.library.data.auth.FirebaseUserDocumentRepository
 import com.google.firebase.auth.FirebaseUser
@@ -57,7 +58,8 @@ internal class FirebaseAccountController(
     private val translate: (String) -> String,
     private val games: () -> List<Game>,
     private val loadCover: (ImageView, String, String) -> Unit,
-    private val openGameDetails: (Game) -> Unit
+    private val openGameDetails: (Game) -> Unit,
+    private val gameEngagementRepository: GameEngagementRepository
 ) {
     private val userDocuments = FirebaseUserDocumentRepository()
     private var pendingDeletionUid: String? = null
@@ -257,20 +259,31 @@ internal class FirebaseAccountController(
             addMetric(libraryGames.size, "الألعاب")
             addMetric(favoriteCount, "المفضلة")
             statsCard.addView(metrics)
+            page.addView(statsCard, LinearLayout.LayoutParams(-1, -2).apply {
+                bottomMargin = dp(14)
+            })
+
+            val favoritesCard = profileSectionCard(dark)
             val favoritePreview = libraryGames.filter { it.isFavorite }.take(8)
-            statsCard.addView(TextView(activity).apply {
+            favoritesCard.addView(TextView(activity).apply {
                 text = translate("ألعابك المفضلة")
-                textSize = 13f
+                textSize = 16f
                 setTypeface(null, android.graphics.Typeface.BOLD)
-                setTextColor(if (dark) Color.rgb(218, 224, 233) else Color.rgb(55, 62, 73))
-                setPadding(0, dp(12), 0, dp(9))
+                setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+            })
+            favoritesCard.addView(TextView(activity).apply {
+                text = if (favoriteCount > 8) translate("عرض 8 من " + favoriteCount + " لعبة مفضلة")
+                    else translate(favoriteCount.toString() + " لعبة محفوظة في المفضلة")
+                textSize = 11f
+                setTextColor(if (dark) Color.rgb(145, 154, 168) else Color.rgb(105, 114, 128))
+                setPadding(0, dp(4), 0, dp(10))
             })
             if (favoritePreview.isEmpty()) {
-                statsCard.addView(TextView(activity).apply {
-                    text = translate("لم تضف ألعاباً إلى المفضلة بعد. اضغط نجمة أي لعبة لإضافتها هنا.")
+                favoritesCard.addView(TextView(activity).apply {
+                    text = translate("لا توجد ألعاب مفضلة بعد. أضف الألعاب التي تحبها باستخدام زر النجمة في صفحة التفاصيل.")
                     textSize = 12f
                     setTextColor(if (dark) Color.rgb(160, 168, 181) else Color.rgb(91, 98, 110))
-                    setPadding(dp(12), dp(16), dp(12), dp(16))
+                    setPadding(dp(12), dp(18), dp(12), dp(18))
                     gravity = Gravity.CENTER
                     background = GradientDrawable().apply {
                         cornerRadius = dp(14).toFloat()
@@ -290,68 +303,76 @@ internal class FirebaseAccountController(
                     layoutDirection = View.LAYOUT_DIRECTION_RTL
                 }
                 favoritePreview.forEach { game ->
-                    val favoriteCard = LinearLayout(activity).apply {
-                        orientation = LinearLayout.VERTICAL
-                        isClickable = true
-                        isFocusable = true
-                        setPadding(dp(8), dp(8), dp(8), dp(9))
-                        background = GradientDrawable().apply {
-                            cornerRadius = dp(15).toFloat()
-                            setColor(if (dark) Color.rgb(30, 33, 40) else Color.rgb(247, 248, 250))
-                            setStroke(dp(1), if (dark) Color.rgb(76, 84, 97) else Color.rgb(205, 211, 220))
-                        }
-                        if (android.os.Build.VERSION.SDK_INT >= 23) foreground =
-                            android.graphics.drawable.RippleDrawable(
-                                android.content.res.ColorStateList.valueOf(Color.argb(55, 190, 198, 210)),
-                                null,
-                                android.graphics.drawable.ColorDrawable(Color.WHITE)
-                            )
-                        contentDescription = game.name + "، " + translate(game.platform)
-                        setOnClickListener { openGameDetails(game) }
-                    }
-                    val cover = ImageView(activity).apply {
-                        scaleType = ImageView.ScaleType.CENTER_CROP
-                        background = GradientDrawable().apply {
-                            cornerRadius = dp(10).toFloat()
-                            setColor(if (dark) Color.rgb(42, 46, 55) else Color.rgb(225, 229, 235))
-                        }
-                        clipToOutline = true
-                        contentDescription = translate("غلاف اللعبة") + " " + game.name
-                    }
-                    if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) {
-                        loadCover(cover, game.coverLocalPath, game.coverUrl)
-                    } else {
-                        cover.setImageResource(android.R.drawable.ic_menu_gallery)
-                        cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
-                    }
-                    favoriteCard.addView(cover, LinearLayout.LayoutParams(dp(112), dp(132)))
-                    favoriteCard.addView(TextView(activity).apply {
-                        text = game.name
-                        textSize = 11f
-                        setTypeface(null, android.graphics.Typeface.BOLD)
-                        maxLines = 2
-                        ellipsize = android.text.TextUtils.TruncateAt.END
-                        setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
-                        setPadding(dp(2), dp(8), dp(2), dp(3))
-                    }, LinearLayout.LayoutParams(dp(112), -2))
-                    favoriteCard.addView(TextView(activity).apply {
-                        text = game.platform
-                        textSize = 10f
-                        maxLines = 1
-                        ellipsize = android.text.TextUtils.TruncateAt.END
-                        setTextColor(if (dark) Color.rgb(165, 174, 188) else Color.rgb(100, 108, 120))
-                        setPadding(dp(2), 0, dp(2), 0)
-                    }, LinearLayout.LayoutParams(dp(112), -2))
-                    favoritesTrack.addView(favoriteCard, LinearLayout.LayoutParams(dp(130), -2).apply {
+                    favoritesTrack.addView(profileGameCard(game, dark, ""), LinearLayout.LayoutParams(dp(130), -2).apply {
                         marginEnd = dp(9)
                     })
                 }
                 favoritesScroll.addView(favoritesTrack)
-                statsCard.addView(favoritesScroll, LinearLayout.LayoutParams(-1, -2))
+                favoritesCard.addView(favoritesScroll, LinearLayout.LayoutParams(-1, -2))
             }
-            page.addView(statsCard, LinearLayout.LayoutParams(-1, -2).apply {
+            page.addView(favoritesCard, LinearLayout.LayoutParams(-1, -2).apply {
                 bottomMargin = dp(14)
             })
+
+            val ratingsCard = profileSectionCard(dark)
+            val ratingsHeading = TextView(activity).apply {
+                text = translate("تقييماتي")
+                textSize = 16f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+            }
+            ratingsCard.addView(ratingsHeading)
+            val ratingsContent = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(0, dp(9), 0, 0)
+            }
+            ratingsContent.addView(TextView(activity).apply {
+                text = translate("جارٍ تحميل تقييماتك...")
+                textSize = 12f
+                setTextColor(if (dark) Color.rgb(150, 158, 171) else Color.rgb(105, 112, 124))
+            })
+            ratingsCard.addView(ratingsContent)
+            page.addView(ratingsCard, LinearLayout.LayoutParams(-1, -2).apply {
+                bottomMargin = dp(14)
+            })
+            gameEngagementRepository.loadMyRatings(libraryGames, onSuccess = { ratings ->
+                ratingsContent.removeAllViews()
+                ratingsHeading.text = translate("تقييماتي • " + ratings.size)
+                if (ratings.isEmpty()) {
+                    ratingsContent.addView(TextView(activity).apply {
+                        text = translate("لم تقيّم أي لعبة بعد. افتح تفاصيل لعبة وأضف تقييمك لتظهر هنا.")
+                        textSize = 12f
+                        setTextColor(if (dark) Color.rgb(150, 158, 171) else Color.rgb(105, 112, 124))
+                        setPadding(0, dp(5), 0, dp(4))
+                    })
+                } else {
+                    val ratingsScroll = HorizontalScrollView(activity).apply {
+                        isHorizontalScrollBarEnabled = false
+                        overScrollMode = View.OVER_SCROLL_NEVER
+                        layoutDirection = View.LAYOUT_DIRECTION_RTL
+                    }
+                    val ratingsTrack = LinearLayout(activity).apply {
+                        orientation = LinearLayout.HORIZONTAL
+                        layoutDirection = View.LAYOUT_DIRECTION_RTL
+                    }
+                    ratings.take(12).forEach { entry ->
+                        ratingsTrack.addView(
+                            profileGameCard(entry.game, dark, "★ " + entry.rating + "/5"),
+                            LinearLayout.LayoutParams(dp(130), -2).apply { marginEnd = dp(9) }
+                        )
+                    }
+                    ratingsScroll.addView(ratingsTrack)
+                    ratingsContent.addView(ratingsScroll)
+                }
+            }, onFailure = {
+                ratingsContent.removeAllViews()
+                ratingsContent.addView(TextView(activity).apply {
+                    text = translate("تعذر تحميل تقييماتك الآن. تحقق من الاتصال وحاول لاحقاً.")
+                    textSize = 12f
+                    setTextColor(if (dark) Color.rgb(180, 150, 150) else Color.rgb(140, 75, 75))
+                })
+            })
+
             val profileBioPreview = TextView(activity).apply {
                 textSize = 13f
                 setTextColor(if (dark) Color.rgb(190, 198, 210) else Color.rgb(75, 83, 96))
@@ -650,6 +671,72 @@ internal class FirebaseAccountController(
             setPadding(0, dp(18), 0, dp(8))
         })
         showAccountPage(page)
+    }
+
+    private fun profileSectionCard(dark: Boolean): LinearLayout = LinearLayout(activity).apply {
+        orientation = LinearLayout.VERTICAL
+        setPadding(dp(16), dp(15), dp(16), dp(14))
+        background = GradientDrawable().apply {
+            cornerRadius = dp(20).toFloat()
+            setColor(if (dark) Color.rgb(19, 22, 28) else Color.WHITE)
+            setStroke(dp(1), if (dark) Color.rgb(82, 91, 105) else Color.rgb(199, 207, 218))
+        }
+        elevation = dp(2).toFloat()
+    }
+
+    private fun profileGameCard(game: Game, dark: Boolean, footer: String): LinearLayout {
+        val card = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            isClickable = true
+            isFocusable = true
+            setPadding(dp(8), dp(8), dp(8), dp(9))
+            background = GradientDrawable().apply {
+                cornerRadius = dp(15).toFloat()
+                setColor(if (dark) Color.rgb(30, 33, 40) else Color.rgb(247, 248, 250))
+                setStroke(dp(1), if (dark) Color.rgb(76, 84, 97) else Color.rgb(205, 211, 220))
+            }
+            if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
+                android.content.res.ColorStateList.valueOf(Color.argb(55, 190, 198, 210)),
+                null,
+                android.graphics.drawable.ColorDrawable(Color.WHITE)
+            )
+            contentDescription = game.name + "، " + translate(game.platform)
+            setOnClickListener { openGameDetails(game) }
+        }
+        val cover = ImageView(activity).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            background = GradientDrawable().apply {
+                cornerRadius = dp(10).toFloat()
+                setColor(if (dark) Color.rgb(42, 46, 55) else Color.rgb(225, 229, 235))
+            }
+            clipToOutline = true
+            contentDescription = translate("غلاف اللعبة") + " " + game.name
+        }
+        if (game.coverUrl.isNotBlank() || game.coverLocalPath.isNotBlank()) {
+            loadCover(cover, game.coverLocalPath, game.coverUrl)
+        } else {
+            cover.setImageResource(android.R.drawable.ic_menu_gallery)
+            cover.scaleType = ImageView.ScaleType.CENTER_INSIDE
+        }
+        card.addView(cover, LinearLayout.LayoutParams(dp(112), dp(132)))
+        card.addView(TextView(activity).apply {
+            text = game.name
+            textSize = 11f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            maxLines = 2
+            ellipsize = android.text.TextUtils.TruncateAt.END
+            setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+            setPadding(dp(2), dp(8), dp(2), dp(3))
+        }, LinearLayout.LayoutParams(dp(112), -2))
+        card.addView(TextView(activity).apply {
+            text = if (footer.isBlank()) game.platform else game.platform + "  •  " + footer
+            textSize = 10f
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+            setTextColor(if (dark) Color.rgb(165, 174, 188) else Color.rgb(100, 108, 120))
+            setPadding(dp(2), 0, dp(2), 0)
+        }, LinearLayout.LayoutParams(dp(112), -2))
+        return card
     }
 
     private fun chooseProfilePhoto() {
