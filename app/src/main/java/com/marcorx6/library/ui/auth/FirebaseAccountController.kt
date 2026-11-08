@@ -1372,7 +1372,13 @@ internal class FirebaseAccountController(
             textSize = 23f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(Color.WHITE)
-            setPadding(0, 0, 0, dp(16))
+            setPadding(0, 0, 0, dp(3))
+        })
+        page.addView(TextView(activity).apply {
+            text = translate("اضغط مطولاً على المحادثة لحذفها من قائمتك فقط")
+            textSize = 11f
+            setTextColor(Color.rgb(145, 155, 170))
+            setPadding(0, 0, 0, dp(14))
         })
         val list = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
         val scroll = ScrollView(activity).apply { addView(list) }
@@ -1480,6 +1486,12 @@ internal class FirebaseAccountController(
                     val scroll = ScrollView(activity).apply { isFillViewport = true; addView(messages) }
                     page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
                     var selectedReply: com.google.firebase.firestore.DocumentSnapshot? = null
+                    page.addView(TextView(activity).apply {
+                        text = translate("اضغط على الرسالة للرد، واضغط مطولاً لحذفها لدى الطرفين")
+                        textSize = 11f
+                        setTextColor(Color.rgb(145, 155, 170))
+                        setPadding(dp(3), dp(5), dp(3), dp(5))
+                    })
                     val replyPreview = TextView(activity).apply {
                         visibility = View.GONE
                         textSize = 12f
