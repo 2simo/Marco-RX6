@@ -195,6 +195,7 @@ internal class FirebaseAccountController(
         })
 
         if (user != null && !user.isAnonymous) {
+            addPublicFollowControls(page, user.uid, dark)
             // These figures describe the locally available library, not cloud-account-wide activity.
             val libraryGames = games()
             userDocuments.syncPublicFavorites(
