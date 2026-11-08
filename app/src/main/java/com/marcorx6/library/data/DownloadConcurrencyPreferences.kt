@@ -21,6 +21,12 @@ internal class DownloadConcurrencyPreferences(context: Context) {
         preferences.edit().putInt(KEY_SEGMENT_CONNECTIONS, value.coerceIn(1, 4)).apply()
     }
 
+    fun speedLimitBytesPerSecond(): Long = preferences.getLong(KEY_SPEED_LIMIT, 0L).coerceAtLeast(0L)
+
+    fun setSpeedLimitBytesPerSecond(value: Long) {
+        preferences.edit().putLong(KEY_SPEED_LIMIT, value.coerceAtLeast(0L)).apply()
+    }
+
     fun wifiOnly(): Boolean = preferences.getBoolean(KEY_WIFI_ONLY, false)
 
     fun setWifiOnly(enabled: Boolean) {
@@ -31,6 +37,7 @@ internal class DownloadConcurrencyPreferences(context: Context) {
         private const val KEY_MAX_CONCURRENT = "max_concurrent_downloads"
         private const val KEY_WIFI_ONLY = "wifi_only_downloads"
         private const val KEY_SEGMENT_CONNECTIONS = "segment_connections"
+        private const val KEY_SPEED_LIMIT = "download_speed_limit_bytes_per_second"
         const val DEFAULT_SEGMENT_CONNECTIONS = 4
         const val DEFAULT_MAX_CONCURRENT = 2
     }
