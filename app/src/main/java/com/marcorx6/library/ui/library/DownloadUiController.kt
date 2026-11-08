@@ -281,7 +281,7 @@ internal class DownloadUiController(
         }, LinearLayout.LayoutParams(0, dp(40), 1f))
         maintenanceRow.addView(bulkButton("مسح المكتملة") {
             AlertDialog.Builder(activity)
-                .setMessage(translate("حذف جميع التنزيلات المكتملة من القائمة والملفات المحفوظة؟"))
+                .setMessage(translate("إزالة جميع التنزيلات المكتملة من قائمة التنزيلات؟"))
                 .setNegativeButton(translate("إلغاء"), null)
                 .setPositiveButton(translate("حذف")) { _, _ ->
                     val count = downloadRepository.clearCompletedDownloads()
