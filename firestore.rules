@@ -73,6 +73,22 @@ service cloud.firestore {
             )
         );
 
+      match /devices/{deviceId} {
+        // Device tokens are private credentials used only by the authenticated owner
+        // and the trusted push sender (which uses the Firebase Admin SDK).
+        allow read: if signedInAs(userId) && !isAnonymous();
+        allow create, update: if signedInAs(userId)
+          && !isAnonymous()
+          && request.resource.data.keys().hasOnly(['token', 'platform', 'updatedAt'])
+          && request.resource.data.keys().hasAll(['token', 'platform', 'updatedAt'])
+          && request.resource.data.token is string
+          && request.resource.data.token.size() >= 20
+          && request.resource.data.token.size() <= 4096
+          && request.resource.data.platform == 'android'
+          && request.resource.data.updatedAt == request.time;
+        allow delete: if signedInAs(userId) && !isAnonymous();
+      }
+
       match /notifications/{notificationId} {
         allow get, list: if signedInAs(userId);
         allow create: if !isAnonymous()
