@@ -84,7 +84,6 @@ internal class FirebaseUserDocumentRepository(
                 )
                 publicData["bio"] = bio?.trim()?.take(160).orEmpty()
                 photoUrl?.trim()?.takeIf(String::isNotBlank)?.let { publicData["photoUrl"] = it }
-                photoData?.takeIf(String::isNotBlank)?.let { publicData["photoData"] = it }
                 if (showFavorites == false) {
                     publicData["favoriteGames"] = FieldValue.delete()
                 } else {
