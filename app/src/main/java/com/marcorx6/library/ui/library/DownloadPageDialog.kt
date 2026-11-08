@@ -60,7 +60,7 @@ internal class DownloadPageDialog(
         val dark = appPreferences.getBoolean("dark_mode", true)
         val background = if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247)
         val surface = if (dark) Color.rgb(25, 28, 34) else Color.WHITE
-        val primary = if (dark) Color.rgb(91, 157, 242) else Color.rgb(105, 116, 132)
+        val primary = if (dark) Color.rgb(91, 157, 242) else Color.rgb(35, 91, 165)
         val border = if (dark) Color.rgb(70, 77, 89) else Color.rgb(205, 211, 220)
         val heading = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
         val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
