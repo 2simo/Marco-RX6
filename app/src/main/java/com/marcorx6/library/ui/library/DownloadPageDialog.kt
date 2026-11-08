@@ -414,7 +414,14 @@ internal class DownloadPageDialog(
             "adyoulike.com", "bidvertiser.com", "clickadu.com", "clickaine.com",
             "evadav.com", "galaksion.com", "onclickmega.com", "pushground.com",
             "richpush.co", "rollerads.com", "trafficstars.com", "zeropark.com",
-            "plugrush.com", "popmyads.com"
+            "plugrush.com", "popmyads.com",
+            // Common third-party analytics and session-tracking endpoints.
+            "google-analytics.com", "analytics.google.com", "hotjar.com",
+            "segment.io", "mixpanel.com", "amplitude.com", "fullstory.com",
+            "mouseflow.com", "scorecardresearch.com", "chartbeat.com",
+            "parsely.com", "heap.io", "heapanalytics.com", "smartlook.com",
+            "luckyorange.com", "inspectlet.com", "nr-data.net", "newrelic.com",
+            "stats.wp.com"
         )
         val adEndpointPatterns = listOf(
             Regex("""(?:^|/)(?:pagead|adsystem|adserver|adservice|adview|adclick|popunder|popup|bannerad|vast|vpaid|adrequest|adserve|adframe|adloader|adscript|adsby|adsense|prebid|gampad)(?:/|[._?=&-]|$)""", RegexOption.IGNORE_CASE),
