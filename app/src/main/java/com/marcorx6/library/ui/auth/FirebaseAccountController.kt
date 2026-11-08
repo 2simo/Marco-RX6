@@ -858,6 +858,7 @@ internal class FirebaseAccountController(
             page.addView(header)
             val identity = profileSectionCard(dark)
             identity.gravity = Gravity.CENTER_HORIZONTAL
+            addPublicAvatar(identity, snapshot, dark)
             identity.addView(TextView(activity).apply {
                 text = snapshot.getString("displayName")?.takeIf { it.isNotBlank() } ?: translate("مستخدم MARCO")
                 textSize = 22f
@@ -877,6 +878,7 @@ internal class FirebaseAccountController(
                 topMargin = dp(14)
                 bottomMargin = dp(14)
             })
+            addPublicFollowControls(page, uid, dark)
             if (snapshot.getBoolean("showFavorites") == true) {
                 page.addView(sectionCaption("الألعاب المفضلة", dark))
                 val values = snapshot.get("favoriteGames") as? List<*>
@@ -915,6 +917,136 @@ internal class FirebaseAccountController(
             showAccountPage(page)
         }.addOnFailureListener {
             toast("تعذر تحميل الملف الشخصي. تحقق من المعرّف والاتصال.")
+        }
+    }
+
+    private fun addPublicAvatar(identity: LinearLayout, snapshot: com.google.firebase.firestore.DocumentSnapshot, dark: Boolean) {
+        val avatar = ImageView(activity).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(if (dark) Color.rgb(35, 38, 45) else Color.rgb(222, 226, 232))
+                setStroke(dp(2), Color.rgb(190, 198, 210))
+            }
+            clipToOutline = true
+            setImageResource(com.marcorx6.library.R.drawable.ic_nav_profile)
+            imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
+        }
+        identity.addView(avatar, LinearLayout.LayoutParams(dp(92), dp(92)).apply {
+            gravity = Gravity.CENTER_HORIZONTAL
+            bottomMargin = dp(12)
+        })
+        val encoded = snapshot.getString("photoData")
+        if (!encoded.isNullOrBlank()) {
+            runCatching {
+                val bytes = Base64.decode(encoded, Base64.DEFAULT)
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            }.getOrNull()?.let {
+                avatar.setImageBitmap(it)
+                avatar.imageTintList = null
+            }
+        } else {
+            snapshot.getString("photoUrl")?.takeIf { it.startsWith("https://") }?.let { photoUrl ->
+                Thread {
+                    val bitmap = runCatching {
+                        java.net.URL(photoUrl).openConnection().apply {
+                            connectTimeout = 6000
+                            readTimeout = 6000
+                            useCaches = true
+                        }.getInputStream().use { BitmapFactory.decodeStream(it) }
+                    }.getOrNull()
+                    if (bitmap != null && !activity.isFinishing && !activity.isDestroyed) {
+                        avatar.post {
+                            avatar.setImageBitmap(bitmap)
+                            avatar.imageTintList = null
+                        }
+                    }
+                }.apply { name = "marco-public-avatar-loader" }.start()
+            }
+        }
+    }
+
+    private fun addPublicFollowControls(page: LinearLayout, targetUid: String, dark: Boolean) {
+        val currentUser = authRepository.currentUser
+        val isOwnProfile = currentUser?.uid == targetUid
+        val stats = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+        }
+        val followers = TextView(activity).apply {
+            text = "—  " + translate("المتابعون")
+            gravity = Gravity.CENTER
+            textSize = 12f
+            setTextColor(if (dark) Color.rgb(205, 212, 222) else Color.rgb(65, 72, 84))
+            setPadding(dp(16), dp(10), dp(16), dp(10))
+        }
+        val following = TextView(activity).apply {
+            text = "—  " + translate("يتابع")
+            gravity = Gravity.CENTER
+            textSize = 12f
+            setTextColor(if (dark) Color.rgb(205, 212, 222) else Color.rgb(65, 72, 84))
+            setPadding(dp(16), dp(10), dp(16), dp(10))
+        }
+        stats.addView(followers)
+        stats.addView(following)
+        page.addView(stats, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
+        fun refreshCounts() {
+            userDocuments.loadFollowCounts(targetUid).addOnSuccessListener { counts ->
+                followers.text = counts.first.toString() + "  " + translate("المتابعون")
+                following.text = counts.second.toString() + "  " + translate("يتابع")
+            }
+        }
+        refreshCounts()
+        if (isOwnProfile) return
+        if (currentUser == null || currentUser.isAnonymous) {
+            action(
+                page,
+                translate("سجّل الدخول للمتابعة"),
+                translate("أنشئ حساب MARCO لمتابعة هذا الملف الشخصي"),
+                dark,
+                run = ::show
+            )
+            return
+        }
+        val followButton = TextView(activity).apply {
+            text = translate("جارٍ التحقق...")
+            gravity = Gravity.CENTER
+            textSize = 14f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(Color.rgb(20, 23, 29))
+            setPadding(dp(18), dp(14), dp(18), dp(14))
+            background = GradientDrawable().apply {
+                cornerRadius = dp(16).toFloat()
+                setColor(Color.rgb(190, 198, 210))
+            }
+            isEnabled = false
+        }
+        page.addView(followButton, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(14) })
+        userDocuments.isFollowing(currentUser.uid, targetUid).addOnSuccessListener { initialFollowing ->
+            var followingState = initialFollowing
+            fun updateLabel() {
+                followButton.text = translate(if (followingState) "إلغاء المتابعة" else "متابعة")
+            }
+            updateLabel()
+            followButton.isEnabled = true
+            followButton.setOnClickListener {
+                followButton.isEnabled = false
+                val nextState = !followingState
+                userDocuments.setFollowing(currentUser.uid, targetUid, nextState)
+                    .addOnSuccessListener {
+                        followingState = nextState
+                        updateLabel()
+                        followButton.isEnabled = true
+                        refreshCounts()
+                    }
+                    .addOnFailureListener {
+                        followButton.isEnabled = true
+                        toast("تعذرت مزامنة المتابعة. تحقق من الاتصال وحاول مجدداً.")
+                    }
+            }
+        }.addOnFailureListener {
+            followButton.text = translate("تعذر تحميل المتابعة")
+            followButton.isEnabled = false
         }
     }
 
