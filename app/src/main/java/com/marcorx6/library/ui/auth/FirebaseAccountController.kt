@@ -1496,7 +1496,7 @@ internal class FirebaseAccountController(
                     val replyPreview = TextView(activity).apply {
                         visibility = View.GONE
                         textSize = 12f
-                        setTextColor(Color.rgb(125, 190, 255))
+                        setTextColor(Color.rgb(198, 203, 212))
                         setPadding(dp(10), dp(7), dp(10), dp(7))
                         setOnClickListener { selectedReply = null; visibility = View.GONE }
                     }
@@ -1510,6 +1510,11 @@ internal class FirebaseAccountController(
                         hint = translate("اكتب رسالة...")
                         textSize = 14f
                         maxLines = 4
+                        minLines = 1
+                        inputType = InputType.TYPE_CLASS_TEXT or
+                            InputType.TYPE_TEXT_FLAG_MULTI_LINE or
+                            InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+                        imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_SEND
                         setTextColor(Color.WHITE)
                         setHintTextColor(Color.rgb(130, 138, 151))
                         setPadding(dp(12), dp(10), dp(12), dp(10))
@@ -1555,7 +1560,7 @@ internal class FirebaseAccountController(
                                 toast(error.localizedMessage ?: "تعذر إرسال الرسالة.")
                             }
                     }
-                    showAccountPage(page)
+                    showConversationPage(page)
                     val id = messaging.conversationId(user.uid, otherUid)
                     messagesListener = messaging.listenMessages(id, { snapshots ->
                         if (activity.isFinishing || activity.isDestroyed) return@listenMessages
@@ -2364,6 +2369,38 @@ internal class FirebaseAccountController(
             setPadding(0, dp(4), 0, dp(22))
         })
         return page
+    }
+
+    /** Keep the composer above the keyboard while only the message list resizes. */
+    private fun showConversationPage(page: LinearLayout) {
+        val dark = true
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(page) { view, insets ->
+            val safe = insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.systemBars() or
+                    androidx.core.view.WindowInsetsCompat.Type.displayCutout()
+            )
+            val ime = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.ime())
+            view.setPadding(0, safe.top, 0, maxOf(safe.bottom, ime.bottom))
+            insets
+        }
+        page.animate().cancel()
+        page.clearAnimation()
+        page.alpha = 1f
+        page.translationY = 0f
+        setContentView(page)
+        activity.window.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        activity.window.statusBarColor = Color.TRANSPARENT
+        activity.window.navigationBarColor = Color.TRANSPARENT
+        androidx.core.view.WindowInsetsControllerCompat(activity.window, activity.window.decorView).apply {
+            isAppearanceLightStatusBars = !dark
+            isAppearanceLightNavigationBars = !dark
+            show(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+        }
+        androidx.core.view.ViewCompat.requestApplyInsets(page)
+        applyUnifiedSkin(page)
+        page.animate().cancel()
+        page.alpha = 1f
+        page.translationY = 0f
     }
 
     private fun showAccountPage(page: LinearLayout) {
