@@ -875,12 +875,12 @@ internal class FirebaseAccountController(
                 toast("هذا الملف الشخصي غير متاح أو لم يسمح صاحبه بعرضه")
                 return@addOnSuccessListener
             }
-            val dark = isDarkMode()
+            val dark = true
             val page = LinearLayout(activity).apply {
                 orientation = LinearLayout.VERTICAL
                 layoutDirection = View.LAYOUT_DIRECTION_RTL
-                setPadding(dp(20), dp(22), dp(20), dp(28))
-                setBackgroundColor(if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247))
+                setPadding(dp(20), dp(18), dp(20), dp(30))
+                setBackgroundColor(Color.rgb(7, 8, 10))
             }
             val header = LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL
@@ -1064,6 +1064,12 @@ internal class FirebaseAccountController(
         val stats = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
+            setPadding(dp(10), dp(8), dp(10), dp(8))
+            background = GradientDrawable().apply {
+                cornerRadius = dp(18).toFloat()
+                setColor(Color.rgb(19, 22, 28))
+                setStroke(dp(1), Color.rgb(82, 91, 105))
+            }
         }
         val followers = TextView(activity).apply {
             text = "—  " + translate("المتابعون")
