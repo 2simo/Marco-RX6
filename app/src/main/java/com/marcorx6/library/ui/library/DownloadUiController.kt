@@ -322,6 +322,50 @@ internal class DownloadUiController(
                     render?.invoke()
                 }.show()
         }, LinearLayout.LayoutParams(0, dp(40), 1f).apply { marginStart = dp(8) })
+        val speedLimitButton = TextView(activity).apply {
+            fun labelFor(value: Long): String = when (value) {
+                0L -> "∞"
+                256L * 1024L -> "256 KB/s"
+                512L * 1024L -> "512 KB/s"
+                1024L * 1024L -> "1 MB/s"
+                2L * 1024L * 1024L -> "2 MB/s"
+                else -> "5 MB/s"
+            }
+            text = translate("حد السرعة") + ": " + labelFor(downloadRepository.downloadSpeedLimitBytesPerSecond())
+            textSize = 11f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            gravity = Gravity.CENTER
+            setTextColor(primary)
+            setPadding(dp(14), dp(9), dp(14), dp(9))
+            this.background = GradientDrawable().apply {
+                setColor(surface)
+                cornerRadius = dp(12).toFloat()
+                setStroke(dp(1), if (dark) Color.rgb(78, 85, 98) else Color.rgb(210, 216, 225))
+            }
+            setOnClickListener {
+                val values = longArrayOf(0L, 256L * 1024L, 512L * 1024L, 1024L * 1024L, 2L * 1024L * 1024L, 5L * 1024L * 1024L)
+                val labels = arrayOf(
+                    translate("غير محدود"), "256 KB/s", "512 KB/s", "1 MB/s", "2 MB/s", "5 MB/s"
+                )
+                val selected = values.indexOf(downloadRepository.downloadSpeedLimitBytesPerSecond()).coerceAtLeast(0)
+                val picker = AlertDialog.Builder(activity)
+                    .setTitle(translate("حد سرعة التنزيل"))
+                    .setSingleChoiceItems(labels, selected) { dialog, which ->
+                        val value = values[which]
+                        downloadRepository.setDownloadSpeedLimitBytesPerSecond(value)
+                        text = translate("حد السرعة") + ": " + labels[which]
+                        Toast.makeText(activity, translate("سيُطبّق حد السرعة على التنزيلات الجديدة أو المستأنفة"), Toast.LENGTH_LONG).show()
+                        dialog.dismiss()
+                    }
+                    .setNegativeButton(translate("إلغاء"), null)
+                    .create()
+                picker.show()
+                styleDialog(picker)
+            }
+        }
+        root.addView(speedLimitButton, LinearLayout.LayoutParams(-2, dp(40)).apply {
+            bottomMargin = dp(9)
+        })
         root.addView(filterRow)
         root.addView(bulkRow)
         root.addView(maintenanceRow)
