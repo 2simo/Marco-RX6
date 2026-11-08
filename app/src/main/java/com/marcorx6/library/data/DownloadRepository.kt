@@ -20,7 +20,8 @@ internal data class DownloadEntry(
     val totalBytes: Long,
     val mimeType: String?,
     val sourcePostUrl: String,
-    val priority: Int
+    val priority: Int,
+    val segmentBytes: List<Long>
 )
 
 internal sealed class DownloadStartResult {
@@ -106,7 +107,12 @@ internal class DownloadRepository(context: Context) {
             totalBytes = item.totalBytes,
             mimeType = item.mimeType,
             sourcePostUrl = item.sourcePostUrl,
-            priority = item.priority
+            priority = item.priority,
+            segmentBytes = (0 until 4).map { index ->
+                File(appContext.filesDir, "MARCO_RX6_downloads/${item.id}.seg$index").let { file ->
+                    if (file.isFile) file.length() else 0L
+                }
+            }
         )
     }
 
