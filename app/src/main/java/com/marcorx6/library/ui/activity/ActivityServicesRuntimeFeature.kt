@@ -1,6 +1,7 @@
 package com.marcorx6.library.ui.activity
 
 import com.marcorx6.library.ui.*
+import com.marcorx6.library.data.DownloadWorkScheduler
 
 import android.app.AlertDialog
 import androidx.activity.ComponentActivity
@@ -17,6 +18,10 @@ internal class ActivityServicesRuntimeFeature(
     showHome: () -> Unit,
     openGameSource: (String) -> Unit
 ) {
+    init {
+        DownloadWorkScheduler.schedule(activity.applicationContext)
+    }
+
     // Bound concurrent background work so bursts of sync/download tasks cannot
     // create an unbounded number of threads on lower-memory phones.
     val ioExecutor = java.util.concurrent.Executors.newFixedThreadPool(3)
