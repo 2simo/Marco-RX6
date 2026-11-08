@@ -362,6 +362,21 @@ describe("Firestore user isolation rules", () => {
     await assertSucceeds(getDoc(rating));
   });
 
+  it("allows a user's collection-group query for public game ratings", async () => {
+    const uid = "ratings-owner";
+    const db = testEnv.authenticatedContext(uid).firestore();
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const adminDb = context.firestore();
+      await setDoc(doc(adminDb, "gameMetrics/" + "f".repeat(64) + "/ratings/" + uid), {
+        uid, rating: 5, updatedAt: new Date(),
+      });
+    });
+    const result = await assertSucceeds(getDocs(
+      query(collectionGroup(db, "ratings"), where("uid", "==", uid)),
+    ));
+    if (result.size !== 1) throw new Error("Expected the user's rating to be returned");
+  });
+
   it("denies ratings from anonymous visitors", async () => {
     const uid = "anonymous-rater";
     const db = testEnv.authenticatedContext(uid, {
