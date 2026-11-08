@@ -227,7 +227,7 @@ internal object BloggerFeedParser {
         val seenUrls = mutableSetOf<String>()
         val downloadTerms = listOf(
             "تحميل", "تنزيل", "download", "direct link", "رابط مباشر", "رابط التحميل",
-            "اللعبة", "التحديث", "الباتش", "باتش", "ملف اللعبة", "رابط اللعبة",
+            "التحديث", "الباتش", "باتش", "ملف اللعبة", "رابط اللعبة",
             "game", "update", "dlc", "mediafire", "mega", "google drive", "drive.google",
             "pixeldrain", "1fichier", "uptobox", "rapidgator", "uploaded", "filecrypt",
             "4shared", "gofile", "terabox", "send.cm", "katfile", "userscloud"
@@ -275,7 +275,8 @@ internal object BloggerFeedParser {
             val knownHost = knownDownloadHosts.any { host == it || host.endsWith(".$it") }
             val isInsideDownloadSection = downloadSections.any { it.contains(anchor.value) }
             val isFileUrl = extension in downloadableExtensions
-            val hasDownloadLabel = downloadTerms.any { normalizedLabel.contains(it) }
+            val hasDownloadLabel = downloadTerms.any { normalizedLabel.contains(it) } ||
+                normalizedLabel == "اللعبة"
             // A link in an explicitly named download section, a recognized file host,
             // or a direct downloadable file is sufficient even when its button says
             // only "اضغط هنا". Generic article/navigation links remain excluded.
