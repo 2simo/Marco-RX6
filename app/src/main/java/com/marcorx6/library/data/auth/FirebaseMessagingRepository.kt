@@ -6,7 +6,6 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import java.security.MessageDigest
 
@@ -62,11 +61,27 @@ internal class FirebaseMessagingRepository(
                 if (!existing.exists()) {
                     transaction.set(conversation, mapOf(
                         "participants" to participants,
+                        "participantA" to participants[0],
+                        "participantB" to participants[1],
                         "lastMessage" to "",
                         "lastSenderUid" to firstUid,
                         "createdAt" to FieldValue.serverTimestamp(),
                         "updatedAt" to FieldValue.serverTimestamp()
                     ))
+                } else {
+                    val storedParticipants = (existing.get("participants") as? List<*>)
+                        ?.filterIsInstance<String>()
+                    if (storedParticipants?.size == 2 &&
+                        storedParticipants.contains(firstUid) &&
+                        storedParticipants.contains(secondUid)
+                    ) {
+                        transaction.update(conversation, mapOf(
+                            "participantA" to storedParticipants[0],
+                            "participantB" to storedParticipants[1]
+                        ))
+                    } else {
+                        throw IllegalStateException("بيانات المشاركين في المحادثة غير صالحة")
+                    }
                 }
                 true
             }.continueWith { transactionTask ->
@@ -101,8 +116,14 @@ internal class FirebaseMessagingRepository(
                     throw conversationTask.exception ?: IllegalStateException("تعذر فتح المحادثة")
                 }
                 val batch = firestore.batch()
+                val storedParticipants = (conversationTask.result.get("participants") as? List<*>)
+                    ?.filterIsInstance<String>()
+                    ?.takeIf { it.size == 2 && it.contains(senderUid) && it.contains(recipientUid) }
+                    ?: participants
                 val conversationData = mutableMapOf<String, Any>(
-                    "participants" to participants,
+                    "participants" to storedParticipants,
+                    "participantA" to storedParticipants[0],
+                    "participantB" to storedParticipants[1],
                     "lastMessage" to body.take(180),
                     "lastSenderUid" to senderUid,
                     "updatedAt" to FieldValue.serverTimestamp()
@@ -150,13 +171,36 @@ internal class FirebaseMessagingRepository(
         onChange: (List<DocumentSnapshot>) -> Unit,
         onError: (Exception) -> Unit
     ): ListenerRegistration {
-        return firestore.collection(CONVERSATIONS)
-            .whereArrayContains("participants", uid)
-            .orderBy("updatedAt", Query.Direction.DESCENDING)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) onError(error)
-                else onChange(snapshot?.documents.orEmpty())
+        val firstDocuments = linkedMapOf<String, DocumentSnapshot>()
+        val secondDocuments = linkedMapOf<String, DocumentSnapshot>()
+        val lock = Any()
+        fun handleSnapshot(firstField: Boolean, snapshot: com.google.firebase.firestore.QuerySnapshot?, error: Exception?) {
+            if (error != null) {
+                onError(error)
+                return
             }
+            val combined = synchronized(lock) {
+                val target = if (firstField) firstDocuments else secondDocuments
+                target.clear()
+                snapshot?.documents.orEmpty().forEach { target[it.id] = it }
+                (firstDocuments.values + secondDocuments.values)
+                    .distinctBy { it.id }
+                    .sortedByDescending { it.getTimestamp("updatedAt")?.toDate()?.time ?: 0L }
+            }
+            onChange(combined)
+        }
+        val firstListener = firestore.collection(CONVERSATIONS)
+            .whereEqualTo("participantA", uid)
+            .addSnapshotListener { snapshot, error -> handleSnapshot(true, snapshot, error) }
+        val secondListener = firestore.collection(CONVERSATIONS)
+            .whereEqualTo("participantB", uid)
+            .addSnapshotListener { snapshot, error -> handleSnapshot(false, snapshot, error) }
+        return object : ListenerRegistration {
+            override fun remove() {
+                firstListener.remove()
+                secondListener.remove()
+            }
+        }
     }
 
     fun listenMessages(
