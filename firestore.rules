@@ -318,7 +318,7 @@ service cloud.firestore {
             && request.resource.data.deletedFor is list
             && request.resource.data.deletedFor.size() <= 2
             && resource.data.participants.hasAll(request.resource.data.deletedFor)
-            && request.resource.data.deletedFor.hasAll(resource.data.deletedFor)
+            && (!('deletedFor' in resource.data) || request.resource.data.deletedFor.hasAll(resource.data.deletedFor))
             && request.resource.data.deletedFor.hasAny([request.auth.uid])
           )
           ||
