@@ -1566,31 +1566,6 @@ internal class FirebaseAccountController(
                 val eligibleProfiles = java.util.Collections.synchronizedList(
                     mutableListOf<Pair<String, com.google.firebase.firestore.DocumentSnapshot>>()
                 )
-                followerIds.forEach { followerUid ->
-                    userDocuments.isFollowing(user.uid, followerUid)
-                        .addOnSuccessListener { followsBack ->
-                            if (followsBack) {
-                                userDocuments.loadPublicProfile(followerUid)
-                                    .addOnSuccessListener { profile ->
-                                        if (profile.exists()) eligibleProfiles.add(followerUid to profile)
-                                        pending--
-                                        renderEligible()
-                                    }
-                                    .addOnFailureListener {
-                                        pending--
-                                        renderEligible()
-                                    }
-                            } else {
-                                pending--
-                                renderEligible()
-                            }
-                        }
-                        .addOnFailureListener {
-                            pending--
-                            renderEligible()
-                        }
-                }
-                fun unused() = Unit
                 fun renderEligible() {
                     if (pending != 0 || activity.isFinishing || activity.isDestroyed || !dialog.isShowing) return
                     dialogContent.removeAllViews()
@@ -1625,6 +1600,31 @@ internal class FirebaseAccountController(
                             bottomMargin = dp(7)
                         })
                     }
+                }
+
+                followerIds.forEach { followerUid ->
+                    userDocuments.isFollowing(user.uid, followerUid)
+                        .addOnSuccessListener { followsBack ->
+                            if (followsBack) {
+                                userDocuments.loadPublicProfile(followerUid)
+                                    .addOnSuccessListener { profile ->
+                                        if (profile.exists()) eligibleProfiles.add(followerUid to profile)
+                                        pending--
+                                        renderEligible()
+                                    }
+                                    .addOnFailureListener {
+                                        pending--
+                                        renderEligible()
+                                    }
+                            } else {
+                                pending--
+                                renderEligible()
+                            }
+                        }
+                        .addOnFailureListener {
+                            pending--
+                            renderEligible()
+                        }
                 }
             }
             .addOnFailureListener { error ->
