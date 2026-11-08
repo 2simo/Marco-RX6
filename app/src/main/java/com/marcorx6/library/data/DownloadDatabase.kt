@@ -184,6 +184,44 @@ internal class DownloadDatabase private constructor(context: Context) :
             .use { cursor -> buildList { while (cursor.moveToNext()) add(cursor.toRecord()) } }
 
     @Synchronized
+    fun pauseAllActive(): List<Long> {
+        val db = writableDatabase
+        db.beginTransaction()
+        try {
+            val ids = db.query(
+                "downloads", arrayOf("id"), "status IN (?,?,?)",
+                arrayOf(
+                    DownloadManager.STATUS_PENDING.toString(),
+                    DownloadManager.STATUS_RUNNING.toString(),
+                    STATUS_SCHEDULED.toString()
+                ), null, null, "id ASC"
+            ).use { cursor -> buildList { while (cursor.moveToNext()) add(cursor.getLong(0)) } }
+            db.update(
+                "downloads",
+                ContentValues().apply { put("status", DownloadManager.STATUS_PAUSED) },
+                "status IN (?,?,?)",
+                arrayOf(
+                    DownloadManager.STATUS_PENDING.toString(),
+                    DownloadManager.STATUS_RUNNING.toString(),
+                    STATUS_SCHEDULED.toString()
+                )
+            )
+            db.setTransactionSuccessful()
+            return ids
+        } finally {
+            db.endTransaction()
+        }
+    }
+
+    @Synchronized
+    fun pausedOrFailedIds(): List<Long> =
+        readableDatabase.query(
+            "downloads", arrayOf("id"), "status IN (?,?)",
+            arrayOf(DownloadManager.STATUS_PAUSED.toString(), DownloadManager.STATUS_FAILED.toString()),
+            null, null, "id ASC"
+        ).use { cursor -> buildList { while (cursor.moveToNext()) add(cursor.getLong(0)) } }
+
+    @Synchronized
     fun status(id: Long, status: Int, error: String = "") {
         writableDatabase.update("downloads", ContentValues().apply {
             put("status", status); put("error", error)
