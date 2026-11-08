@@ -428,6 +428,9 @@ internal class DownloadPageDialog(
             val uri = try { Uri.parse(url) } catch (_: Exception) { return false }
             val host = uri.host?.lowercase() ?: return false
             if (hostIsAllowed(host)) return false
+            // Never classify an explicit file/download endpoint as an ad request.
+            // This protects direct game archives served from shared CDN domains.
+            if (isDirectFileUrl(url)) return false
             if (blockedAdHosts.any { host == it || host.endsWith(".$it") }) return true
             val pageHost = try { Uri.parse(webView.url ?: safeStartUrl).host?.lowercase() } catch (_: Exception) { null }
             // Generic endpoint rules apply only to third-party requests, not the download site itself.
