@@ -20,9 +20,9 @@ internal class GameFavoriteToggleFactory(
             contentDescription = game.name + ", " + if (game.isFavorite) "إزالة من المفضلة" else "إضافة إلى المفضلة"
             textSize = 25f
             gravity = android.view.Gravity.CENTER
-            setTextColor(if (game.isFavorite) android.graphics.Color.rgb(76, 145, 235) else white())
+            setTextColor(if (game.isFavorite) android.graphics.Color.rgb(190, 198, 210) else white())
             if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                android.content.res.ColorStateList.valueOf(android.graphics.Color.argb(82, 76, 145, 235)),
+                android.content.res.ColorStateList.valueOf(android.graphics.Color.argb(82, 190, 198, 210)),
                 null,
                 android.graphics.drawable.ColorDrawable(android.graphics.Color.WHITE)
             )
@@ -37,7 +37,7 @@ internal class GameFavoriteToggleFactory(
                     text = ""
                     setCompoundDrawablesRelativeWithIntrinsicBounds(0, if (games[index].isFavorite) com.marcorx6.library.R.drawable.ic_action_favorite else com.marcorx6.library.R.drawable.ic_action_favorite_outline, 0, 0)
                     contentDescription = games[index].name + ", " + if (games[index].isFavorite) "إزالة من المفضلة" else "إضافة إلى المفضلة"
-                    setTextColor(if (games[index].isFavorite) android.graphics.Color.rgb(76, 145, 235) else white())
+                    setTextColor(if (games[index].isFavorite) android.graphics.Color.rgb(190, 198, 210) else white())
                     renderGames()
                 }
             }
