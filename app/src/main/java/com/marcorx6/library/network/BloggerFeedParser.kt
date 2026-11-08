@@ -275,7 +275,7 @@ internal object BloggerFeedParser {
             // only "اضغط هنا". Generic article/navigation links remain excluded.
             if (!isInsideDownloadSection && !knownHost && !isFileUrl && !hasDownloadLabel) continue
 
-            val safeLabel = label.ifBlank { "تحميل \${result.length() + 1}" }
+            val safeLabel = label.ifBlank { "تحميل ${result.length() + 1}" }
             result.put(JSONObject().put("label", safeLabel).put("url", href))
         }
 
