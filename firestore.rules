@@ -11,6 +11,16 @@ service cloud.firestore {
         && request.auth.token.firebase.sign_in_provider == 'anonymous';
     }
 
+    function follows(userId, targetUid) {
+      return exists(/databases/$(database)/documents/userFollows/$(userId)/following/$(targetUid));
+    }
+
+    function mutuallyFollowing(firstUid, secondUid) {
+      return firstUid != secondUid
+        && follows(firstUid, secondUid)
+        && follows(secondUid, firstUid);
+    }
+
     function validGuestProfile() {
       return request.resource.data.keys().hasOnly([
           'uid', 'isAnonymous', 'createdAt', 'updatedAt'
@@ -30,7 +40,7 @@ service cloud.firestore {
           || (!isAnonymous()
             && request.resource.data.keys().hasOnly([
               'uid', 'isAnonymous', 'createdAt', 'updatedAt',
-              'email', 'displayName', 'photoUrl', 'bio', 'photoData',
+              'email', 'displayName', 'photoUrl', 'bio', 'photoData', 'username',
               'publicProfile', 'showFavorites'
             ])
             && request.resource.data.keys().size() <= 11
@@ -40,6 +50,11 @@ service cloud.firestore {
             && (!('bio' in request.resource.data)
               || (request.resource.data.bio is string
                 && request.resource.data.bio.size() <= 160))
+            && (!('username' in request.resource.data)
+              || (request.resource.data.username is string
+                && request.resource.data.username.size() >= 3
+                && request.resource.data.username.size() <= 20
+                && request.resource.data.username.matches('[A-Za-z0-9][A-Za-z0-9_]{2,19}')))
             && (!('photoData' in request.resource.data)
               || (request.resource.data.photoData is string
                 && request.resource.data.photoData.size() <= 600000))
@@ -76,7 +91,7 @@ service cloud.firestore {
       allow create, update: if signedInAs(userId)
         && !isAnonymous()
         && request.resource.data.keys().hasOnly([
-          'uid', 'displayName', 'bio', 'photoUrl', 'photoData', 'showFavorites', 'favoriteGames',
+          'uid', 'username', 'displayName', 'bio', 'photoUrl', 'photoData', 'showFavorites', 'favoriteGames',
           'followerCount', 'followingCount', 'updatedAt'
         ])
         && request.resource.data.keys().hasAll(['uid', 'displayName', 'showFavorites', 'updatedAt'])
@@ -85,6 +100,11 @@ service cloud.firestore {
         && request.resource.data.displayName.size() <= 40
         && request.resource.data.showFavorites is bool
         && request.resource.data.updatedAt == request.time
+        && (!('username' in request.resource.data)
+          || (request.resource.data.username is string
+            && request.resource.data.username.size() >= 3
+            && request.resource.data.username.size() <= 20
+            && request.resource.data.username.matches('[A-Za-z0-9][A-Za-z0-9_]{2,19}')))
         && (!('bio' in request.resource.data)
           || (request.resource.data.bio is string
             && request.resource.data.bio.size() <= 160))
@@ -128,6 +148,90 @@ service cloud.firestore {
       allow delete: if signedInAs(followerUid)
         || (request.auth != null && resource.data.targetUid == request.auth.uid);
       allow update: if false;
+    }
+
+
+    // Username keys are normalized to lowercase by the app. Clients can reserve
+    // a free key once; only its owner may release it. Enumeration is disabled.
+    match /usernames/{usernameKey} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if request.auth != null
+        && !isAnonymous()
+        && usernameKey.matches('[a-z0-9][a-z0-9_]{2,19}')
+        && request.resource.data.keys().hasOnly(['uid', 'username', 'createdAt'])
+        && request.resource.data.keys().hasAll(['uid', 'username', 'createdAt'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.username is string
+        && request.resource.data.username.lower() == usernameKey
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+
+    // Private one-to-one conversations. Inbox queries must constrain participants
+    // to the signed-in UID; only a mutually-following pair can start/send messages.
+    match /conversations/{conversationId} {
+      allow get, list: if request.auth != null
+        && resource.data.participants is list
+        && resource.data.participants.hasAny([request.auth.uid]);
+      allow create: if request.auth != null
+        && !isAnonymous()
+        && request.resource.data.keys().hasOnly([
+          'participants', 'lastMessage', 'lastSenderUid', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.keys().hasAll([
+          'participants', 'lastMessage', 'lastSenderUid', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.participants is list
+        && request.resource.data.participants.size() == 2
+        && request.resource.data.participants[0] != request.resource.data.participants[1]
+        && request.resource.data.participants.hasAny([request.auth.uid])
+        && mutuallyFollowing(
+          request.resource.data.participants[0],
+          request.resource.data.participants[1]
+        )
+        && request.resource.data.lastSenderUid == request.auth.uid
+        && request.resource.data.lastMessage is string
+        && request.resource.data.lastMessage.size() <= 180
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+      allow update: if request.auth != null
+        && resource.data.participants is list
+        && resource.data.participants.hasAny([request.auth.uid])
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['lastMessage', 'lastSenderUid', 'updatedAt'])
+        && request.resource.data.lastSenderUid == request.auth.uid
+        && request.resource.data.lastMessage is string
+        && request.resource.data.lastMessage.size() <= 180
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        function conversationParticipants() {
+          return getAfter(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+        }
+        allow read: if request.auth != null
+          && get(/databases/$(database)/documents/conversations/$(conversationId))
+            .data.participants.hasAny([request.auth.uid]);
+        allow create: if request.auth != null
+          && !isAnonymous()
+          && conversationParticipants() is list
+          && conversationParticipants().hasAny([request.auth.uid])
+          && conversationParticipants().size() == 2
+          && mutuallyFollowing(
+            conversationParticipants()[0],
+            conversationParticipants()[1]
+          )
+          && request.resource.data.keys().hasOnly(['senderUid', 'text', 'createdAt'])
+          && request.resource.data.keys().hasAll(['senderUid', 'text', 'createdAt'])
+          && request.resource.data.senderUid == request.auth.uid
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 4000
+          && request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
+      }
     }
 
     // Game IDs are SHA-256 hashes generated from stable game identity fields.
