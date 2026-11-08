@@ -331,6 +331,8 @@ internal class DownloadPageDialog(
         browserActions.addView(adToggle, LinearLayout.LayoutParams(0, dp(42), 1f))
         root.addView(browserActions, LinearLayout.LayoutParams(-1, -2))
         val blockedRequests = AtomicInteger(0)
+        // Curated local filter rules: known ad networks plus common third-party ad endpoints.
+        // This is deliberately conservative for first-party pages so download controls keep working.
         val blockedAdHosts = setOf(
             "doubleclick.net", "googlesyndication.com", "googleadservices.com",
             "adservice.google.com", "googletagservices.com", "googletagmanager.com",
@@ -340,40 +342,48 @@ internal class DownloadPageDialog(
             "adsrvr.org", "criteo.com", "casalemedia.com", "rubiconproject.com",
             "openx.net", "pubmatic.com", "sharethrough.com", "lijit.com",
             "media.net", "revcontent.com", "mgid.com", "zemanta.com",
-            "smartadserver.com", "yieldmo.com", "bidswitch.net",
-            "advertising.com", "3lift.com", "contextweb.com", "sovrn.com",
-            "inmobi.com", "unityads.unity3d.com", "applovin.com",
-            "vungle.com", "chartboost.com", "ironsrc.com", "appsflyer.com",
-            "adjust.com", "branch.io", "scorecardresearch.com",
-            "adcolony.com", "adnxs-simple.com", "adsafeprotected.com",
-            "adroll.com", "advertising.com", "amplitude.com", "app-measurement.com",
-            "bidswitch.net", "bluekai.com", "bouncex.net", "casalemedia.com",
-            "clarity.ms", "connectad.io", "demdex.net",
-            "e-planning.net", "everesttech.net", "eyeota.net", "flashtalking.com",
-            "google-analytics.com", "hotjar.com", "ibillboard.com", "krxd.net",
-            "lijit.com", "mathtag.com", "moatads.com", "omnitagjs.com",
-            "pixel.quantserve.com", "quantserve.com", "rlcdn.com", "samba.tv",
-            "serving-sys.com", "sharethrough.com", "simpli.fi", "siteimproveanalytics.com",
-            "smartadserver.com", "sportradarserving.com", 
-            "teads.tv", "triplelift.com", "turn.com", "undertone.com",
-            "yieldlove.com", "zemanta.com",
-            "adclick.g.doubleclick.net", "ads.google.com", "ads.youtube.com",
-            "amazon-adsystem.com", "advertising.amazon.com", "adzerk.net",
-            "adlightning.com", "admanmedia.com", "adpushup.com", "adrecover.com",
-            "adthrive.com", "carbonads.com", "ethicalads.io", " BuySellAds.com".trim().lowercase(),
-            "onesignal.com", "pushengage.com", "webpushr.com",
-            "optad360.com", " monetizemore.com".trim().lowercase(), "snigel.com",
+            "smartadserver.com", "yieldmo.com", "bidswitch.net", "advertising.com",
+            "3lift.com", "contextweb.com", "sovrn.com", "inmobi.com",
+            "unityads.unity3d.com", "applovin.com", "vungle.com", "chartboost.com",
+            "ironsrc.com", "adcolony.com", "adnxs-simple.com", "adsafeprotected.com",
+            "adroll.com", "bluekai.com", "bouncex.net", "clarity.ms", "connectad.io",
+            "demdex.net", "e-planning.net", "everesttech.net", "eyeota.net",
+            "flashtalking.com", "ibillboard.com", "krxd.net", "mathtag.com",
+            "moatads.com", "omnitagjs.com", "quantserve.com", "rlcdn.com",
+            "samba.tv", "serving-sys.com", "simpli.fi", "sportradarserving.com",
+            "teads.tv", "triplelift.com", "turn.com", "undertone.com", "yieldlove.com",
+            "adzerk.net", "adlightning.com", "admanmedia.com", "adpushup.com",
+            "adrecover.com", "adthrive.com", "carbonads.com", "ethicalads.io",
+            "buysellads.com", "optad360.com", "monetizemore.com", "snigel.com",
             "shareasale.com", "impact.com", "awin1.com", "partnerize.com",
-            "track.adform.net", "pixel.facebook.com", "connect.facebook.net",
-            "analytics.tiktok.com", "bat.bing.com", "stats.g.doubleclick.net"
+            "amazon-adsystem.com", "advertising.amazon.com", "ads.google.com",
+            "ads.youtube.com", "pixel.facebook.com", "connect.facebook.net",
+            "analytics.tiktok.com", "bat.bing.com", "popunder.net", "understanding.com",
+            "hilltopads.net", "hilltopads.com", "ad-maven.com", "ad-maven.net",
+            " Monetag.com".trim().lowercase(), "monetag.com", " monetag.net".trim().lowercase(),
+            "adcash.com", "yllix.com", " RevenueHits.com".trim().lowercase(),
+            "revenuehits.com", "adf.ly", "shorte.st", "linkvertise.com",
+            "clk.sh", "ouo.io", "ouo.press", "bc.vc", "za.gl", "shrinkme.io"
+        )
+        val adEndpointPatterns = listOf(
+            Regex("""(?:^|/)(?:pagead|adsystem|adserver|adservice|adview|adclick|popunder|popup|bannerad|vast|vpaid)(?:/|[._?=&-]|$)""", RegexOption.IGNORE_CASE),
+            Regex("""[?&](?:adunit|adslot|adtag|adzone|adserver|sponsorid)=([^&]*)""", RegexOption.IGNORE_CASE)
         )
         fun hostIsAllowed(host: String): Boolean =
             allowedHosts.any { host == it || host.endsWith(".$it") }
         fun isBlockedAdRequest(url: String): Boolean {
             if (!adBlockerEnabled) return false
-            val host = try { Uri.parse(url).host?.lowercase() } catch (_: Exception) { null } ?: return false
+            val uri = try { Uri.parse(url) } catch (_: Exception) { return false }
+            val host = uri.host?.lowercase() ?: return false
             if (hostIsAllowed(host)) return false
-            return blockedAdHosts.any { host == it || host.endsWith(".$it") }
+            if (blockedAdHosts.any { host == it || host.endsWith(".$it") }) return true
+            val pageHost = try { Uri.parse(webView.url ?: safeStartUrl).host?.lowercase() } catch (_: Exception) { null }
+            // Generic endpoint rules apply only to third-party requests, not the download site itself.
+            if (pageHost != null && host != pageHost && !host.endsWith(".$pageHost")) {
+                val target = (uri.encodedPath.orEmpty() + "?" + uri.encodedQuery.orEmpty())
+                if (adEndpointPatterns.any { it.containsMatchIn(target) }) return true
+            }
+            return false
         }
         fun recordBlocked() {
             val count = blockedRequests.incrementAndGet()
@@ -388,19 +398,25 @@ internal class DownloadPageDialog(
             val script = """(function(){try{
               var selectors=['iframe[src*="doubleclick"]','iframe[src*="googlesyndication"]',
                 'iframe[src*="adservice"]','iframe[src*="adnxs"]','iframe[src*="outbrain"]',
-                '[id^="google_ads"]','[id*="ad-container"]','[class*="ad-container"]',
-                '[class*="advertisement"]','[class*="advert-banner"]','[class*="ad-slot"]',
-                '[class*="sponsored"]','[data-ad]','[data-ad-unit]','[data-advertisement]',
-                'ins.adsbygoogle','amp-ad','amp-embed[type="taboola"]',
-                'div[id*="taboola"]','div[class*="taboola"]',
-                'div[id*="outbrain"]','div[class*="outbrain"]'];
+                'iframe[src*="taboola"]','iframe[src*="popads"]','iframe[src*="popcash"]',
+                'iframe[src*="propellerads"]','iframe[src*="exoclick"]','iframe[src*="adsterra"]',
+                '[id^="google_ads"]','[id*="ad-container"]','[id*="ad_wrapper"]',
+                '[class*="ad-container"]','[class*="ad-wrapper"]','[class*="advertisement"]',
+                '[class*="advert-banner"]','[class*="ad-slot"]','[class*="ad-placement"]',
+                '[class*="sponsored"]','[class*="sponsor-box"]','[data-ad]','[data-ad-unit]',
+                '[data-ad-slot]','[data-advertisement]','[data-google-query-id]',
+                '[aria-label="advertisement" i]','ins.adsbygoogle','amp-ad',
+                'amp-embed[type="taboola"]','div[id*="taboola"]','div[class*="taboola"]',
+                'div[id*="outbrain"]','div[class*="outbrain"]',
+                'a[href*="doubleclick.net"]','a[href*="popads.net"]','a[href*="popcash.net"]',
+                'a[href*="propellerads.com"]','a[href*="exoclick.com"]'];
               function hideAds(root){var n=0;selectors.forEach(function(s){
                 try{
                   if(root&&root.nodeType===1&&root.matches&&root.matches(s)){
-                    root.style.setProperty('display','none','important');n++;
+                    root.style.setProperty('display','none','important');root.setAttribute('data-marco-ad-hidden','1');n++;
                   }
                   root.querySelectorAll(s).forEach(function(e){
-                    if(n<160){e.style.setProperty('display','none','important');n++;}
+                    if(n<240){e.style.setProperty('display','none','important');e.setAttribute('data-marco-ad-hidden','1');n++;}
                   });
                 }catch(ignore){}
               });}
