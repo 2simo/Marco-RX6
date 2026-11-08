@@ -14,6 +14,11 @@ on:
 permissions:
   contents: read
 
+# Keep only the newest build for a branch; rapid fixes should not queue stale APK builds.
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-22.04
