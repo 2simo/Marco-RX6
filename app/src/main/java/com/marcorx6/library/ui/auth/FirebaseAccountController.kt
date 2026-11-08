@@ -65,6 +65,8 @@ internal class FirebaseAccountController(
 ) {
     private val userDocuments = FirebaseUserDocumentRepository()
     private val messaging = FirebaseMessagingRepository()
+    private val notifications = com.marcorx6.library.data.auth.FirebaseNotificationRepository()
+    private var notificationsListener: com.google.firebase.firestore.ListenerRegistration? = null
     private var inboxListener: com.google.firebase.firestore.ListenerRegistration? = null
     private var messagesListener: com.google.firebase.firestore.ListenerRegistration? = null
     private var pendingDeletionUid: String? = null
@@ -586,6 +588,13 @@ internal class FirebaseAccountController(
                 toast("تم نسخ معرّف الملف الشخصي")
             }, LinearLayout.LayoutParams(-1, dp(46)))
             page.addView(profileIdCard, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(14) })
+            action(
+                page,
+                translate("الإشعارات"),
+                translate("متابعون جدد ورسائلك الخاصة"),
+                dark,
+                run = ::showNotifications
+            )
             action(
                 page,
                 translate("الرسائل الخاصة"),
@@ -1215,6 +1224,93 @@ internal class FirebaseAccountController(
         }
     }
 
+
+    private fun showNotifications() {
+        val user = authRepository.currentUser
+        if (user == null || user.isAnonymous) {
+            toast("سجّل الدخول لمتابعة إشعارات حسابك.")
+            show()
+            return
+        }
+        notificationsListener?.remove()
+        val page = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            setPadding(dp(18), dp(16), dp(18), dp(24))
+            setBackgroundColor(Color.rgb(7, 8, 10))
+        }
+        page.addView(TextView(activity).apply {
+            text = translate("الإشعارات")
+            textSize = 24f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(Color.WHITE)
+            setPadding(0, 0, 0, dp(14))
+        })
+        val list = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
+        val scroll = ScrollView(activity).apply { addView(list) }
+        page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
+        page.addView(TextView(activity).apply {
+            text = translate("رجوع إلى الحساب")
+            textSize = 13f
+            setTextColor(Color.rgb(190, 198, 210))
+            setPadding(dp(8), dp(14), dp(8), dp(14))
+            setOnClickListener { notificationsListener?.remove(); notificationsListener = null; show() }
+        })
+        showAccountPage(page)
+        notificationsListener = notifications.listen(user.uid, { items ->
+            if (activity.isFinishing || activity.isDestroyed) return@listen
+            list.removeAllViews()
+            if (items.isEmpty()) {
+                list.addView(TextView(activity).apply {
+                    text = translate("لا توجد إشعارات بعد.")
+                    textSize = 13f
+                    setTextColor(Color.rgb(165, 173, 185))
+                    setPadding(dp(12), dp(28), dp(12), dp(28))
+                })
+            }
+            items.forEach { item ->
+                val type = item.getString("type").orEmpty()
+                val actorUid = item.getString("actorUid").orEmpty()
+                val unread = item.getBoolean("read") != true
+                val title = item.getString("title") ?: "إشعار جديد"
+                val body = item.getString("body").orEmpty()
+                val row = TextView(activity).apply {
+                    text = (if (unread) "●  " else "○  ") + title + "\\n" + body
+                    textSize = 13f
+                    setTextColor(if (unread) Color.WHITE else Color.rgb(170, 177, 188))
+                    setPadding(dp(15), dp(14), dp(15), dp(14))
+                    background = GradientDrawable().apply {
+                        cornerRadius = dp(15).toFloat()
+                        setColor(if (unread) Color.rgb(35, 38, 45) else Color.rgb(18, 20, 25))
+                        setStroke(dp(1), Color.rgb(75, 82, 94))
+                    }
+                    setOnClickListener {
+                        notifications.markRead(user.uid, item)
+                            .addOnFailureListener { error ->
+                                android.util.Log.w("MarcoNotifications", "Mark read failed", error)
+                            }
+                        when (type) {
+                            "follow" -> if (actorUid.isNotBlank()) showPublicProfile(actorUid)
+                            "message" -> if (actorUid.isNotBlank()) openConversation(actorUid)
+                            "game" -> {
+                                val gameId = item.getString("gameId")
+                                val game = games().firstOrNull { it.id == gameId }
+                                if (game != null) openGameDetails(game)
+                                else toast("هذه اللعبة لم تعد متاحة في المكتبة.")
+                            }
+                            else -> toast("نوع الإشعار غير معروف.")
+                        }
+                    }
+                }
+                list.addView(row, LinearLayout.LayoutParams(-1, -2).apply {
+                    bottomMargin = dp(9)
+                })
+            }
+        }, { error ->
+            android.util.Log.e("MarcoNotifications", "Notification listener failed", error)
+            toast(error.localizedMessage ?: "تعذر تحميل الإشعارات. تحقق من الاتصال.")
+        })
+    }
 
     private fun showInbox() {
         val user = authRepository.currentUser
