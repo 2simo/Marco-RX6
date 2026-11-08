@@ -16,7 +16,7 @@ internal class GameFavoriteToggleFactory(
     fun create(game: Game): TextView {
         return TextView(activity).apply {
             text = ""
-            setCompoundDrawablesRelativeWithIntrinsicBounds(0, if (game.isFavorite) com.marcorx6.library.R.drawable.ic_action_favorite else com.marcorx6.library.R.drawable.ic_action_favorite_outline, 0, 0)
+            setCompoundDrawablesRelativeWithIntrinsicBounds(0, if (game.isFavorite) com.marcorx6.library.R.drawable.ic_action_favorite_star else com.marcorx6.library.R.drawable.ic_action_favorite_star_star_outline, 0, 0)
             contentDescription = game.name + ", " + if (game.isFavorite) "إزالة من المفضلة" else "إضافة إلى المفضلة"
             textSize = 25f
             gravity = android.view.Gravity.CENTER
@@ -35,7 +35,7 @@ internal class GameFavoriteToggleFactory(
                     games[index] = games[index].copy(isFavorite = !games[index].isFavorite)
                     saveGames()
                     text = ""
-                    setCompoundDrawablesRelativeWithIntrinsicBounds(0, if (games[index].isFavorite) com.marcorx6.library.R.drawable.ic_action_favorite else com.marcorx6.library.R.drawable.ic_action_favorite_outline, 0, 0)
+                    setCompoundDrawablesRelativeWithIntrinsicBounds(0, if (games[index].isFavorite) com.marcorx6.library.R.drawable.ic_action_favorite_star else com.marcorx6.library.R.drawable.ic_action_favorite_star_star_outline, 0, 0)
                     contentDescription = games[index].name + ", " + if (games[index].isFavorite) "إزالة من المفضلة" else "إضافة إلى المفضلة"
                     setTextColor(if (games[index].isFavorite) android.graphics.Color.rgb(190, 198, 210) else white())
                     renderGames()
