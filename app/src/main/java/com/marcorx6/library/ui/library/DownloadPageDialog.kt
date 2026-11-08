@@ -296,10 +296,26 @@ internal class DownloadPageDialog(
         addressInput.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE) {
                 val entered = addressInput.text.toString().trim()
-                val candidate = if (entered.contains("://")) entered else "https://$entered"
-                val safeUrl = SecureUrlPolicy.toHttpsUrl(candidate)
-                if (safeUrl != null) {
-                    webView.loadUrl(safeUrl)
+                if (entered.isBlank()) {
+                    addressInput.error = translate("أدخل رابطاً أو عبارة للبحث")
+                    return@setOnEditorActionListener true
+                }
+                val looksLikeUrl = entered.contains("://") ||
+                    android.util.Patterns.WEB_URL.matcher(entered).matches()
+                val destination = if (looksLikeUrl) {
+                    val candidate = if (entered.contains("://")) entered else "https://$entered"
+                    SecureUrlPolicy.toHttpsUrl(candidate)
+                } else {
+                    Uri.Builder()
+                        .scheme("https")
+                        .authority("www.google.com")
+                        .appendPath("search")
+                        .appendQueryParameter("q", entered)
+                        .build()
+                        .toString()
+                }
+                if (destination != null) {
+                    webView.loadUrl(destination)
                     val imm = activity.getSystemService(Activity.INPUT_METHOD_SERVICE) as? android.view.inputmethod.InputMethodManager
                     imm?.hideSoftInputFromWindow(addressInput.windowToken, 0)
                     true
