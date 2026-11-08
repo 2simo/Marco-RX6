@@ -915,6 +915,51 @@ internal class FirebaseAccountController(
                     page.addView(scroll)
                 }
             }
+            page.addView(sectionCaption("تقييمات هذا المستخدم", dark))
+            val publicRatings = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(0, dp(6), 0, dp(8))
+            }
+            publicRatings.addView(TextView(activity).apply {
+                text = translate("جارٍ تحميل التقييمات...")
+                textSize = 12f
+                setTextColor(if (dark) Color.rgb(150, 158, 171) else Color.rgb(105, 114, 128))
+            })
+            page.addView(publicRatings)
+            gameEngagementRepository.loadRatingsForUser(uid, games(), onSuccess = { ratings ->
+                publicRatings.removeAllViews()
+                if (ratings.isEmpty()) {
+                    publicRatings.addView(TextView(activity).apply {
+                        text = translate("لا توجد تقييمات عامة متاحة لهذا المستخدم بعد.")
+                        textSize = 12f
+                        setTextColor(if (dark) Color.rgb(150, 158, 171) else Color.rgb(105, 114, 128))
+                    })
+                } else {
+                    val scroll = HorizontalScrollView(activity).apply {
+                        isHorizontalScrollBarEnabled = false
+                        layoutDirection = View.LAYOUT_DIRECTION_RTL
+                    }
+                    val track = LinearLayout(activity).apply {
+                        orientation = LinearLayout.HORIZONTAL
+                        layoutDirection = View.LAYOUT_DIRECTION_RTL
+                    }
+                    ratings.take(20).forEach { entry ->
+                        track.addView(
+                            profileGameCard(entry.game, dark, "★ " + entry.rating + "/5"),
+                            LinearLayout.LayoutParams(dp(130), -2).apply { marginEnd = dp(9) }
+                        )
+                    }
+                    scroll.addView(track)
+                    publicRatings.addView(scroll)
+                }
+            }, onFailure = {
+                publicRatings.removeAllViews()
+                publicRatings.addView(TextView(activity).apply {
+                    text = translate("تعذر تحميل التقييمات حالياً.")
+                    textSize = 12f
+                    setTextColor(if (dark) Color.rgb(180, 150, 150) else Color.rgb(140, 75, 75))
+                })
+            })
             showAccountPage(page)
         }.addOnFailureListener {
             toast("تعذر تحميل الملف الشخصي. تحقق من المعرّف والاتصال.")
