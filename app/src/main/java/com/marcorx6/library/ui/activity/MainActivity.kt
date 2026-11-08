@@ -130,7 +130,8 @@ class MainActivity : ComponentActivity() {
             launchProfilePhotoPicker = { intent -> activityResultRuntimeFeature.launchProfileAvatar(intent) },
             translate = ::tr,
             games = { games },
-            loadCover = coverRuntimeFeature::load
+            loadCover = coverRuntimeFeature::load,
+            openGameDetails = { game -> gameExperienceFeature.showDetails(game) }
         )
     }
 
