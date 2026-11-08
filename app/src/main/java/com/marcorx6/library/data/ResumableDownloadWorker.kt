@@ -78,7 +78,6 @@ internal class ResumableDownloadWorker(
             isStopped = { isStopped || database.get(item.id)?.status == DownloadManager.STATUS_PAUSED ||
                 database.get(item.id)?.status == DownloadDatabase.STATUS_CANCELLED },
             onProgress = { downloaded, total ->
-                database.progress(item.id, downloaded, total, item.etag, item.lastModified)
                 updateProgressNotification(item.title, item.id, downloaded, total)
             }
         )
