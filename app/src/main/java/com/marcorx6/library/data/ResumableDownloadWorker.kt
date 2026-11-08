@@ -158,6 +158,10 @@ internal class ResumableDownloadWorker(
                             sink.fd.sync()
                             database.progress(item.id, offset, total, etag, modified)
                             lastUpdate = now
+                            if (now - lastNotificationUpdate >= 1_500L) {
+                                updateProgressNotification(item.title, item.id, offset, total)
+                                lastNotificationUpdate = now
+                            }
                         }
                     }
                     sink.fd.sync()
@@ -208,6 +212,24 @@ internal class ResumableDownloadWorker(
         } finally {
             connection?.disconnect()
         }
+    }
+
+    private fun updateProgressNotification(title: String, downloadId: Long, downloaded: Long, total: Long) {
+        val language = applicationContext.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+            .getString("language", "ar") ?: "ar"
+        val localize: (String) -> String = { LanguageTranslator.translate(it, language) }
+        val percent = if (total > 0L) (downloaded * 100L / total).coerceIn(0L, 100L).toInt() else 0
+        val text = if (total > 0L) "$percent%" else localize("قيد التنزيل")
+        val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher)
+            .setContentTitle(title.ifBlank { "MARCO" })
+            .setContentText(text)
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setProgress(100, percent, total <= 0L)
+            .build()
+        val manager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.notify(notificationId(downloadId), notification)
     }
 
     private fun createForegroundInfo(title: String, downloadId: Long): ForegroundInfo {
