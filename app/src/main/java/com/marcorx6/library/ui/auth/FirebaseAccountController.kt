@@ -72,7 +72,7 @@ internal class FirebaseAccountController(
         }
         header.addView(ImageView(activity).apply {
             setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
-            imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
+            imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(76, 145, 235))
             scaleType = ImageView.ScaleType.CENTER_INSIDE
             contentDescription = translate("رجوع")
             isClickable = true
@@ -106,12 +106,12 @@ internal class FirebaseAccountController(
                 background = GradientDrawable().apply {
                     shape = GradientDrawable.OVAL
                     setColor(if (dark) Color.rgb(35, 38, 45) else Color.rgb(222, 226, 232))
-                    setStroke(dp(2), Color.rgb(190, 198, 210))
+                    setStroke(dp(2), Color.rgb(76, 145, 235))
                 }
                 clipToOutline = true
                 contentDescription = translate("صورة الحساب")
                 setImageResource(com.marcorx6.library.R.drawable.ic_nav_profile)
-                imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
+                imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(76, 145, 235))
             }
             page.addView(photoView, LinearLayout.LayoutParams(dp(104), dp(104)).apply {
                 gravity = Gravity.CENTER
@@ -220,7 +220,7 @@ internal class FirebaseAccountController(
                     if (profilePhotoData.isNullOrBlank() && user.photoUrl != null) {
                         // The provider photo remains available as the account's fallback identity.
                         photoView.setImageResource(com.marcorx6.library.R.drawable.ic_nav_profile)
-                        photoView.imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
+                        photoView.imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(76, 145, 235))
                     }
                     profileLoaded = true
                     saveButton.isEnabled = true
@@ -334,7 +334,7 @@ internal class FirebaseAccountController(
             setPadding(dp(17), dp(14), dp(17), dp(14))
             background = GradientDrawable().apply {
                 cornerRadius = dp(16).toFloat()
-                setColor(if (primary) Color.rgb(190, 198, 210) else if (dark) Color.rgb(25, 28, 34) else Color.WHITE)
+                setColor(if (primary) Color.rgb(76, 145, 235) else if (dark) Color.rgb(25, 28, 34) else Color.WHITE)
                 setStroke(dp(1), if (primary) Color.rgb(145, 153, 166) else if (dark) Color.rgb(75, 80, 90) else Color.rgb(160, 168, 181))
             }
             setOnClickListener { run() }
@@ -462,14 +462,14 @@ internal class FirebaseAccountController(
         header.addView(heading, LinearLayout.LayoutParams(0, dp(52), 1f))
         header.addView(ImageView(activity).apply {
             setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
-            imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
+            imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(76, 145, 235))
             scaleType = ImageView.ScaleType.CENTER_INSIDE
             contentDescription = translate("رجوع")
             setPadding(dp(12), dp(12), dp(12), dp(12))
             isClickable = true
             isFocusable = true
             if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                android.content.res.ColorStateList.valueOf(Color.argb(72, 190, 198, 210)),
+                android.content.res.ColorStateList.valueOf(Color.argb(72, 76, 145, 235)),
                 null,
                 android.graphics.drawable.ColorDrawable(Color.WHITE)
             )
@@ -559,7 +559,7 @@ internal class FirebaseAccountController(
             setPadding(dp(18), dp(15), dp(18), dp(15))
             background = GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(Color.rgb(190, 198, 210), Color.rgb(105, 113, 126))
+                intArrayOf(Color.rgb(76, 145, 235), Color.rgb(35, 91, 165))
             ).apply {
                 cornerRadius = dp(15).toFloat()
                 setStroke(dp(1), Color.argb(190, 145, 153, 166))
@@ -629,14 +629,14 @@ internal class FirebaseAccountController(
             text = translate("إظهار كلمة المرور")
             textSize = 12f
             gravity = Gravity.END
-            setTextColor(Color.rgb(190, 198, 210))
+            setTextColor(Color.rgb(76, 145, 235))
             minHeight = dp(48)
             minWidth = dp(48)
             contentDescription = translate("إظهار كلمة المرور")
             isClickable = true
             isFocusable = true
             if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                android.content.res.ColorStateList.valueOf(Color.argb(72, 190, 198, 210)),
+                android.content.res.ColorStateList.valueOf(Color.argb(72, 76, 145, 235)),
                 null,
                 android.graphics.drawable.ColorDrawable(Color.WHITE)
             )
@@ -660,14 +660,14 @@ internal class FirebaseAccountController(
                 text = translate("نسيت كلمة المرور؟")
                 textSize = 12f
                 gravity = Gravity.END
-                setTextColor(Color.rgb(190, 198, 210))
+                setTextColor(Color.rgb(76, 145, 235))
                 minHeight = dp(48)
                 minWidth = dp(48)
                 contentDescription = translate("نسيت كلمة المرور؟")
                 isClickable = true
                 isFocusable = true
                 if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                    android.content.res.ColorStateList.valueOf(Color.argb(72, 190, 198, 210)),
+                    android.content.res.ColorStateList.valueOf(Color.argb(72, 76, 145, 235)),
                     null,
                     android.graphics.drawable.ColorDrawable(Color.WHITE)
                 )
