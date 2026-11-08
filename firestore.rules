@@ -218,14 +218,26 @@ service cloud.firestore {
         && resource.data.participants is list
         && resource.data.participants.hasAny([request.auth.uid])
         && mutuallyFollowing(resource.data.participants[0], resource.data.participants[1])
-        && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['lastMessage', 'lastSenderUid', 'updatedAt', 'participantA', 'participantB'])
         && request.resource.data.participantA == resource.data.participants[0]
         && request.resource.data.participantB == resource.data.participants[1]
-        && request.resource.data.lastSenderUid == request.auth.uid
-        && request.resource.data.lastMessage is string
-        && request.resource.data.lastMessage.size() <= 180
-        && request.resource.data.updatedAt == request.time;
+        && (
+          (
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['lastMessage', 'lastSenderUid', 'updatedAt', 'participantA', 'participantB'])
+            && request.resource.data.lastSenderUid == request.auth.uid
+            && request.resource.data.lastMessage is string
+            && request.resource.data.lastMessage.size() <= 180
+            && request.resource.data.updatedAt == request.time
+          )
+          ||
+          (
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['participantA', 'participantB'])
+            && request.resource.data.lastMessage == resource.data.lastMessage
+            && request.resource.data.lastSenderUid == resource.data.lastSenderUid
+            && request.resource.data.updatedAt == resource.data.updatedAt
+          )
+        );
       allow delete: if false;
 
       match /messages/{messageId} {
