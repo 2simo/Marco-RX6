@@ -75,10 +75,14 @@ internal class FirebaseMessagingRepository(
                         storedParticipants.contains(firstUid) &&
                         storedParticipants.contains(secondUid)
                     ) {
-                        transaction.update(conversation, mapOf(
-                            "participantA" to storedParticipants[0],
-                            "participantB" to storedParticipants[1]
-                        ))
+                        if (existing.getString("participantA") != storedParticipants[0] ||
+                            existing.getString("participantB") != storedParticipants[1]
+                        ) {
+                            transaction.update(conversation, mapOf(
+                                "participantA" to storedParticipants[0],
+                                "participantB" to storedParticipants[1]
+                            ))
+                        }
                     } else {
                         throw IllegalStateException("بيانات المشاركين في المحادثة غير صالحة")
                     }
