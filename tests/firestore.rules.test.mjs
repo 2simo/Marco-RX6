@@ -307,6 +307,12 @@ describe("Firestore user isolation rules", () => {
       createdAt: serverTimestamp(),
     }));
     await assertFails(updateDoc(claim, { uid: "username-bob" }));
+    await assertFails(deleteDoc(claim));
+    await assertFails(setDoc(doc(bob, "users/username-bob"), {
+      username: "marco_rx6",
+      displayName: "Bob",
+      updatedAt: serverTimestamp(),
+    }));
     await assertFails(setDoc(doc(bob, "usernames/invalid-name"), {
       uid: "username-bob",
       username: "invalid-name",
