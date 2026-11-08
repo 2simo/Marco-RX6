@@ -1293,8 +1293,12 @@ internal class FirebaseAccountController(
                             "follow" -> if (actorUid.isNotBlank()) showPublicProfile(actorUid)
                             "message" -> if (actorUid.isNotBlank()) openConversation(actorUid)
                             "game" -> {
-                                val gameId = item.getString("gameId")
-                                val game = games().firstOrNull { it.id == gameId }
+                                val gameName = item.getString("gameName").orEmpty()
+                                val platform = item.getString("platform").orEmpty()
+                                val game = games().firstOrNull {
+                                    it.name.equals(gameName, ignoreCase = true) &&
+                                        it.platform.equals(platform, ignoreCase = true)
+                                }
                                 if (game != null) openGameDetails(game)
                                 else toast("هذه اللعبة لم تعد متاحة في المكتبة.")
                             }
