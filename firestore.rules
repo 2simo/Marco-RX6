@@ -75,8 +75,7 @@ service cloud.firestore {
 
       match /notifications/{notificationId} {
         allow get, list: if signedInAs(userId);
-        allow create: if signedInAs(userId)
-          && !isAnonymous()
+        allow create: if !isAnonymous()
           && request.resource.data.keys().hasOnly([
             'type', 'actorUid', 'conversationId', 'messageId',
             'gameName', 'platform', 'title', 'body', 'createdAt', 'read'
@@ -94,6 +93,7 @@ service cloud.firestore {
           && (
             (
               request.resource.data.type == 'game'
+              && signedInAs(userId)
               && request.resource.data.actorUid == userId
               && request.resource.data.gameName is string
               && request.resource.data.gameName.size() > 0
