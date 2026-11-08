@@ -342,7 +342,7 @@ internal class MainLibraryInterfaceController(
                 androidx.core.view.WindowInsetsCompat.Type.navigationBars() or
                     androidx.core.view.WindowInsetsCompat.Type.mandatorySystemGestures()
             ).bottom
-            root.setPadding(dp(16), searchBaseTop + safeTop, dp(16), searchBaseBottom + safeBottom)
+            root.setPadding(dp(16), searchBaseTop, dp(16), searchBaseBottom + safeBottom)
             insets
         }
         applyTypography(scroll)
@@ -433,7 +433,7 @@ internal class MainLibraryInterfaceController(
         ViewCompat.setOnApplyWindowInsetsListener(scroll) { _, insets ->
             val safeTop = insets.getInsets(WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.displayCutout()).top
             val safeBottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars() or WindowInsetsCompat.Type.mandatorySystemGestures()).bottom
-            root.setPadding(dp(16), dp(12) + safeTop, dp(16), dp(20) + safeBottom)
+            root.setPadding(dp(16), dp(12), dp(16), dp(20) + safeBottom)
             insets
         }
         applyTypography(scroll)
@@ -499,7 +499,7 @@ internal class MainLibraryInterfaceController(
         ViewCompat.setOnApplyWindowInsetsListener(scroll) { _, insets ->
             val safeTop = insets.getInsets(WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.displayCutout()).top
             val safeBottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars() or WindowInsetsCompat.Type.mandatorySystemGestures()).bottom
-            root.setPadding(dp(14), dp(10) + safeTop, dp(14), dp(18) + safeBottom)
+            root.setPadding(dp(14), dp(10), dp(14), dp(18) + safeBottom)
             insets
         }
         applyTypography(scroll)
@@ -534,7 +534,7 @@ internal class MainLibraryInterfaceController(
                 WindowInsetsCompat.Type.navigationBars() or
                     WindowInsetsCompat.Type.mandatorySystemGestures()
             ).bottom
-            view.setPadding(dp(12), dp(8) + safeTop, dp(12), dp(104) + safeBottom)
+            view.setPadding(dp(12), dp(8), dp(12), dp(104) + safeBottom)
             insets
         }
 
@@ -1087,7 +1087,7 @@ internal class MainLibraryInterfaceController(
             dockParams.bottomMargin = dp(12) + safeBottom
             dock.layoutParams = dockParams
             // Keep content below Android's status bar on edge-to-edge devices.
-            val effectiveSafeTop = safeTop.coerceAtLeast(dp(24))
+            val effectiveSafeTop = 0
             pageScroll.setPadding(0, effectiveSafeTop, 0, dp(84) + safeBottom)
             insets
         }
