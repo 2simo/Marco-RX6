@@ -73,6 +73,7 @@ internal class FirebaseAccountController(
     private var returnToProfileEditorAfterPhotoPick = false
 
     fun show() {
+        clearAccountListeners()
         returnToProfileEditorAfterPhotoPick = false
         // Keep the social profile strictly monochrome, independent of the app reading theme.
         val dark = true
@@ -962,6 +963,7 @@ internal class FirebaseAccountController(
                 .setMessage(translate("سيتم تسجيل الخروج من حساب MARCO فقط. ستبقى جلسة Google المستعملة في Blogger وGoogle Drive كما هي، ولن تُحذف مكتبتك أو ملفات التنزيل على هذا الهاتف."))
                 .setNegativeButton(translate("إلغاء"), null)
                 .setPositiveButton(translate("تسجيل الخروج")) { _, _ ->
+                    clearAccountListeners()
                     authRepository.signOut()
                     signOutAdmin()
                     onAccountChanged()
@@ -2158,6 +2160,7 @@ internal class FirebaseAccountController(
      * This prevents a previous Google account from being silently reused after sign-out.
      */
     private fun startFreshGoogleAccountSelection() {
+        clearAccountListeners()
         GoogleSignIn.getClient(activity, firebaseGoogleOptions()).signOut()
             .addOnCompleteListener {
                 launchGoogleSignIn(googleSignInIntent())
@@ -2605,6 +2608,7 @@ internal class FirebaseAccountController(
                         // Do not sign out the shared GoogleSignIn account here: Blogger and
                         // Drive use GoogleSignIn.getLastSignedInAccount() for their own OAuth session.
                         // Deleting Firebase Authentication does not require clearing that Google session.
+                        clearAccountListeners()
                         authRepository.signOut()
                         signOutAdmin()
                         onAccountChanged()
@@ -2617,6 +2621,16 @@ internal class FirebaseAccountController(
             .addOnFailureListener { error ->
                 toast("تعذر حذف بيانات الحساب؛ لم يتم حذف حساب الدخول")
             }
+    }
+
+    /** Stop account-scoped Firestore listeners before leaving or changing the Firebase session. */
+    private fun clearAccountListeners() {
+        notificationsListener?.remove()
+        notificationsListener = null
+        inboxListener?.remove()
+        inboxListener = null
+        messagesListener?.remove()
+        messagesListener = null
     }
 
     /** Complete the normal Firebase account flow without requesting Blogger or Drive scopes. */
