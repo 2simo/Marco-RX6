@@ -476,6 +476,8 @@ class MainActivity : ComponentActivity() {
             showGameDialog = { bloggerRuntimeFeature.showComposer() },
             showProfile = { userExperienceRuntimeFeature.showProfile() },
             showDownloads = activityServicesRuntimeFeature::showDownloadManager,
+            showNotifications = firebaseAccountController::openNotificationsFromLibrary,
+            showMessages = firebaseAccountController::openMessagesFromLibrary,
             applyTypography = ::applyTypography,
             applyUnifiedSkin = ::applyUnifiedSkin,
             applyMotionPreferences = ::applyMotionPreferences,
