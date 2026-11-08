@@ -236,39 +236,34 @@ internal class DownloadPageDialog(
         }
         root.addView(candidateScroll, LinearLayout.LayoutParams(-1, dp(112)))
 
-        fun confirmDownload(url: String, label: String, mimeType: String = "") {
+        fun confirmDownload(
+            url: String,
+            label: String,
+            mimeType: String = "",
+            contentDisposition: String = ""
+        ) {
             val safeUrl = SecureUrlPolicy.toHttpsUrl(url) ?: return
-            val prompt = AlertDialog.Builder(activity)
-                .setTitle(translate("إضافة تنزيل"))
-                .setMessage(label.take(100) + "\n\n" + safeUrl)
-                .setNegativeButton(translate("إلغاء"), null)
-                .setPositiveButton(translate("تنزيل الآن")) { _, _ ->
+            DownloadConfirmationPanel(activity, translate, dark).show(
+                url = safeUrl,
+                suggestedName = android.webkit.URLUtil.guessFileName(safeUrl, contentDisposition, mimeType)
+                    .ifBlank { label.ifBlank { gameTitle } },
+                mimeType = mimeType,
+                onConfirm = { fileName ->
+                    val safeName = fileName.trim()
+                        .replace(Regex("""[\\\\/:*?"<>|]"""), "_")
+                        .take(180)
+                        .ifBlank { android.webkit.URLUtil.guessFileName(safeUrl, null, mimeType) }
+                    val disposition = "attachment; filename=\"$safeName\""
                     onDownload(
                         safeUrl,
-                        gameTitle,
+                        safeName.ifBlank { gameTitle },
                         webView.settings.userAgentString.orEmpty(),
-                        "",
+                        disposition,
                         mimeType,
                         webView.url.orEmpty()
                     )
                 }
-                .create()
-            prompt.show()
-            prompt.window?.setBackgroundDrawable(GradientDrawable().apply {
-                setColor(if (dark) Color.rgb(25, 28, 34) else Color.WHITE)
-                cornerRadius = dp(20).toFloat()
-                setStroke(dp(1), border)
-            })
-            prompt.findViewById<TextView>(android.R.id.message)?.setTextColor(muted)
-            prompt.getButton(AlertDialog.BUTTON_POSITIVE)?.apply {
-                setTextColor(if (dark) Color.rgb(20, 23, 29) else Color.WHITE)
-                this.background = GradientDrawable().apply {
-                    setColor(if (dark) Color.rgb(205, 212, 222) else Color.rgb(75, 86, 103))
-                    cornerRadius = dp(11).toFloat()
-                }
-                setPadding(dp(14), dp(4), dp(14), dp(4))
-            }
-            prompt.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(primary)
+            )
         }
 
         fun isDirectFileUrl(url: String): Boolean {
@@ -556,7 +551,7 @@ internal class DownloadPageDialog(
             if (safeUrl == null) {
                 Toast.makeText(activity, translate("رابط الملف غير آمن؛ تم إيقاف التنزيل"), Toast.LENGTH_LONG).show()
             } else {
-                confirmDownload(safeUrl, contentDisposition.ifBlank { gameTitle }, mimeType.orEmpty())
+                confirmDownload(safeUrl, contentDisposition.ifBlank { gameTitle }, mimeType.orEmpty(), contentDisposition)
             }
         })
 
