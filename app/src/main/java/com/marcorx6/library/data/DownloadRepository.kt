@@ -37,6 +37,10 @@ internal class DownloadRepository(context: Context) {
     private val database = DownloadDatabase.get(appContext)
     private val concurrencyPreferences = DownloadConcurrencyPreferences(appContext)
 
+    private companion object {
+        val probeExecutor = java.util.concurrent.Executors.newFixedThreadPool(2)
+    }
+
     init {
         DownloadWorkScheduler.schedule(appContext)
     }
@@ -51,7 +55,7 @@ internal class DownloadRepository(context: Context) {
         sourcePostUrl: String = "",
         onResult: (DownloadStartResult) -> Unit
     ) {
-        Thread {
+        probeExecutor.execute {
             val result = try {
                 val secureLink = SecureUrlPolicy.toHttpsUrl(link)
                     ?: throw SecurityException("رابط التنزيل غير آمن أو غير صالح؛ يجب استخدام HTTPS")
@@ -87,7 +91,7 @@ internal class DownloadRepository(context: Context) {
                 } else DownloadStartResult.Failed(message)
             }
             onResult(result)
-        }.start()
+        }
     }
 
 
