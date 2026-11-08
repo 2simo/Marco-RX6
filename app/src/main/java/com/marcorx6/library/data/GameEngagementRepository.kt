@@ -208,9 +208,23 @@ internal class GameEngagementRepository(
             onSuccess(emptyList())
             return
         }
+        loadRatingsForUser(user.uid, games, onSuccess, onFailure)
+    }
+
+    /** Loads a selected user's public ratings and maps them to known library metadata. */
+    fun loadRatingsForUser(
+        uid: String,
+        games: List<Game>,
+        onSuccess: (List<UserRating>) -> Unit,
+        onFailure: (Exception) -> Unit = {}
+    ) {
+        if (uid.isBlank()) {
+            onSuccess(emptyList())
+            return
+        }
         val gamesById = games.associateBy(::gameId)
         firestore.collectionGroup("ratings")
-            .whereEqualTo("uid", user.uid)
+            .whereEqualTo("uid", uid)
             .get()
             .addOnSuccessListener { snapshot ->
                 val ratings = snapshot.documents.mapNotNull { document ->
