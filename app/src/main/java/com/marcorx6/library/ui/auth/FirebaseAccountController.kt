@@ -222,6 +222,22 @@ internal class FirebaseAccountController(
             page.addView(statsCard, LinearLayout.LayoutParams(-1, -2).apply {
                 bottomMargin = dp(14)
             })
+            val profileBioPreview = TextView(activity).apply {
+                textSize = 13f
+                setTextColor(if (dark) Color.rgb(190, 198, 210) else Color.rgb(75, 83, 96))
+                setPadding(dp(15), dp(12), dp(15), dp(12))
+                background = GradientDrawable().apply {
+                    cornerRadius = dp(14).toFloat()
+                    setColor(if (dark) Color.rgb(22, 24, 29) else Color.WHITE)
+                    setStroke(dp(1), if (dark) Color.rgb(76, 83, 94) else Color.rgb(205, 210, 218))
+                }
+                visibility = View.GONE
+                contentDescription = translate("نبذة الحساب")
+                tag = "marco-profile-bio-preview"
+            }
+            page.addView(profileBioPreview, LinearLayout.LayoutParams(-1, -2).apply {
+                bottomMargin = dp(14)
+            })
         }
 
         if (user == null || user.isAnonymous) {
@@ -370,7 +386,15 @@ internal class FirebaseAccountController(
             userDocuments.loadUser(user.uid)
                 .addOnSuccessListener { snapshot ->
                     profilePhotoData = snapshot.getString("photoData")
-                    bioInput.setText(snapshot.getString("bio").orEmpty())
+                    val savedBio = snapshot.getString("bio").orEmpty().trim()
+                    bioInput.setText(savedBio)
+                    if (savedBio.isNotBlank()) {
+                        // Reflect the saved profile introduction in the account overview.
+                        page.findViewWithTag<TextView>("marco-profile-bio-preview")?.let { preview ->
+                            preview.text = savedBio
+                            preview.visibility = View.VISIBLE
+                        }
+                    }
                     profilePhotoData?.let { encoded ->
                         runCatching {
                             val bytes = Base64.decode(encoded, Base64.DEFAULT)
