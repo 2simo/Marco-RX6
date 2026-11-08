@@ -125,6 +125,12 @@ internal class FirebaseAccountController(
             setImageResource(com.marcorx6.library.R.drawable.ic_nav_profile)
             imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
         }
+        val accountHandleView = TextView(activity).apply {
+            textSize = 12f
+            gravity = Gravity.CENTER
+            setTextColor(Color.rgb(155, 162, 173))
+            visibility = View.GONE
+        }
         // A compact identity panel makes the account state immediately clear.
         val identityCard = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
@@ -204,12 +210,6 @@ internal class FirebaseAccountController(
                 marginStart = dp(8)
             })
             identityCard.addView(accountNameRow)
-            val accountHandleView = TextView(activity).apply {
-                textSize = 12f
-                gravity = Gravity.CENTER
-                setTextColor(Color.rgb(155, 162, 173))
-                visibility = View.GONE
-            }
             identityCard.addView(accountHandleView)
             accountHandleView.isClickable = true
             accountHandleView.isFocusable = true
