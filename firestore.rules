@@ -296,12 +296,23 @@ service cloud.firestore {
       allow update: if request.auth != null
         && resource.data.participants is list
         && resource.data.participants.hasAny([request.auth.uid])
-        && mutuallyFollowing(resource.data.participants[0], resource.data.participants[1])
         && request.resource.data.participantA == resource.data.participants[0]
         && request.resource.data.participantB == resource.data.participants[1]
         && (
+          // Hiding a conversation is a private inbox action. It must remain
+          // available even after the participants stop following each other.
           (
-            request.resource.data.diff(resource.data).affectedKeys()
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deletedFor'])
+            && request.resource.data.deletedFor is list
+            && request.resource.data.deletedFor.size() <= 2
+            && resource.data.participants.hasAll(request.resource.data.deletedFor)
+            && (!('deletedFor' in resource.data) || request.resource.data.deletedFor.hasAll(resource.data.deletedFor))
+            && request.resource.data.deletedFor.hasAny([request.auth.uid])
+          )
+          ||
+          (
+            mutuallyFollowing(resource.data.participants[0], resource.data.participants[1])
+            && request.resource.data.diff(resource.data).affectedKeys()
               .hasOnly(['lastMessage', 'lastSenderUid', 'updatedAt', 'participantA', 'participantB', 'deletedFor'])
             && request.resource.data.lastSenderUid == request.auth.uid
             && request.resource.data.lastMessage is string
@@ -314,16 +325,8 @@ service cloud.firestore {
           )
           ||
           (
-            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deletedFor'])
-            && request.resource.data.deletedFor is list
-            && request.resource.data.deletedFor.size() <= 2
-            && resource.data.participants.hasAll(request.resource.data.deletedFor)
-            && (!('deletedFor' in resource.data) || request.resource.data.deletedFor.hasAll(resource.data.deletedFor))
-            && request.resource.data.deletedFor.hasAny([request.auth.uid])
-          )
-          ||
-          (
-            request.resource.data.diff(resource.data).affectedKeys()
+            mutuallyFollowing(resource.data.participants[0], resource.data.participants[1])
+            && request.resource.data.diff(resource.data).affectedKeys()
               .hasOnly(['participantA', 'participantB'])
             && request.resource.data.lastMessage == resource.data.lastMessage
             && request.resource.data.lastSenderUid == resource.data.lastSenderUid
