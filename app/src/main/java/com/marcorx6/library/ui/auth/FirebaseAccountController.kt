@@ -1560,6 +1560,12 @@ internal class FirebaseAccountController(
                                 toast(error.localizedMessage ?: "تعذر إرسال الرسالة.")
                             }
                     }
+                    input.setOnEditorActionListener { _, actionId, _ ->
+                        if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEND) {
+                            send.performClick()
+                            true
+                        } else false
+                    }
                     showConversationPage(page)
                     val id = messaging.conversationId(user.uid, otherUid)
                     messagesListener = messaging.listenMessages(id, { snapshots ->
