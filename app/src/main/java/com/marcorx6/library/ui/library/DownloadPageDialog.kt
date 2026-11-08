@@ -375,7 +375,7 @@ internal class DownloadPageDialog(
         // This is deliberately conservative for first-party pages so download controls keep working.
         val blockedAdHosts = setOf(
             "doubleclick.net", "googlesyndication.com", "googleadservices.com",
-            "adservice.google.com", "googletagservices.com", "googletagmanager.com",
+            "adservice.google.com", "googletagservices.com",
             "taboola.com", "outbrain.com", "popads.net", "popcash.net",
             "propellerads.com", "exoclick.com", "trafficjunky.com", "onclickads.net",
             "juicyads.com", "adsterra.com", "adform.net", "adnxs.com",
@@ -401,11 +401,19 @@ internal class DownloadPageDialog(
             "analytics.tiktok.com", "bat.bing.com", "popunder.net",
             "hilltopads.net", "hilltopads.com", "ad-maven.com", "ad-maven.net",
             "monetag.com", "monetag.net",
-            "adcash.com", "yllix.com", "revenuehits.com"
+            "adcash.com", "yllix.com", "revenuehits.com",
+            "adnow.com", "adskeeper.co.uk", "adskeeper.com", "ad-delivery.net",
+            "ad.gt", "adfox.ru", "adition.com", "adkernel.com", "admatic.com.tr",
+            "adplugg.com", "adstir.com", "adtelligent.com", "adtng.com", "adwolf.com",
+            "adyoulike.com", "bidvertiser.com", "clickadu.com", "clickaine.com",
+            "evadav.com", "galaksion.com", "onclickmega.com", "pushground.com",
+            "richpush.co", "rollerads.com", "trafficstars.com", "zeropark.com",
+            "plugrush.com", "popmyads.com"
         )
         val adEndpointPatterns = listOf(
-            Regex("""(?:^|/)(?:pagead|adsystem|adserver|adservice|adview|adclick|popunder|popup|bannerad|vast|vpaid)(?:/|[._?=&-]|$)""", RegexOption.IGNORE_CASE),
-            Regex("""[?&](?:adunit|adslot|adtag|adzone|adserver|sponsorid)=([^&]*)""", RegexOption.IGNORE_CASE)
+            Regex("""(?:^|/)(?:pagead|adsystem|adserver|adservice|adview|adclick|popunder|popup|bannerad|vast|vpaid|adrequest|adserve|adframe|adloader|adscript|adsby|adsense|prebid|gampad)(?:/|[._?=&-]|$)""", RegexOption.IGNORE_CASE),
+            Regex("""[?&](?:adunit|adslot|adtag|adzone|adserver|sponsorid|advert|advertising|ad_type|ad_format|ad_id)=([^&]*)""", RegexOption.IGNORE_CASE),
+            Regex("""(?:^|[./_-])(?:ads?|adserver|adservice|adnetwork|advert|sponsor|popunder|popup)(?:[./_-]|$)""", RegexOption.IGNORE_CASE)
         )
         fun hostIsAllowed(host: String): Boolean =
             allowedHosts.any { host == it || host.endsWith(".$it") }
@@ -438,10 +446,15 @@ internal class DownloadPageDialog(
                 'iframe[src*="adservice"]','iframe[src*="adnxs"]','iframe[src*="outbrain"]',
                 'iframe[src*="taboola"]','iframe[src*="popads"]','iframe[src*="popcash"]',
                 'iframe[src*="propellerads"]','iframe[src*="exoclick"]','iframe[src*="adsterra"]',
-                '[id^="google_ads"]','[id*="ad-container"]','[id*="ad_wrapper"]',
+                'iframe[src*="ad-delivery"]','iframe[src*="clickadu"]','iframe[src*="trafficstars"]',
+                'iframe[src*="adnow"]','iframe[src*="adskeeper"]','iframe[src*="monetag"]',
+                '[id^="google_ads"]','[id*="ad-container"]','[id*="ad_wrapper"]','[id*="ad_banner"]',
+                '[id*="ad-popup"]','[id*="ad-overlay"]',
                 '[class*="ad-container"]','[class*="ad-wrapper"]','[class*="advertisement"]',
                 '[class*="advert-banner"]','[class*="ad-slot"]','[class*="ad-placement"]',
-                '[class*="sponsored"]','[class*="sponsor-box"]','[data-ad]','[data-ad-unit]',
+                '[class*="sponsored"]','[class*="sponsor-box"]','[class*="ad-banner"]',
+                '[class*="ad-popup"]','[class*="ad-overlay"]','[class*="popunder"]',
+                '[data-ad]','[data-ad-unit]',
                 '[data-ad-slot]','[data-advertisement]','[data-google-query-id]',
                 '[aria-label="advertisement" i]','ins.adsbygoogle','amp-ad',
                 'amp-embed[type="taboola"]','div[id*="taboola"]','div[class*="taboola"]',
@@ -460,9 +473,14 @@ internal class DownloadPageDialog(
               });}
               hideAds(document);
               if(!window.__marcoAdObserver){
+                var pending=false;
                 window.__marcoAdObserver=new MutationObserver(function(records){
-                  records.forEach(function(record){record.addedNodes.forEach(function(node){
-                    if(node&&node.nodeType===1){hideAds(node);}});
+                  if(pending)return;pending=true;
+                  requestAnimationFrame(function(){
+                    pending=false;
+                    records.forEach(function(record){record.addedNodes.forEach(function(node){
+                      if(node&&node.nodeType===1){hideAds(node);}});
+                    });
                   });
                 });
                 window.__marcoAdObserver.observe(document.documentElement,{childList:true,subtree:true});
