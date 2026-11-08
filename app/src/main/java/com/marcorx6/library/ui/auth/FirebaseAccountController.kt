@@ -16,6 +16,7 @@ import android.view.Gravity
 import android.view.View
 import android.util.Patterns
 import android.widget.EditText
+import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
@@ -496,6 +497,26 @@ internal class FirebaseAccountController(
                 override fun afterTextChanged(s: android.text.Editable?) = Unit
             })
 
+            page.addView(sectionCaption("خصوصية الملف الشخصي", dark))
+            val publicProfileToggle = CheckBox(activity).apply {
+                text = translate("السماح للآخرين بمشاهدة ملفي الشخصي")
+                textSize = 13f
+                setTextColor(if (dark) Color.rgb(225, 229, 236) else Color.rgb(45, 52, 63))
+                buttonTintList = android.content.res.ColorStateList.valueOf(Color.rgb(180, 190, 205))
+                isEnabled = false
+            }
+            val showFavoritesToggle = CheckBox(activity).apply {
+                text = translate("إظهار ألعابي المفضلة في الملف العام")
+                textSize = 12f
+                setTextColor(if (dark) Color.rgb(190, 198, 210) else Color.rgb(75, 83, 96))
+                buttonTintList = android.content.res.ColorStateList.valueOf(Color.rgb(180, 190, 205))
+                isEnabled = false
+            }
+            page.addView(publicProfileToggle, LinearLayout.LayoutParams(-1, dp(48)))
+            page.addView(showFavoritesToggle, LinearLayout.LayoutParams(-1, dp(44)).apply {
+                bottomMargin = dp(10)
+            })
+
             var profilePhotoData: String? = null
             var profileLoaded = false
             val saveButton = accountSubmitButton(translate("حفظ التغييرات")) { button ->
@@ -524,7 +545,12 @@ internal class FirebaseAccountController(
                         displayName = name,
                         bio = bio,
                         photoUrl = user.photoUrl?.toString(),
-                        photoData = profilePhotoData
+                        photoData = profilePhotoData,
+                        publicProfile = publicProfileToggle.isChecked,
+                        showFavorites = showFavoritesToggle.isChecked,
+                        favoriteGames = libraryGames.filter { it.isFavorite }.take(30).map { game ->
+                            mapOf("name" to game.name, "platform" to game.platform, "coverUrl" to game.coverUrl)
+                        }
                     ).addOnSuccessListener {
                         toast("تم حفظ معلومات الملف الشخصي")
                         show()
@@ -554,6 +580,10 @@ internal class FirebaseAccountController(
                 .addOnSuccessListener { snapshot ->
                     profilePhotoData = snapshot.getString("photoData")
                     val savedBio = snapshot.getString("bio").orEmpty().trim()
+                    publicProfileToggle.isChecked = snapshot.getBoolean("publicProfile") ?: false
+                    showFavoritesToggle.isChecked = snapshot.getBoolean("showFavorites") ?: true
+                    publicProfileToggle.isEnabled = true
+                    showFavoritesToggle.isEnabled = true
                     bioInput.setText(savedBio)
                     if (savedBio.isNotBlank()) {
                         // Reflect the saved profile introduction in the account overview.
