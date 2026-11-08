@@ -563,3 +563,68 @@ describe("Firestore user isolation rules", () => {
     await assertFails(getDocs(collection(db, "admin")));
   });
 });
+
+describe("Private notification inbox rules", () => {
+  it("allows a real follow event to create a recipient notification", async () => {
+    const alice = testEnv.authenticatedContext("alice").firestore();
+    const bob = testEnv.authenticatedContext("bob").firestore();
+    await assertSucceeds(setDoc(doc(alice, "userFollows/alice/following/bob"), {
+      uid: "alice",
+      targetUid: "bob",
+      createdAt: serverTimestamp(),
+    }));
+    await assertSucceeds(setDoc(doc(bob, "users/bob/notifications/follow-1"), {
+      type: "follow",
+      actorUid: "alice",
+      title: "متابع جديد",
+      body: "بدأ هذا المستخدم بمتابعتك",
+      createdAt: serverTimestamp(),
+      read: false,
+    }));
+    await assertSucceeds(updateDoc(doc(bob, "users/bob/notifications/follow-1"), {
+      read: true,
+      readAt: serverTimestamp(),
+    }));
+  });
+
+  it("denies forged follow notifications and cross-account inbox reads", async () => {
+    const alice = testEnv.authenticatedContext("alice").firestore();
+    const bob = testEnv.authenticatedContext("bob").firestore();
+    const mallory = testEnv.authenticatedContext("mallory").firestore();
+    await assertFails(setDoc(doc(bob, "users/bob/notifications/forged"), {
+      type: "follow",
+      actorUid: "mallory",
+      title: "متابع جديد",
+      body: "مزيف",
+      createdAt: serverTimestamp(),
+      read: false,
+    }));
+    await assertFails(getDocs(collection(alice, "users/bob/notifications")));
+    await assertFails(setDoc(doc(mallory, "users/bob/notifications/intrusion"), {
+      type: "game",
+      actorUid: "mallory",
+      gameName: "Game",
+      platform: "PS2",
+      title: "لعبة جديدة",
+      body: "Game • PS2",
+      createdAt: serverTimestamp(),
+      read: false,
+    }));
+  });
+
+  it("allows a user to record and read a newly discovered local catalog game", async () => {
+    const db = testEnv.authenticatedContext("game-user").firestore();
+    const notice = doc(db, "users/game-user/notifications/game-1");
+    await assertSucceeds(setDoc(notice, {
+      type: "game",
+      actorUid: "game-user",
+      gameName: "Example Game",
+      platform: "PS2",
+      title: "لعبة جديدة في المكتبة",
+      body: "Example Game • PS2",
+      createdAt: serverTimestamp(),
+      read: false,
+    }));
+    await assertSucceeds(getDoc(notice));
+  });
+});
