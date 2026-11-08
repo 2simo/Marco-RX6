@@ -39,7 +39,7 @@ internal class DownloadMiniPanelDialog(
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(17), dp(15), dp(17), dp(12))
-            background = GradientDrawable().apply {
+            this.background = GradientDrawable().apply {
                 setColor(background)
                 cornerRadii = floatArrayOf(dp(22).toFloat(), dp(22).toFloat(), dp(22).toFloat(), dp(22).toFloat(), 0f, 0f, 0f, 0f)
                 setStroke(dp(1), if (dark) Color.rgb(75, 82, 94) else Color.rgb(211, 216, 224))
@@ -65,7 +65,7 @@ internal class DownloadMiniPanelDialog(
             setTextColor(accent)
             gravity = Gravity.CENTER
             setPadding(dp(13), dp(9), dp(13), dp(9))
-            background = GradientDrawable().apply {
+            this.background = GradientDrawable().apply {
                 setColor(surface); cornerRadius = dp(12).toFloat()
                 setStroke(dp(1), if (dark) Color.rgb(78, 85, 98) else Color.rgb(210, 216, 225))
             }
@@ -86,7 +86,7 @@ internal class DownloadMiniPanelDialog(
             setTextColor(if (dark) Color.rgb(20, 23, 29) else Color.WHITE)
             gravity = Gravity.CENTER
             setPadding(dp(14), dp(12), dp(14), dp(12))
-            background = GradientDrawable().apply {
+            this.background = GradientDrawable().apply {
                 setColor(if (dark) Color.rgb(205, 212, 222) else Color.rgb(75, 86, 103))
                 cornerRadius = dp(14).toFloat()
             }
@@ -111,7 +111,7 @@ internal class DownloadMiniPanelDialog(
             gravity = Gravity.CENTER
             setTextColor(accent)
             setPadding(dp(10), dp(7), dp(10), dp(7))
-            background = GradientDrawable().apply {
+            this.background = GradientDrawable().apply {
                 setColor(surface); cornerRadius = dp(9).toFloat()
                 setStroke(dp(1), if (dark) Color.rgb(78, 85, 98) else Color.rgb(210, 216, 225))
             }
@@ -122,7 +122,7 @@ internal class DownloadMiniPanelDialog(
             val card = LinearLayout(activity).apply {
                 orientation = LinearLayout.VERTICAL
                 setPadding(dp(12), dp(10), dp(12), dp(10))
-                background = GradientDrawable().apply {
+                this.background = GradientDrawable().apply {
                     setColor(surface); cornerRadius = dp(14).toFloat()
                     setStroke(dp(1), if (dark) Color.rgb(65, 72, 84) else Color.rgb(218, 222, 229))
                 }
