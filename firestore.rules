@@ -228,14 +228,28 @@ service cloud.firestore {
             conversationParticipants()[0],
             conversationParticipants()[1]
           )
-          && request.resource.data.keys().hasOnly(['senderUid', 'text', 'createdAt'])
-          && request.resource.data.keys().hasAll(['senderUid', 'text', 'createdAt'])
+          && request.resource.data.keys().hasOnly(['senderUid', 'text', 'createdAt', 'readBy'])
+          && request.resource.data.keys().hasAll(['senderUid', 'text', 'createdAt', 'readBy'])
           && request.resource.data.senderUid == request.auth.uid
           && request.resource.data.text is string
           && request.resource.data.text.size() > 0
           && request.resource.data.text.size() <= 4000
-          && request.resource.data.createdAt == request.time;
-        allow update, delete: if false;
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.readBy is list
+          && request.resource.data.readBy.size() == 1
+          && request.resource.data.readBy[0] == request.auth.uid;
+        allow update: if request.auth != null
+          && get(/databases/$(database)/documents/conversations/$(conversationId))
+            .data.participants.hasAny([request.auth.uid])
+          && resource.data.senderUid != request.auth.uid
+          && resource.data.readBy is list
+          && resource.data.readBy.size() == 1
+          && request.resource.data.readBy is list
+          && request.resource.data.readBy.size() == 2
+          && request.resource.data.readBy.hasAll([resource.data.senderUid, request.auth.uid])
+          && request.resource.data.readAt == request.time
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy', 'readAt']);
+        allow delete: if false;
       }
     }
 
