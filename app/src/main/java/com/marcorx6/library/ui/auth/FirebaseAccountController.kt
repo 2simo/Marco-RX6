@@ -1176,27 +1176,82 @@ internal class FirebaseAccountController(
                         val name = profile.getString("displayName")?.takeIf { it.isNotBlank() }
                             ?: translate("مستخدم MARCO")
                         val bio = profile.getString("bio").orEmpty()
-                        listContainer.addView(LinearLayout(activity).apply {
-                            orientation = LinearLayout.VERTICAL
-                            setPadding(dp(12), dp(12), dp(12), dp(12))
+                        val row = LinearLayout(activity).apply {
+                            orientation = LinearLayout.HORIZONTAL
+                            gravity = Gravity.CENTER_VERTICAL
+                            layoutDirection = View.LAYOUT_DIRECTION_RTL
+                            setPadding(dp(12), dp(11), dp(12), dp(11))
                             background = GradientDrawable().apply {
-                                cornerRadius = dp(14).toFloat()
-                                setColor(Color.rgb(25, 28, 34))
+                                cornerRadius = dp(17).toFloat()
+                                setColor(Color.rgb(23, 26, 32))
                                 setStroke(dp(1), Color.rgb(76, 84, 97))
                             }
-                            addView(TextView(activity).apply {
-                                text = name
-                                textSize = 14f
-                                setTypeface(null, android.graphics.Typeface.BOLD)
-                                setTextColor(Color.WHITE)
-                            })
-                            if (bio.isNotBlank()) addView(TextView(activity).apply {
-                                text = bio
-                                textSize = 11f
-                                setTextColor(Color.rgb(160, 168, 181))
-                                setPadding(0, dp(4), 0, 0)
-                            })
-                        }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
+                            isClickable = true
+                            isFocusable = true
+                            setOnClickListener { showPublicProfile(profile.id) }
+                        }
+                        val avatar = ImageView(activity).apply {
+                            scaleType = ImageView.ScaleType.CENTER_CROP
+                            setImageResource(com.marcorx6.library.R.drawable.ic_nav_profile)
+                            imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
+                            background = GradientDrawable().apply {
+                                shape = GradientDrawable.OVAL
+                                setColor(Color.rgb(39, 43, 51))
+                                setStroke(dp(1), Color.rgb(145, 153, 166))
+                            }
+                            clipToOutline = true
+                            contentDescription = translate("صورة الحساب")
+                        }
+                        row.addView(avatar, LinearLayout.LayoutParams(dp(52), dp(52)).apply {
+                            marginEnd = dp(12)
+                        })
+                        val identity = LinearLayout(activity).apply {
+                            orientation = LinearLayout.VERTICAL
+                            gravity = Gravity.CENTER_VERTICAL
+                        }
+                        identity.addView(TextView(activity).apply {
+                            text = name
+                            textSize = 14f
+                            setTypeface(null, android.graphics.Typeface.BOLD)
+                            setTextColor(Color.WHITE)
+                            maxLines = 1
+                            ellipsize = android.text.TextUtils.TruncateAt.END
+                        })
+                        if (bio.isNotBlank()) identity.addView(TextView(activity).apply {
+                            text = bio
+                            textSize = 11f
+                            setTextColor(Color.rgb(160, 168, 181))
+                            maxLines = 2
+                            ellipsize = android.text.TextUtils.TruncateAt.END
+                            setPadding(0, dp(3), 0, 0)
+                        })
+                        row.addView(identity, LinearLayout.LayoutParams(0, -2, 1f))
+                        row.addView(TextView(activity).apply {
+                            text = "‹"
+                            textSize = 25f
+                            setTextColor(Color.rgb(150, 158, 171))
+                            gravity = Gravity.CENTER
+                        }, LinearLayout.LayoutParams(dp(24), dp(42)))
+                        profile.getString("photoUrl")?.takeIf { it.startsWith("https://") }?.let { photoUrl ->
+                            Thread {
+                                val bitmap = runCatching {
+                                    java.net.URL(photoUrl).openConnection().apply {
+                                        connectTimeout = 6000
+                                        readTimeout = 6000
+                                        useCaches = true
+                                    }.getInputStream().use { BitmapFactory.decodeStream(it) }
+                                }.getOrNull()
+                                if (bitmap != null && !activity.isFinishing && !activity.isDestroyed) {
+                                    avatar.post {
+                                        avatar.setImageBitmap(bitmap)
+                                        avatar.imageTintList = null
+                                    }
+                                }
+                            }.apply { name = "marco-connection-avatar-loader" }.start()
+                        }
+                        listContainer.addView(row, LinearLayout.LayoutParams(-1, -2).apply {
+                            bottomMargin = dp(9)
+                        })
                     }
                     if (listContainer.childCount == 0) {
                         listContainer.addView(TextView(activity).apply {
