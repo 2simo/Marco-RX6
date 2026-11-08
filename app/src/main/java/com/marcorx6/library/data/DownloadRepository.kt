@@ -130,6 +130,28 @@ internal class DownloadRepository(context: Context) {
         return true
     }
 
+    fun pauseAllDownloads(): Int {
+        val active = database.all().filter {
+            it.status == DownloadManager.STATUS_PENDING ||
+                it.status == DownloadManager.STATUS_RUNNING ||
+                it.status == DownloadDatabase.STATUS_SCHEDULED
+        }
+        active.forEach { item ->
+            DownloadWorkScheduler.cancel(appContext, item.id)
+            database.status(item.id, DownloadManager.STATUS_PAUSED)
+        }
+        return active.size
+    }
+
+    fun resumeAllDownloads(): Int {
+        val paused = database.all().filter {
+            it.status == DownloadManager.STATUS_PAUSED || it.status == DownloadManager.STATUS_FAILED
+        }
+        paused.forEach { item -> database.status(item.id, DownloadManager.STATUS_PENDING) }
+        if (paused.isNotEmpty()) DownloadWorkScheduler.schedule(appContext)
+        return paused.size
+    }
+
     fun maxConcurrentDownloads(): Int = concurrencyPreferences.maxConcurrent()
 
     fun setMaxConcurrentDownloads(value: Int) {
