@@ -189,19 +189,21 @@ service cloud.firestore {
           || (resource.data.participants is list
             && resource.data.participants.hasAny([request.auth.uid])));
       allow list: if request.auth != null
-        && resource.data.participants is list
-        && request.auth.uid in resource.data.participants;
+        && (resource.data.participantA == request.auth.uid
+          || resource.data.participantB == request.auth.uid);
       allow create: if request.auth != null
         && !isAnonymous()
         && request.resource.data.keys().hasOnly([
-          'participants', 'lastMessage', 'lastSenderUid', 'createdAt', 'updatedAt'
+          'participants', 'participantA', 'participantB', 'lastMessage', 'lastSenderUid', 'createdAt', 'updatedAt'
         ])
         && request.resource.data.keys().hasAll([
-          'participants', 'lastMessage', 'lastSenderUid', 'createdAt', 'updatedAt'
+          'participants', 'participantA', 'participantB', 'lastMessage', 'lastSenderUid', 'createdAt', 'updatedAt'
         ])
         && request.resource.data.participants is list
         && request.resource.data.participants.size() == 2
         && request.resource.data.participants[0] != request.resource.data.participants[1]
+        && request.resource.data.participantA == request.resource.data.participants[0]
+        && request.resource.data.participantB == request.resource.data.participants[1]
         && request.resource.data.participants.hasAny([request.auth.uid])
         && mutuallyFollowing(
           request.resource.data.participants[0],
@@ -217,7 +219,9 @@ service cloud.firestore {
         && resource.data.participants.hasAny([request.auth.uid])
         && mutuallyFollowing(resource.data.participants[0], resource.data.participants[1])
         && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['lastMessage', 'lastSenderUid', 'updatedAt'])
+          .hasOnly(['lastMessage', 'lastSenderUid', 'updatedAt', 'participantA', 'participantB'])
+        && request.resource.data.participantA == resource.data.participants[0]
+        && request.resource.data.participantB == resource.data.participants[1]
         && request.resource.data.lastSenderUid == request.auth.uid
         && request.resource.data.lastMessage is string
         && request.resource.data.lastMessage.size() <= 180
