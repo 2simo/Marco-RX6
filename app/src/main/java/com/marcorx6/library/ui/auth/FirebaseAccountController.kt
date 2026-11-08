@@ -394,6 +394,60 @@ internal class FirebaseAccountController(
                 })
             })
 
+            // Real profile tabs: show the existing library, favorites, and Firestore ratings
+            // without inventing a posts/activity feed that the app does not currently store.
+            val profileTabs = LinearLayout(activity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER
+                setPadding(dp(5), dp(5), dp(5), dp(5))
+                background = GradientDrawable().apply {
+                    cornerRadius = dp(17).toFloat()
+                    setColor(Color.rgb(18, 20, 25))
+                    setStroke(dp(1), Color.rgb(70, 77, 89))
+                }
+            }
+            val tabLabels = listOf("الكل", "المفضلة", "التقييمات")
+            val tabViews = tabLabels.map { label ->
+                TextView(activity).apply {
+                    text = translate(label)
+                    textSize = 12f
+                    gravity = Gravity.CENTER
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    setPadding(dp(10), dp(12), dp(10), dp(12))
+                    setTextColor(Color.rgb(155, 163, 176))
+                    background = GradientDrawable().apply {
+                        cornerRadius = dp(13).toFloat()
+                        setColor(Color.TRANSPARENT)
+                    }
+                    isClickable = true
+                    isFocusable = true
+                }.also { tab ->
+                    profileTabs.addView(tab, LinearLayout.LayoutParams(0, -2, 1f).apply {
+                        marginEnd = dp(3)
+                    })
+                }
+            }
+            fun selectProfileTab(index: Int) {
+                tabViews.forEachIndexed { tabIndex, tab ->
+                    val selected = tabIndex == index
+                    tab.setTextColor(if (selected) Color.WHITE else Color.rgb(155, 163, 176))
+                    tab.background = GradientDrawable().apply {
+                        cornerRadius = dp(13).toFloat()
+                        setColor(if (selected) Color.rgb(62, 68, 79) else Color.TRANSPARENT)
+                        if (selected) setStroke(dp(1), Color.rgb(145, 153, 166))
+                    }
+                }
+                favoritesCard.visibility = if (index == 0 || index == 1) View.VISIBLE else View.GONE
+                ratingsCard.visibility = if (index == 0 || index == 2) View.VISIBLE else View.GONE
+            }
+            tabViews.forEachIndexed { index, tab ->
+                tab.setOnClickListener { selectProfileTab(index) }
+            }
+            page.addView(profileTabs, page.indexOfChild(favoritesCard), LinearLayout.LayoutParams(-1, -2).apply {
+                bottomMargin = dp(12)
+            })
+            selectProfileTab(0)
+
             val profileBioPreview = TextView(activity).apply {
                 textSize = 13f
                 setTextColor(if (dark) Color.rgb(190, 198, 210) else Color.rgb(75, 83, 96))
