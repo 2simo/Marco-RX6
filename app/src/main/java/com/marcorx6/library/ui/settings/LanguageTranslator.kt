@@ -701,6 +701,7 @@ internal object LanguageTranslator {
             "تعذر تحديث المحادثة. تحقق من الاتصال." to listOf("Could not update the conversation. Check your connection.", "Impossible de mettre à jour la conversation. Vérifiez votre connexion.", "No se pudo actualizar la conversación. Comprueba tu conexión."),
             "الرسائل الخاصة" to listOf("Private messages", "Messages privés", "Mensajes privados"),
             "رجوع إلى الحساب" to listOf("Back to account", "Retour au compte", "Volver a la cuenta"),
+            "العودة إلى القائمة الرئيسية" to listOf("Back to main library", "Retour à la bibliothèque principale", "Volver a la biblioteca principal"),
             "لا توجد محادثات بعد. ابدأ محادثة مع شخص يتابعك وتتابعه." to listOf("No conversations yet. Start a conversation with someone who follows you and whom you follow.", "Aucune conversation pour le moment. Commencez avec une personne qui vous suit et que vous suivez.", "Aún no hay conversaciones. Inicia una conversación con alguien que te siga y a quien sigas."),
             "محادثة" to listOf("Conversation", "Conversation", "Conversación"),
             "اكتب رسالة..." to listOf("Write a message...", "Écrivez un message...", "Escribe un mensaje..."),
