@@ -980,59 +980,121 @@ internal class FirebaseAccountController(
                 bottomMargin = dp(14)
             })
             addPublicFollowControls(page, uid, dark)
-            if (snapshot.getBoolean("showFavorites") == true) {
-                page.addView(sectionCaption("الألعاب المفضلة", dark))
-                val values = snapshot.get("favoriteGames") as? List<*>
-                val favorites = values.orEmpty().mapNotNull { value ->
-                    val item = value as? Map<*, *> ?: return@mapNotNull null
-                    val name = item["name"] as? String ?: return@mapNotNull null
-                    val platform = item["platform"] as? String ?: return@mapNotNull null
-                    val coverUrl = item["coverUrl"] as? String ?: ""
-                    Game(name, platform, "", "", coverUrl = coverUrl)
-                }
-                if (favorites.isEmpty()) {
-                    page.addView(TextView(activity).apply {
-                        text = translate("لم يشارك هذا المستخدم ألعاباً مفضلة بعد.")
-                        textSize = 12f
-                        setTextColor(if (dark) Color.rgb(150, 158, 171) else Color.rgb(105, 114, 128))
-                        setPadding(dp(12), dp(14), dp(12), dp(14))
-                    })
-                } else {
-                    val scroll = HorizontalScrollView(activity).apply {
-                        isHorizontalScrollBarEnabled = false
-                        layoutDirection = View.LAYOUT_DIRECTION_RTL
-                    }
-                    val track = LinearLayout(activity).apply {
-                        orientation = LinearLayout.HORIZONTAL
-                        layoutDirection = View.LAYOUT_DIRECTION_RTL
-                    }
-                    favorites.forEach { game ->
-                        track.addView(profileGameCard(game, dark, ""), LinearLayout.LayoutParams(dp(130), -2).apply {
-                            marginEnd = dp(9)
-                        })
-                    }
-                    scroll.addView(track)
-                    page.addView(scroll)
-                }
-            }
-            page.addView(sectionCaption("تقييمات هذا المستخدم", dark))
-            val publicRatings = LinearLayout(activity).apply {
+            val showFavorites = snapshot.getBoolean("showFavorites") == true
+            val favoritesSection = LinearLayout(activity).apply {
                 orientation = LinearLayout.VERTICAL
-                setPadding(0, dp(6), 0, dp(8))
+                if (showFavorites) {
+                    addView(sectionCaption("الألعاب المفضلة", dark))
+                    val values = snapshot.get("favoriteGames") as? List<*>
+                    val favorites = values.orEmpty().mapNotNull { value ->
+                        val item = value as? Map<*, *> ?: return@mapNotNull null
+                        val name = item["name"] as? String ?: return@mapNotNull null
+                        val platform = item["platform"] as? String ?: return@mapNotNull null
+                        val coverUrl = item["coverUrl"] as? String ?: ""
+                        Game(name, platform, "", "", coverUrl = coverUrl)
+                    }
+                    if (favorites.isEmpty()) {
+                        addView(TextView(activity).apply {
+                            text = translate("لم يشارك هذا المستخدم ألعاباً مفضلة بعد.")
+                            textSize = 12f
+                            setTextColor(Color.rgb(150, 158, 171))
+                            setPadding(dp(12), dp(14), dp(12), dp(14))
+                        })
+                    } else {
+                        val scroll = HorizontalScrollView(activity).apply {
+                            isHorizontalScrollBarEnabled = false
+                            layoutDirection = View.LAYOUT_DIRECTION_RTL
+                        }
+                        val track = LinearLayout(activity).apply {
+                            orientation = LinearLayout.HORIZONTAL
+                            layoutDirection = View.LAYOUT_DIRECTION_RTL
+                        }
+                        favorites.forEach { game ->
+                            track.addView(profileGameCard(game, dark, ""), LinearLayout.LayoutParams(dp(130), -2).apply {
+                                marginEnd = dp(9)
+                            })
+                        }
+                        scroll.addView(track)
+                        addView(scroll)
+                    }
+                }
             }
-            publicRatings.addView(TextView(activity).apply {
-                text = translate("جارٍ تحميل التقييمات...")
-                textSize = 12f
-                setTextColor(if (dark) Color.rgb(150, 158, 171) else Color.rgb(105, 114, 128))
+            val ratingsSection = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                addView(sectionCaption("تقييمات هذا المستخدم", dark))
+                addView(TextView(activity).apply {
+                    text = translate("جارٍ تحميل التقييمات...")
+                    textSize = 12f
+                    setTextColor(Color.rgb(150, 158, 171))
+                    setPadding(dp(4), dp(8), dp(4), dp(8))
+                })
+            }
+            val content = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+            }
+            val tabs = LinearLayout(activity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER
+                setPadding(dp(4), dp(4), dp(4), dp(4))
+                background = GradientDrawable().apply {
+                    cornerRadius = dp(16).toFloat()
+                    setColor(Color.rgb(19, 22, 28))
+                    setStroke(dp(1), Color.rgb(70, 77, 89))
+                }
+            }
+            val tabItems = mutableListOf<Pair<TextView, String>>()
+            fun selectPublicTab(selected: String) {
+                content.removeAllViews()
+                when (selected) {
+                    "favorites" -> content.addView(favoritesSection)
+                    "ratings" -> content.addView(ratingsSection)
+                    else -> {
+                        if (showFavorites) content.addView(favoritesSection)
+                        content.addView(ratingsSection)
+                    }
+                }
+                tabItems.forEach { (view, key) ->
+                    val active = key == selected
+                    view.setTextColor(if (active) Color.rgb(12, 14, 18) else Color.rgb(190, 198, 210))
+                    (view.background as? GradientDrawable)?.setColor(
+                        if (active) Color.rgb(190, 198, 210) else Color.TRANSPARENT
+                    )
+                }
+            }
+            fun addPublicTab(label: String, key: String) {
+                val tab = TextView(activity).apply {
+                    text = translate(label)
+                    gravity = Gravity.CENTER
+                    textSize = 13f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    setPadding(dp(16), dp(11), dp(16), dp(11))
+                    background = GradientDrawable().apply {
+                        cornerRadius = dp(12).toFloat()
+                        setColor(Color.TRANSPARENT)
+                    }
+                    setOnClickListener { selectPublicTab(key) }
+                }
+                tabItems.add(tab to key)
+                tabs.addView(tab, LinearLayout.LayoutParams(0, -2, 1f))
+            }
+            addPublicTab("الكل", "all")
+            if (showFavorites) addPublicTab("المفضلة", "favorites")
+            addPublicTab("التقييمات", "ratings")
+            page.addView(tabs, LinearLayout.LayoutParams(-1, -2).apply {
+                topMargin = dp(12)
+                bottomMargin = dp(12)
             })
-            page.addView(publicRatings)
+            page.addView(content, LinearLayout.LayoutParams(-1, -2))
+            selectPublicTab("all")
             gameEngagementRepository.loadRatingsForUser(uid, games(), onSuccess = { ratings ->
-                publicRatings.removeAllViews()
+                ratingsSection.removeAllViews()
+                ratingsSection.addView(sectionCaption("تقييمات هذا المستخدم", dark))
                 if (ratings.isEmpty()) {
-                    publicRatings.addView(TextView(activity).apply {
+                    ratingsSection.addView(TextView(activity).apply {
                         text = translate("لا توجد تقييمات عامة متاحة لهذا المستخدم بعد.")
                         textSize = 12f
-                        setTextColor(if (dark) Color.rgb(150, 158, 171) else Color.rgb(105, 114, 128))
+                        setTextColor(Color.rgb(150, 158, 171))
+                        setPadding(dp(4), dp(8), dp(4), dp(8))
                     })
                 } else {
                     val scroll = HorizontalScrollView(activity).apply {
@@ -1050,14 +1112,16 @@ internal class FirebaseAccountController(
                         )
                     }
                     scroll.addView(track)
-                    publicRatings.addView(scroll)
+                    ratingsSection.addView(scroll)
                 }
             }, onFailure = {
-                publicRatings.removeAllViews()
-                publicRatings.addView(TextView(activity).apply {
+                ratingsSection.removeAllViews()
+                ratingsSection.addView(sectionCaption("تقييمات هذا المستخدم", dark))
+                ratingsSection.addView(TextView(activity).apply {
                     text = translate("تعذر تحميل التقييمات حالياً.")
                     textSize = 12f
-                    setTextColor(if (dark) Color.rgb(180, 150, 150) else Color.rgb(140, 75, 75))
+                    setTextColor(Color.rgb(190, 198, 210))
+                    setPadding(dp(4), dp(8), dp(4), dp(8))
                 })
             })
             showAccountPage(page)
