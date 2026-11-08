@@ -204,6 +204,13 @@ internal class FirebaseAccountController(
                 marginStart = dp(8)
             })
             identityCard.addView(accountNameRow)
+            val accountHandleView = TextView(activity).apply {
+                textSize = 12f
+                gravity = Gravity.CENTER
+                setTextColor(Color.rgb(155, 162, 173))
+                visibility = View.GONE
+            }
+            identityCard.addView(accountHandleView)
             user.email?.takeIf { it.isNotBlank() }?.let { emailAddress ->
                 identityCard.addView(TextView(activity).apply {
                     text = emailAddress
@@ -493,6 +500,10 @@ internal class FirebaseAccountController(
             })
             userDocuments.loadUser(user.uid)
                 .addOnSuccessListener { snapshot ->
+                    snapshot.getString("username")?.takeIf { it.isNotBlank() }?.let { handle ->
+                        accountHandleView.text = "@$handle"
+                        accountHandleView.visibility = View.VISIBLE
+                    }
                     snapshot.getString("photoData")?.takeIf { it.isNotBlank() }?.let { encoded ->
                         runCatching {
                             val bytes = Base64.decode(encoded, Base64.DEFAULT)
