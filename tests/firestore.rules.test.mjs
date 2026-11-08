@@ -345,6 +345,11 @@ describe("Firestore user isolation rules", () => {
       readBy: ["message-alice"],
     }));
     const bobMessage = doc(bob, "conversations/" + conversationId + "/messages/first");
+    const aliceMessage = doc(alice, "conversations/" + conversationId + "/messages/first");
+    await assertFails(updateDoc(aliceMessage, {
+      readBy: ["message-alice", "message-bob"],
+      readAt: serverTimestamp(),
+    }));
     await assertFails(updateDoc(bobMessage, {
       readBy: ["message-alice", "message-outsider"],
       readAt: serverTimestamp(),
