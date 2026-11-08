@@ -248,8 +248,29 @@ internal class DownloadUiController(
             Toast.makeText(activity, translate("تم استكمال") + " $count " + translate("تنزيلات"), Toast.LENGTH_SHORT).show()
             render?.invoke()
         }, LinearLayout.LayoutParams(0, dp(42), 1f).apply { marginStart = dp(8) })
+        val maintenanceRow = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, 0, 0, dp(10))
+        }
+        maintenanceRow.addView(bulkButton("إعادة محاولة الفاشلة") {
+            val count = downloadRepository.retryAllFailed()
+            Toast.makeText(activity, translate("إعادة محاولة") + " $count " + translate("تنزيلات"), Toast.LENGTH_SHORT).show()
+            render?.invoke()
+        }, LinearLayout.LayoutParams(0, dp(40), 1f))
+        maintenanceRow.addView(bulkButton("مسح المكتملة") {
+            AlertDialog.Builder(activity)
+                .setMessage(translate("حذف جميع التنزيلات المكتملة من القائمة والملفات المحفوظة؟"))
+                .setNegativeButton(translate("إلغاء"), null)
+                .setPositiveButton(translate("حذف")) { _, _ ->
+                    val count = downloadRepository.clearCompletedDownloads()
+                    Toast.makeText(activity, translate("تم حذف") + " $count " + translate("ملفات مكتملة"), Toast.LENGTH_SHORT).show()
+                    render?.invoke()
+                }.show()
+        }, LinearLayout.LayoutParams(0, dp(40), 1f).apply { marginStart = dp(8) })
         root.addView(filterRow)
         root.addView(bulkRow)
+        root.addView(maintenanceRow)
 
         val list = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
         class RowViews(
@@ -383,13 +404,34 @@ internal class DownloadUiController(
             }
 
         fun updateActions(item: com.marcorx6.library.data.DownloadEntry, views: RowViews) {
-            val signature = "${item.status}:${item.id}"
+            val signature = "${item.status}:${item.id}:${item.priority}"
             if (views.actionState == signature) return
             views.actionState = signature
             views.actions.removeAllViews()
             fun addAction(view: View, start: Boolean = false) {
                 views.actions.addView(view, LinearLayout.LayoutParams(0, -2, 1f).apply {
                     if (start) marginStart = dp(6) else marginEnd = dp(6)
+                })
+            }
+            if (item.status == DownloadManager.STATUS_PENDING ||
+                item.status == com.marcorx6.library.data.DownloadDatabase.STATUS_SCHEDULED ||
+                item.status == DownloadManager.STATUS_PAUSED) {
+                addAction(smallAction(translate("الأولوية: ") + when (item.priority) {
+                    2 -> translate("عالية")
+                    1 -> translate("متوسطة")
+                    else -> translate("عادية")
+                }) {
+                    val choices = arrayOf(translate("عادية"), translate("متوسطة"), translate("عالية"))
+                    AlertDialog.Builder(activity)
+                        .setTitle(translate("أولوية التنزيل"))
+                        .setSingleChoiceItems(choices, item.priority.coerceIn(0, 2)) { dialog, selected ->
+                            downloadRepository.setDownloadPriority(item.id, selected)
+                            views.actionState = ""
+                            render?.invoke()
+                            dialog.dismiss()
+                        }
+                        .setNegativeButton(translate("إلغاء"), null)
+                        .show().also(styleDialog)
                 })
             }
             if (item.status == DownloadManager.STATUS_SUCCESSFUL) {
