@@ -20,7 +20,8 @@ internal data class DownloadEntry(
     val downloadedBytes: Long,
     val totalBytes: Long,
     val mimeType: String?,
-    val sourcePostUrl: String
+    val sourcePostUrl: String,
+    val priority: Int
 )
 
 internal sealed class DownloadStartResult {
@@ -105,7 +106,8 @@ internal class DownloadRepository(context: Context) {
             downloadedBytes = item.downloadedBytes,
             totalBytes = item.totalBytes,
             mimeType = item.mimeType,
-            sourcePostUrl = item.sourcePostUrl
+            sourcePostUrl = item.sourcePostUrl,
+            priority = item.priority
         )
     }
 
@@ -142,6 +144,22 @@ internal class DownloadRepository(context: Context) {
         if (ids.isNotEmpty()) DownloadWorkScheduler.schedule(appContext)
         return ids.size
     }
+
+    fun setDownloadPriority(id: Long, priority: Int): Boolean {
+        if (database.get(id) == null) return false
+        database.setPriority(id, priority)
+        DownloadWorkScheduler.schedule(appContext)
+        return true
+    }
+
+    fun retryAllFailed(): Int {
+        val failed = database.all().filter { it.status == DownloadManager.STATUS_FAILED }
+        failed.forEach { database.status(it.id, DownloadManager.STATUS_PENDING) }
+        if (failed.isNotEmpty()) DownloadWorkScheduler.schedule(appContext)
+        return failed.size
+    }
+
+    fun clearCompletedDownloads(): Int = database.deleteCompleted()
 
     fun maxConcurrentDownloads(): Int = concurrencyPreferences.maxConcurrent()
 
