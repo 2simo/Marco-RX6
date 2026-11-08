@@ -1384,11 +1384,15 @@ internal class FirebaseAccountController(
         val scroll = ScrollView(activity).apply { addView(list) }
         page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
         page.addView(TextView(activity).apply {
-            text = translate("رجوع إلى الحساب")
+            text = translate("العودة إلى القائمة الرئيسية")
             textSize = 13f
             setTextColor(Color.rgb(190, 198, 210))
             setPadding(dp(8), dp(14), dp(8), dp(14))
-            setOnClickListener { inboxListener?.remove(); inboxListener = null; show() }
+            setOnClickListener {
+                inboxListener?.remove()
+                inboxListener = null
+                onBack()
+            }
         })
         showAccountPage(page)
         inboxListener = messaging.listenInbox(user.uid, { conversations ->
