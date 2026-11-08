@@ -1365,10 +1365,23 @@ internal class FirebaseAccountController(
                 messagesListener = messaging.listenMessages(id, { snapshots ->
                     if (activity.isFinishing || activity.isDestroyed) return@listenMessages
                     messages.removeAllViews()
+                    messaging.markMessagesRead(id, user.uid, snapshots).addOnFailureListener { error ->
+                        android.util.Log.w("MarcoMessages", "Read receipt update failed", error)
+                    }
                     snapshots.forEach { snapshot ->
                         val mine = snapshot.getString("senderUid") == user.uid
+                        val recipientRead = (snapshot.get("readBy") as? List<*>)?.contains(otherUid) == true
+                        val sentAt = snapshot.getTimestamp("createdAt")?.toDate()
+                        val timeLabel = sentAt?.let {
+                            java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT).format(it)
+                        }.orEmpty()
+                        val messageText = buildString {
+                            append(snapshot.getString("text").orEmpty())
+                            if (timeLabel.isNotBlank()) append("\n").append(timeLabel)
+                            if (mine) append(if (recipientRead) "  ✓✓" else "  ✓")
+                        }
                         val bubble = TextView(activity).apply {
-                            text = snapshot.getString("text").orEmpty()
+                            text = messageText
                             textSize = 14f
                             setTextColor(if (mine) Color.rgb(18, 20, 24) else Color.WHITE)
                             setPadding(dp(13), dp(10), dp(13), dp(10))
