@@ -358,7 +358,7 @@ internal class DownloadPageDialog(
             "shareasale.com", "impact.com", "awin1.com", "partnerize.com",
             "amazon-adsystem.com", "advertising.amazon.com", "ads.google.com",
             "ads.youtube.com", "pixel.facebook.com", "connect.facebook.net",
-            "analytics.tiktok.com", "bat.bing.com", "popunder.net", "understanding.com",
+            "analytics.tiktok.com", "bat.bing.com", "popunder.net",
             "hilltopads.net", "hilltopads.com", "ad-maven.com", "ad-maven.net",
             "monetag.com", "monetag.net",
             "adcash.com", "yllix.com", "revenuehits.com"
