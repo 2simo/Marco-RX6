@@ -208,6 +208,7 @@ internal class FirebaseUserDocumentRepository(
                 val resolvedAvatar = photoData?.takeIf(String::isNotBlank)
                     ?: privateSnapshot.getString("photoData")
                 if (resolvedAvatar != null) publicData["photoData"] = resolvedAvatar
+                else publicData["photoData"] = FieldValue.delete()
                 if ((showFavorites ?: privateSnapshot.getBoolean("showFavorites")) == false) {
                     publicData["favoriteGames"] = FieldValue.delete()
                 } else {
