@@ -43,12 +43,19 @@ internal class FirebaseUserDocumentRepository(
     fun loadUser(uid: String): Task<DocumentSnapshot> =
         userDocument(uid).get()
 
+    /** A public profile is fetched by exact UID; Firestore rules enforce owner visibility. */
+    fun loadPublicProfile(uid: String): Task<DocumentSnapshot> =
+        userDocument(uid.trim()).get()
+
     fun saveProfile(
         uid: String,
         displayName: String?,
         bio: String?,
         photoUrl: String?,
-        photoData: String? = null
+        photoData: String? = null,
+        publicProfile: Boolean? = null,
+        showFavorites: Boolean? = null,
+        favoriteGames: List<Map<String, Any>>? = null
     ): Task<Void> {
         val data = mutableMapOf<String, Any>(
             "updatedAt" to FieldValue.serverTimestamp()
@@ -57,6 +64,9 @@ internal class FirebaseUserDocumentRepository(
         bio?.trim()?.let { data["bio"] = it }
         photoUrl?.trim()?.takeIf(String::isNotBlank)?.let { data["photoUrl"] = it }
         photoData?.takeIf(String::isNotBlank)?.let { data["photoData"] = it }
+        publicProfile?.let { data["publicProfile"] = it }
+        showFavorites?.let { data["showFavorites"] = it }
+        favoriteGames?.let { data["favoriteGames"] = it.take(30) }
         return userDocument(uid).set(data, SetOptions.merge())
     }
 
