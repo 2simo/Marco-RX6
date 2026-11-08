@@ -238,7 +238,7 @@ internal class DownloadPageDialog(
 
         fun confirmDownload(url: String, label: String, mimeType: String = "") {
             val safeUrl = SecureUrlPolicy.toHttpsUrl(url) ?: return
-            AlertDialog.Builder(activity)
+            val prompt = AlertDialog.Builder(activity)
                 .setTitle(translate("إضافة تنزيل"))
                 .setMessage(label.take(100) + "\n\n" + safeUrl)
                 .setNegativeButton(translate("إلغاء"), null)
@@ -252,7 +252,24 @@ internal class DownloadPageDialog(
                         webView.url.orEmpty()
                     )
                 }
-                .show()
+                .create()
+            prompt.show()
+            prompt.window?.setBackgroundDrawable(GradientDrawable().apply {
+                setColor(if (dark) Color.rgb(25, 28, 34) else Color.WHITE)
+                cornerRadius = dp(20).toFloat()
+                setStroke(dp(1), border)
+            })
+            prompt.findViewById<TextView>(android.R.id.alertTitle)?.setTextColor(heading)
+            prompt.findViewById<TextView>(android.R.id.message)?.setTextColor(muted)
+            prompt.getButton(AlertDialog.BUTTON_POSITIVE)?.apply {
+                setTextColor(if (dark) Color.rgb(20, 23, 29) else Color.WHITE)
+                background = GradientDrawable().apply {
+                    setColor(if (dark) Color.rgb(205, 212, 222) else Color.rgb(75, 86, 103))
+                    cornerRadius = dp(11).toFloat()
+                }
+                setPadding(dp(14), dp(4), dp(14), dp(4))
+            }
+            prompt.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(primary)
         }
 
         fun isDirectFileUrl(url: String): Boolean {
