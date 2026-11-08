@@ -129,7 +129,8 @@ class MainActivity : ComponentActivity() {
             applyUnifiedSkin = ::applyUnifiedSkin,
             launchProfilePhotoPicker = { intent -> activityResultRuntimeFeature.launchProfileAvatar(intent) },
             translate = ::tr,
-            games = { games }
+            games = { games },
+            loadCover = coverRuntimeFeature::load
         )
     }
 
