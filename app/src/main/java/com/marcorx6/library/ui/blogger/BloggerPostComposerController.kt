@@ -96,7 +96,7 @@ internal class BloggerPostComposerController(
             setTextColor(if (primary) accentForeground() else studioTextColor)
             background = if (primary) android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(android.graphics.Color.rgb(190, 198, 210), android.graphics.Color.rgb(105, 113, 126))
+                intArrayOf(android.graphics.Color.rgb(76, 145, 235), android.graphics.Color.rgb(35, 91, 165))
             ).apply { cornerRadius = dp(13).toFloat() }
             else rounded(panel(), 13)
         }
