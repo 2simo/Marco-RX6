@@ -72,6 +72,10 @@ internal class FirebaseAccountController(
     private var pendingDeletionUid: String? = null
     private var returnToProfileEditorAfterPhotoPick = false
 
+    fun openNotificationsFromLibrary() = showNotifications()
+
+    fun openMessagesFromLibrary() = showInbox()
+
     fun show() {
         clearAccountListeners()
         returnToProfileEditorAfterPhotoPick = false
