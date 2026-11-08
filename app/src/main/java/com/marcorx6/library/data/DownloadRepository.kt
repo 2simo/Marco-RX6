@@ -177,6 +177,12 @@ internal class DownloadRepository(context: Context) {
 
     fun maxSegmentConnections(): Int = concurrencyPreferences.segmentConnections()
 
+    fun downloadSpeedLimitBytesPerSecond(): Long = concurrencyPreferences.speedLimitBytesPerSecond()
+
+    fun setDownloadSpeedLimitBytesPerSecond(value: Long) {
+        concurrencyPreferences.setSpeedLimitBytesPerSecond(value)
+    }
+
     fun setMaxSegmentConnections(value: Int) {
         concurrencyPreferences.setSegmentConnections(value)
     }
