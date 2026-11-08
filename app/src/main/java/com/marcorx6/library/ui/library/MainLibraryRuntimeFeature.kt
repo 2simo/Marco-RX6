@@ -40,6 +40,8 @@ internal class MainLibraryRuntimeFeature(
     private val applyTypography: (View) -> Unit,
     private val applyUnifiedSkin: (View) -> Unit,
     private val applyMotionPreferences: (View) -> Unit,
+    private val showNotifications: () -> Unit,
+    private val showMessages: () -> Unit,
     private val loadEngagementSummary: (Game, (Long, Double, Long) -> Unit) -> Unit,
 ) {
     val viewState = MainLibraryViewState()
@@ -123,7 +125,9 @@ internal class MainLibraryRuntimeFeature(
             showDetails = showDetails,
             applyTypography = applyTypography,
             applyUnifiedSkin = applyUnifiedSkin,
-            applyMotionPreferences = applyMotionPreferences
+            applyMotionPreferences = applyMotionPreferences,
+            showNotifications = showNotifications,
+            showMessages = showMessages
         )
     }
 
