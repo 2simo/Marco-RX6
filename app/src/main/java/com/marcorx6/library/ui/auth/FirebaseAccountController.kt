@@ -1232,22 +1232,34 @@ internal class FirebaseAccountController(
                             setTextColor(Color.rgb(150, 158, 171))
                             gravity = Gravity.CENTER
                         }, LinearLayout.LayoutParams(dp(24), dp(42)))
-                        profile.getString("photoUrl")?.takeIf { it.startsWith("https://") }?.let { photoUrl ->
-                            Thread {
-                                val bitmap = runCatching {
-                                    java.net.URL(photoUrl).openConnection().apply {
-                                        connectTimeout = 6000
-                                        readTimeout = 6000
-                                        useCaches = true
-                                    }.getInputStream().use { BitmapFactory.decodeStream(it) }
-                                }.getOrNull()
-                                if (bitmap != null && !activity.isFinishing && !activity.isDestroyed) {
-                                    avatar.post {
-                                        avatar.setImageBitmap(bitmap)
-                                        avatar.imageTintList = null
+                        val publicPhotoData = profile.getString("photoData")
+                        val publicAvatar = publicPhotoData?.takeIf { it.isNotBlank() }?.let { encoded ->
+                            runCatching {
+                                val bytes = Base64.decode(encoded, Base64.DEFAULT)
+                                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                            }.getOrNull()
+                        }
+                        if (publicAvatar != null) {
+                            avatar.setImageBitmap(publicAvatar)
+                            avatar.imageTintList = null
+                        } else {
+                            profile.getString("photoUrl")?.takeIf { it.startsWith("https://") }?.let { photoUrl ->
+                                Thread {
+                                    val bitmap = runCatching {
+                                        java.net.URL(photoUrl).openConnection().apply {
+                                            connectTimeout = 6000
+                                            readTimeout = 6000
+                                            useCaches = true
+                                        }.getInputStream().use { BitmapFactory.decodeStream(it) }
+                                    }.getOrNull()
+                                    if (bitmap != null && !activity.isFinishing && !activity.isDestroyed) {
+                                        avatar.post {
+                                            avatar.setImageBitmap(bitmap)
+                                            avatar.imageTintList = null
+                                        }
                                     }
-                                }
-                            }.start()
+                                }.start()
+                            }
                         }
                         listContainer.addView(row, LinearLayout.LayoutParams(-1, -2).apply {
                             bottomMargin = dp(9)
@@ -1607,9 +1619,9 @@ internal class FirebaseAccountController(
             output.reset()
             scaled.compress(Bitmap.CompressFormat.JPEG, quality, output)
             quality -= 8
-        } while (output.size() > 420_000 && quality >= 42)
+        } while (output.size() > 160_000 && quality >= 30)
         scaled.recycle()
-        require(output.size() <= 450_000) { "الصورة كبيرة جداً، اختر صورة أصغر." }
+        require(output.size() <= 180_000) { "الصورة كبيرة جداً للملف العام؛ اختر صورة أصغر." }
         return Base64.encodeToString(output.toByteArray(), Base64.NO_WRAP)
     }
 
