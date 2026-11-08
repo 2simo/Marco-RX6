@@ -128,7 +128,8 @@ class MainActivity : ComponentActivity() {
             isDarkMode = ::isDarkMode,
             applyUnifiedSkin = ::applyUnifiedSkin,
             launchProfilePhotoPicker = { intent -> activityResultRuntimeFeature.launchProfileAvatar(intent) },
-            translate = ::tr
+            translate = ::tr,
+            games = { games }
         )
     }
 
