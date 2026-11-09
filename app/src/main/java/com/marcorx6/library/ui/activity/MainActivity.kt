@@ -413,6 +413,13 @@ class MainActivity : ComponentActivity() {
         lifecycleCoordinator.onResume()
     }
 
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        if (coverRuntimeFeatureDelegate.isInitialized()) {
+            coverRuntimeFeature.trimMemory(level)
+        }
+    }
+
     override fun onDestroy() {
         lifecycleCoordinator.onDestroy()
         firebaseSessionCoordinator.stop()
