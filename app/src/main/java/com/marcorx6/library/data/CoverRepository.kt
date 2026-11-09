@@ -1,6 +1,7 @@
 package com.marcorx6.library.data
 
 import android.content.Context
+import android.content.ComponentCallbacks2
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Handler
@@ -184,6 +185,17 @@ internal class CoverRepository(context: Context) : AutoCloseable {
         } finally {
             temporary.delete()
             connection.disconnect()
+        }
+    }
+
+    /** Releases cached bitmaps as Android signals increasing memory pressure. */
+    fun trimMemory(level: Int) {
+        when {
+            level >= ComponentCallbacks2.TRIM_MEMORY_MODERATE -> bitmapCache.evictAll()
+            level >= ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN ->
+                bitmapCache.trimToSize((bitmapCache.maxSize() / 2).coerceAtLeast(1024))
+            level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW ->
+                bitmapCache.trimToSize((bitmapCache.maxSize() * 3 / 4).coerceAtLeast(1024))
         }
     }
 
