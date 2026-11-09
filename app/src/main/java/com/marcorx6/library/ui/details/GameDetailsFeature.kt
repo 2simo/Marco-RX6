@@ -65,8 +65,7 @@ internal class GameDetailsFeature(
         makeText = makeText,
         isDarkMode = isDarkMode,
         white = white,
-        red = red,
-        favoriteToggleFactory = favoriteToggleFactory
+        red = red
     )
 
     private val identityViewFactory = GameDetailsIdentityViewFactory(
