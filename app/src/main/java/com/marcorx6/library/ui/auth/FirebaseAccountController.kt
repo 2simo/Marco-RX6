@@ -2595,7 +2595,7 @@ internal class FirebaseAccountController(
         androidx.core.view.WindowInsetsControllerCompat(activity.window, activity.window.decorView).apply {
             isAppearanceLightStatusBars = !dark
             isAppearanceLightNavigationBars = !dark
-            show(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+            hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
         }
         androidx.core.view.ViewCompat.requestApplyInsets(page)
         applyUnifiedSkin(page)
@@ -2635,7 +2635,7 @@ internal class FirebaseAccountController(
         androidx.core.view.WindowInsetsControllerCompat(activity.window, activity.window.decorView).apply {
             isAppearanceLightStatusBars = !dark
             isAppearanceLightNavigationBars = !dark
-            show(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+            hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
         }
         androidx.core.view.ViewCompat.requestApplyInsets(scroll)
         applyUnifiedSkin(page)
