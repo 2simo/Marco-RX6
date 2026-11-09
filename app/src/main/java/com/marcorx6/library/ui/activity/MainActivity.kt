@@ -128,7 +128,7 @@ class MainActivity : ComponentActivity() {
                 createInterface()
             },
             onSignedIn = {
-                FirebasePushTokenRepository(applicationContext).syncCurrentToken()
+                FirebasePushTokenRepository().syncCurrentToken()
                 // After authentication, open the editable account profile directly.
                 showFirebaseAccount()
             },
@@ -408,7 +408,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        FirebasePushTokenRepository(applicationContext).syncCurrentToken()
+        FirebasePushTokenRepository().syncCurrentToken()
         firebaseSessionCoordinator.ensureGuestSession()
         lifecycleCoordinator.onResume()
     }
