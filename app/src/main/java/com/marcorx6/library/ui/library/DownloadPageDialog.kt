@@ -48,7 +48,8 @@ internal class DownloadPageDialog(
     fun show(
         startUrl: String,
         gameTitle: String,
-        onDownload: (String, String, String, String, String, String) -> Unit
+        onDownload: (String, String, String, String, String, String) -> Unit,
+        onOpenDownloads: () -> Unit = {}
     ) {
         val safeStartUrl = SecureUrlPolicy.toHttpsUrl(startUrl)
         if (safeStartUrl == null) {
@@ -75,6 +76,7 @@ internal class DownloadPageDialog(
         }
         val webView = WebView(activity)
         val browserHistory = mutableListOf<Pair<String, String>>()
+        val browserBookmarks = mutableListOf<Pair<String, String>>()
         val browserTabs = mutableListOf<Pair<String, String>>()
         val browserTabStates = mutableListOf<android.os.Bundle?>()
         var activeTabIndex = 0
@@ -102,6 +104,14 @@ internal class DownloadPageDialog(
                 if (url.startsWith("https://")) browserHistory.add(item.optString("title") to url)
             }
         }
+        runCatching {
+            val saved = JSONArray(appPreferences.getString("download_browser_bookmarks", "[]"))
+            for (i in 0 until saved.length()) {
+                val item = saved.optJSONObject(i) ?: continue
+                val url = SecureUrlPolicy.toHttpsUrl(item.optString("url")) ?: continue
+                browserBookmarks.add(item.optString("title").ifBlank { Uri.parse(url).host.orEmpty() } to url)
+            }
+        }
         browserTabs.add(translate("التبويب 1") to safeStartUrl)
         browserTabStates.add(null)
 
@@ -111,6 +121,68 @@ internal class DownloadPageDialog(
                 json.put(org.json.JSONObject().put("title", title).put("url", url))
             }
             appPreferences.edit().putString("download_browser_history", json.toString()).apply()
+        }
+
+        fun persistBookmarks() {
+            val json = JSONArray()
+            browserBookmarks.take(100).forEach { (title, url) ->
+                json.put(org.json.JSONObject().put("title", title).put("url", url))
+            }
+            appPreferences.edit().putString("download_browser_bookmarks", json.toString()).apply()
+        }
+
+        fun toggleCurrentBookmark() {
+            val url = SecureUrlPolicy.toHttpsUrl(webView.url ?: safeStartUrl) ?: return
+            val existing = browserBookmarks.indexOfFirst { it.second == url }
+            if (existing >= 0) {
+                browserBookmarks.removeAt(existing)
+                Toast.makeText(activity, translate("تمت إزالة الموقع من المفضلة"), Toast.LENGTH_SHORT).show()
+            } else {
+                val title = webView.title.orEmpty().ifBlank { Uri.parse(url).host.orEmpty() }
+                browserBookmarks.add(0, title to url)
+                Toast.makeText(activity, translate("تم حفظ الموقع في المفضلة"), Toast.LENGTH_SHORT).show()
+            }
+            persistBookmarks()
+        }
+
+        fun openBrowserBookmarks() {
+            if (browserBookmarks.isEmpty()) {
+                Toast.makeText(activity, translate("لا توجد مواقع محفوظة في المفضلة"), Toast.LENGTH_SHORT).show()
+                return
+            }
+            val labels = browserBookmarks.map { (title, url) ->
+                (title.ifBlank { Uri.parse(url).host.orEmpty() }) + "\n" + url
+            }.toTypedArray()
+            AlertDialog.Builder(activity)
+                .setTitle(translate("المفضلة"))
+                .setItems(labels) { _, which ->
+                    browserBookmarks.getOrNull(which)?.second?.let { webView.loadUrl(it) }
+                }
+                .setNegativeButton(translate("إغلاق"), null)
+                .setNeutralButton(translate("مسح المفضلة")) { _, _ ->
+                    browserBookmarks.clear()
+                    persistBookmarks()
+                    Toast.makeText(activity, translate("تم مسح المواقع المحفوظة"), Toast.LENGTH_SHORT).show()
+                }
+                .show()
+        }
+
+        fun clearBrowsingData() {
+            AlertDialog.Builder(activity)
+                .setTitle(translate("الخصوصية"))
+                .setMessage(translate("سيتم مسح سجل التصفح وملفات تعريف الارتباط وبيانات المواقع المخزنة. لن تُحذف الملفات التي نزّلتها."))
+                .setNegativeButton(translate("إلغاء"), null)
+                .setPositiveButton(translate("مسح البيانات")) { _, _ ->
+                    browserHistory.clear()
+                    persistBrowserHistory()
+                    CookieManager.getInstance().removeAllCookies(null)
+                    CookieManager.getInstance().flush()
+                    android.webkit.WebStorage.getInstance().deleteAllData()
+                    webView.clearCache(true)
+                    webView.clearFormData()
+                    Toast.makeText(activity, translate("تم مسح بيانات التصفح"), Toast.LENGTH_SHORT).show()
+                }
+                .show()
         }
 
         fun rememberPage(url: String, title: String) {
@@ -255,8 +327,9 @@ internal class DownloadPageDialog(
         })
         toolbar.addView(titleBox, LinearLayout.LayoutParams(0, -2, 1f))
         toolbar.addView(toolbarAction("", { openBrowserHistory() }, com.marcorx6.library.R.drawable.ic_action_history))
+        toolbar.addView(toolbarAction("", { openBrowserBookmarks() }, com.marcorx6.library.R.drawable.ic_action_bookmark))
         toolbar.addView(toolbarAction("", { openBrowserTabs() }, com.marcorx6.library.R.drawable.ic_action_tabs))
-
+        toolbar.addView(toolbarAction("", { clearBrowsingData() }, com.marcorx6.library.R.drawable.ic_action_shield))
         toolbar.addView(toolbarAction("", { dialog.dismiss() }, com.marcorx6.library.R.drawable.ic_action_close))
         root.addView(toolbar, LinearLayout.LayoutParams(-1, -2))
 
@@ -508,9 +581,17 @@ internal class DownloadPageDialog(
             gravity = Gravity.CENTER
             setPadding(0, dp(3), 0, dp(7))
         }
+        browserActions.addView(toolbarAction(translate("الرئيسية"), {
+            webView.loadUrl("https://www.google.com/")
+        }, com.marcorx6.library.R.drawable.ic_nav_home),
+            LinearLayout.LayoutParams(0, dp(42), 1f).apply { marginEnd = dp(6) })
         browserActions.addView(toolbarAction(translate("تقدم"), {
             if (webView.canGoForward()) webView.goForward()
         }, com.marcorx6.library.R.drawable.ic_action_forward),
+            LinearLayout.LayoutParams(0, dp(42), 1f).apply { marginEnd = dp(6) })
+        browserActions.addView(toolbarAction(translate("التنزيلات"), {
+            onOpenDownloads()
+        }, com.marcorx6.library.R.drawable.ic_action_download),
             LinearLayout.LayoutParams(0, dp(42), 1f).apply { marginEnd = dp(6) })
         browserActions.addView(toolbarAction(translate("فتح خارجياً"), {
             try {
