@@ -21,6 +21,8 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import com.marcorx6.library.data.DownloadStoragePreferences
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 
 /**
  * Download-add sheet shown directly over the in-app browser.
@@ -309,5 +311,11 @@ internal class DownloadConfirmationPanel(
             }
         }
         root.animate().alpha(1f).translationY(0f).setDuration(190L).start()
+        (activity as? LifecycleOwner)?.lifecycle?.addObserver(object : DefaultLifecycleObserver {
+            override fun onDestroy(owner: LifecycleOwner) {
+                if (dialog.isShowing) dialog.dismiss()
+                owner.lifecycle.removeObserver(this)
+            }
+        })
     }
 }
