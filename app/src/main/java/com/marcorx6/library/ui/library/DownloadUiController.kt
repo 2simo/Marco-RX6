@@ -814,7 +814,7 @@ internal class DownloadUiController(
             androidx.core.view.WindowInsetsControllerCompat(this, decorView).apply {
                 isAppearanceLightStatusBars = !dark
                 isAppearanceLightNavigationBars = !dark
-                show(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+                hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
             }
         }
         androidx.core.view.ViewCompat.requestApplyInsets(root)
