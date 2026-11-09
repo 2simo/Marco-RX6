@@ -51,7 +51,7 @@ class MarcoFirebaseMessagingService : FirebaseMessagingService() {
         )
         val appIcon = BitmapFactory.decodeResource(resources, R.drawable.marco_rx6_dragon)
         val builder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_launcher)
+            .setSmallIcon(R.drawable.ic_notification_marco)
             .setLargeIcon(appIcon)
             .setContentTitle(title)
             .setContentText(body)
