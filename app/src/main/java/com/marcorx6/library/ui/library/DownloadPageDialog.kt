@@ -28,6 +28,8 @@ import android.text.InputType
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import com.marcorx6.library.network.SecureUrlPolicy
 import java.io.ByteArrayInputStream
 import org.json.JSONArray
@@ -760,5 +762,11 @@ internal class DownloadPageDialog(
         }
         addressInput.setText(safeStartUrl)
         webView.loadUrl(safeStartUrl)
+        (activity as? LifecycleOwner)?.lifecycle?.addObserver(object : DefaultLifecycleObserver {
+            override fun onDestroy(owner: LifecycleOwner) {
+                if (dialog.isShowing) dialog.dismiss()
+                owner.lifecycle.removeObserver(this)
+            }
+        })
     }
 }
