@@ -681,6 +681,7 @@ internal class MainLibraryInterfaceController(
             isHorizontalScrollBarEnabled = false
             clipToPadding = false
             overScrollMode = View.OVER_SCROLL_NEVER
+            setPadding(dp(2), dp(2), dp(2), dp(2))
         }
         filters = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -703,7 +704,7 @@ internal class MainLibraryInterfaceController(
                 gravity = Gravity.CENTER
                 minimumHeight = dp(48)
                 contentDescription = text.toString()
-                setPadding(dp(16), dp(10), dp(16), dp(10))
+                setPadding(dp(14), dp(9), dp(14), dp(9))
                 background = GradientDrawable(
                     GradientDrawable.Orientation.LEFT_RIGHT,
                     if (isDarkMode()) intArrayOf(Color.argb(210, 35, 38, 45), Color.argb(192, 15, 17, 22))
@@ -715,8 +716,6 @@ internal class MainLibraryInterfaceController(
                 setTextColor(muted)
                 isClickable = true
                 isFocusable = true
-                minimumHeight = dp(56)
-                contentDescription = text.toString()
                 if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
                     android.content.res.ColorStateList.valueOf(Color.argb(75, 190, 198, 210)),
                     null,
@@ -881,6 +880,7 @@ internal class MainLibraryInterfaceController(
         if (activeDockTab !in setOf("HOME", "SEARCH", "FAVORITES", "DOWNLOADS", "MESSAGES", "PROFILE")) activeDockTab = "HOME"
         val dockItems = linkedMapOf<String, LinearLayout>()
         val dockLabels = linkedMapOf<String, String>()
+        val dockTextViews = linkedMapOf<String, TextView>()
         fun renderDockSelection() {
             dockItems.forEach { (tab, item) ->
                 val active = tab == activeDockTab
@@ -914,9 +914,9 @@ internal class MainLibraryInterfaceController(
             val item = LinearLayout(context).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
-                setPadding(dp(4), dp(4), dp(4), dp(3))
-                minimumWidth = dp(48)
-                minimumHeight = dp(58)
+                setPadding(dp(1), dp(4), dp(1), dp(3))
+                minimumWidth = 0
+                minimumHeight = dp(56)
                 isClickable = true
                 isFocusable = true
                 if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
@@ -938,19 +938,22 @@ internal class MainLibraryInterfaceController(
                 scaleType = ImageView.ScaleType.FIT_CENTER
                 importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
             }, LinearLayout.LayoutParams(dp(21), dp(21)))
-            item.addView(TextView(context).apply {
+            val labelView = TextView(context).apply {
                 text = label
-                textSize = 9f
+                textSize = 8.5f
                 maxLines = 1
+                ellipsize = android.text.TextUtils.TruncateAt.END
                 gravity = Gravity.CENTER
                 typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
                 setTextColor(if (isDarkMode()) silver else Color.rgb(91, 98, 110))
                 importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-            }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(2) })
+            }
+            item.addView(labelView, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(2) })
             dockItems[key] = item
             dockLabels[key] = label
-            dock.addView(item, LinearLayout.LayoutParams(0, dp(58), 1f).apply {
-                marginStart = dp(3); marginEnd = dp(3)
+            dockTextViews[key] = labelView
+            dock.addView(item, LinearLayout.LayoutParams(0, dp(56), 1f).apply {
+                marginStart = dp(1); marginEnd = dp(1)
             })
         }
         dockItem("HOME", R.drawable.ic_nav_home, tr("الرئيسية")) {
@@ -961,14 +964,27 @@ internal class MainLibraryInterfaceController(
             selected = "FAVORITES"; renderGames(); pageScroll.smoothScrollTo(0, 0)
         }
         dockItem("DOWNLOADS", R.drawable.ic_nav_downloads, tr("التنزيلات")) { showDownloads() }
-        dockItem("MESSAGES", android.R.drawable.ic_dialog_email, tr("الرسائل")) { showMessages() }
+        dockItem("MESSAGES", R.drawable.ic_nav_messages, tr("الرسائل")) { showMessages() }
         dockItem("PROFILE", R.drawable.ic_nav_profile, tr("حسابي")) { showProfile() }
         renderDockSelection()
 
+        // Labels are retained on wider phones; compact widths switch to icon-only
+        // tabs so six destinations never collide or shrink into unreadable text.
+        fun updateDockDensity() {
+            dockItems.forEach { (key, item) ->
+                val compact = item.width < dp(49)
+                dockTextViews[key]?.visibility = if (compact) View.GONE else View.VISIBLE
+                item.contentDescription = dockLabels[key] ?: key
+            }
+        }
+        dock.addOnLayoutChangeListener { _, left, _, right, _, oldLeft, _, oldRight, _ ->
+            if (right - left != oldRight - oldLeft) updateDockDensity()
+        }
         val dockParams = FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply {
-            leftMargin = dp(16); rightMargin = dp(16); bottomMargin = dp(12)
+            leftMargin = dp(12); rightMargin = dp(12); bottomMargin = dp(8)
         }
         shell.addView(dock, dockParams)
+        dock.post { updateDockDensity() }
 
         // Hide the floating bottom dock while the user scrolls down and reveal it
         // while scrolling up. Translation keeps the content layout stable (no jump).
@@ -1027,7 +1043,7 @@ internal class MainLibraryInterfaceController(
             val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
             // The floating navigation dock must never sit on top of the keyboard.
             setDockVisible(!imeVisible)
-            dockParams.bottomMargin = dp(12) + safeBottom
+            dockParams.bottomMargin = dp(8) + safeBottom
             dock.layoutParams = dockParams
             // When typing, reclaim the dock's reserved space so the focused field
             // and the final form controls remain reachable above the keyboard.
