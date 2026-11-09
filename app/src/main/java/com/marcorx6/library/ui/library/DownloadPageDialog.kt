@@ -305,72 +305,28 @@ internal class DownloadPageDialog(
                 setOnClickListener { onClick() }
             }
 
-        val toolbar = LinearLayout(activity).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-        }
-        val titleBox = LinearLayout(activity).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(2), dp(2), 0, dp(2))
-        }
-        titleBox.addView(TextView(activity).apply {
-            text = "MARCO"
-            textSize = 17f
-            letterSpacing = 0.12f
-            setTypeface(null, Typeface.BOLD)
-            setTextColor(heading)
-        })
-        titleBox.addView(TextView(activity).apply {
-            text = translate("متصفح MARCO")
-            textSize = 10f
-            setTextColor(muted)
-        })
-        toolbar.addView(titleBox, LinearLayout.LayoutParams(0, -2, 1f))
-        toolbar.addView(toolbarAction("", { openBrowserHistory() }, com.marcorx6.library.R.drawable.ic_action_history))
-        toolbar.addView(toolbarAction("", { openBrowserBookmarks() }, com.marcorx6.library.R.drawable.ic_action_bookmark))
-        toolbar.addView(toolbarAction("", { openBrowserTabs() }, com.marcorx6.library.R.drawable.ic_action_tabs))
-        toolbar.addView(toolbarAction("", { clearBrowsingData() }, com.marcorx6.library.R.drawable.ic_action_shield))
-        toolbar.addView(toolbarAction("", { dialog.dismiss() }, com.marcorx6.library.R.drawable.ic_action_close))
-        root.addView(toolbar, LinearLayout.LayoutParams(-1, -2))
-
-        // Opera-inspired compact navigation row: history, editable address, reload and external open.
+        // Minimal browser header: address/search field and one ad-settings icon.
         val addressRow = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, dp(8), 0, dp(8))
+            setPadding(0, dp(4), 0, dp(8))
         }
-        addressRow.addView(toolbarAction("", {
-            if (webView.canGoBack()) webView.goBack()
-        }, com.marcorx6.library.R.drawable.ic_action_back))
         val addressInput = EditText(activity).apply {
             setSingleLine(true)
-            textSize = 12f
+            textSize = 13f
             setTextColor(heading)
             setHintTextColor(muted)
             hint = translate("ابحث أو أدخل عنوان الموقع")
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
             imeOptions = EditorInfo.IME_ACTION_GO
-            setPadding(dp(12), 0, dp(10), 0)
+            setPadding(dp(14), 0, dp(12), 0)
             setBackground(GradientDrawable().apply {
                 setColor(surface)
                 cornerRadius = dp(18).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(65, 71, 82) else Color.rgb(205, 211, 220))
+                setStroke(dp(1), border)
             })
         }
-        addressRow.addView(addressInput, LinearLayout.LayoutParams(0, dp(44), 1f).apply {
-            marginStart = dp(4)
-            marginEnd = dp(4)
-        })
-        addressRow.addView(toolbarAction("", {
-            toggleCurrentBookmark()
-        }, com.marcorx6.library.R.drawable.ic_action_bookmark))
-        addressRow.addView(toolbarAction("", {
-            val currentUrl = SecureUrlPolicy.toHttpsUrl(webView.url ?: safeStartUrl)
-            if (currentUrl != null) {
-                webView.stopLoading()
-                webView.loadUrl(currentUrl)
-            }
-        }, com.marcorx6.library.R.drawable.ic_action_refresh))
+        addressRow.addView(addressInput, LinearLayout.LayoutParams(0, dp(46), 1f))
         addressInput.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE) {
                 val entered = addressInput.text.toString().trim()
@@ -378,32 +334,22 @@ internal class DownloadPageDialog(
                     addressInput.error = translate("أدخل رابطاً أو عبارة للبحث")
                     return@setOnEditorActionListener true
                 }
-                val looksLikeUrl = entered.contains("://") ||
-                    android.util.Patterns.WEB_URL.matcher(entered).matches()
-                val destination = if (looksLikeUrl) {
-                    val candidate = if (entered.contains("://")) entered else "https://$entered"
-                    SecureUrlPolicy.toHttpsUrl(candidate)
+                val isUrl = entered.contains("://") || android.util.Patterns.WEB_URL.matcher(entered).matches()
+                val destination = if (isUrl) {
+                    SecureUrlPolicy.toHttpsUrl(if (entered.contains("://")) entered else "https://$entered")
                 } else {
-                    Uri.Builder()
-                        .scheme("https")
-                        .authority("www.google.com")
-                        .appendPath("search")
-                        .appendQueryParameter("q", entered)
-                        .build()
-                        .toString()
+                    Uri.Builder().scheme("https").authority("www.google.com")
+                        .appendPath("search").appendQueryParameter("q", entered).build().toString()
                 }
                 if (destination != null) {
                     webView.loadUrl(destination)
-                    val imm = activity.getSystemService(Activity.INPUT_METHOD_SERVICE) as? android.view.inputmethod.InputMethodManager
-                    imm?.hideSoftInputFromWindow(addressInput.windowToken, 0)
-                    true
-                } else {
-                    addressInput.error = translate("رابط الصفحة غير صالح أو غير آمن")
-                    true
-                }
+                    (activity.getSystemService(Activity.INPUT_METHOD_SERVICE) as? android.view.inputmethod.InputMethodManager)
+                        ?.hideSoftInputFromWindow(addressInput.windowToken, 0)
+                } else addressInput.error = translate("رابط الصفحة غير صالح أو غير آمن")
+                true
             } else false
         }
-        root.addView(addressRow, LinearLayout.LayoutParams(-1, -2))
+
 
 
         val progress = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
@@ -429,7 +375,6 @@ internal class DownloadPageDialog(
             setTextColor(primary)
             setPadding(dp(3), 0, dp(3), dp(6))
         }
-        root.addView(blockedStats, LinearLayout.LayoutParams(-1, -2))
 
         val browserFrame = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
@@ -441,7 +386,13 @@ internal class DownloadPageDialog(
             clipToOutline = true
         }
         browserFrame.addView(webView, LinearLayout.LayoutParams(-1, 0, 1f))
-        root.addView(browserFrame, LinearLayout.LayoutParams(-1, 0, 1f))
+        val swipeRefresh = androidx.swiperefreshlayout.widget.SwipeRefreshLayout(activity).apply {
+            setColorSchemeColors(primary)
+            setProgressBackgroundColorSchemeColor(surface)
+            setOnRefreshListener { webView.reload() }
+        }
+        swipeRefresh.addView(browserFrame, androidx.swiperefreshlayout.widget.SwipeRefreshLayout.LayoutParams(-1, -1))
+        root.addView(swipeRefresh, LinearLayout.LayoutParams(-1, 0, 1f))
 
         val candidateTitle = TextView(activity).apply {
             text = translate("روابط ملفات محتملة")
@@ -566,49 +517,73 @@ internal class DownloadPageDialog(
         val allowedHosts = adPreferences.getString("download_page_ad_allowlist", "").orEmpty()
             .split(',', ';').map { it.trim().lowercase() }.filter { it.isNotBlank() }.toMutableSet()
         lateinit var adToggle: TextView
-        adToggle = toolbarAction(translate("حجب الإعلانات"), {
-            adBlockerEnabled = !adBlockerEnabled
-            adPreferences.edit().putBoolean("download_page_ad_blocker", adBlockerEnabled).apply()
-            adToggle.apply {
-                text = translate("حجب الإعلانات")
-                setCompoundDrawablesRelativeWithIntrinsicBounds(
-                    if (adBlockerEnabled) com.marcorx6.library.R.drawable.ic_action_check
-                    else com.marcorx6.library.R.drawable.ic_action_close, 0, 0, 0
-                )
+        fun showAdSettings() {
+            val content = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(20), dp(12), dp(20), dp(4))
             }
-            blockedStats.text = translate(if (adBlockerEnabled) "تم تفعيل حجب الإعلانات" else "تم إيقاف حجب الإعلانات")
-            webView.reload()
-        }, if (adBlockerEnabled) com.marcorx6.library.R.drawable.ic_action_check else com.marcorx6.library.R.drawable.ic_action_close)
-        val browserActions = LinearLayout(activity).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER
-            setPadding(0, dp(3), 0, dp(7))
+            val enabled = android.widget.CheckBox(activity).apply {
+                text = translate("تفعيل حجب الإعلانات والمتتبعات")
+                isChecked = adBlockerEnabled
+                setTextColor(heading)
+                buttonTintList = android.content.res.ColorStateList.valueOf(primary)
+            }
+            val allowlistInput = EditText(activity).apply {
+                setText(allowedHosts.joinToString(", "))
+                hint = translate("مواقع مسموح بها، افصل بينها بفاصلة")
+                textSize = 13f
+                setTextColor(heading)
+                setHintTextColor(muted)
+                inputType = InputType.TYPE_CLASS_TEXT
+                setPadding(dp(12), dp(10), dp(12), dp(10))
+                setBackground(GradientDrawable().apply {
+                    setColor(surface); cornerRadius = dp(12).toFloat(); setStroke(dp(1), border)
+                })
+            }
+            content.addView(enabled)
+            content.addView(TextView(activity).apply {
+                text = translate("استثناء نطاقات المواقع من الحجب")
+                textSize = 11f; setTextColor(muted)
+                setPadding(0, dp(10), 0, dp(5))
+            })
+            content.addView(allowlistInput, LinearLayout.LayoutParams(-1, dp(48)))
+            AlertDialog.Builder(activity)
+                .setTitle(translate("إعدادات حجب الإعلانات"))
+                .setView(content)
+                .setNegativeButton(translate("إلغاء"), null)
+                .setPositiveButton(translate("حفظ")) { _, _ ->
+                    adBlockerEnabled = enabled.isChecked
+                    val cleaned = allowlistInput.text.toString().split(',', ';')
+                        .map { it.trim().lowercase() }
+                        .filter { it.matches(Regex("[a-z0-9.-]+")) && it.contains('.') }
+                        .distinct().take(30)
+                    appPreferences.edit()
+                        .putBoolean("download_page_ad_blocker", adBlockerEnabled)
+                        .putString("download_page_ad_allowlist", cleaned.joinToString(","))
+                        .apply()
+                    allowedHosts.clear()
+                    allowedHosts.addAll(cleaned)
+                    adToggle.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                        if (adBlockerEnabled) com.marcorx6.library.R.drawable.ic_action_check
+                        else com.marcorx6.library.R.drawable.ic_action_shield, 0, 0, 0
+                    )
+                    webView.reload()
+                }
+                .show()
         }
-        browserActions.addView(toolbarAction(translate("الرئيسية"), {
-            webView.loadUrl("https://www.google.com/")
-        }, com.marcorx6.library.R.drawable.ic_nav_home),
-            LinearLayout.LayoutParams(0, dp(42), 1f).apply { marginEnd = dp(6) })
-        browserActions.addView(toolbarAction(translate("تقدم"), {
-            if (webView.canGoForward()) webView.goForward()
-        }, com.marcorx6.library.R.drawable.ic_action_forward),
-            LinearLayout.LayoutParams(0, dp(42), 1f).apply { marginEnd = dp(6) })
-        browserActions.addView(toolbarAction(translate("التنزيلات"), {
-            dialog.dismiss()
-            onOpenDownloads()
-        }, com.marcorx6.library.R.drawable.ic_action_download),
-            LinearLayout.LayoutParams(0, dp(42), 1f).apply { marginEnd = dp(6) })
-        browserActions.addView(toolbarAction(translate("فتح خارجياً"), {
-            try {
-                val currentUrl = SecureUrlPolicy.toHttpsUrl(webView.url ?: safeStartUrl)
-                if (currentUrl == null) throw IllegalArgumentException("Unsafe page URL")
-                activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(currentUrl)))
-            } catch (_: Exception) {
-                Toast.makeText(activity, translate("تعذر فتح المتصفح الخارجي"), Toast.LENGTH_SHORT).show()
-            }
-        }, com.marcorx6.library.R.drawable.ic_action_external),
-            LinearLayout.LayoutParams(0, dp(42), 1f).apply { marginEnd = dp(6) })
-        browserActions.addView(adToggle, LinearLayout.LayoutParams(0, dp(42), 1f))
-        root.addView(browserActions, LinearLayout.LayoutParams(-1, -2))
+        adToggle = TextView(activity).apply {
+            gravity = Gravity.CENTER
+            setTextColor(primary)
+            setCompoundDrawablesRelativeWithIntrinsicBounds(
+                if (adBlockerEnabled) com.marcorx6.library.R.drawable.ic_action_check
+                else com.marcorx6.library.R.drawable.ic_action_shield, 0, 0, 0
+            )
+            setPadding(dp(8), 0, dp(8), 0)
+            contentDescription = translate("إعدادات حجب الإعلانات")
+            setOnClickListener { showAdSettings() }
+        }
+        addressRow.addView(adToggle, LinearLayout.LayoutParams(dp(46), dp(46)).apply { marginStart = dp(7) })
+
         val blockedRequests = AtomicInteger(0)
         // Curated local filter rules: known ad networks plus common third-party ad endpoints.
         // This is deliberately conservative for first-party pages so download controls keep working.
@@ -768,6 +743,7 @@ internal class DownloadPageDialog(
                 if (activeTabIndex in browserTabs.indices && url.startsWith("https://")) {
                     browserTabs[activeTabIndex] = browserTabs[activeTabIndex].first to url
                 }
+                swipeRefresh.isRefreshing = false
                 progress.visibility = View.VISIBLE
                 progress.progress = 0
                 status.text = Uri.parse(url).host ?: translate("جارٍ فتح صفحة التحميل…")
@@ -781,6 +757,7 @@ internal class DownloadPageDialog(
             override fun onPageFinished(view: WebView, url: String) {
                 rememberPage(url, view.title.orEmpty())
                 progress.visibility = View.GONE
+                swipeRefresh.isRefreshing = false
                 status.text = translate("إذا ظهرت خطوة تحقق أو مؤقت، أكملها داخل هذه الصفحة. الروابط المحتملة تظهر أسفلها.")
                 applyCosmeticFiltering()
                 scanForFileLinks()
@@ -788,11 +765,15 @@ internal class DownloadPageDialog(
 
             override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, error: SslError) {
                 handler.cancel()
+                swipeRefresh.isRefreshing = false
                 status.text = translate("تعذر التحقق من أمان اتصال الموقع؛ تم إيقاف فتح الصفحة.")
             }
 
             override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
-                if (request.isForMainFrame) status.text = translate("تعذر تحميل صفحة الموقع. جرّب فتحها بالمتصفح الخارجي.")
+                if (request.isForMainFrame) {
+                    swipeRefresh.isRefreshing = false
+                    status.text = translate("تعذر تحميل صفحة الموقع. جرّب فتحها بالمتصفح الخارجي.")
+                }
             }
         }
         webView.webChromeClient = object : WebChromeClient() {
