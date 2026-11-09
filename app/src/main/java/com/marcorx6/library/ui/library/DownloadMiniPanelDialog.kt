@@ -107,6 +107,13 @@ internal class DownloadMiniPanelDialog(
         )
         val rows = linkedMapOf<Long, Row>()
         val speedSamples = mutableMapOf<Long, Pair<Long, Long>>()
+        val emptyState = TextView(activity).apply {
+            text = translate("لا توجد تنزيلات في القائمة")
+            textSize = 12f
+            setTextColor(muted)
+            gravity = Gravity.CENTER
+            setPadding(0, dp(25), 0, dp(25))
+        }
         val handler = Handler(Looper.getMainLooper())
         // Database reads and file-size checks must never run on the UI thread.
         // A single worker also keeps refreshes and user actions in a predictable order.
@@ -180,13 +187,13 @@ internal class DownloadMiniPanelDialog(
                         speedSamples.remove(id)
                     }
                     if (entries.isEmpty()) {
-                        if (list.childCount == 0) list.addView(TextView(activity).apply {
-                            text = translate("لا توجد تنزيلات في القائمة")
-                            textSize = 12f; setTextColor(muted); gravity = Gravity.CENTER
-                            setPadding(0, dp(25), 0, dp(25))
-                        })
+                        rows.clear()
+                        speedSamples.clear()
+                        list.removeAllViews()
+                        list.addView(emptyState, LinearLayout.LayoutParams(-1, -2))
                         return@post
                     }
+                    if (emptyState.parent === list) list.removeView(emptyState)
                     entries.forEachIndexed { index, item ->
                         val row = rows[item.id] ?: makeRow(item.title).also {
                             rows[item.id] = it
