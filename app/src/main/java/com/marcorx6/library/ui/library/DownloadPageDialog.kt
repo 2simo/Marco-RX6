@@ -518,7 +518,7 @@ internal class DownloadPageDialog(
         var adBlockerEnabled = adPreferences.getBoolean("download_page_ad_blocker", true)
         val allowedHosts = adPreferences.getString("download_page_ad_allowlist", "").orEmpty()
             .split(',', ';').map { it.trim().lowercase() }.filter { it.isNotBlank() }.toMutableSet()
-        lateinit var adToggle: TextView
+        lateinit var adToggle: android.widget.ImageButton
         fun showAdSettings() {
             val content = LinearLayout(activity).apply {
                 orientation = LinearLayout.VERTICAL
@@ -565,23 +565,25 @@ internal class DownloadPageDialog(
                         .apply()
                     allowedHosts.clear()
                     allowedHosts.addAll(cleaned)
-                    adToggle.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                        if (adBlockerEnabled) com.marcorx6.library.R.drawable.ic_action_check
-                        else com.marcorx6.library.R.drawable.ic_action_shield, 0, 0, 0
+                    adToggle.imageTintList = android.content.res.ColorStateList.valueOf(
+                        if (adBlockerEnabled) heading else muted
                     )
                     webView.reload()
                 }
                 .show()
         }
-        adToggle = TextView(activity).apply {
-            gravity = Gravity.CENTER
-            setTextColor(primary)
-            setCompoundDrawablesRelativeWithIntrinsicBounds(
-                if (adBlockerEnabled) com.marcorx6.library.R.drawable.ic_action_check
-                else com.marcorx6.library.R.drawable.ic_action_shield, 0, 0, 0
-            )
-            setPadding(dp(8), 0, dp(8), 0)
+        adToggle = android.widget.ImageButton(activity).apply {
+            setImageResource(com.marcorx6.library.R.drawable.ic_action_shield)
+            imageTintList = android.content.res.ColorStateList.valueOf(if (adBlockerEnabled) heading else muted)
+            scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
             contentDescription = translate("إعدادات حجب الإعلانات")
+            isClickable = true
+            isFocusable = true
+            background = GradientDrawable().apply {
+                setColor(surface)
+                cornerRadius = dp(14).toFloat()
+                setStroke(dp(1), border)
+            }
             setOnClickListener { showAdSettings() }
         }
         addressRow.addView(adToggle, LinearLayout.LayoutParams(dp(46), dp(46)).apply { marginStart = dp(7) })
