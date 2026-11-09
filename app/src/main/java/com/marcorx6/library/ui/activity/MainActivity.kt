@@ -48,6 +48,9 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun cancelScreenMotion(view: View) {
+        // The outgoing root is detached immediately after this call. Cancel its own
+        // transition without recursively visiting every game card; card reveal work
+        // cancels itself from its detach listener.
         view.animate().cancel()
         view.clearAnimation()
         view.alpha = 1f
@@ -55,10 +58,7 @@ class MainActivity : ComponentActivity() {
         view.translationY = 0f
         view.scaleX = 1f
         view.scaleY = 1f
-        if (view is android.view.ViewGroup) {
-            view.layoutTransition = null
-            for (index in 0 until view.childCount) cancelScreenMotion(view.getChildAt(index))
-        }
+        if (view is android.view.ViewGroup) view.layoutTransition = null
     }
 
     private fun showRootScreen(view: View) {
