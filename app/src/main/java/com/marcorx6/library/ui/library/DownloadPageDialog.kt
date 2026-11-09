@@ -593,6 +593,8 @@ internal class DownloadPageDialog(
         // This is deliberately conservative for first-party pages so download controls keep working.
         val blockedAdHosts = setOf(
             "doubleclick.net", "googlesyndication.com", "googleadservices.com",
+            // Ad/redirect endpoints observed on the supplied VikingFile download page.
+            "mkfshtuxymriq.space", "rapidadexchange.com", "usrpubtrck.com",
             "adservice.google.com", "googletagservices.com",
             "taboola.com", "outbrain.com", "popads.net", "popcash.net",
             "propellerads.com", "exoclick.com", "trafficjunky.com", "onclickads.net",
@@ -731,7 +733,9 @@ internal class DownloadPageDialog(
         }
         webView.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): android.webkit.WebResourceResponse? {
-                if (!request.isForMainFrame && isBlockedAdRequest(request.url.toString())) {
+                // Check top-level navigations too: ad networks often redirect the whole
+                // tab instead of opening a popup, which the old subresource-only check missed.
+                if (isBlockedAdRequest(request.url.toString())) {
                     recordBlocked()
                     return android.webkit.WebResourceResponse(
                         "text/plain",
