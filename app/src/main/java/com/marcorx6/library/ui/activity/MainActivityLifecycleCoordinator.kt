@@ -25,7 +25,12 @@ internal class MainActivityLifecycleCoordinator(
     private val shutdownServices: () -> Unit,
     private val closeCoverRuntime: () -> Unit
 ) {
+    private var created = false
+    private var destroyed = false
+
     fun onCreate() {
+        if (created || destroyed) return
+        created = true
         initializePreferredPlatform()
         applySystemBarAppearance()
         createNotificationChannel()
@@ -46,11 +51,14 @@ internal class MainActivityLifecycleCoordinator(
     }
 
     fun onResume() {
+        if (!created || destroyed) return
         applySystemBarAppearance()
         ViewCompat.requestApplyInsets(activity.window.decorView)
     }
 
     fun onDestroy() {
+        if (destroyed) return
+        destroyed = true
         dismissUserExperience()
         disposeLibrary()
         shutdownServices()
