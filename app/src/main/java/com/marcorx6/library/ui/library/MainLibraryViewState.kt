@@ -12,6 +12,10 @@ internal class MainLibraryViewState {
     lateinit var filters: LinearLayout
     lateinit var countText: TextView
 
+    /** Rendering can be requested while the screen tree is still being assembled. */
+    fun isReadyForRendering(): Boolean =
+        this::gameList.isInitialized && this::filters.isInitialized && this::countText.isInitialized
+
     var selected: String = "ALL"
     var sortMode: String = "الأحدث"
 }
