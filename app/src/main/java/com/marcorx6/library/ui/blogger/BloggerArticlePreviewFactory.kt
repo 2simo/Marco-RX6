@@ -3,6 +3,7 @@ package com.marcorx6.library.ui
 import com.marcorx6.library.network.BloggerArticleBuilder
 import android.app.Activity
 import android.webkit.WebView
+import android.webkit.WebViewClient
 
 internal class BloggerArticlePreviewFactory(
     private val activity: Activity,
@@ -49,6 +50,17 @@ internal class BloggerArticlePreviewFactory(
         return WebView(activity).apply {
             setBackgroundColor(backgroundColor())
             settings.javaScriptEnabled = false
+            webViewClient = object : WebViewClient() {
+                override fun onRenderProcessGone(
+                    view: WebView,
+                    detail: android.webkit.RenderProcessGoneDetail
+                ): Boolean {
+                    (view.parent as? android.view.ViewGroup)?.removeView(view)
+                    view.destroy()
+                    android.util.Log.w("MarcoArticlePreview", "Preview renderer exited; the preview was discarded")
+                    return true
+                }
+            }
             loadDataWithBaseURL(null, previewHtml, "text/html", "UTF-8", null)
         }
     }
