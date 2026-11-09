@@ -1785,7 +1785,6 @@ internal class FirebaseAccountController(
                                     cornerRadius = dp(16).toFloat()
                                     setColor(if (mine) Color.rgb(190, 198, 210) else Color.rgb(35, 39, 46))
                                 }
-                                maximumWidth = dp(280)
                             }
                             if (!replyText.isNullOrBlank()) {
                                 val quote = LinearLayout(activity).apply {
@@ -1806,6 +1805,7 @@ internal class FirebaseAccountController(
                                 })
                                 quote.addView(TextView(activity).apply {
                                     text = replyText
+                                    maxWidth = dp(250)
                                     textSize = 11f
                                     maxLines = 2
                                     ellipsize = android.text.TextUtils.TruncateAt.END
@@ -1816,6 +1816,7 @@ internal class FirebaseAccountController(
                             }
                             bubble.addView(TextView(activity).apply {
                                 text = snapshot.getString("text").orEmpty()
+                                maxWidth = dp(250)
                                 textSize = 14f
                                 setTextColor(if (mine) Color.rgb(18, 20, 24) else Color.WHITE)
                                 textDirection = View.TEXT_DIRECTION_FIRST_STRONG
