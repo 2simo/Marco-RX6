@@ -1326,16 +1326,56 @@ internal class FirebaseAccountController(
                 val unread = item.getBoolean("read") != true
                 val title = item.getString("title") ?: "إشعار جديد"
                 val body = item.getString("body").orEmpty()
-                val row = TextView(activity).apply {
-                    text = (if (unread) "●  " else "○  ") + title + "\n" + body
-                    textSize = 13f
-                    setTextColor(if (unread) Color.WHITE else Color.rgb(170, 177, 188))
-                    setPadding(dp(15), dp(14), dp(15), dp(14))
+                val row = LinearLayout(activity).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    layoutDirection = View.LAYOUT_DIRECTION_RTL
+                    gravity = Gravity.CENTER_VERTICAL
+                    setPadding(dp(12), dp(11), dp(12), dp(11))
                     background = GradientDrawable().apply {
                         cornerRadius = dp(15).toFloat()
                         setColor(if (unread) Color.rgb(35, 38, 45) else Color.rgb(18, 20, 25))
                         setStroke(dp(1), Color.rgb(75, 82, 94))
                     }
+                    if (type == "game") {
+                        val coverUrl = item.getString("coverUrl").orEmpty()
+                        val cover = ImageView(activity).apply {
+                            scaleType = ImageView.ScaleType.CENTER_CROP
+                            clipToOutline = true
+                            background = GradientDrawable().apply {
+                                cornerRadius = dp(9).toFloat()
+                                setColor(Color.rgb(42, 46, 55))
+                            }
+                            contentDescription = translate("غلاف اللعبة") + " " + item.getString("gameName").orEmpty()
+                            if (coverUrl.startsWith("https://", ignoreCase = true)) {
+                                loadCover(this, "", coverUrl)
+                            } else {
+                                setImageResource(android.R.drawable.ic_menu_gallery)
+                                scaleType = ImageView.ScaleType.CENTER_INSIDE
+                            }
+                        }
+                        addView(cover, LinearLayout.LayoutParams(dp(66), dp(82)).apply {
+                            marginEnd = dp(12)
+                        })
+                    }
+                    val textColumn = LinearLayout(activity).apply {
+                        orientation = LinearLayout.VERTICAL
+                        gravity = Gravity.CENTER_VERTICAL
+                    }
+                    textColumn.addView(TextView(activity).apply {
+                        text = (if (unread) "●  " else "○  ") + title
+                        textSize = 13f
+                        setTypeface(null, android.graphics.Typeface.BOLD)
+                        setTextColor(if (unread) Color.WHITE else Color.rgb(170, 177, 188))
+                    })
+                    textColumn.addView(TextView(activity).apply {
+                        text = body
+                        textSize = 11f
+                        setTextColor(Color.rgb(165, 173, 185))
+                        setPadding(0, dp(5), 0, 0)
+                    })
+                    addView(textColumn, LinearLayout.LayoutParams(0, -2, 1f))
+                    isClickable = true
+                    isFocusable = true
                     setOnClickListener {
                         notifications.markRead(user.uid, item)
                             .addOnFailureListener { error ->
