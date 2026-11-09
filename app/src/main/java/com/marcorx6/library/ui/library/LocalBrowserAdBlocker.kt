@@ -37,13 +37,6 @@ internal object LocalBrowserAdBlocker {
         Regex("""(?:^|[./_-])(?:ads?|adserver|adservice|adnetwork|advert|sponsor|popunder|popup)(?:[./_-]|$)""", RegexOption.IGNORE_CASE)
     )
 
-    fun shouldBlockNavigation(url: String, enabled: Boolean, allowedHosts: Set<String>): Boolean {
-        if (!enabled) return false
-        val host = hostOf(url) ?: return false
-        if (isAllowed(host, allowedHosts)) return false
-        return forcedRedirectHosts.any { host == it || host.endsWith(".$it") }
-    }
-
     fun shouldBlockRequest(
         url: String,
         pageUrl: String,
