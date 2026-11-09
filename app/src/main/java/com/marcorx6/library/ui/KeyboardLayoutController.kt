@@ -4,6 +4,7 @@ import android.app.Activity
 import android.graphics.Rect
 import android.view.View
 import android.view.ViewTreeObserver
+import android.view.Window
 import android.view.WindowManager
 import android.widget.EditText
 
@@ -15,10 +16,10 @@ import android.widget.EditText
  * it into the visible area instead of leaving it underneath the IME.
  */
 internal object KeyboardLayoutController {
-    fun install(activity: Activity, root: View) {
-        activity.window.setSoftInputMode(
-            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
-        )
+    fun install(activity: Activity, root: View) = install(activity.window, root)
+
+    fun install(window: Window, root: View) {
+        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
 
         val observer = root.viewTreeObserver
         if (!observer.isAlive) return
