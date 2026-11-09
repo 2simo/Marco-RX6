@@ -139,6 +139,12 @@ internal class MainLibraryRuntimeFeature(
 
     fun create() = mainLibraryFeature.create()
     fun dispose() = mainLibraryFeature.dispose()
-    fun renderGames() = gameLibraryFeature.render()
+    fun renderGames() {
+        // MainLibraryInterfaceController requests an initial render while building
+        // category sections, before the list/filter/count views are attached.
+        // Skip that early request; create() performs the real render after wiring them.
+        if (!viewState.isReadyForRendering()) return
+        gameLibraryFeature.render()
+    }
     fun showAdvancedFilters() = advancedFiltersFeature.show()
 }
