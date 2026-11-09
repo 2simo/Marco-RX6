@@ -15,8 +15,6 @@ internal class FirebasePushTokenRepository(
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance(),
     private val messaging: FirebaseMessaging = FirebaseMessaging.getInstance()
 ) {
-    private val appContext = context.applicationContext
-
     fun syncCurrentToken() {
         val user = auth.currentUser ?: return
         if (user.isAnonymous) return
