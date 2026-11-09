@@ -10,6 +10,8 @@ class MarcoApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        AppDiagnostics.install(this)
+        AppDiagnostics.log("INFO", "Application", "Process started")
         // Do not initialize WebView/WorkManager filter components during process startup.
         // The browser initializes the filter lazily when the user actually opens it.
     }
