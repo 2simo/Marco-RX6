@@ -88,19 +88,49 @@ jobs:
         run: |
           APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort | tail -n 1)"
           test -n "$APKSIGNER"
-          RELEASE_CERT="$("$APKSIGNER" verify --print-certs app/build/outputs/apk/release/app-release.apk | awk '/certificate SHA-256 digest:/ {print $NF; exit}')"
-          RELEASE_CERT_SHA1="$("$APKSIGNER" verify --print-certs app/build/outputs/apk/release/app-release.apk | awk '/certificate SHA-1 digest:/ {print $NF; exit}')"
-          DEBUG_CERT="$("$APKSIGNER" verify --print-certs app/build/outputs/apk/debug/app-debug.apk | awk '/certificate SHA-256 digest:/ {print $NF; exit}')"
+          RELEASE_DIR="app/build/outputs/apk/release"
+          DEBUG_DIR="app/build/outputs/apk/debug"
+          test -s "$RELEASE_DIR/app-arm64-v8a-release.apk"
+          test -s "$RELEASE_DIR/app-armeabi-v7a-release.apk"
+          test -s "$RELEASE_DIR/app-universal-release.apk"
+          RELEASE_CERT=""
+          RELEASE_CERT_SHA1=""
+          for APK in "$RELEASE_DIR"/*.apk; do
+            CERT="$("$APKSIGNER" verify --print-certs "$APK" | awk '/certificate SHA-256 digest:/ {print $NF; exit}')"
+            SHA1="$("$APKSIGNER" verify --print-certs "$APK" | awk '/certificate SHA-1 digest:/ {print $NF; exit}')"
+            test -n "$CERT"
+            if [ -z "$RELEASE_CERT" ]; then RELEASE_CERT="$CERT"; RELEASE_CERT_SHA1="$SHA1"; fi
+            test "$CERT" = "$RELEASE_CERT"
+            echo "$(basename "$APK"): $(stat -c%s "$APK") bytes"
+          done
+          DEBUG_CERT="$("$APKSIGNER" verify --print-certs "$DEBUG_DIR/app-universal-debug.apk" | awk '/certificate SHA-256 digest:/ {print $NF; exit}')"
           test -n "$RELEASE_CERT"
           test -n "$RELEASE_CERT_SHA1"
           test "$DEBUG_CERT" = "$RELEASE_CERT"
           echo "Firebase Android release SHA-1: $RELEASE_CERT_SHA1"
           echo "Firebase Android release SHA-256: $RELEASE_CERT"
 
-      - name: Upload Release APK for device testing
+      # The primary release artifact is the smaller ARM64 build for modern phones.
+      - name: Upload ARM64 Release APK
         uses: actions/upload-artifact@v7
         with:
           name: marco-rx6-release-apk
-          path: app/build/outputs/apk/release/app-release.apk
+          path: app/build/outputs/apk/release/app-arm64-v8a-release.apk
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Upload ARM32 Release APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: marco-rx6-arm32-apk
+          path: app/build/outputs/apk/release/app-armeabi-v7a-release.apk
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Upload Universal Release APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: marco-rx6-universal-apk
+          path: app/build/outputs/apk/release/app-universal-release.apk
           if-no-files-found: error
           retention-days: 3
