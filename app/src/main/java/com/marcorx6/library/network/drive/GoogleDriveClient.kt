@@ -2,7 +2,7 @@ package com.marcorx6.library.network
 
 import android.graphics.BitmapFactory
 import org.json.JSONObject
-import java.io.ByteArrayOutputStream
+import java.io.BufferedOutputStream
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
@@ -30,13 +30,13 @@ internal class GoogleDriveClient : DriveCoverUploader {
         val boundary = "MarcoRX6" + System.currentTimeMillis()
         val metadata = JSONObject()
             .put("name", "MARCO_RX6_" + file.nameWithoutExtension + "." + extension)
-        val multipart = ByteArrayOutputStream().apply {
-            write("--$boundary\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n".toByteArray(Charsets.UTF_8))
-            write(metadata.toString().toByteArray(Charsets.UTF_8))
-            write("\r\n--$boundary\r\nContent-Type: $mime\r\n\r\n".toByteArray(Charsets.UTF_8))
-            file.inputStream().use { it.copyTo(this) }
-            write("\r\n--$boundary--\r\n".toByteArray(Charsets.UTF_8))
-        }
+        val metadataPart = (
+            "--$boundary\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n" +
+                metadata.toString() +
+                "\r\n--$boundary\r\nContent-Type: $mime\r\n\r\n"
+            ).toByteArray(Charsets.UTF_8)
+        val closingPart = "\r\n--$boundary--\r\n".toByteArray(Charsets.UTF_8)
+        val multipartLength = metadataPart.size.toLong() + file.length() + closingPart.size
 
         val upload = URL(UPLOAD_URL).openConnection() as HttpURLConnection
         val uploadBody: String
@@ -46,9 +46,14 @@ internal class GoogleDriveClient : DriveCoverUploader {
             upload.connectTimeout = 30_000
             upload.readTimeout = 30_000
             upload.doOutput = true
+            upload.setFixedLengthStreamingMode(multipartLength)
             upload.setRequestProperty("Authorization", "Bearer $accessToken")
             upload.setRequestProperty("Content-Type", "multipart/related; boundary=$boundary")
-            upload.outputStream.use { it.write(multipart.toByteArray()) }
+            BufferedOutputStream(upload.outputStream).use { output ->
+                output.write(metadataPart)
+                file.inputStream().use { input -> input.copyTo(output) }
+                output.write(closingPart)
+            }
             val code = upload.responseCode
             uploadBody = readResponse(upload, code)
             if (code !in 200..299) {
