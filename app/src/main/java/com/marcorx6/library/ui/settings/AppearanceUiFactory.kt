@@ -145,6 +145,7 @@ internal class AppearanceUiFactory(
                 .hide(WindowInsetsCompat.Type.statusBars())
             window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
             window.attributes = window.attributes.apply { dimAmount = 0.66f }
+            KeyboardLayoutController.install(window, window.decorView)
         }
         dialog.findViewById<TextView>(activity.resources.getIdentifier("alertTitle", "id", "android"))?.apply {
             setTextColor(white())
