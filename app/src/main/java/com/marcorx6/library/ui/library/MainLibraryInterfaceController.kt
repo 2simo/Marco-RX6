@@ -1091,11 +1091,16 @@ internal class MainLibraryInterfaceController(
                 WindowInsetsCompat.Type.navigationBars() or
                     WindowInsetsCompat.Type.mandatorySystemGestures()
             ).bottom
+            val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
+            // The floating navigation dock must never sit on top of the keyboard.
+            setDockVisible(!imeVisible)
             dockParams.bottomMargin = dp(12) + safeBottom
             dock.layoutParams = dockParams
-            // Keep content below Android's status bar on edge-to-edge devices.
+            // When typing, reclaim the dock's reserved space so the focused field
+            // and the final form controls remain reachable above the keyboard.
             val effectiveSafeTop = 0
-            pageScroll.setPadding(0, effectiveSafeTop, 0, dp(84) + safeBottom)
+            val bottomContentSpace = if (imeVisible) dp(16) + safeBottom else dp(84) + safeBottom
+            pageScroll.setPadding(0, effectiveSafeTop, 0, bottomContentSpace)
             insets
         }
         setContentView(shell)
