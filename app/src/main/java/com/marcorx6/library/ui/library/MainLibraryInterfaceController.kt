@@ -306,6 +306,11 @@ internal class MainLibraryInterfaceController(
         root.addView(makeText(tr("اختر القسم الذي تريد تصفحه"), 13f, gray, false),
             LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(14) })
 
+        val librarySnapshot = games()
+        val platformCounts = librarySnapshot.groupingBy {
+            GameLibraryManager.normalizePlatform(it.platform) ?: it.platform.trim()
+        }.eachCount()
+        val favoritesCount = librarySnapshot.count { it.isFavorite }
         val available = listOf(
             "PS4" to "PS4",
             "PS3" to "PS3",
@@ -313,7 +318,7 @@ internal class MainLibraryInterfaceController(
             "PS3_ARABIC" to tr("PS3 Arabic"),
             "FAVORITES" to tr("المفضلة")
         ).mapNotNull { (key, label) ->
-            val count = GameLibraryManager.filterAndSort(games(), key, "", "", "", sortMode).size
+            val count = if (key == "FAVORITES") favoritesCount else platformCounts[key] ?: 0
             if (count > 0) Triple(key, label, count) else null
         }
         val cards = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
