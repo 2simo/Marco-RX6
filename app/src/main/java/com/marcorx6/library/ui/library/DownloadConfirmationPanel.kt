@@ -264,11 +264,14 @@ internal class DownloadConfirmationPanel(
             marginEnd = dp(9)
         })
         val start = TextView(activity).apply {
-            text = translate("بدء التنزيل  ↓")
+            text = translate("بدء التنزيل")
             textSize = 13f
             setTypeface(null, Typeface.BOLD)
             gravity = Gravity.CENTER
             setTextColor(if (dark) Color.rgb(19, 22, 28) else Color.WHITE)
+            setCompoundDrawablesRelativeWithIntrinsicBounds(com.marcorx6.library.R.drawable.ic_action_download, 0, 0, 0)
+            compoundDrawablePadding = dp(7)
+            compoundDrawableTintList = android.content.res.ColorStateList.valueOf(if (dark) Color.rgb(19, 22, 28) else Color.WHITE)
             this.background = GradientDrawable().apply {
                 setColor(silver)
                 cornerRadius = dp(15).toFloat()
