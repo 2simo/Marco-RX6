@@ -76,7 +76,7 @@ function notificationData(document, recipientUid) {
     type: stringField(f, "type", "general"),
     recipientUid
   };
-  for (const key of ["actorUid", "conversationId", "messageId", "gameName", "platform"]) {
+  for (const key of ["actorUid", "conversationId", "messageId", "gameName", "platform", "coverUrl"]) {
     const value = stringField(f, key);
     if (value) data[key] = value;
   }
