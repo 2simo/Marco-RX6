@@ -740,9 +740,12 @@ internal class DownloadPageDialog(
                 }
             } else false
         }
+        var lifecycleObserver: DefaultLifecycleObserver? = null
+        val lifecycleOwner = activity as? LifecycleOwner
         dialog.setOnDismissListener {
             webView.stopLoading()
             webView.destroy()
+            lifecycleObserver?.let { lifecycleOwner?.lifecycle?.removeObserver(it) }
         }
         dialog.show()
         dialog.window?.apply {
@@ -762,11 +765,13 @@ internal class DownloadPageDialog(
         }
         addressInput.setText(safeStartUrl)
         webView.loadUrl(safeStartUrl)
-        (activity as? LifecycleOwner)?.lifecycle?.addObserver(object : DefaultLifecycleObserver {
+        val observer = object : DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
                 if (dialog.isShowing) dialog.dismiss()
                 owner.lifecycle.removeObserver(this)
             }
-        })
+        }
+        lifecycleObserver = observer
+        lifecycleOwner?.lifecycle?.addObserver(observer)
     }
 }
