@@ -35,6 +35,7 @@ import java.io.ByteArrayInputStream
 import org.json.JSONArray
 import org.json.JSONTokener
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * A small in-app browser for download pages that are not direct files.
@@ -589,13 +590,14 @@ internal class DownloadPageDialog(
         addressRow.addView(adToggle, LinearLayout.LayoutParams(dp(46), dp(46)).apply { marginStart = dp(7) })
 
         val blockedRequests = AtomicInteger(0)
+        val activePageUrl = AtomicReference(safeStartUrl)
         fun isBlockedRedirectDestination(url: String): Boolean =
             LocalBrowserAdBlocker.shouldBlockNavigation(url, adBlockerEnabled, allowedHosts)
 
         fun isBlockedAdRequest(url: String): Boolean =
             LocalBrowserAdBlocker.shouldBlockRequest(
                 url = url,
-                pageUrl = webView.url ?: safeStartUrl,
+                pageUrl = activePageUrl.get(),
                 enabled = adBlockerEnabled,
                 allowedHosts = allowedHosts,
                 isDirectFile = ::isDirectFileUrl
@@ -690,6 +692,7 @@ internal class DownloadPageDialog(
             }
 
             override fun onPageStarted(view: WebView, url: String, favicon: android.graphics.Bitmap?) {
+                activePageUrl.set(url)
                 if (activeTabIndex in browserTabs.indices && url.startsWith("https://")) {
                     browserTabs[activeTabIndex] = browserTabs[activeTabIndex].first to url
                 }
