@@ -321,7 +321,7 @@ internal class DownloadPageDialog(
             setTextColor(heading)
         })
         titleBox.addView(TextView(activity).apply {
-            text = translate("متصفح التحميل")
+            text = translate("متصفح MARCO")
             textSize = 10f
             setTextColor(muted)
         })
@@ -593,6 +593,7 @@ internal class DownloadPageDialog(
         }, com.marcorx6.library.R.drawable.ic_action_forward),
             LinearLayout.LayoutParams(0, dp(42), 1f).apply { marginEnd = dp(6) })
         browserActions.addView(toolbarAction(translate("التنزيلات"), {
+            dialog.dismiss()
             onOpenDownloads()
         }, com.marcorx6.library.R.drawable.ic_action_download),
             LinearLayout.LayoutParams(0, dp(42), 1f).apply { marginEnd = dp(6) })
