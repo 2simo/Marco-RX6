@@ -72,6 +72,7 @@ class MainActivity : ComponentActivity() {
         // updates during scrolling/resizing, contributing to visible flicker.
         LanguageTranslator.translateViewTree(view, appearanceRuntimeFeature.currentLanguage())
         setContentView(view)
+        activityServicesRuntimeFeature.applySystemBarAppearance()
         applyMotionPreferences(view)
         applyUnifiedSkin(view)
     }
@@ -124,7 +125,7 @@ class MainActivity : ComponentActivity() {
                 googleAccountRuntimeFeature.signOut { }
             },
             styleDialog = ::styleAlertDialog,
-            setContentView = { view -> secondaryScreenBackCallback.isEnabled = true; setContentView(view) },
+            setContentView = { view -> secondaryScreenBackCallback.isEnabled = true; setContentView(view); activityServicesRuntimeFeature.applySystemBarAppearance() },
             onBack = ::createInterface,
             dp = ::dp,
             isDarkMode = ::isDarkMode,
