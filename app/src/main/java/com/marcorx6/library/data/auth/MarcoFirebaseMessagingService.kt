@@ -24,7 +24,7 @@ import java.net.URL
 class MarcoFirebaseMessagingService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        FirebasePushTokenRepository(applicationContext).saveToken(token)
+        FirebasePushTokenRepository().saveToken(token)
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
