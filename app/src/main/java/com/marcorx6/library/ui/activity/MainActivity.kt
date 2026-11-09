@@ -78,6 +78,7 @@ class MainActivity : ComponentActivity() {
         // updates during scrolling/resizing, contributing to visible flicker.
         LanguageTranslator.translateViewTree(view, appearanceRuntimeFeature.currentLanguage())
         setContentView(view)
+        com.marcorx6.library.ui.KeyboardLayoutController.install(this, view)
         activityServicesRuntimeFeature.applySystemBarAppearance()
         applyMotionPreferences(view)
         applyUnifiedSkin(view)
