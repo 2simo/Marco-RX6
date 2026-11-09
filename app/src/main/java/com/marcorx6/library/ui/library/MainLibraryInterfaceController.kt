@@ -16,10 +16,8 @@ import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.Gravity
-import android.graphics.Rect
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewTreeObserver
 import android.widget.*
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -81,88 +79,12 @@ internal class MainLibraryInterfaceController(
         createText(value, size, color, bold)
 
     private fun runWhenVisible(view: View, action: () -> Unit) {
-        var completed = false
-        var observer: ViewTreeObserver? = null
-        lateinit var checkVisibility: () -> Unit
-        val scrollListener = ViewTreeObserver.OnScrollChangedListener { checkVisibility() }
-
-        fun removeObserver() {
-            observer?.takeIf { it.isAlive }?.removeOnScrollChangedListener(scrollListener)
-            observer = null
-        }
-
-        val attachListener = object : View.OnAttachStateChangeListener {
-            override fun onViewAttachedToWindow(v: View) {
-                observer = v.viewTreeObserver
-                if (observer?.isAlive == true) observer?.addOnScrollChangedListener(scrollListener)
-                v.post { checkVisibility() }
-            }
-
-            override fun onViewDetachedFromWindow(v: View) {
-                removeObserver()
-            }
-        }
-
-        checkVisibility = {
-            if (!completed && view.isAttachedToWindow) {
-                val visible = Rect()
-                if (view.getGlobalVisibleRect(visible) && visible.width() > 0 && visible.height() > 0) {
-                    completed = true
-                    removeObserver()
-                    view.removeOnAttachStateChangeListener(attachListener)
-                    action()
-                }
-            }
-        }
-
-        view.addOnAttachStateChangeListener(attachListener)
-        if (view.isAttachedToWindow) {
-            observer = view.viewTreeObserver
-            if (observer?.isAlive == true) observer?.addOnScrollChangedListener(scrollListener)
-            view.post { checkVisibility() }
-        }
+        VisibleViewWorkScheduler.watch(view, action)
     }
 
     private fun loadCoverWhenVisible(image: ImageView, localPath: String, imageUrl: String) {
-        var requested = false
-        var observer: ViewTreeObserver? = null
-        lateinit var checkVisibility: () -> Unit
-        val scrollListener = ViewTreeObserver.OnScrollChangedListener { checkVisibility() }
-
-        fun removeObserver() {
-            observer?.takeIf { it.isAlive }?.removeOnScrollChangedListener(scrollListener)
-            observer = null
-        }
-
-        val attachListener = object : View.OnAttachStateChangeListener {
-            override fun onViewAttachedToWindow(view: View) {
-                observer = view.viewTreeObserver
-                if (observer?.isAlive == true) observer?.addOnScrollChangedListener(scrollListener)
-                view.post { checkVisibility() }
-            }
-
-            override fun onViewDetachedFromWindow(view: View) {
-                removeObserver()
-            }
-        }
-
-        checkVisibility = {
-            if (!requested && image.isAttachedToWindow) {
-                val visible = Rect()
-                if (image.getGlobalVisibleRect(visible) && visible.width() > 0 && visible.height() > 0) {
-                    requested = true
-                    removeObserver()
-                    image.removeOnAttachStateChangeListener(attachListener)
-                    loadCover(image, localPath, imageUrl)
-                }
-            }
-        }
-
-        image.addOnAttachStateChangeListener(attachListener)
-        if (image.isAttachedToWindow) {
-            observer = image.viewTreeObserver
-            if (observer?.isAlive == true) observer?.addOnScrollChangedListener(scrollListener)
-            image.post { checkVisibility() }
+        VisibleViewWorkScheduler.watch(image) {
+            loadCover(image, localPath, imageUrl)
         }
     }
 
