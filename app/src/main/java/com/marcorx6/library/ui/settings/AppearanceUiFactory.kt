@@ -95,6 +95,13 @@ internal class AppearanceUiFactory(
 
     fun applyUnifiedSkin(view: View) {
         installGlassInteraction(view)
+        // Every screen opened through MainActivity receives the same neutral
+        // black/silver base when its root has no explicit surface of its own.
+        if (view.parent === activity.findViewById<ViewGroup>(android.R.id.content) &&
+            view.background == null
+        ) {
+            view.setBackgroundColor(bg())
+        }
         when (view) {
             is EditText -> styleInput(view)
             // CompoundButton subclasses Button, so handle them first to avoid
@@ -117,6 +124,13 @@ internal class AppearanceUiFactory(
             is Spinner -> {
                 view.backgroundTintList = android.content.res.ColorStateList.valueOf(gray())
                 view.minimumHeight = dp(48)
+            }
+            is TextView -> {
+                // Clickable text controls (back links, compact actions and chips)
+                // share a reliable touch target without changing their typography.
+                if (view.isClickable || view.isLongClickable) {
+                    view.minimumHeight = maxOf(view.minimumHeight, dp(44))
+                }
             }
         }
         if (view is ViewGroup) {
