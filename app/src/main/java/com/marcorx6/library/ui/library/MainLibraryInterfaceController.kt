@@ -414,7 +414,14 @@ internal class MainLibraryInterfaceController(
                 setPadding(0, dp(5), 0, 0)
             })
             item.addView(info, LinearLayout.LayoutParams(0, -2, 1f))
-            item.addView(makeText("‹", 27f, silver, true))
+            item.addView(ImageView(context).apply {
+                setImageResource(R.drawable.ic_action_chevron)
+                imageTintList = android.content.res.ColorStateList.valueOf(silver)
+                scaleType = ImageView.ScaleType.CENTER_INSIDE
+                contentDescription = tr("فتح القسم")
+            }, LinearLayout.LayoutParams(dp(28), dp(28)).apply {
+                marginStart = dp(8)
+            })
             cards.addView(item, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(11) })
             ScrollRevealAnimator.reveal(item)
         }
@@ -576,7 +583,7 @@ internal class MainLibraryInterfaceController(
             LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginEnd = dp(8) })
         header.addView(headerAction(R.drawable.ic_action_settings, tr("الإعدادات")) { showAppearanceSettings() },
             LinearLayout.LayoutParams(dp(48), dp(48)))
-        header.addView(headerAction(android.R.drawable.ic_popup_reminder, tr("الإشعارات")) { showNotifications() },
+        header.addView(headerAction(R.drawable.ic_action_notifications, tr("الإشعارات")) { showNotifications() },
             LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginStart = dp(8) })
 
         root.addView(header)
