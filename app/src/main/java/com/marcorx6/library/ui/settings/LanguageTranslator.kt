@@ -705,6 +705,8 @@ internal object LanguageTranslator {
             "لا توجد محادثات بعد. ابدأ محادثة مع شخص يتابعك وتتابعه." to listOf("No conversations yet. Start a conversation with someone who follows you and whom you follow.", "Aucune conversation pour le moment. Commencez avec une personne qui vous suit et que vous suivez.", "Aún no hay conversaciones. Inicia una conversación con alguien que te siga y a quien sigas."),
             "محادثة" to listOf("Conversation", "Conversation", "Conversación"),
             "اكتب رسالة..." to listOf("Write a message...", "Écrivez un message...", "Escribe un mensaje..."),
+            "فتح القسم" to listOf("Open section", "Ouvrir la section", "Abrir sección"),
+            "فتح الملف الشخصي" to listOf("Open profile", "Ouvrir le profil", "Abrir perfil"),
             "إرسال" to listOf("Send", "Envoyer", "Enviar"),
         )
 
