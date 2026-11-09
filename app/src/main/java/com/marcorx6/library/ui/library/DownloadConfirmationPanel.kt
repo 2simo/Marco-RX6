@@ -76,13 +76,15 @@ internal class DownloadConfirmationPanel(
         }.getOrDefault("تخزين التطبيق")
 
         val dialog = Dialog(activity)
+        val motionEnabled = activity.getSharedPreferences("app_settings", Activity.MODE_PRIVATE)
+            .getBoolean("animations", true)
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(18), dp(10), dp(18), dp(20))
             this.background = shape(background, border, 25)
             elevation = dp(20).toFloat()
-            alpha = 0f
-            translationY = dp(18).toFloat()
+            alpha = if (motionEnabled) 0f else 1f
+            translationY = if (motionEnabled) dp(18).toFloat() else 0f
         }
 
         val scroll = ScrollView(activity).apply {
@@ -310,7 +312,12 @@ internal class DownloadConfirmationPanel(
                 hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
             }
         }
-        root.animate().alpha(1f).translationY(0f).setDuration(190L).start()
+        if (motionEnabled) {
+            root.animate().cancel()
+            root.animate().alpha(1f).translationY(0f).setDuration(190L)
+                .setInterpolator(android.view.animation.DecelerateInterpolator())
+                .start()
+        }
         var lifecycleObserver: DefaultLifecycleObserver? = null
         val lifecycleOwner = activity as? LifecycleOwner
         dialog.setOnDismissListener {
