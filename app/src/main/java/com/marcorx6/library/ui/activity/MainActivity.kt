@@ -462,6 +462,7 @@ class MainActivity : ComponentActivity() {
     private fun styleAlertDialog(dialog: AlertDialog) {
         appearanceRuntimeFeature.styleAlertDialog(dialog)
         dialog.window?.let { window ->
+            LanguageTranslator.translateViewTree(window.decorView, appearanceRuntimeFeature.currentLanguage())
             androidx.core.view.WindowInsetsControllerCompat(window, window.decorView).apply {
                 systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                 hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
