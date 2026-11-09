@@ -1775,33 +1775,71 @@ internal class FirebaseAccountController(
                             val sentAt = snapshot.getTimestamp("createdAt")?.toDate()
                             val timeLabel = sentAt?.let {
                                 java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT).format(it)
-                            }.orEmpty()
-                            val messageText = buildString {
-                                append(snapshot.getString("text").orEmpty())
-                                if (timeLabel.isNotBlank()) append("\n").append(timeLabel)
-                                if (mine) append(if (recipientRead) "  ✓✓" else "  ✓")
-                            }
+                            } ?: "…"
                             val replyText = snapshot.getString("replyToText")
-                            val bubble = TextView(activity).apply {
-                                text = buildString {
-                                    if (!replyText.isNullOrBlank()) append(replyText).append("\n")
-                                    append(messageText)
-                                }
-                                if (!replyText.isNullOrBlank()) {
-                                    setCompoundDrawablesRelativeWithIntrinsicBounds(
-                                        activity.getDrawable(com.marcorx6.library.R.drawable.ic_action_reply),
-                                        null, null, null
-                                    )
-                                    compoundDrawablePadding = dp(5)
-                                }
-                                textSize = 14f
-                                setTextColor(if (mine) Color.rgb(18, 20, 24) else Color.WHITE)
-                                setPadding(dp(13), dp(10), dp(13), dp(10))
+                            val bubble = LinearLayout(activity).apply {
+                                orientation = LinearLayout.VERTICAL
+                                layoutDirection = View.LAYOUT_DIRECTION_LTR
+                                setPadding(dp(12), dp(9), dp(12), dp(7))
                                 background = GradientDrawable().apply {
-                                    cornerRadius = dp(15).toFloat()
+                                    cornerRadius = dp(16).toFloat()
                                     setColor(if (mine) Color.rgb(190, 198, 210) else Color.rgb(35, 39, 46))
                                 }
+                                maximumWidth = dp(280)
                             }
+                            if (!replyText.isNullOrBlank()) {
+                                val quote = LinearLayout(activity).apply {
+                                    orientation = LinearLayout.VERTICAL
+                                    setPadding(dp(9), dp(6), dp(9), dp(6))
+                                    background = GradientDrawable().apply {
+                                        cornerRadius = dp(9).toFloat()
+                                        setColor(if (mine) Color.argb(48, 20, 23, 29) else Color.argb(105, 8, 10, 14))
+                                    }
+                                }
+                                val replySender = if (snapshot.getString("replyToSenderUid") == user.uid) translate("أنت")
+                                    else profile.getString("displayName") ?: translate("الطرف الآخر")
+                                quote.addView(TextView(activity).apply {
+                                    text = translate("رد على") + " " + replySender
+                                    textSize = 10f
+                                    setTypeface(null, android.graphics.Typeface.BOLD)
+                                    setTextColor(if (mine) Color.rgb(55, 61, 72) else Color.rgb(190, 198, 210))
+                                })
+                                quote.addView(TextView(activity).apply {
+                                    text = replyText
+                                    textSize = 11f
+                                    maxLines = 2
+                                    ellipsize = android.text.TextUtils.TruncateAt.END
+                                    setTextColor(if (mine) Color.rgb(48, 53, 63) else Color.rgb(220, 224, 231))
+                                    setPadding(0, dp(2), 0, 0)
+                                })
+                                bubble.addView(quote, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(7) })
+                            }
+                            bubble.addView(TextView(activity).apply {
+                                text = snapshot.getString("text").orEmpty()
+                                textSize = 14f
+                                setTextColor(if (mine) Color.rgb(18, 20, 24) else Color.WHITE)
+                                textDirection = View.TEXT_DIRECTION_FIRST_STRONG
+                                gravity = Gravity.START
+                            }, LinearLayout.LayoutParams(-1, -2))
+                            val metadata = LinearLayout(activity).apply {
+                                orientation = LinearLayout.HORIZONTAL
+                                gravity = Gravity.END or Gravity.CENTER_VERTICAL
+                                layoutDirection = View.LAYOUT_DIRECTION_LTR
+                            }
+                            metadata.addView(TextView(activity).apply {
+                                text = timeLabel
+                                textSize = 9f
+                                setTextColor(if (mine) Color.rgb(65, 70, 80) else Color.rgb(165, 174, 188))
+                                gravity = Gravity.CENTER_VERTICAL
+                            })
+                            if (mine) metadata.addView(TextView(activity).apply {
+                                text = if (recipientRead) "  ✓✓" else "  ✓"
+                                textSize = 10f
+                                setTypeface(null, android.graphics.Typeface.BOLD)
+                                setTextColor(if (recipientRead) Color.rgb(55, 75, 95) else Color.rgb(75, 80, 90))
+                                gravity = Gravity.CENTER_VERTICAL
+                            })
+                            bubble.addView(metadata, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(4) })
                             bubble.setOnClickListener {
                                 selectedReply = snapshot
                                 replyPreview.text = translate("رد على:") + " " + snapshot.getString("text").orEmpty().take(100) + "  ×"
