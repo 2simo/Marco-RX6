@@ -645,7 +645,7 @@ internal class DownloadPageDialog(
         fun isBlockedRedirectDestination(url: String): Boolean {
             if (!adBlockerEnabled) return false
             val host = runCatching { Uri.parse(url).host?.lowercase() }.getOrNull() ?: return false
-            if (hostIsAllowed(host)) return false
+            if (allowedHosts.any { host == it || host.endsWith(".$it") }) return false
             return blockedRedirectHosts.any { host == it || host.endsWith(".$it") }
         }
         val adEndpointPatterns = listOf(
