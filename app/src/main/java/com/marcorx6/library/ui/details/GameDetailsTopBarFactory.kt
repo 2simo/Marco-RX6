@@ -20,6 +20,7 @@ internal class GameDetailsTopBarFactory(
         val topBar = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = android.view.Gravity.CENTER_VERTICAL
+            layoutDirection = android.view.View.LAYOUT_DIRECTION_LTR
             setPadding(dp(16), dp(10), dp(12), dp(10))
             background = GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
@@ -50,8 +51,10 @@ internal class GameDetailsTopBarFactory(
             minimumHeight = dp(48)
         }
         topBar.addView(close, LinearLayout.LayoutParams(dp(48), dp(48)))
-        // Title, platform and favorite action are shown together in the identity card.
+        // Keep navigation on the left and move the favorite action to the
+        // right side of the upper toolbar, as requested.
         topBar.addView(android.view.View(activity), LinearLayout.LayoutParams(0, dp(48), 1f))
+        topBar.addView(favoriteToggleFactory.create(game), LinearLayout.LayoutParams(dp(48), dp(48)))
         return topBar
     }
 }
