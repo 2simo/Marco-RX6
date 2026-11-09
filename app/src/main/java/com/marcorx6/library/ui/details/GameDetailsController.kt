@@ -38,6 +38,7 @@ internal class GameDetailsController(
         val reader = android.app.Dialog(activity)
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
+            clipToPadding = false
             setBackgroundColor(bg())
         }
 
@@ -144,12 +145,32 @@ internal class GameDetailsController(
                 android.view.WindowManager.LayoutParams.MATCH_PARENT,
                 android.view.WindowManager.LayoutParams.MATCH_PARENT
             )
+            androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
+            androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
+                val cutout = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.displayCutout())
+                view.setPadding(cutout.left, cutout.top, cutout.right, cutout.bottom)
+                insets
+            }
+            androidx.core.view.ViewCompat.requestApplyInsets(root)
             androidx.core.view.WindowInsetsControllerCompat(window, window.decorView).apply {
                 isAppearanceLightNavigationBars = !isDarkMode()
                 systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
+                hide(androidx.core.view.WindowInsetsCompat.Type.statusBars() or androidx.core.view.WindowInsetsCompat.Type.navigationBars())
             }
         }
+        val motionEnabled = activity.getSharedPreferences("app_settings", Activity.MODE_PRIVATE)
+            .getBoolean("animations", true)
+        if (motionEnabled) {
+            root.alpha = 0f
+            root.translationY = dp(12).toFloat()
+            root.scaleX = 0.995f
+            root.scaleY = 0.995f
+            root.animate().alpha(1f).translationY(0f).scaleX(1f).scaleY(1f)
+                .setDuration(240L)
+                .setInterpolator(android.view.animation.DecelerateInterpolator(1.35f))
+                .start()
+        }
+        com.marcorx6.library.AppDiagnostics.log("INFO", "GameDetails", "Opened game details screen")
         val lifecycleOwner = activity as? LifecycleOwner
         val lifecycleObserver = object : DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
@@ -157,7 +178,11 @@ internal class GameDetailsController(
                 owner.lifecycle.removeObserver(this)
             }
         }
-        reader.setOnDismissListener { lifecycleOwner?.lifecycle?.removeObserver(lifecycleObserver) }
+        reader.setOnDismissListener {
+            root.animate().cancel()
+            com.marcorx6.library.AppDiagnostics.log("INFO", "GameDetails", "Closed game details screen")
+            lifecycleOwner?.lifecycle?.removeObserver(lifecycleObserver)
+        }
         lifecycleOwner?.lifecycle?.addObserver(lifecycleObserver)
     }
 }
