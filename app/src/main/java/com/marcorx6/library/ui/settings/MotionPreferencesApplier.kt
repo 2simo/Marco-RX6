@@ -32,6 +32,13 @@ internal class MotionPreferencesApplier(
         if (!animationsEnabled) {
             view.animate().cancel()
             view.clearAnimation()
+            // A cancelled entrance animation must never leave a control or card
+            // transparent, shifted, or scaled after the user disables motion.
+            view.alpha = 1f
+            view.translationX = 0f
+            view.translationY = 0f
+            view.scaleX = 1f
+            view.scaleY = 1f
         }
     }
 }
