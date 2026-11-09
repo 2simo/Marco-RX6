@@ -34,6 +34,7 @@ internal class StartupExperienceController(
     private var dialog: Dialog? = null
 
     fun show() {
+        if (!isActivityUsable() || dialog?.isShowing == true) return
         animator?.cancel()
         completion?.let(handler::removeCallbacks)
         val splash = Dialog(activity, android.R.style.Theme_Material_NoActionBar)
