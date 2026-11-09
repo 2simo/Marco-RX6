@@ -389,6 +389,7 @@ internal class DownloadUiController(
         val lastSpeedSample = mutableMapOf<Long, Pair<Long, Long>>()
         val lastSegmentSpeedSample = mutableMapOf<Pair<Long, Int>, Pair<Long, Long>>()
         val handler = Handler(Looper.getMainLooper())
+        var refreshInProgress = false
 
         // Poll more frequently only while a transfer is active. An idle download
         // screen does not need to query the persistent queue several times per second.
@@ -728,11 +729,22 @@ internal class DownloadUiController(
         }
 
         render = renderBlock@{
-            if (activity.isFinishing || activity.isDestroyed) return@renderBlock
-            val allEntries = try { downloadRepository.getDownloads() } catch (error: Exception) {
-                Toast.makeText(activity, translate("تعذر قراءة التنزيلات") + (error.message?.takeIf { it.isNotBlank() }?.let { ": ${translate(it)}" } ?: ""), Toast.LENGTH_LONG).show()
-                return@renderBlock
-            }
+            if (activity.isFinishing || activity.isDestroyed || refreshInProgress) return@renderBlock
+            refreshInProgress = true
+            Thread({
+                val entriesResult = runCatching { downloadRepository.getDownloads() }
+                handler.post {
+                    refreshInProgress = false
+                    if (activity.isFinishing || activity.isDestroyed || !root.isAttachedToWindow) return@post
+                    val allEntries = entriesResult.getOrElse { error ->
+                        Toast.makeText(
+                            activity,
+                            translate("تعذر قراءة التنزيلات") +
+                                (error.message?.takeIf { it.isNotBlank() }?.let { ": ${translate(it)}" } ?: ""),
+                            Toast.LENGTH_LONG
+                        ).show()
+                        return@post
+                    }
             refreshIntervalMillis = if (allEntries.any {
                 it.status == DownloadManager.STATUS_RUNNING ||
                     it.status == DownloadManager.STATUS_PENDING ||
@@ -774,6 +786,11 @@ internal class DownloadUiController(
                     list.removeView(row.card)
                     list.addView(row.card, desiredIndex.coerceAtMost(list.childCount))
                 }
+            }
+                }
+            }, "Marco-Download-Refresh").apply {
+                isDaemon = true
+                start()
             }
         }
         render?.invoke()
