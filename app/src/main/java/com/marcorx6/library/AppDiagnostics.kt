@@ -81,8 +81,8 @@ object AppDiagnostics {
     }
 
     private fun rotate(directory: File, current: File) {
-        File(directory, "$LOG_NAME.$MAX_LOG_FILES").delete()
-        for (index in MAX_LOG_FILES - 1 downTo 1) {
+        File(directory, "$LOG_NAME.${MAX_LOG_FILES - 1}").delete()
+        for (index in MAX_LOG_FILES - 2 downTo 1) {
             val source = File(directory, "$LOG_NAME.$index")
             if (source.exists()) source.renameTo(File(directory, "$LOG_NAME.${index + 1}"))
         }
