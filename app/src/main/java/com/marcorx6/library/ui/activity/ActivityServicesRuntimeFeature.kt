@@ -62,6 +62,8 @@ internal class ActivityServicesRuntimeFeature(
     fun openGameLink(link: String) = downloadFeature.openGameLink(link)
 
     fun shutdown() {
-        ioExecutor.shutdownNow()
+        // Drain queued work instead of interrupting Blogger/Drive requests during Activity teardown.
+        // UiThreadDispatcher rejects callbacks once this Activity is destroyed.
+        ioExecutor.shutdown()
     }
 }
