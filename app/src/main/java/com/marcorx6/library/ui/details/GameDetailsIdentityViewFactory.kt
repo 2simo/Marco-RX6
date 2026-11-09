@@ -107,10 +107,7 @@ internal class GameDetailsIdentityViewFactory(
                 setPadding(0, dp(3), 0, 0)
             }, LinearLayout.LayoutParams(-1, -2))
         }
-        titleRow.addView(titleColumn, LinearLayout.LayoutParams(0, -2, 1f))
-        titleRow.addView(favoriteToggleFactory.create(game), LinearLayout.LayoutParams(dp(48), dp(48)).apply {
-            marginStart = dp(20)
-        })
+        titleRow.addView(titleColumn, LinearLayout.LayoutParams(-1, -2))
         identityInfo.addView(titleRow, LinearLayout.LayoutParams(-1, -2))
 
         val downloadRow = LinearLayout(activity).apply {
@@ -138,8 +135,11 @@ internal class GameDetailsIdentityViewFactory(
             ellipsize = android.text.TextUtils.TruncateAt.END
         }
         downloadRow.addView(downloadCount, LinearLayout.LayoutParams(-2, -2))
+        // Place the download counter at the far end of the game card,
+        // instead of directly underneath the title.
         identityInfo.addView(downloadRow, LinearLayout.LayoutParams(-2, -2).apply {
             topMargin = dp(10)
+            gravity = android.view.Gravity.END
         })
         gameCard.addView(identityInfo, LinearLayout.LayoutParams(0, -2, 1f))
         root.addView(gameCard, LinearLayout.LayoutParams(-1, -2).apply {
