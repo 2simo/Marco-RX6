@@ -73,7 +73,8 @@ internal class DownloadPageDialog(
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(background)
-            setPadding(dp(12), dp(10), dp(12), dp(10))
+            setPadding(0, 0, 0, 0)
+            clipToPadding = false
         }
         val webView = WebView(activity)
         val browserHistory = mutableListOf<Pair<String, String>>()
@@ -367,9 +368,11 @@ internal class DownloadPageDialog(
 
         val status = TextView(activity).apply {
             text = translate("جارٍ فتح صفحة التحميل…")
-            textSize = 11f
+            textSize = 10f
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
             setTextColor(muted)
-            setPadding(dp(3), dp(3), dp(3), dp(7))
+            setPadding(dp(8), dp(2), dp(8), dp(3))
         }
         root.addView(status, LinearLayout.LayoutParams(-1, -2))
         val blockedStats = TextView(activity).apply {
@@ -381,12 +384,8 @@ internal class DownloadPageDialog(
 
         val browserFrame = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            this.background = GradientDrawable().apply {
-                setColor(surface)
-                cornerRadius = dp(16).toFloat()
-                setStroke(dp(1), if (dark) Color.argb(120, 130, 138, 151) else Color.argb(150, 160, 168, 181))
-            }
-            clipToOutline = true
+            this.background = android.graphics.drawable.ColorDrawable(surface)
+            clipToOutline = false
         }
         browserFrame.addView(webView, LinearLayout.LayoutParams(-1, 0, 1f))
         val swipeRefresh = androidx.swiperefreshlayout.widget.SwipeRefreshLayout(activity).apply {
@@ -412,7 +411,7 @@ internal class DownloadPageDialog(
             visibility = View.GONE
             addView(candidates, android.widget.FrameLayout.LayoutParams(-1, -2))
         }
-        root.addView(candidateScroll, LinearLayout.LayoutParams(-1, dp(112)))
+        root.addView(candidateScroll, LinearLayout.LayoutParams(-1, dp(88)))
 
         fun confirmDownload(
             url: String,
@@ -721,6 +720,7 @@ internal class DownloadPageDialog(
                 progress.visibility = View.VISIBLE
                 progress.progress = 0
                 status.text = Uri.parse(url).host ?: translate("جارٍ فتح صفحة التحميل…")
+                com.marcorx6.library.AppDiagnostics.log("INFO", "Browser", "Loading host: ${Uri.parse(url).host.orEmpty()}")
                 addressInput.setText(url)
                 candidates.removeAllViews()
                 candidateUrls.clear()
@@ -730,6 +730,7 @@ internal class DownloadPageDialog(
 
             override fun onPageFinished(view: WebView, url: String) {
                 rememberPage(url, view.title.orEmpty())
+                com.marcorx6.library.AppDiagnostics.log("INFO", "Browser", "Page loaded: ${Uri.parse(url).host.orEmpty()}")
                 progress.visibility = View.GONE
                 swipeRefresh.isRefreshing = false
                 status.text = translate("إذا ظهرت خطوة تحقق أو مؤقت، أكملها داخل هذه الصفحة. الروابط المحتملة تظهر أسفلها.")
@@ -757,6 +758,7 @@ internal class DownloadPageDialog(
                 // A crashed WebView renderer must be detached and destroyed. Returning
                 // true keeps the host app alive instead of propagating the renderer crash.
                 rendererGone = true
+                com.marcorx6.library.AppDiagnostics.log("ERROR", "Browser", "WebView renderer exited; didCrash=${detail.didCrash}")
                 swipeRefresh.isRefreshing = false
                 progress.visibility = View.GONE
                 status.text = translate("توقف محرك الصفحة. أغلق هذه النافذة ثم أعد فتح صفحة التحميل.")
@@ -798,6 +800,8 @@ internal class DownloadPageDialog(
         var lifecycleObserver: DefaultLifecycleObserver? = null
         val lifecycleOwner = activity as? LifecycleOwner
         dialog.setOnDismissListener {
+            root.animate().cancel()
+            com.marcorx6.library.AppDiagnostics.log("INFO", "Browser", "Closed download browser")
             if (!rendererGone) {
                 webView.stopLoading()
                 webView.onPause()
@@ -815,13 +819,35 @@ internal class DownloadPageDialog(
             navigationBarColor = background
             setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
             clearFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            androidx.core.view.WindowCompat.setDecorFitsSystemWindows(this, false)
+            androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
+                val cutout = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.displayCutout())
+                view.setPadding(cutout.left, cutout.top, cutout.right, cutout.bottom)
+                insets
+            }
+            androidx.core.view.ViewCompat.requestApplyInsets(root)
+            if (android.os.Build.VERSION.SDK_INT >= 28) {
+                attributes = attributes.apply {
+                    layoutInDisplayCutoutMode = android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+                }
+            }
             androidx.core.view.WindowInsetsControllerCompat(this, decorView).apply {
                 isAppearanceLightNavigationBars = !dark
                 systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
+                hide(androidx.core.view.WindowInsetsCompat.Type.statusBars() or androidx.core.view.WindowInsetsCompat.Type.navigationBars())
             }
         }
         addressInput.setText(safeStartUrl)
+        val motionEnabled = appPreferences.getBoolean("animations", true)
+        if (motionEnabled) {
+            root.alpha = 0f
+            root.translationY = dp(12).toFloat()
+            root.animate().alpha(1f).translationY(0f)
+                .setDuration(240L)
+                .setInterpolator(android.view.animation.DecelerateInterpolator(1.35f))
+                .start()
+        }
+        com.marcorx6.library.AppDiagnostics.log("INFO", "Browser", "Opened download browser")
         webView.loadUrl(safeStartUrl)
         val observer = object : DefaultLifecycleObserver {
             override fun onResume(owner: LifecycleOwner) {
