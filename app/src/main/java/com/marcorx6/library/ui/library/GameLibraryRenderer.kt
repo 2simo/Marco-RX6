@@ -2,11 +2,9 @@ package com.marcorx6.library.ui
 
 import android.app.Activity
 import android.graphics.Color
-import android.graphics.Rect
 import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
 import android.view.View
-import android.view.ViewTreeObserver
 import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.ImageView
@@ -45,46 +43,7 @@ internal class GameLibraryRenderer(
      * row actually intersects the visible screen. Off-screen cards keep placeholders.
      */
     private fun runWhenVisible(view: View, action: () -> Unit) {
-        var completed = false
-        var observer: ViewTreeObserver? = null
-        lateinit var checkVisibility: () -> Unit
-        val scrollListener = ViewTreeObserver.OnScrollChangedListener { checkVisibility() }
-
-        fun removeObserver() {
-            observer?.takeIf { it.isAlive }?.removeOnScrollChangedListener(scrollListener)
-            observer = null
-        }
-
-        val attachListener = object : View.OnAttachStateChangeListener {
-            override fun onViewAttachedToWindow(v: View) {
-                observer = v.viewTreeObserver
-                if (observer?.isAlive == true) observer?.addOnScrollChangedListener(scrollListener)
-                v.post { checkVisibility() }
-            }
-
-            override fun onViewDetachedFromWindow(v: View) {
-                removeObserver()
-            }
-        }
-
-        checkVisibility = {
-            if (!completed && view.isAttachedToWindow) {
-                val visible = Rect()
-                if (view.getGlobalVisibleRect(visible) && visible.width() > 0 && visible.height() > 0) {
-                    completed = true
-                    removeObserver()
-                    view.removeOnAttachStateChangeListener(attachListener)
-                    action()
-                }
-            }
-        }
-
-        view.addOnAttachStateChangeListener(attachListener)
-        if (view.isAttachedToWindow) {
-            observer = view.viewTreeObserver
-            if (observer?.isAlive == true) observer?.addOnScrollChangedListener(scrollListener)
-            view.post { checkVisibility() }
-        }
+        VisibleViewWorkScheduler.watch(view, action)
     }
 
     private var lastRenderedContainer: LinearLayout? = null
@@ -493,7 +452,6 @@ internal class GameLibraryRenderer(
                 }
 
                 slot.addView(card, FrameLayout.LayoutParams(-1, -2))
-                ScrollRevealAnimator.reveal(card)
                 }
                 runWhenVisible(slot) { buildCard() }
 
