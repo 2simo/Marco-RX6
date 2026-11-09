@@ -73,10 +73,16 @@ class MainActivity : ComponentActivity() {
             view.alpha = 0f
             view.translationY = dp(8).toFloat()
         }
+        // Apply one direction policy to every full-screen page. This prevents mixed
+        // RTL/LTR roots from reversing tab order or pushing icons into adjacent labels.
+        val pageLanguage = appearanceRuntimeFeature.currentLanguage()
+        val isRtlPage = pageLanguage.equals("ar", ignoreCase = true)
+        view.layoutDirection = if (isRtlPage) View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
+        view.textDirection = if (isRtlPage) View.TEXT_DIRECTION_RTL else View.TEXT_DIRECTION_LTR
         // Translate once before the first draw. A permanent global-layout listener
         // repeatedly traversed the entire view tree and could trigger needless text
         // updates during scrolling/resizing, contributing to visible flicker.
-        LanguageTranslator.translateViewTree(view, appearanceRuntimeFeature.currentLanguage())
+        LanguageTranslator.translateViewTree(view, pageLanguage)
         setContentView(view)
         com.marcorx6.library.ui.KeyboardLayoutController.install(this, view)
         activityServicesRuntimeFeature.applySystemBarAppearance()
