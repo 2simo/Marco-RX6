@@ -119,12 +119,21 @@ internal class FirebaseMessagingRepository(
             if (allowedTask.result != true) {
                 throw IllegalStateException("يمكنك المراسلة فقط عندما يتابع كل منكما الآخر")
             }
-            conversation.get().continueWithTask { conversationTask ->
-                if (!conversationTask.isSuccessful) {
-                    throw conversationTask.exception ?: IllegalStateException("تعذر فتح المحادثة")
+            Tasks.whenAllSuccess<DocumentSnapshot>(
+                conversation.get(),
+                firestore.collection("users").document(senderUid).get()
+            ).continueWithTask { dataTask ->
+                if (!dataTask.isSuccessful) {
+                    throw dataTask.exception ?: IllegalStateException("تعذر تحميل بيانات المحادثة والمرسل")
                 }
+                val conversationSnapshot = dataTask.result[0]
+                val senderProfile = dataTask.result[1]
+                val senderUsername = senderProfile.getString("username")
+                    ?.trim()?.removePrefix("@")?.takeIf { it.isNotBlank() }
+                    ?: senderProfile.getString("displayName")?.trim()?.takeIf { it.isNotBlank() }
+                    ?: "MARCO"
                 val batch = firestore.batch()
-                val storedParticipants = (conversationTask.result.get("participants") as? List<*>)
+                val storedParticipants = (conversationSnapshot.get("participants") as? List<*>)
                     ?.filterIsInstance<String>()
                     ?.takeIf { it.size == 2 && it.contains(senderUid) && it.contains(recipientUid) }
                     ?: participants
@@ -136,7 +145,7 @@ internal class FirebaseMessagingRepository(
                     "lastSenderUid" to senderUid,
                     "updatedAt" to FieldValue.serverTimestamp()
                 )
-                if (!conversationTask.result.exists()) {
+                if (!conversationSnapshot.exists()) {
                     conversationData["createdAt"] = FieldValue.serverTimestamp()
                 }
                 conversationData["deletedFor"] = FieldValue.arrayRemove(senderUid, recipientUid)
@@ -163,8 +172,8 @@ internal class FirebaseMessagingRepository(
                     "actorUid" to senderUid,
                     "conversationId" to id,
                     "messageId" to message.id,
-                    "title" to "رسالة جديدة",
-                    "body" to body.take(120),
+                    "title" to "New message from @$senderUsername",
+                    "body" to "You have received a new message.",
                     "createdAt" to FieldValue.serverTimestamp(),
                     "read" to false,
                     "pushStatus" to "pending"
