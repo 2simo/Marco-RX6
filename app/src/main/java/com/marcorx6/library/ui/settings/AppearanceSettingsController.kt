@@ -317,11 +317,7 @@ internal class AppearanceSettingsController(
             setPadding(0, dp(24), 0, dp(10))
         })
         applyMotionPreferences(root)
-        if (preferences.getBoolean("animations", true)) {
-            root.alpha = 0f
-            root.translationY = dp(10).toFloat()
-            root.animate().alpha(1f).translationY(0f).setDuration(260L).start()
-        }
+        // The enclosing screen transition is applied once by MainActivity.showRootScreen.
         val scroll = android.widget.ScrollView(activity).apply {
             isFillViewport = true
             isVerticalScrollBarEnabled = false
