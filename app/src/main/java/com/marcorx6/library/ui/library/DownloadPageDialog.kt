@@ -31,8 +31,6 @@ import android.widget.Toast
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.marcorx6.library.network.SecureUrlPolicy
-import io.github.edsuns.adfilter.AdFilter
-import io.github.edsuns.adblockclient.ResourceType
 import java.io.ByteArrayInputStream
 import org.json.JSONArray
 import org.json.JSONTokener
@@ -77,26 +75,6 @@ internal class DownloadPageDialog(
             setPadding(dp(12), dp(10), dp(12), dp(10))
         }
         val webView = WebView(activity)
-        // Filter initialization is isolated from app startup and must never take down the browser.
-        val adFilter = runCatching { AdFilter.get(activity) }.getOrNull()
-        if (adFilter == null) {
-            Toast.makeText(activity, translate("تعذر تشغيل محرك الحجب؛ سيعمل المتصفح بالحماية الأساسية."), Toast.LENGTH_LONG).show()
-        } else {
-            runCatching { adFilter.setupWebView(webView) }
-            runCatching {
-                if (!adFilter.hasInstallation) {
-                    val subscriptions = linkedMapOf(
-                        "EasyList" to "https://easylist.to/easylist/easylist.txt",
-                        "EasyPrivacy" to "https://easylist.to/easylist/easyprivacy.txt",
-                        "AdGuard Annoyances" to "https://filters.adtidy.org/extension/chromium/filters/14.txt"
-                    )
-                    subscriptions.forEach { (name, url) ->
-                        val subscription = adFilter.viewModel.addFilter(name, url)
-                        adFilter.viewModel.download(subscription.id)
-                    }
-                }
-            }
-        }
         val browserHistory = mutableListOf<Pair<String, String>>()
         val browserBookmarks = mutableListOf<Pair<String, String>>()
         val browserTabs = mutableListOf<Pair<String, String>>()
@@ -611,91 +589,18 @@ internal class DownloadPageDialog(
         addressRow.addView(adToggle, LinearLayout.LayoutParams(dp(46), dp(46)).apply { marginStart = dp(7) })
 
         val blockedRequests = AtomicInteger(0)
-        // Curated local filter rules: known ad networks plus common third-party ad endpoints.
-        // This is deliberately conservative for first-party pages so download controls keep working.
-        val blockedAdHosts = setOf(
-            "doubleclick.net", "googlesyndication.com", "googleadservices.com",
-            // Ad/redirect endpoints observed on the supplied VikingFile download page.
-            "mkfshtuxymriq.space", "rapidadexchange.com", "usrpubtrck.com",
-            "adservice.google.com", "googletagservices.com",
-            "taboola.com", "outbrain.com", "popads.net", "popcash.net",
-            "propellerads.com", "exoclick.com", "trafficjunky.com", "onclickads.net",
-            "juicyads.com", "adsterra.com", "adform.net", "adnxs.com",
-            "adsrvr.org", "criteo.com", "casalemedia.com", "rubiconproject.com",
-            "openx.net", "pubmatic.com", "sharethrough.com", "lijit.com",
-            "media.net", "revcontent.com", "mgid.com", "zemanta.com",
-            "smartadserver.com", "yieldmo.com", "bidswitch.net", "advertising.com",
-            "3lift.com", "contextweb.com", "sovrn.com", "inmobi.com",
-            "unityads.unity3d.com", "applovin.com", "vungle.com", "chartboost.com",
-            "ironsrc.com", "adcolony.com", "adnxs-simple.com", "adsafeprotected.com",
-            "adroll.com", "bluekai.com", "bouncex.net", "clarity.ms", "connectad.io",
-            "demdex.net", "e-planning.net", "everesttech.net", "eyeota.net",
-            "flashtalking.com", "ibillboard.com", "krxd.net", "mathtag.com",
-            "moatads.com", "omnitagjs.com", "quantserve.com", "rlcdn.com",
-            "samba.tv", "serving-sys.com", "simpli.fi", "sportradarserving.com",
-            "teads.tv", "triplelift.com", "turn.com", "undertone.com", "yieldlove.com",
-            "adzerk.net", "adlightning.com", "admanmedia.com", "adpushup.com",
-            "adrecover.com", "adthrive.com", "carbonads.com", "ethicalads.io",
-            "buysellads.com", "optad360.com", "monetizemore.com", "snigel.com",
-            "shareasale.com", "impact.com", "awin1.com", "partnerize.com",
-            "amazon-adsystem.com", "advertising.amazon.com", "ads.google.com",
-            "ads.youtube.com", "pixel.facebook.com", "connect.facebook.net",
-            "analytics.tiktok.com", "bat.bing.com", "popunder.net",
-            "hilltopads.net", "hilltopads.com", "ad-maven.com", "ad-maven.net",
-            "monetag.com", "monetag.net",
-            "adcash.com", "yllix.com", "revenuehits.com",
-            "adnow.com", "adskeeper.co.uk", "adskeeper.com", "ad-delivery.net",
-            "ad.gt", "adfox.ru", "adition.com", "adkernel.com", "admatic.com.tr",
-            "adplugg.com", "adstir.com", "adtelligent.com", "adtng.com", "adwolf.com",
-            "adyoulike.com", "bidvertiser.com", "clickadu.com", "clickaine.com",
-            "evadav.com", "galaksion.com", "onclickmega.com", "pushground.com",
-            "richpush.co", "rollerads.com", "trafficstars.com", "zeropark.com",
-            "plugrush.com", "popmyads.com",
-            // Common third-party analytics and session-tracking endpoints.
-            "google-analytics.com", "analytics.google.com", "hotjar.com",
-            "segment.io", "mixpanel.com", "amplitude.com", "fullstory.com",
-            "mouseflow.com", "scorecardresearch.com", "chartbeat.com",
-            "parsely.com", "heap.io", "heapanalytics.com", "smartlook.com",
-            "luckyorange.com", "inspectlet.com", "nr-data.net", "newrelic.com",
-            "stats.wp.com"
-        )
-        // Destinations frequently used by forced-click and pop-under advertising.
-        // These are blocked only as top-level navigations; explicit allowlist entries win.
-        val blockedRedirectHosts = setOf(
-            "aliexpress.com", "aliexpress.ru", "aliexpress.us", "aliexpress.com.tr",
-            "aliexpress.ma", "melbet.com", "melbet.ma", "melbet.org",
-            "1xbet.com", "1xbet.ma", "1xbet.org", "1x-bet.com", "1x-bet.ma"
-        )
-        fun isBlockedRedirectDestination(url: String): Boolean {
-            if (!adBlockerEnabled) return false
-            val host = runCatching { Uri.parse(url).host?.lowercase() }.getOrNull() ?: return false
-            if (allowedHosts.any { host == it || host.endsWith(".$it") }) return false
-            return blockedRedirectHosts.any { host == it || host.endsWith(".$it") }
-        }
-        val adEndpointPatterns = listOf(
-            Regex("""(?:^|/)(?:pagead|adsystem|adserver|adservice|adview|adclick|popunder|popup|bannerad|vast|vpaid|adrequest|adserve|adframe|adloader|adscript|adsby|adsense|prebid|gampad)(?:/|[._?=&-]|$)""", RegexOption.IGNORE_CASE),
-            Regex("""[?&](?:adunit|adslot|adtag|adzone|adserver|sponsorid|advert|advertising|ad_type|ad_format|ad_id)=([^&]*)""", RegexOption.IGNORE_CASE),
-            Regex("""(?:^|[./_-])(?:ads?|adserver|adservice|adnetwork|advert|sponsor|popunder|popup)(?:[./_-]|$)""", RegexOption.IGNORE_CASE)
-        )
-        fun hostIsAllowed(host: String): Boolean =
-            allowedHosts.any { host == it || host.endsWith(".$it") }
-        fun isBlockedAdRequest(url: String): Boolean {
-            if (!adBlockerEnabled) return false
-            val uri = try { Uri.parse(url) } catch (_: Exception) { return false }
-            val host = uri.host?.lowercase() ?: return false
-            if (hostIsAllowed(host)) return false
-            // Never classify an explicit file/download endpoint as an ad request.
-            // This protects direct game archives served from shared CDN domains.
-            if (isDirectFileUrl(url)) return false
-            if (blockedAdHosts.any { host == it || host.endsWith(".$it") }) return true
-            val pageHost = try { Uri.parse(webView.url ?: safeStartUrl).host?.lowercase() } catch (_: Exception) { null }
-            // Generic endpoint rules apply only to third-party requests, not the download site itself.
-            if (pageHost != null && host != pageHost && !host.endsWith(".$pageHost")) {
-                val target = (uri.encodedPath.orEmpty() + "?" + uri.encodedQuery.orEmpty())
-                if (adEndpointPatterns.any { it.containsMatchIn(target) }) return true
-            }
-            return false
-        }
+        fun isBlockedRedirectDestination(url: String): Boolean =
+            LocalBrowserAdBlocker.shouldBlockNavigation(url, adBlockerEnabled, allowedHosts)
+
+        fun isBlockedAdRequest(url: String): Boolean =
+            LocalBrowserAdBlocker.shouldBlockRequest(
+                url = url,
+                pageUrl = webView.url ?: safeStartUrl,
+                enabled = adBlockerEnabled,
+                allowedHosts = allowedHosts,
+                isDirectFile = ::isDirectFileUrl
+            )
+
         fun recordBlocked() {
             val count = blockedRequests.incrementAndGet()
             activity.runOnUiThread {
@@ -755,15 +660,6 @@ internal class DownloadPageDialog(
         }
         webView.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): android.webkit.WebResourceResponse? {
-                if (adBlockerEnabled && !request.isForMainFrame) {
-                    val engineResult = runCatching {
-                        adFilter?.shouldIntercept(view, request)
-                    }.getOrNull()
-                    if (engineResult?.shouldBlock == true) {
-                        recordBlocked()
-                        return engineResult.resourceResponse ?: android.webkit.WebResourceResponse("text/plain", "utf-8", ByteArrayInputStream(ByteArray(0)))
-                    }
-                }
                 // Retain narrow local fallbacks for known forced-redirect destinations.
                 if (isBlockedAdRequest(request.url.toString())) {
                     recordBlocked()
@@ -780,11 +676,8 @@ internal class DownloadPageDialog(
                 val scheme = request.url.scheme?.lowercase()
                 if (scheme != "https") return true
                 val destination = request.url.toString()
-                val engineBlocksNavigation = adBlockerEnabled && runCatching {
-                    adFilter?.shouldIntercept(destination, view.url ?: safeStartUrl, ResourceType.SUBDOCUMENT)?.shouldBlock == true
-                }.getOrDefault(false)
                 if (adBlockerEnabled &&
-                    (engineBlocksNavigation || isBlockedRedirectDestination(destination) || isBlockedAdRequest(destination))
+                    (isBlockedRedirectDestination(destination) || isBlockedAdRequest(destination))
                 ) {
                     recordBlocked()
                     return true
@@ -797,7 +690,6 @@ internal class DownloadPageDialog(
             }
 
             override fun onPageStarted(view: WebView, url: String, favicon: android.graphics.Bitmap?) {
-                if (adBlockerEnabled) runCatching { adFilter?.performScript(view, url) }
                 if (activeTabIndex in browserTabs.indices && url.startsWith("https://")) {
                     browserTabs[activeTabIndex] = browserTabs[activeTabIndex].first to url
                 }
