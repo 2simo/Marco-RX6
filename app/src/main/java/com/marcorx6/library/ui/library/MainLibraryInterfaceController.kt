@@ -512,8 +512,11 @@ internal class MainLibraryInterfaceController(
         // Featured cover-flow sits above platform filters and uses only real library entries.
         val featuredPlatforms = setOf("PS4", "PS3", "PS2")
         val featuredGroups = games()
-            .filter { GameLibraryManager.normalizePlatform(it.platform) in featuredPlatforms }
-            .groupBy { GameLibraryManager.normalizePlatform(it.platform).orEmpty() }
+            .mapNotNull { game ->
+                val platform = GameLibraryManager.normalizePlatform(game.platform)
+                if (platform in featuredPlatforms) platform to game else null
+            }
+            .groupBy({ it.first }, { it.second })
         val popularByPlatform = listOf("PS4", "PS3", "PS2").flatMap { platform ->
             featuredGroups[platform].orEmpty()
                 .sortedWith(compareByDescending<Game> { it.isFavorite }.thenBy { it.name.lowercase() })
