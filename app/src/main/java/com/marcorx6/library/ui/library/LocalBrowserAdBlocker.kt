@@ -1,4 +1,4 @@
-package com.marcorx6.library.ui.library
+package com.marcorx6.library.ui
 
 import android.net.Uri
 
