@@ -2,7 +2,6 @@ package com.marcorx6.library.ui
 
 import android.app.Activity
 import android.graphics.Color
-import android.view.View
 import android.webkit.WebView
 import android.webkit.WebViewClient
 
@@ -21,7 +20,6 @@ internal class GameArticleWebViewFactory(
     ): WebView {
         return WebView(activity).apply {
             setBackgroundColor(backgroundColor)
-            setLayerType(View.LAYER_TYPE_HARDWARE, null)
             isVerticalScrollBarEnabled = false
             // JavaScript is enabled only for local DOM height measurement. Article
             // scripts and event handlers are stripped before the HTML is loaded.
