@@ -456,9 +456,18 @@ internal class BloggerPostComposerController(
         setContentView(page)
         androidx.core.view.ViewCompat.requestApplyInsets(page)
         applyUnifiedSkin(page)
-        page.alpha = 0f
-        page.translationY = dp(14).toFloat()
-        page.animate().alpha(1f).translationY(0f).setDuration(280L)
-            .setInterpolator(android.view.animation.DecelerateInterpolator()).start()
+        val motionEnabled = activity.getSharedPreferences("app_settings", android.content.Context.MODE_PRIVATE)
+            .getBoolean("animations", true)
+        if (motionEnabled) {
+            page.alpha = 0f
+            page.translationY = dp(14).toFloat()
+            page.animate().cancel()
+            page.animate().alpha(1f).translationY(0f).setDuration(240L)
+                .setInterpolator(android.view.animation.DecelerateInterpolator())
+                .start()
+        } else {
+            page.alpha = 1f
+            page.translationY = 0f
+        }
     }
 }
