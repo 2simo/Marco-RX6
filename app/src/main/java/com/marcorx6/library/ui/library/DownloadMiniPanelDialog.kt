@@ -293,9 +293,21 @@ internal class DownloadMiniPanelDialog(
                 hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
             }
         }
-        render()
-        handler.postDelayed(refresh, 900L)
         val observer = object : DefaultLifecycleObserver {
+            override fun onStart(owner: LifecycleOwner) {
+                if (dialog.isShowing) {
+                    handler.removeCallbacks(refresh)
+                    render()
+                    handler.postDelayed(refresh, 1_200L)
+                }
+            }
+
+            override fun onStop(owner: LifecycleOwner) {
+                // The panel is not visible while the activity is backgrounded.
+                // Stop periodic database polling to avoid needless wakeups.
+                handler.removeCallbacks(refresh)
+            }
+
             override fun onDestroy(owner: LifecycleOwner) {
                 if (dialog.isShowing) dialog.dismiss()
                 handler.removeCallbacks(refresh)
@@ -304,5 +316,12 @@ internal class DownloadMiniPanelDialog(
         }
         lifecycleObserver = observer
         lifecycleOwner?.lifecycle?.addObserver(observer)
+        if (lifecycleOwner == null ||
+            lifecycleOwner.lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED)
+        ) {
+            render()
+            handler.removeCallbacks(refresh)
+            handler.postDelayed(refresh, 900L)
+        }
     }
 }
