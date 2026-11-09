@@ -66,7 +66,7 @@ class MainActivity : ComponentActivity() {
         // Finish outgoing transitions before replacing the screen, then normalize the incoming root.
         val content = findViewById<android.view.ViewGroup>(android.R.id.content)
         for (index in 0 until content.childCount) cancelScreenMotion(content.getChildAt(index))
-        cancelScreenMotion(view)
+        // Incoming screens are freshly built; avoid a redundant full-tree animation reset.
         val animationsEnabled = getSharedPreferences("app_settings", MODE_PRIVATE)
             .getBoolean("animations", true)
         if (animationsEnabled) {
