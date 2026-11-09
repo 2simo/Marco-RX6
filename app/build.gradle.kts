@@ -85,7 +85,7 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.10.1")
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
-    implementation("com.github.Edsuns.AdblockAndroid:ad-filter:1.0")
+    implementation("com.github.Edsuns.AdblockAndroid:ad-filter:v0.9.1")
     implementation("androidx.work:work-runtime-ktx:2.10.0")
     implementation("com.google.android.gms:play-services-auth:21.3.0")
     implementation("com.google.mlkit:translate:17.0.3")
