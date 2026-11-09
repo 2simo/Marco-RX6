@@ -391,7 +391,7 @@ internal class DownloadPageDialog(
             setProgressBackgroundColorSchemeColor(surface)
             setOnRefreshListener { webView.reload() }
         }
-        swipeRefresh.addView(browserFrame, androidx.swiperefreshlayout.widget.SwipeRefreshLayout.LayoutParams(-1, -1))
+        swipeRefresh.addView(browserFrame, android.view.ViewGroup.LayoutParams(-1, -1))
         root.addView(swipeRefresh, LinearLayout.LayoutParams(-1, 0, 1f))
 
         val candidateTitle = TextView(activity).apply {
