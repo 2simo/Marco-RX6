@@ -32,6 +32,8 @@ internal class CoverRuntimeFeature(
 
     fun stableCacheName(value: String): String = repository.stableCacheName(value)
 
+    fun trimMemory(level: Int) = repository.trimMemory(level)
+
     fun deleteIfUnused(path: String) {
         CoverFileCleanup.deleteIfUnused(
             File(filesDir, "covers"),
