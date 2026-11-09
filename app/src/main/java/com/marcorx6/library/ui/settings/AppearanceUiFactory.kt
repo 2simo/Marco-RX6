@@ -95,6 +95,20 @@ internal class AppearanceUiFactory(
 
     fun applyUnifiedSkin(view: View) {
         installGlassInteraction(view)
+        if (view is TextView && view !is EditText) {
+            val compoundIcons = view.compoundDrawablesRelative
+            if (compoundIcons.any { it != null }) {
+                // Use one predictable icon footprint and spacing for compound
+                // icon/label controls so glyphs cannot collide with their text.
+                compoundIcons.filterNotNull().forEach { icon ->
+                    icon.setBounds(0, 0, dp(18), dp(18))
+                }
+                view.compoundDrawablePadding = maxOf(view.compoundDrawablePadding, dp(6))
+            }
+            if (view.isClickable || view.isLongClickable) {
+                view.minimumHeight = maxOf(view.minimumHeight, dp(44))
+            }
+        }
         // Every screen opened through MainActivity receives the same neutral
         // black/silver base when its root has no explicit surface of its own.
         if (view.parent === activity.findViewById<ViewGroup>(android.R.id.content) &&
@@ -124,13 +138,6 @@ internal class AppearanceUiFactory(
             is Spinner -> {
                 view.backgroundTintList = android.content.res.ColorStateList.valueOf(gray())
                 view.minimumHeight = dp(48)
-            }
-            is TextView -> {
-                // Clickable text controls (back links, compact actions and chips)
-                // share a reliable touch target without changing their typography.
-                if (view.isClickable || view.isLongClickable) {
-                    view.minimumHeight = maxOf(view.minimumHeight, dp(44))
-                }
             }
         }
         if (view is ViewGroup) {
