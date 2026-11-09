@@ -369,6 +369,7 @@ class MainActivity : ComponentActivity() {
             scheduleNotifications = activityServicesRuntimeFeature::scheduleNotifications,
             requestNotificationPermission = activityServicesRuntimeFeature::requestNotificationPermissionIfNeeded,
             syncFromBlog = { bloggerRuntimeFeature.sync(showResult = false) },
+            disposeAccount = { firebaseAccountController.dispose() },
             dismissUserExperience = { userExperienceRuntimeFeature.dismiss() },
             disposeLibrary = { libraryRuntimeFeature.dispose() },
             shutdownServices = { activityServicesRuntimeFeature.shutdown() },
