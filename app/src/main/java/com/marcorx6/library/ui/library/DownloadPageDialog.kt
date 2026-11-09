@@ -564,7 +564,7 @@ internal class DownloadPageDialog(
         val adPreferences = appPreferences
         var adBlockerEnabled = adPreferences.getBoolean("download_page_ad_blocker", true)
         val allowedHosts = adPreferences.getString("download_page_ad_allowlist", "").orEmpty()
-            .split(',', ';').map { it.trim().lowercase() }.filter { it.isNotBlank() }.toSet()
+            .split(',', ';').map { it.trim().lowercase() }.filter { it.isNotBlank() }.toMutableSet()
         lateinit var adToggle: TextView
         adToggle = toolbarAction(translate("حجب الإعلانات"), {
             adBlockerEnabled = !adBlockerEnabled
