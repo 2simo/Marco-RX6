@@ -195,4 +195,14 @@ class LanguageTranslatorTest {
             LanguageTranslator.translate("أدخل كلمة المرور الحالية للتحقق من هويتك قبل الحذف.", "en")
         )
     }
+
+    @Test
+    fun translatesNewVectorNavigationAccessibilityLabels() {
+        assertEquals("Open section", LanguageTranslator.translate("فتح القسم", "en"))
+        assertEquals("Ouvrir la section", LanguageTranslator.translate("فتح القسم", "fr"))
+        assertEquals("Abrir sección", LanguageTranslator.translate("فتح القسم", "es"))
+        assertEquals("Open profile", LanguageTranslator.translate("فتح الملف الشخصي", "en"))
+        assertEquals("Ouvrir le profil", LanguageTranslator.translate("فتح الملف الشخصي", "fr"))
+        assertEquals("Abrir perfil", LanguageTranslator.translate("فتح الملف الشخصي", "es"))
+    }
 }
