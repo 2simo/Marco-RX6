@@ -68,11 +68,7 @@ internal class GameArticleWebViewFactory(
                     (view.parent as? android.view.ViewGroup)?.removeView(view)
                     view.stopLoading()
                     view.destroy()
-                    android.widget.Toast.makeText(
-                        activity,
-                        "تعذر عرض المقال حالياً؛ أعد فتح تفاصيل اللعبة للمحاولة مجدداً.",
-                        android.widget.Toast.LENGTH_SHORT
-                    ).show()
+                    android.util.Log.w("MarcoArticleWebView", "Article renderer exited; the article view was discarded")
                     return true
                 }
 
