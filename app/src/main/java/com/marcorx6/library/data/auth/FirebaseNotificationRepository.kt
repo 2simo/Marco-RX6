@@ -75,13 +75,6 @@ internal class FirebaseNotificationRepository(
         )
     }
 
-    fun delete(uid: String, notification: DocumentSnapshot): Task<Void> {
-        if (uid.isBlank() || notification.reference.parent.parent?.id != uid) {
-            return Tasks.forException(IllegalArgumentException("إشعار غير صالح"))
-        }
-        return notification.reference.delete()
-    }
-
     fun unreadCount(items: List<DocumentSnapshot>): Int =
         items.count { it.getBoolean("read") != true }
 
