@@ -747,15 +747,15 @@ internal class DownloadPageDialog(
             setLayout(-1, -1)
             setGravity(Gravity.FILL)
             setBackgroundDrawableResource(android.R.color.transparent)
-            // Make the full-screen download workspace visually own both system bars.
-            statusBarColor = background
+            // Keep the same immersive top-bar policy as the rest of the app.
+            statusBarColor = Color.TRANSPARENT
             navigationBarColor = background
             setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
             clearFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-            decorView.systemUiVisibility = if (!dark) {
-                View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
-            } else {
-                0
+            androidx.core.view.WindowInsetsControllerCompat(this, decorView).apply {
+                isAppearanceLightNavigationBars = !dark
+                systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
             }
         }
         addressInput.setText(safeStartUrl)
