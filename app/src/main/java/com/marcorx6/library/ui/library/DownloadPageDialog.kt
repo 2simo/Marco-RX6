@@ -579,11 +579,11 @@ internal class DownloadPageDialog(
             contentDescription = translate("إعدادات حجب الإعلانات")
             isClickable = true
             isFocusable = true
-            background = GradientDrawable().apply {
+            setBackground(GradientDrawable().apply {
                 setColor(surface)
                 cornerRadius = dp(14).toFloat()
                 setStroke(dp(1), border)
-            }
+            })
             setOnClickListener { showAdSettings() }
         }
         addressRow.addView(adToggle, LinearLayout.LayoutParams(dp(46), dp(46)).apply { marginStart = dp(7) })
