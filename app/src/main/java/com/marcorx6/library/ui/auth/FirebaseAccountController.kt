@@ -934,9 +934,12 @@ internal class FirebaseAccountController(
                     .addOnFailureListener { toast("تعذر إرسال رسالة التأكيد") }
             })
         }
-        if (user.email != null && user.providerData.any { it.providerId == "password" }) {
+        val passwordResetEmail = user.email?.takeIf {
+            user.providerData.any { provider -> provider.providerId == "password" }
+        }
+        if (passwordResetEmail != null) {
             action(page, translate("إعادة تعيين كلمة المرور"), translate("إرسال رابط آمن لتغيير كلمة مرور الحساب"), dark, run = {
-                authRepository.sendPasswordReset(user.email!!)
+                authRepository.sendPasswordReset(passwordResetEmail)
                     .addOnSuccessListener { toast("إذا كان الحساب موجوداً، فستصلك رسالة إعادة التعيين.") }
                     .addOnFailureListener { toast("تعذر إرسال رابط إعادة تعيين كلمة المرور") }
             })
