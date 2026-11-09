@@ -2637,10 +2637,6 @@ internal class FirebaseAccountController(
             hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
         }
         androidx.core.view.ViewCompat.requestApplyInsets(page)
-        applyUnifiedSkin(page)
-        page.animate().cancel()
-        page.alpha = 1f
-        page.translationY = 0f
     }
 
     private fun showAccountPage(page: LinearLayout) {
@@ -2677,12 +2673,6 @@ internal class FirebaseAccountController(
             hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
         }
         androidx.core.view.ViewCompat.requestApplyInsets(scroll)
-        applyUnifiedSkin(page)
-        // The screen is installed by the activity's shared navigation path.
-        // Keep it at its final state instead of restarting an overlapping fade.
-        page.animate().cancel()
-        page.alpha = 1f
-        page.translationY = 0f
     }
 
     private fun accountInput(hintText: String, inputType: Int): EditText {
