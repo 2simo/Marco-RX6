@@ -59,6 +59,23 @@ internal class GameArticleWebViewFactory(
                     }
                 }
 
+                override fun onRenderProcessGone(
+                    view: WebView,
+                    detail: android.webkit.RenderProcessGoneDetail
+                ): Boolean {
+                    // The article is optional UI; discard a dead renderer without
+                    // taking down the library/details Activity with it.
+                    (view.parent as? android.view.ViewGroup)?.removeView(view)
+                    view.stopLoading()
+                    view.destroy()
+                    android.widget.Toast.makeText(
+                        activity,
+                        "تعذر عرض المقال حالياً؛ أعد فتح تفاصيل اللعبة للمحاولة مجدداً.",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                    return true
+                }
+
                 override fun shouldOverrideUrlLoading(view: WebView?, request: android.webkit.WebResourceRequest?): Boolean {
                     val target = request?.url?.toString().orEmpty()
                     if (target.startsWith("https://", ignoreCase = true)) onDownload(target, null, null, null, gameUrl)
