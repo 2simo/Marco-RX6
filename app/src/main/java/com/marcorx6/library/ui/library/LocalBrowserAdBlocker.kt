@@ -31,12 +31,6 @@ internal object LocalBrowserAdBlocker {
         "mkfshtuxymriq.space", "rapidadexchange.com", "usrpubtrck.com"
     )
 
-    private val forcedRedirectHosts = setOf(
-        "aliexpress.com", "aliexpress.ru", "aliexpress.us", "aliexpress.com.tr",
-        "aliexpress.ma", "melbet.com", "melbet.ma", "melbet.org",
-        "1xbet.com", "1xbet.ma", "1xbet.org", "1x-bet.com", "1x-bet.ma"
-    )
-
     private val adEndpointPatterns = listOf(
         Regex("""(?:^|/)(?:pagead|adsystem|adserver|adservice|adview|adclick|popunder|popup|bannerad|vast|vpaid|adrequest|adserve|adframe|adloader|adscript|adsby|adsense|prebid|gampad)(?:/|[._?=&-]|$)""", RegexOption.IGNORE_CASE),
         Regex("""[?&](?:adunit|adslot|adtag|adzone|adserver|sponsorid|advert|advertising|ad_type|ad_format|ad_id)=([^&]*)""", RegexOption.IGNORE_CASE),
@@ -62,11 +56,11 @@ internal object LocalBrowserAdBlocker {
         if (isAllowed(host, allowedHosts)) return false
         if (blockedAdHosts.any { host == it || host.endsWith(".$it") }) return true
 
-        val pageHost = hostOf(pageUrl) ?: return false
-        if (host == pageHost || host.endsWith(".$pageHost")) return false
+        val pageHost = hostOf(pageUrl)
+        val sameSite = pageHost != null && (host == pageHost || host.endsWith(".$pageHost") || pageHost.endsWith(".$host"))
         val uri = runCatching { Uri.parse(url) }.getOrNull() ?: return false
-        val target = uri.encodedPath.orEmpty() + "?" + uri.encodedQuery.orEmpty()
-        return adEndpointPatterns.any { it.containsMatchIn(target) }
+        val target = (uri.host.orEmpty() + uri.encodedPath.orEmpty() + "?" + uri.encodedQuery.orEmpty())
+        return adEndpointPatterns.any { it.containsMatchIn(target) } && !sameSite
     }
 
     private fun hostOf(url: String): String? =
