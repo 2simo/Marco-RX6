@@ -150,11 +150,14 @@ internal class GameDetailsController(
                 hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
             }
         }
-        (activity as? LifecycleOwner)?.lifecycle?.addObserver(object : DefaultLifecycleObserver {
+        val lifecycleOwner = activity as? LifecycleOwner
+        val lifecycleObserver = object : DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
                 if (reader.isShowing) reader.dismiss()
                 owner.lifecycle.removeObserver(this)
             }
-        })
+        }
+        reader.setOnDismissListener { lifecycleOwner?.lifecycle?.removeObserver(lifecycleObserver) }
+        lifecycleOwner?.lifecycle?.addObserver(lifecycleObserver)
     }
 }
