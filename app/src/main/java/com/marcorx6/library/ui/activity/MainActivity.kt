@@ -378,6 +378,15 @@ class MainActivity : ComponentActivity() {
         lifecycleCoordinator.onCreate()
     }
 
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus && !isFinishing && !isDestroyed) {
+            // Dialogs and external activities can temporarily change system-bar visibility.
+            // Reapply the immersive policy only after this Activity regains focus.
+            activityServicesRuntimeFeature.applySystemBarAppearance()
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         FirebasePushTokenRepository(applicationContext).syncCurrentToken()
