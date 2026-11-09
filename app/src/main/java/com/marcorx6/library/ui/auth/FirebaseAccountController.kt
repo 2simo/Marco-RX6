@@ -1312,6 +1312,19 @@ internal class FirebaseAccountController(
                 val unread = item.getBoolean("read") != true
                 val title = item.getString("title") ?: "إشعار جديد"
                 val body = item.getString("body").orEmpty()
+                // Older notification documents may not contain coverUrl. Resolve the
+                // current library game so its local cover or latest URL can still render.
+                val gameName = item.getString("gameName").orEmpty()
+                val platform = item.getString("platform").orEmpty()
+                val linkedGame = if (type == "game" && gameName.isNotBlank()) {
+                    games().firstOrNull {
+                        it.name.equals(gameName, ignoreCase = true) &&
+                            (platform.isBlank() || it.platform.equals(platform, ignoreCase = true))
+                    }
+                } else null
+                val savedCoverUrl = item.getString("coverUrl").orEmpty()
+                val coverLocalPath = linkedGame?.coverLocalPath.orEmpty()
+                val coverImageUrl = linkedGame?.coverUrl?.takeIf { it.isNotBlank() } ?: savedCoverUrl
                 val row = LinearLayout(activity).apply {
                     orientation = LinearLayout.HORIZONTAL
                     layoutDirection = View.LAYOUT_DIRECTION_RTL
@@ -1323,7 +1336,6 @@ internal class FirebaseAccountController(
                         setStroke(dp(1), Color.rgb(75, 82, 94))
                     }
                     if (type == "game") {
-                        val coverUrl = item.getString("coverUrl").orEmpty()
                         val cover = ImageView(activity).apply {
                             scaleType = ImageView.ScaleType.CENTER_CROP
                             clipToOutline = true
@@ -1331,9 +1343,9 @@ internal class FirebaseAccountController(
                                 cornerRadius = dp(9).toFloat()
                                 setColor(Color.rgb(42, 46, 55))
                             }
-                            contentDescription = translate("غلاف اللعبة") + " " + item.getString("gameName").orEmpty()
-                            if (coverUrl.startsWith("https://", ignoreCase = true)) {
-                                loadCover(this, "", coverUrl)
+                            contentDescription = translate("غلاف اللعبة") + " " + gameName
+                            if (coverLocalPath.isNotBlank() || coverImageUrl.startsWith("https://", ignoreCase = true)) {
+                                loadCover(this, coverLocalPath, coverImageUrl)
                             } else {
                                 setImageResource(android.R.drawable.ic_menu_gallery)
                                 scaleType = ImageView.ScaleType.CENTER_INSIDE
@@ -1371,13 +1383,7 @@ internal class FirebaseAccountController(
                             "follow" -> if (actorUid.isNotBlank()) showPublicProfile(actorUid)
                             "message" -> if (actorUid.isNotBlank()) openConversation(actorUid)
                             "game" -> {
-                                val gameName = item.getString("gameName").orEmpty()
-                                val platform = item.getString("platform").orEmpty()
-                                val game = games().firstOrNull {
-                                    it.name.equals(gameName, ignoreCase = true) &&
-                                        it.platform.equals(platform, ignoreCase = true)
-                                }
-                                if (game != null) openGameDetails(game)
+                                if (linkedGame != null) openGameDetails(linkedGame)
                                 else toast("هذه اللعبة لم تعد متاحة في المكتبة.")
                             }
                         }
