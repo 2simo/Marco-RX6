@@ -64,9 +64,14 @@ internal class DownloadUiController(
                     }
                     is DownloadStartResult.OpenInBrowser -> {
                         Toast.makeText(activity, translate("هذا رابط صفحة تحميل؛ افتح الصفحة لإكمال الخطوات واختيار الملف المباشر"), Toast.LENGTH_LONG).show()
-                        DownloadPageDialog(activity, translate).show(result.finalUrl, title) { url, gameTitle, userAgent, disposition, mimeType, pageUrl ->
-                            enqueueGameDownload(url, gameTitle, userAgent, disposition, mimeType, pageUrl, sourcePostUrl)
-                        }
+                        DownloadPageDialog(activity, translate).show(
+                            result.finalUrl,
+                            title,
+                            onDownload = { url, gameTitle, userAgent, disposition, mimeType, pageUrl ->
+                                enqueueGameDownload(url, gameTitle, userAgent, disposition, mimeType, pageUrl, sourcePostUrl)
+                            },
+                            onOpenDownloads = { showDownloadManager() }
+                        )
                     }
                     is DownloadStartResult.RefreshSource -> {
                         Toast.makeText(activity, translate("تعذر استخدام الرابط القديم؛ جارٍ تحديث معلومات اللعبة من المصدر"), Toast.LENGTH_LONG).show()
