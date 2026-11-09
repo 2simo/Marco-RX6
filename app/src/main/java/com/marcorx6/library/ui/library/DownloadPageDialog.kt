@@ -31,6 +31,8 @@ import android.widget.Toast
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.marcorx6.library.network.SecureUrlPolicy
+import io.github.edsuns.adfilter.AdFilter
+import io.github.edsuns.adblockclient.ResourceType
 import java.io.ByteArrayInputStream
 import org.json.JSONArray
 import org.json.JSONTokener
@@ -75,6 +77,8 @@ internal class DownloadPageDialog(
             setPadding(dp(12), dp(10), dp(12), dp(10))
         }
         val webView = WebView(activity)
+        val adFilter = AdFilter.get(activity)
+        adFilter.setupWebView(webView)
         val browserHistory = mutableListOf<Pair<String, String>>()
         val browserBookmarks = mutableListOf<Pair<String, String>>()
         val browserTabs = mutableListOf<Pair<String, String>>()
@@ -733,8 +737,18 @@ internal class DownloadPageDialog(
         }
         webView.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): android.webkit.WebResourceResponse? {
-                // Check top-level navigations too: ad networks often redirect the whole
-                // tab instead of opening a popup, which the old subresource-only check missed.
+                if (adBlockerEnabled) {
+                    val engineResult = if (request.isForMainFrame) {
+                        adFilter.shouldIntercept(request.url.toString(), view.url ?: safeStartUrl, ResourceType.SUBDOCUMENT)
+                    } else {
+                        adFilter.shouldIntercept(view, request)
+                    }
+                    if (engineResult.shouldBlock) {
+                        recordBlocked()
+                        return engineResult.resourceResponse ?: android.webkit.WebResourceResponse("text/plain", "utf-8", ByteArrayInputStream(ByteArray(0)))
+                    }
+                }
+                // Retain narrow local fallbacks for known forced-redirect destinations.
                 if (isBlockedAdRequest(request.url.toString())) {
                     recordBlocked()
                     return android.webkit.WebResourceResponse(
@@ -750,8 +764,11 @@ internal class DownloadPageDialog(
                 val scheme = request.url.scheme?.lowercase()
                 if (scheme != "https") return true
                 val destination = request.url.toString()
+                val engineBlocksNavigation = adBlockerEnabled && runCatching {
+                    adFilter.shouldIntercept(destination, view.url ?: safeStartUrl, ResourceType.SUBDOCUMENT).shouldBlock
+                }.getOrDefault(false)
                 if (adBlockerEnabled &&
-                    (isBlockedRedirectDestination(destination) || isBlockedAdRequest(destination))
+                    (engineBlocksNavigation || isBlockedRedirectDestination(destination) || isBlockedAdRequest(destination))
                 ) {
                     recordBlocked()
                     return true
@@ -764,6 +781,7 @@ internal class DownloadPageDialog(
             }
 
             override fun onPageStarted(view: WebView, url: String, favicon: android.graphics.Bitmap?) {
+                if (adBlockerEnabled) adFilter.performScript(view, url)
                 if (activeTabIndex in browserTabs.indices && url.startsWith("https://")) {
                     browserTabs[activeTabIndex] = browserTabs[activeTabIndex].first to url
                 }
