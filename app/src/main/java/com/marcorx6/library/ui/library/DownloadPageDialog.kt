@@ -362,6 +362,9 @@ internal class DownloadPageDialog(
             marginEnd = dp(4)
         })
         addressRow.addView(toolbarAction("", {
+            toggleCurrentBookmark()
+        }, com.marcorx6.library.R.drawable.ic_action_bookmark))
+        addressRow.addView(toolbarAction("", {
             val currentUrl = SecureUrlPolicy.toHttpsUrl(webView.url ?: safeStartUrl)
             if (currentUrl != null) {
                 webView.stopLoading()
