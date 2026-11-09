@@ -16,7 +16,7 @@ permissions:
 
 # Keep only the newest build for a branch; rapid fixes should not queue stale APK builds.
 concurrency:
-  group: build-apk-${{ github.ref }}
+  group: build-apk-final-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
