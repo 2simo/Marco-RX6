@@ -35,6 +35,7 @@ internal class FirstRunSetupController(
 ) {
     fun show() {
         val settings = activity.getSharedPreferences("app_settings", Activity.MODE_PRIVATE)
+        val motionEnabled = settings.getBoolean("animations", true)
         val appearance = appearancePreferences()
         var step = 0
         var preferredPlatform = settings.getString("preferred_platform", "PS3")
@@ -144,7 +145,7 @@ internal class FirstRunSetupController(
                     action()
                     renderStep(step, false)
                 }
-                if (animate) {
+                if (animate && motionEnabled) {
                     card.alpha = 0f
                     card.translationY = dp(14).toFloat()
                     card.animate().alpha(1f).translationY(0f).setStartDelay((choices.childCount - 1) * 65L)
@@ -175,7 +176,7 @@ internal class FirstRunSetupController(
                     }
                     card.addView(dot, LinearLayout.LayoutParams(dp(24), dp(24)).apply { topMargin = dp(9) })
                     choices.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(9) })
-                    if (animate) viewFactory.animateIn(card)
+                    if (animate && motionEnabled) viewFactory.animateIn(card)
                 }
                 4 -> {
                     addChoice(tr("تفعيل الإشعارات"), tr("تنبيه عند وصول مقال جديد"), notificationsEnabled) { notificationsEnabled = true }
@@ -191,7 +192,7 @@ internal class FirstRunSetupController(
                     choices.addView(folderCard, LinearLayout.LayoutParams(-1, -2).apply {
                         bottomMargin = dp(10)
                     })
-                    if (animate) viewFactory.animateIn(folderCard)
+                    if (animate && motionEnabled) viewFactory.animateIn(folderCard)
                     choices.addView(makeText(
                         tr("يمكنك تخطي هذه الخطوة والمتابعة بالتخزين الافتراضي."),
                         11f,
@@ -204,7 +205,7 @@ internal class FirstRunSetupController(
                 6 -> {
                     val readyCard = viewFactory.optionCard(tr("مكتبتك جاهزة!"), true, tr("تم حفظ المنصة واللغة والمظهر واللون والإشعارات ومكان التنزيلات.") + "\n" + tr("المجلد الحالي:") + " " + downloadFolderName())
                     choices.addView(readyCard, LinearLayout.LayoutParams(-1, -2))
-                    if (animate) viewFactory.animateIn(readyCard)
+                    if (animate && motionEnabled) viewFactory.animateIn(readyCard)
                 }
             }
             val scroll = ScrollView(activity).apply {
@@ -216,13 +217,25 @@ internal class FirstRunSetupController(
             content.addView(page, FrameLayout.LayoutParams(-1, -1))
             applyUnifiedSkin(page)
             applyMotionPreferences(page)
-            if (animate) viewFactory.animateIn(page)
+            if (animate && motionEnabled) viewFactory.animateIn(page)
             next.setOnClickListener {
                 if (step < steps.lastIndex) {
                     val old = step
-                    content.animate().alpha(0f).translationX(-dp(28).toFloat()).setDuration(150L)
-                        .withEndAction { renderStep(old + 1, true); content.translationX = dp(28).toFloat(); content.animate().alpha(1f).translationX(0f).setDuration(230L).start() }
-                        .start()
+                    if (motionEnabled) {
+                        content.animate().cancel()
+                        content.animate().alpha(0f).translationX(-dp(28).toFloat()).setDuration(150L)
+                            .withEndAction {
+                                renderStep(old + 1, true)
+                                content.translationX = dp(28).toFloat()
+                                content.animate().alpha(1f).translationX(0f).setDuration(230L).start()
+                            }
+                            .start()
+                    } else {
+                        content.animate().cancel()
+                        content.alpha = 1f
+                        content.translationX = 0f
+                        renderStep(old + 1, false)
+                    }
                 } else {
                     completionController.complete(
                         languageCode = languageCode,
