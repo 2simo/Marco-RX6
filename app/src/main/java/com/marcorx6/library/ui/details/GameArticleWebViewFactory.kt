@@ -63,9 +63,7 @@ internal class GameArticleWebViewFactory(
                 ): Boolean {
                     // The article is optional UI; discard a dead renderer without
                     // taking down the library/details Activity with it.
-                    (view.parent as? android.view.ViewGroup)?.removeView(view)
-                    view.stopLoading()
-                    view.destroy()
+                    (view.parent as? android.view.ViewGroup)?.removeView(view)                    view.destroy()
                     android.util.Log.w("MarcoArticleWebView", "Article renderer exited; the article view was discarded")
                     return true
                 }
