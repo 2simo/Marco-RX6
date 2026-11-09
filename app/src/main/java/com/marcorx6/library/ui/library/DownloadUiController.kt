@@ -810,15 +810,6 @@ internal class DownloadUiController(
                 }
             }
         }
-        root.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
-            override fun onViewAttachedToWindow(view: View) {
-                handler.removeCallbacks(refreshTask)
-                handler.post(refreshTask)
-            }
-            override fun onViewDetachedFromWindow(view: View) {
-                handler.removeCallbacks(refreshTask)
-            }
-        })
         val lifecycleOwner = activity as? LifecycleOwner
         val refreshLifecycleObserver = object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) {
@@ -838,7 +829,26 @@ internal class DownloadUiController(
                 owner.lifecycle.removeObserver(this)
             }
         }
-        lifecycleOwner?.lifecycle?.addObserver(refreshLifecycleObserver)
+        root.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(view: View) {
+                val owner = lifecycleOwner
+                if (owner != null) {
+                    // Register only while this screen is attached. Reopening the
+                    // download manager must not leave observers retaining old views.
+                    if (owner.lifecycle.currentState != androidx.lifecycle.Lifecycle.State.DESTROYED) {
+                        owner.lifecycle.addObserver(refreshLifecycleObserver)
+                    }
+                } else {
+                    handler.removeCallbacks(refreshTask)
+                    handler.post(refreshTask)
+                }
+            }
+
+            override fun onViewDetachedFromWindow(view: View) {
+                handler.removeCallbacks(refreshTask)
+                lifecycleOwner?.lifecycle?.removeObserver(refreshLifecycleObserver)
+            }
+        })
         root.layoutTransition = null
         list.layoutTransition = null
         emptyState.layoutTransition = null
