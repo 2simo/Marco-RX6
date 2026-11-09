@@ -115,7 +115,7 @@ open class BlogNotificationWorker(context: Context, params: WorkerParameters) : 
             com.marcorx6.library.R.drawable.marco_rx6_dragon
         )
         val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
-            .setSmallIcon(com.marcorx6.library.R.drawable.ic_launcher)
+            .setSmallIcon(com.marcorx6.library.R.drawable.ic_notification_marco)
             .setLargeIcon(appIcon)
             .setContentTitle(localize("A NEW GAME ON MARCO"))
             .setContentText(postTitle)
