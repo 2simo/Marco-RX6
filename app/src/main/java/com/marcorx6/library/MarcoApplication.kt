@@ -3,7 +3,6 @@ package com.marcorx6.library
 import android.app.Application
 import androidx.work.Configuration
 import java.util.concurrent.Executors
-import io.github.edsuns.adfilter.AdFilter
 
 /** Gives WorkManager enough bounded worker threads for the user's download concurrency setting. */
 class MarcoApplication : Application(), Configuration.Provider {
@@ -11,19 +10,8 @@ class MarcoApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-        // Initialize the WebView ad-filter engine once for the whole app.
-        val filter = AdFilter.create(this)
-        if (!filter.hasInstallation) {
-            val subscriptions = linkedMapOf(
-                "EasyList" to "https://easylist.to/easylist/easylist.txt",
-                "EasyPrivacy" to "https://easylist.to/easylist/easyprivacy.txt",
-                "AdGuard Annoyances" to "https://filters.adtidy.org/extension/chromium/filters/14.txt"
-            )
-            subscriptions.forEach { (name, url) ->
-                val subscription = filter.viewModel.addFilter(name, url)
-                filter.viewModel.download(subscription.id)
-            }
-        }
+        // Do not initialize WebView/WorkManager filter components during process startup.
+        // The browser initializes the filter lazily when the user actually opens it.
     }
 
     override val workManagerConfiguration: Configuration
