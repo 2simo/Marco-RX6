@@ -110,8 +110,13 @@ open class BlogNotificationWorker(context: Context, params: WorkerParameters) : 
             applicationContext, notificationId, openTarget,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        val appIcon = android.graphics.BitmapFactory.decodeResource(
+            applicationContext.resources,
+            com.marcorx6.library.R.drawable.marco_rx6_dragon
+        )
         val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(com.marcorx6.library.R.drawable.ic_launcher)
+            .setLargeIcon(appIcon)
             .setContentTitle(localize("A NEW GAME ON MARCO"))
             .setContentText(postTitle)
             .setStyle(NotificationCompat.BigTextStyle().bigText(postTitle))
