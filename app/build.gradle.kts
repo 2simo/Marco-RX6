@@ -90,6 +90,8 @@ dependencies {
         // resolvable from active repositories. Its ad-filter source does not use Anko.
         exclude(group = "org.jetbrains.anko")
     }
+    // AdFilter exposes ResourceType from this separate upstream module; JitPack does not publish it transitively.
+    implementation("com.github.Edsuns.AdblockAndroid:adblock-client:v0.9.1")
     implementation("androidx.work:work-runtime-ktx:2.10.0")
     implementation("com.google.android.gms:play-services-auth:21.3.0")
     implementation("com.google.mlkit:translate:17.0.3")
