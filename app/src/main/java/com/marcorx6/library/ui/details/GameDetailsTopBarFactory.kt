@@ -46,8 +46,8 @@ internal class GameDetailsTopBarFactory(
                 android.graphics.drawable.ColorDrawable(Color.WHITE)
             )
             setOnClickListener { onClose() }
-            minWidth = dp(48)
-            minHeight = dp(48)
+            minimumWidth = dp(48)
+            minimumHeight = dp(48)
         }
         topBar.addView(close, LinearLayout.LayoutParams(dp(48), dp(48)))
         // Title, platform and favorite action are shown together in the identity card.
