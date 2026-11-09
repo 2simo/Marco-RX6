@@ -635,6 +635,19 @@ internal class DownloadPageDialog(
             "luckyorange.com", "inspectlet.com", "nr-data.net", "newrelic.com",
             "stats.wp.com"
         )
+        // Destinations frequently used by forced-click and pop-under advertising.
+        // These are blocked only as top-level navigations; explicit allowlist entries win.
+        val blockedRedirectHosts = setOf(
+            "aliexpress.com", "aliexpress.ru", "aliexpress.us", "aliexpress.com.tr",
+            "aliexpress.ma", "melbet.com", "melbet.ma", "melbet.org",
+            "1xbet.com", "1xbet.ma", "1xbet.org", "1x-bet.com", "1x-bet.ma"
+        )
+        fun isBlockedRedirectDestination(url: String): Boolean {
+            if (!adBlockerEnabled) return false
+            val host = runCatching { Uri.parse(url).host?.lowercase() }.getOrNull() ?: return false
+            if (hostIsAllowed(host)) return false
+            return blockedRedirectHosts.any { host == it || host.endsWith(".$it") }
+        }
         val adEndpointPatterns = listOf(
             Regex("""(?:^|/)(?:pagead|adsystem|adserver|adservice|adview|adclick|popunder|popup|bannerad|vast|vpaid|adrequest|adserve|adframe|adloader|adscript|adsby|adsense|prebid|gampad)(?:/|[._?=&-]|$)""", RegexOption.IGNORE_CASE),
             Regex("""[?&](?:adunit|adslot|adtag|adzone|adserver|sponsorid|advert|advertising|ad_type|ad_format|ad_id)=([^&]*)""", RegexOption.IGNORE_CASE),
@@ -732,7 +745,10 @@ internal class DownloadPageDialog(
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 val scheme = request.url.scheme?.lowercase()
                 if (scheme != "https") return true
-                if (adBlockerEnabled && isBlockedAdRequest(request.url.toString())) {
+                val destination = request.url.toString()
+                if (adBlockerEnabled &&
+                    (isBlockedRedirectDestination(destination) || isBlockedAdRequest(destination))
+                ) {
                     recordBlocked()
                     return true
                 }
