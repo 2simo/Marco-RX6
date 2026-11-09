@@ -760,7 +760,8 @@ internal class DownloadPageDialog(
                 swipeRefresh.isRefreshing = false
                 progress.visibility = View.GONE
                 status.text = translate("توقف محرك الصفحة. أغلق هذه النافذة ثم أعد فتح صفحة التحميل.")
-                (view.parent as? android.view.ViewGroup)?.removeView(view)                view.destroy()
+                (view.parent as? android.view.ViewGroup)?.removeView(view)
+                view.destroy()
                 return true
             }
         }
