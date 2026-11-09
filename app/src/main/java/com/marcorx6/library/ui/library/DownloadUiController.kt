@@ -34,6 +34,12 @@ internal class DownloadUiController(
     private val onBack: () -> Unit,
     private val openGameSource: (String) -> Unit
 ) {
+    private companion object {
+        val refreshExecutor = java.util.concurrent.Executors.newSingleThreadExecutor { task ->
+            Thread(task, "Marco-Download-Refresh").apply { isDaemon = true }
+        }
+    }
+
     fun enqueueGameDownload(
         link: String,
         title: String,
@@ -52,8 +58,10 @@ internal class DownloadUiController(
         downloadRepository.enqueue(
             secureLink, title, userAgent, contentDisposition, hintedMimeType, referrer, sourcePostUrl
         ) { result ->
-            activity.runOnUiThread {
-                when (result) {
+            if (!activity.isFinishing && !activity.isDestroyed) {
+                activity.runOnUiThread {
+                    if (activity.isFinishing || activity.isDestroyed) return@runOnUiThread
+                    when (result) {
                     is DownloadStartResult.Enqueued -> {
                         Toast.makeText(activity, translate("تم التحقق من الملف وإضافته إلى مدير التنزيلات"), Toast.LENGTH_LONG).show()
                         DownloadMiniPanelDialog(activity, downloadRepository, translate, isDarkMode).show()
@@ -79,6 +87,7 @@ internal class DownloadUiController(
                     }
                     is DownloadStartResult.Failed ->
                         Toast.makeText(activity, translate(result.message), Toast.LENGTH_LONG).show()
+                    }
                 }
             }
         }
@@ -731,7 +740,7 @@ internal class DownloadUiController(
         render = renderBlock@{
             if (activity.isFinishing || activity.isDestroyed || refreshInProgress) return@renderBlock
             refreshInProgress = true
-            Thread({
+            refreshExecutor.execute {
                 val entriesResult = runCatching { downloadRepository.getDownloads() }
                 handler.post {
                     refreshInProgress = false
@@ -788,9 +797,6 @@ internal class DownloadUiController(
                 }
             }
                 }
-            }, "Marco-Download-Refresh").apply {
-                isDaemon = true
-                start()
             }
         }
         render?.invoke()
