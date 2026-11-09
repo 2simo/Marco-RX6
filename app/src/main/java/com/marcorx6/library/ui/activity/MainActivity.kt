@@ -67,6 +67,12 @@ class MainActivity : ComponentActivity() {
         val content = findViewById<android.view.ViewGroup>(android.R.id.content)
         for (index in 0 until content.childCount) cancelScreenMotion(content.getChildAt(index))
         cancelScreenMotion(view)
+        val animationsEnabled = getSharedPreferences("app_settings", MODE_PRIVATE)
+            .getBoolean("animations", true)
+        if (animationsEnabled) {
+            view.alpha = 0f
+            view.translationY = dp(8).toFloat()
+        }
         // Translate once before the first draw. A permanent global-layout listener
         // repeatedly traversed the entire view tree and could trigger needless text
         // updates during scrolling/resizing, contributing to visible flicker.
@@ -75,6 +81,15 @@ class MainActivity : ComponentActivity() {
         activityServicesRuntimeFeature.applySystemBarAppearance()
         applyMotionPreferences(view)
         applyUnifiedSkin(view)
+        if (animationsEnabled) {
+            view.animate().cancel()
+            view.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(220L)
+                .setInterpolator(android.view.animation.DecelerateInterpolator(1.25f))
+                .start()
+        }
     }
 
     private val downloadStoragePreferences by lazy { DownloadStoragePreferences(applicationContext) }
