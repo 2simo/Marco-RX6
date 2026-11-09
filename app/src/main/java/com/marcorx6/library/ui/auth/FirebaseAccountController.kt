@@ -1837,7 +1837,7 @@ internal class FirebaseAccountController(
                                 text = if (recipientRead) "  ✓✓" else "  ✓"
                                 textSize = 10f
                                 setTypeface(null, android.graphics.Typeface.BOLD)
-                                setTextColor(if (recipientRead) Color.rgb(55, 75, 95) else Color.rgb(75, 80, 90))
+                                setTextColor(if (recipientRead) Color.rgb(88, 96, 108) else Color.rgb(75, 80, 90))
                                 gravity = Gravity.CENTER_VERTICAL
                             })
                             bubble.addView(metadata, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(4) })
