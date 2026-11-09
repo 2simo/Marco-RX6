@@ -1,5 +1,6 @@
 package com.marcorx6.library.data.auth
 
+import com.marcorx6.library.data.Game
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.DocumentSnapshot
@@ -39,11 +40,13 @@ internal class FirebaseNotificationRepository(
 
     fun addNewGameNotifications(
         uid: String,
-        newGames: List<Pair<String, String>>
+        newGames: List<Game>
     ): Task<Void> {
         if (uid.isBlank() || newGames.isEmpty()) return Tasks.forResult(null)
         val batch = firestore.batch()
-        newGames.take(30).forEach { (name, platform) ->
+        newGames.take(30).forEach { game ->
+            val name = game.name
+            val platform = game.platform
             val ref = firestore.collection("users").document(uid)
                 .collection("notifications").document()
             batch.set(ref, mapOf(
@@ -51,6 +54,7 @@ internal class FirebaseNotificationRepository(
                 "actorUid" to uid,
                 "gameName" to name.take(120),
                 "platform" to platform.take(30),
+                "coverUrl" to game.coverUrl.take(2000),
                 "title" to "لعبة جديدة في المكتبة",
                 "body" to "$name • $platform",
                 "createdAt" to FieldValue.serverTimestamp(),
