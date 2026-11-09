@@ -682,6 +682,7 @@ internal class DownloadPageDialog(
                 recordBlocked(newlyHidden)
             }
         }
+        var rendererGone = false
         webView.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): android.webkit.WebResourceResponse? {
                 // Retain narrow local fallbacks for known forced-redirect destinations.
@@ -748,6 +749,22 @@ internal class DownloadPageDialog(
                     status.text = translate("تعذر تحميل صفحة الموقع. جرّب فتحها بالمتصفح الخارجي.")
                 }
             }
+
+            override fun onRenderProcessGone(
+                view: WebView,
+                detail: android.webkit.RenderProcessGoneDetail
+            ): Boolean {
+                // A crashed WebView renderer must be detached and destroyed. Returning
+                // true keeps the host app alive instead of propagating the renderer crash.
+                rendererGone = true
+                swipeRefresh.isRefreshing = false
+                progress.visibility = View.GONE
+                status.text = translate("توقف محرك الصفحة. أغلق هذه النافذة ثم أعد فتح صفحة التحميل.")
+                (view.parent as? android.view.ViewGroup)?.removeView(view)
+                view.stopLoading()
+                view.destroy()
+                return true
+            }
         }
         webView.webChromeClient = object : WebChromeClient() {
             override fun onCreateWindow(view: WebView, isDialog: Boolean, isUserGesture: Boolean, resultMsg: android.os.Message): Boolean {
@@ -782,8 +799,11 @@ internal class DownloadPageDialog(
         var lifecycleObserver: DefaultLifecycleObserver? = null
         val lifecycleOwner = activity as? LifecycleOwner
         dialog.setOnDismissListener {
-            webView.stopLoading()
-            webView.destroy()
+            if (!rendererGone) {
+                webView.stopLoading()
+                webView.onPause()
+                webView.destroy()
+            }
             lifecycleObserver?.let { lifecycleOwner?.lifecycle?.removeObserver(it) }
         }
         dialog.show()
@@ -805,6 +825,14 @@ internal class DownloadPageDialog(
         addressInput.setText(safeStartUrl)
         webView.loadUrl(safeStartUrl)
         val observer = object : DefaultLifecycleObserver {
+            override fun onResume(owner: LifecycleOwner) {
+                if (!rendererGone && dialog.isShowing) webView.onResume()
+            }
+
+            override fun onPause(owner: LifecycleOwner) {
+                if (!rendererGone) webView.onPause()
+            }
+
             override fun onDestroy(owner: LifecycleOwner) {
                 if (dialog.isShowing) dialog.dismiss()
                 owner.lifecycle.removeObserver(this)
