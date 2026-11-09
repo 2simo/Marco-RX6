@@ -13,7 +13,11 @@ internal class MotionPreferencesApplier(
     private val preferences: () -> SharedPreferences
 ) {
     fun apply(view: View) {
-        applyToTree(view, preferences().getBoolean("animations", true))
+        // The app does not install LayoutTransition animations. With motion enabled,
+        // walking every child of a large library screen here would only add main-thread
+        // work before the first frame, so traverse only for the reduced-motion case.
+        if (preferences().getBoolean("animations", true)) return
+        applyToTree(view, animationsEnabled = false)
     }
 
     private fun applyToTree(view: View, animationsEnabled: Boolean) {
