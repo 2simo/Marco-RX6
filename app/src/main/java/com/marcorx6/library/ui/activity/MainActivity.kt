@@ -83,6 +83,7 @@ class MainActivity : ComponentActivity() {
         // repeatedly traversed the entire view tree and could trigger needless text
         // updates during scrolling/resizing, contributing to visible flicker.
         LanguageTranslator.translateViewTree(view, pageLanguage)
+        com.marcorx6.library.AppDiagnostics.log("INFO", "Navigation", "Opened screen: ${view.javaClass.simpleName}")
         setContentView(view)
         com.marcorx6.library.ui.KeyboardLayoutController.install(this, view)
         activityServicesRuntimeFeature.applySystemBarAppearance()
