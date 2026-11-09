@@ -2979,6 +2979,8 @@ internal class FirebaseAccountController(
             }
     }
 
+    fun dispose() = clearAccountListeners()
+
     /** Stop account-scoped Firestore listeners before leaving or changing the Firebase session. */
     private fun clearAccountListeners() {
         notificationsListener?.remove()
