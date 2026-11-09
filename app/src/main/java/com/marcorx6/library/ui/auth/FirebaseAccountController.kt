@@ -1981,12 +1981,12 @@ internal class FirebaseAccountController(
                             setPadding(0, dp(3), 0, 0)
                         })
                         row.addView(identity, LinearLayout.LayoutParams(0, -2, 1f))
-                        row.addView(TextView(activity).apply {
-                            text = "‹"
-                            textSize = 25f
-                            setTextColor(Color.rgb(150, 158, 171))
-                            gravity = Gravity.CENTER
-                        }, LinearLayout.LayoutParams(dp(24), dp(42)))
+                        row.addView(android.widget.ImageView(activity).apply {
+                            setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
+                            imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(150, 158, 171))
+                            scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
+                            contentDescription = translate("فتح الملف الشخصي")
+                        }, LinearLayout.LayoutParams(dp(28), dp(42)))
                         val publicPhotoData = profile.getString("photoData")
                         val publicAvatar = publicPhotoData?.takeIf { it.isNotBlank() }?.let { encoded ->
                             runCatching {
