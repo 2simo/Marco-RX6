@@ -142,7 +142,7 @@ internal class AppearanceUiFactory(
             window.statusBarColor = bg()
             window.navigationBarColor = bg()
             WindowInsetsControllerCompat(window, window.decorView)
-                .show(WindowInsetsCompat.Type.systemBars())
+                .hide(WindowInsetsCompat.Type.statusBars())
             window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
             window.attributes = window.attributes.apply { dimAmount = 0.66f }
         }
