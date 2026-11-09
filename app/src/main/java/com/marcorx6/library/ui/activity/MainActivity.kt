@@ -443,7 +443,13 @@ class MainActivity : ComponentActivity() {
     private fun applyUnifiedSkin(view: View) = appearanceRuntimeFeature.applyUnifiedSkin(view)
     private fun styleAlertDialog(dialog: AlertDialog) {
         appearanceRuntimeFeature.styleAlertDialog(dialog)
-        dialog.window?.decorView?.let(::applyMotionPreferences)
+        dialog.window?.let { window ->
+            androidx.core.view.WindowInsetsControllerCompat(window, window.decorView).apply {
+                systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
+            }
+            applyMotionPreferences(window.decorView)
+        }
     }
     private fun makeInput(hintText: String): EditText = appearanceRuntimeFeature.makeInput(hintText)
 
