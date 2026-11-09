@@ -311,11 +311,18 @@ internal class DownloadConfirmationPanel(
             }
         }
         root.animate().alpha(1f).translationY(0f).setDuration(190L).start()
-        (activity as? LifecycleOwner)?.lifecycle?.addObserver(object : DefaultLifecycleObserver {
+        var lifecycleObserver: DefaultLifecycleObserver? = null
+        val lifecycleOwner = activity as? LifecycleOwner
+        dialog.setOnDismissListener {
+            lifecycleObserver?.let { lifecycleOwner?.lifecycle?.removeObserver(it) }
+        }
+        val observer = object : DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
                 if (dialog.isShowing) dialog.dismiss()
                 owner.lifecycle.removeObserver(this)
             }
-        })
+        }
+        lifecycleObserver = observer
+        lifecycleOwner?.lifecycle?.addObserver(observer)
     }
 }
