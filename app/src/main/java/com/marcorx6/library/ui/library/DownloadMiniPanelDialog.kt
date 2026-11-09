@@ -17,6 +17,8 @@ import android.widget.ScrollView
 import android.widget.TextView
 import com.marcorx6.library.data.DownloadDatabase
 import com.marcorx6.library.data.DownloadRepository
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 
 /** Compact live download list that can sit above the game page or the in-app browser. */
 internal class DownloadMiniPanelDialog(
@@ -245,5 +247,12 @@ internal class DownloadMiniPanelDialog(
         }
         render()
         handler.postDelayed(refresh, 900L)
+        (activity as? LifecycleOwner)?.lifecycle?.addObserver(object : DefaultLifecycleObserver {
+            override fun onDestroy(owner: LifecycleOwner) {
+                if (dialog.isShowing) dialog.dismiss()
+                handler.removeCallbacks(refresh)
+                owner.lifecycle.removeObserver(this)
+            }
+        })
     }
 }
