@@ -168,7 +168,9 @@ internal class ResumableDownloadWorker(
                         sink.write(buffer, 0, count)
                         offset += count
                         val now = System.currentTimeMillis()
-                        if (now - lastUpdate >= 500L) {
+                        // Persist progress once per second rather than forcing a disk sync
+                        // every 500 ms; this reduces flash I/O and wakeups during long downloads.
+                        if (now - lastUpdate >= 1_000L) {
                             sink.flush()
                             sink.fd.sync()
                             database.progress(item.id, offset, total, etag, modified)
