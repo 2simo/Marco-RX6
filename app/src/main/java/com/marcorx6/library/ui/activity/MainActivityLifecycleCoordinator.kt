@@ -20,6 +20,7 @@ internal class MainActivityLifecycleCoordinator(
     private val scheduleNotifications: () -> Unit,
     private val requestNotificationPermission: () -> Unit,
     private val syncFromBlog: () -> Unit,
+    private val disposeAccount: () -> Unit,
     private val dismissUserExperience: () -> Unit,
     private val disposeLibrary: () -> Unit,
     private val shutdownServices: () -> Unit,
@@ -59,6 +60,7 @@ internal class MainActivityLifecycleCoordinator(
     fun onDestroy() {
         if (destroyed) return
         destroyed = true
+        disposeAccount()
         dismissUserExperience()
         disposeLibrary()
         shutdownServices()
