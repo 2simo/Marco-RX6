@@ -142,13 +142,10 @@ internal class GameDetailsController(
                 android.view.WindowManager.LayoutParams.MATCH_PARENT,
                 android.view.WindowManager.LayoutParams.MATCH_PARENT
             )
-            val lightSystemBars = !isDarkMode()
-            @Suppress("DEPRECATION")
-            window.decorView.systemUiVisibility = if (lightSystemBars) {
-                android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or
-                    android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
-            } else {
-                0
+            androidx.core.view.WindowInsetsControllerCompat(window, window.decorView).apply {
+                isAppearanceLightNavigationBars = !isDarkMode()
+                systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
             }
         }
     }
