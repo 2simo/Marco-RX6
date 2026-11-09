@@ -71,7 +71,9 @@ class MainActivity : ComponentActivity() {
             .getBoolean("animations", true)
         if (animationsEnabled) {
             view.alpha = 0f
-            view.translationY = dp(8).toFloat()
+            view.translationY = dp(12).toFloat()
+            view.scaleX = 0.995f
+            view.scaleY = 0.995f
         }
         // Apply one direction policy to every full-screen page. This prevents mixed
         // RTL/LTR roots from reversing tab order or pushing icons into adjacent labels.
@@ -94,8 +96,10 @@ class MainActivity : ComponentActivity() {
             view.animate()
                 .alpha(1f)
                 .translationY(0f)
-                .setDuration(220L)
-                .setInterpolator(android.view.animation.DecelerateInterpolator(1.25f))
+                .scaleX(1f)
+                .scaleY(1f)
+                .setDuration(240L)
+                .setInterpolator(android.view.animation.DecelerateInterpolator(1.35f))
                 .start()
         }
     }
