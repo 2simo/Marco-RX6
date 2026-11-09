@@ -49,8 +49,10 @@ class MarcoFirebaseMessagingService : FirebaseMessagingService() {
             openApp,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        val appIcon = BitmapFactory.decodeResource(resources, R.drawable.marco_rx6_dragon)
         val builder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_launcher)
+            .setLargeIcon(appIcon)
             .setContentTitle(title)
             .setContentText(body)
             .setContentIntent(pendingIntent)
@@ -60,8 +62,7 @@ class MarcoFirebaseMessagingService : FirebaseMessagingService() {
         // Only game notifications include artwork; social messages remain text-only.
         val cover = if (data["type"] == "game") downloadCover(data["coverUrl"]) else null
         if (cover != null) {
-            builder.setLargeIcon(cover)
-                .setStyle(
+            builder.setStyle(
                     NotificationCompat.BigPictureStyle()
                         .bigPicture(cover)
                         .setSummaryText(body)
