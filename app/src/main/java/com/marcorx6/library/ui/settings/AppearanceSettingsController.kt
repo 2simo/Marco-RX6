@@ -309,6 +309,29 @@ internal class AppearanceSettingsController(
             ).show()
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
 
+        root.addView(sectionLabel("التشخيص وسجل الأخطاء"), LinearLayout.LayoutParams(-1, -2))
+        root.addView(settingRow(
+            translate("تصدير سجل التشخيص"),
+            translate("احفظ سجل الأعطال والأحداث محلياً وشاركه عند الحاجة؛ لا يتم إرساله تلقائياً")
+        ) {
+            runCatching {
+                val exportFile = com.marcorx6.library.AppDiagnostics.createExport(activity)
+                val uri = androidx.core.content.FileProvider.getUriForFile(
+                    activity,
+                    "${activity.packageName}.files",
+                    exportFile
+                )
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "application/zip"
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                activity.startActivity(Intent.createChooser(shareIntent, translate("مشاركة سجل التشخيص")))
+            }.onFailure {
+                Toast.makeText(activity, translate("تعذر إنشاء سجل التشخيص"), Toast.LENGTH_LONG).show()
+            }
+        }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
+
         root.addView(TextView(activity).apply {
             text = "MARCO  •  BLACK / BLACK / SILVER EXPERIENCE"
             textSize = 9f
