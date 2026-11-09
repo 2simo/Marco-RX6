@@ -2288,10 +2288,21 @@ internal class FirebaseAccountController(
                         followButton.isEnabled = true
                         refreshMessageAvailability()
                         userDocuments.refreshPublicFollowCounts(currentUser.uid)
+                        val motionEnabled = activity.getSharedPreferences(
+                            "app_settings", Activity.MODE_PRIVATE
+                        ).getBoolean("animations", true)
                         followButton.animate().cancel()
-                        followButton.scaleX = 0.97f
-                        followButton.scaleY = 0.97f
-                        followButton.animate().scaleX(1f).scaleY(1f).setDuration(150).start()
+                        if (motionEnabled) {
+                            followButton.scaleX = 0.97f
+                            followButton.scaleY = 0.97f
+                            followButton.animate().scaleX(1f).scaleY(1f)
+                                .setDuration(150L)
+                                .setInterpolator(android.view.animation.DecelerateInterpolator())
+                                .start()
+                        } else {
+                            followButton.scaleX = 1f
+                            followButton.scaleY = 1f
+                        }
                     }
                     .addOnFailureListener {
                         updateLabel()
