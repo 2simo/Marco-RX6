@@ -1048,24 +1048,27 @@ internal class MainLibraryInterfaceController(
             if (dockHidden == !visible) return
             dockHidden = !visible
             dock.animate().cancel()
+            val motionEnabled = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+                .getBoolean("animations", true)
+            val targetTranslation = if (visible) 0f
+                else (dock.height + dockParams.bottomMargin + dp(12)).toFloat()
             if (visible) {
                 dock.isClickable = true
                 dock.isFocusable = true
+            } else {
+                dock.isClickable = false
+                dock.isFocusable = false
+            }
+            if (motionEnabled) {
                 dock.animate()
-                    .translationY(0f)
-                    .alpha(1f)
+                    .translationY(targetTranslation)
+                    .alpha(if (visible) 1f else 0f)
                     .setDuration(190L)
                     .setInterpolator(android.view.animation.DecelerateInterpolator())
                     .start()
             } else {
-                dock.isClickable = false
-                dock.isFocusable = false
-                dock.animate()
-                    .translationY((dock.height + dockParams.bottomMargin + dp(12)).toFloat())
-                    .alpha(0f)
-                    .setDuration(190L)
-                    .setInterpolator(android.view.animation.DecelerateInterpolator())
-                    .start()
+                dock.translationY = targetTranslation
+                dock.alpha = if (visible) 1f else 0f
             }
         }
         pageScroll.setOnScrollChangeListener { _, _, scrollY, _, _ ->
