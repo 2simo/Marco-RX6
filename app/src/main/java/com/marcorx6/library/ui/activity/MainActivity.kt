@@ -117,7 +117,7 @@ class MainActivity : ComponentActivity() {
             android.util.Log.w("MarcoFirebaseProfile", "Cloud profile save failed; local profile was saved", error)
         }
     }
-    private val firebaseAccountController: FirebaseAccountController by lazy {
+    private val firebaseAccountControllerDelegate: Lazy<FirebaseAccountController> = lazy {
         FirebaseAccountController(
             activity = this,
             authRepository = firebaseAuthRepository,
@@ -153,6 +153,8 @@ class MainActivity : ComponentActivity() {
             gameEngagementRepository = gameEngagementRepository
         )
     }
+
+    private val firebaseAccountController: FirebaseAccountController by firebaseAccountControllerDelegate
 
     private fun showFirebaseAccount() = firebaseAccountController.show()
 
@@ -369,7 +371,7 @@ class MainActivity : ComponentActivity() {
             scheduleNotifications = activityServicesRuntimeFeature::scheduleNotifications,
             requestNotificationPermission = activityServicesRuntimeFeature::requestNotificationPermissionIfNeeded,
             syncFromBlog = { bloggerRuntimeFeature.sync(showResult = false) },
-            disposeAccount = { firebaseAccountController.dispose() },
+            disposeAccount = { if (firebaseAccountControllerDelegate.isInitialized()) firebaseAccountController.dispose() },
             dismissUserExperience = { userExperienceRuntimeFeature.dismiss() },
             disposeLibrary = { libraryRuntimeFeature.dispose() },
             shutdownServices = { activityServicesRuntimeFeature.shutdown() },
