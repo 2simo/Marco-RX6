@@ -16,6 +16,8 @@ import android.widget.Toast
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import com.marcorx6.library.data.DownloadRepository
 import com.marcorx6.library.data.DownloadStartResult
 import com.marcorx6.library.network.SecureUrlPolicy
@@ -817,6 +819,26 @@ internal class DownloadUiController(
                 handler.removeCallbacks(refreshTask)
             }
         })
+        val lifecycleOwner = activity as? LifecycleOwner
+        val refreshLifecycleObserver = object : DefaultLifecycleObserver {
+            override fun onStart(owner: LifecycleOwner) {
+                if (root.isAttachedToWindow) {
+                    handler.removeCallbacks(refreshTask)
+                    handler.post(refreshTask)
+                }
+            }
+
+            override fun onStop(owner: LifecycleOwner) {
+                // The download screen is no longer visible; stop its periodic UI refresh.
+                handler.removeCallbacks(refreshTask)
+            }
+
+            override fun onDestroy(owner: LifecycleOwner) {
+                handler.removeCallbacks(refreshTask)
+                owner.lifecycle.removeObserver(this)
+            }
+        }
+        lifecycleOwner?.lifecycle?.addObserver(refreshLifecycleObserver)
         root.layoutTransition = null
         list.layoutTransition = null
         emptyState.layoutTransition = null
