@@ -1376,6 +1376,19 @@ internal class FirebaseAccountController(
                     addView(textColumn, LinearLayout.LayoutParams(0, -2, 1f))
                     isClickable = true
                     isFocusable = true
+                    setOnLongClickListener {
+                        AlertDialog.Builder(activity)
+                            .setIcon(com.marcorx6.library.R.drawable.ic_action_delete)
+                            .setMessage(translate("حذف هذا الإشعار من قائمتك؟"))
+                            .setNegativeButton(translate("إلغاء"), null)
+                            .setPositiveButton(translate("حذف")) { _, _ ->
+                                notifications.delete(user.uid, item)
+                                    .addOnFailureListener { error ->
+                                        toast(error.localizedMessage ?: translate("تعذر حذف الإشعار."))
+                                    }
+                            }.show()
+                        true
+                    }
                     setOnClickListener {
                         notifications.markRead(user.uid, item)
                             .addOnFailureListener { error ->
