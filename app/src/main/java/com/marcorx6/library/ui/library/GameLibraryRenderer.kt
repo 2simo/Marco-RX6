@@ -498,14 +498,15 @@ internal class GameLibraryRenderer(
                 runWhenVisible(slot) { buildCard() }
 
                 if (gridMode) {
-                    if (currentGridRow == null || currentGridRow!!.childCount == 2) {
-                        currentGridRow = LinearLayout(activity).apply {
+                    val row = currentGridRow?.takeUnless { it.childCount == 2 }
+                        ?: LinearLayout(activity).apply {
                             orientation = LinearLayout.HORIZONTAL
                             gravity = Gravity.TOP
+                        }.also { newRow ->
+                            currentGridRow = newRow
+                            grid.addView(newRow, LinearLayout.LayoutParams(-1, -2))
                         }
-                        grid.addView(currentGridRow, LinearLayout.LayoutParams(-1, -2))
-                    }
-                    currentGridRow!!.addView(
+                    row.addView(
                         slot,
                         LinearLayout.LayoutParams(0, -2, 1f).apply {
                             marginStart = dp(4)
