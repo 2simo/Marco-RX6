@@ -134,8 +134,18 @@ internal class StartupExperienceController(
             insets
         }
         androidx.core.view.ViewCompat.requestApplyInsets(content)
-        logo.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(700L)
-            .setInterpolator(OvershootInterpolator(1.08f)).start()
+        val motionEnabled = activity.getSharedPreferences("app_settings", Activity.MODE_PRIVATE)
+            .getBoolean("animations", true)
+        if (motionEnabled) {
+            logo.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(700L)
+                .setInterpolator(OvershootInterpolator(1.08f)).start()
+        } else {
+            logo.alpha = 1f
+            logo.scaleX = 1f
+            logo.scaleY = 1f
+        }
+        // Keep numeric loading progress active: it reports startup work rather than
+        // decorative motion and remains useful when animations are disabled.
         animator = ValueAnimator.ofInt(1, 100).apply {
             duration = 4500L
             addUpdateListener { valueAnimator ->
