@@ -30,12 +30,12 @@ internal class GameDetailsTopBarFactory(
                 setStroke(dp(1), if (isDarkMode()) Color.argb(150, 130, 138, 151) else Color.argb(160, 160, 168, 181))
             }
         }
-        val close = TextView(activity).apply {
-            text = "‹"
+        val close = android.widget.ImageView(activity).apply {
+            setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
             contentDescription = "إغلاق تفاصيل اللعبة"
-            textSize = 30f
-            setTextColor(white())
-            gravity = android.view.Gravity.CENTER
+            scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
+            imageTintList = android.content.res.ColorStateList.valueOf(white())
+            setPadding(dp(12), dp(12), dp(12), dp(12))
             background = android.graphics.drawable.GradientDrawable().apply {
                 setColor(Color.argb(45, 190, 198, 210))
                 cornerRadius = dp(14).toFloat()
