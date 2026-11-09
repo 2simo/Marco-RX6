@@ -14,6 +14,17 @@ android {
         buildConfig = true
     }
 
+    // Produce device-specific APKs so each phone downloads only its own native libraries.
+    // Keep a Universal APK as a compatibility fallback.
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a")
+            isUniversalApk = true
+        }
+    }
+
     defaultConfig {
         buildConfigField("boolean", "PLAY_DISTRIBUTION", playDistributionEnabled.toString())
         applicationId = "com.marcorx6.library"
