@@ -10,6 +10,8 @@ import android.widget.ScrollView
 import android.widget.TextView
 import com.marcorx6.library.data.Game
 import com.marcorx6.library.ui.details.GameRatingViewFactory
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 
 internal class GameDetailsController(
     private val activity: Activity,
@@ -148,5 +150,11 @@ internal class GameDetailsController(
                 hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
             }
         }
+        (activity as? LifecycleOwner)?.lifecycle?.addObserver(object : DefaultLifecycleObserver {
+            override fun onDestroy(owner: LifecycleOwner) {
+                if (reader.isShowing) reader.dismiss()
+                owner.lifecycle.removeObserver(this)
+            }
+        })
     }
 }
