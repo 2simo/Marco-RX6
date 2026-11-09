@@ -19,6 +19,8 @@ import com.marcorx6.library.data.DownloadDatabase
 import com.marcorx6.library.data.DownloadRepository
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 
 /** Compact live download list that can sit above the game page or the in-app browser. */
 internal class DownloadMiniPanelDialog(
@@ -106,6 +108,12 @@ internal class DownloadMiniPanelDialog(
         val rows = linkedMapOf<Long, Row>()
         val speedSamples = mutableMapOf<Long, Pair<Long, Long>>()
         val handler = Handler(Looper.getMainLooper())
+        // Database reads and file-size checks must never run on the UI thread.
+        // A single worker also keeps refreshes and user actions in a predictable order.
+        val refreshExecutor = Executors.newSingleThreadExecutor { task ->
+            Thread(task, "MarcoDownloadPanel").apply { isDaemon = true }
+        }
+        val refreshInProgress = AtomicBoolean(false)
 
         fun action(label: String, onClick: () -> Unit): TextView = TextView(activity).apply {
             text = label
@@ -154,68 +162,95 @@ internal class DownloadMiniPanelDialog(
         }
 
         fun render() {
-            if (!dialog.isShowing || activity.isFinishing || activity.isDestroyed) return
-            val entries = runCatching { repository.getDownloads().take(8) }.getOrDefault(emptyList())
-            val ids = entries.map { it.id }.toSet()
-            rows.keys.filter { it !in ids }.forEach { id ->
-                rows.remove(id)?.let { list.removeView(it.card) }
-                speedSamples.remove(id)
-            }
-            if (entries.isEmpty()) {
-                if (list.childCount == 0) list.addView(TextView(activity).apply {
-                    text = translate("لا توجد تنزيلات في القائمة")
-                    textSize = 12f; setTextColor(muted); gravity = Gravity.CENTER
-                    setPadding(0, dp(25), 0, dp(25))
-                })
-                return
-            }
-            entries.forEachIndexed { index, item ->
-                val row = rows[item.id] ?: makeRow(item.title).also {
-                    rows[item.id] = it
-                    list.addView(it.card, index.coerceAtMost(list.childCount), LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(7) })
-                }
-                if (list.indexOfChild(row.card) != index) {
-                    list.removeView(row.card)
-                    list.addView(row.card, index.coerceAtMost(list.childCount))
-                }
-                if (row.title.text.toString() != item.title) row.title.text = item.title
-                val statusLabel = when (item.status) {
-                    DownloadManager.STATUS_PENDING, DownloadDatabase.STATUS_SCHEDULED -> translate("في الانتظار")
-                    DownloadManager.STATUS_RUNNING -> translate("قيد التنزيل")
-                    DownloadManager.STATUS_PAUSED -> translate("متوقف مؤقتاً")
-                    DownloadManager.STATUS_SUCCESSFUL -> translate("اكتمل")
-                    DownloadManager.STATUS_FAILED -> translate("فشل")
-                    else -> translate("غير معروف")
-                }
-                val percent = if (item.totalBytes > 0L) (item.downloadedBytes * 100L / item.totalBytes).coerceIn(0L, 100L).toInt() else 0
-                val now = SystemClock.elapsedRealtime()
-                val previous = speedSamples[item.id]
-                val speed = if (item.status == DownloadManager.STATUS_RUNNING && previous != null && now > previous.second && item.downloadedBytes >= previous.first) {
-                    ((item.downloadedBytes - previous.first) * 1000L) / (now - previous.second).coerceAtLeast(1L)
-                } else 0L
-                if (item.status == DownloadManager.STATUS_RUNNING) speedSamples[item.id] = item.downloadedBytes to now else speedSamples.remove(item.id)
-                row.status.text = if (item.totalBytes > 0L) "$statusLabel • $percent%" else statusLabel
-                val downloaded = android.text.format.Formatter.formatFileSize(activity, item.downloadedBytes.coerceAtLeast(0L))
-                val total = if (item.totalBytes > 0L) android.text.format.Formatter.formatFileSize(activity, item.totalBytes) else translate("حجم غير معروف")
-                val speedText = if (item.status == DownloadManager.STATUS_RUNNING) " • " + android.text.format.Formatter.formatFileSize(activity, speed) + "/s" else ""
-                val etaText = if (speed > 0L && item.totalBytes > item.downloadedBytes) {
-                    val seconds = ((item.totalBytes - item.downloadedBytes) / speed).coerceAtLeast(0L)
-                    val eta = if (seconds >= 3600L) "${seconds / 3600L}h ${(seconds % 3600L) / 60L}m"
-                        else if (seconds >= 60L) "${seconds / 60L}m ${seconds % 60L}s" else "${seconds}s"
-                    " • " + translate("متبقي") + " " + eta
-                } else ""
-                row.details.text = "$downloaded / $total$speedText$etaText"
-                row.progress.isIndeterminate = item.status == DownloadManager.STATUS_RUNNING && item.totalBytes <= 0L
-                if (!row.progress.isIndeterminate) row.progress.progress = percent
-                row.progress.visibility = if (item.status == DownloadManager.STATUS_SUCCESSFUL || item.status == DownloadManager.STATUS_FAILED) View.GONE else View.VISIBLE
-                row.actions.removeAllViews()
-                if (item.status == DownloadManager.STATUS_PENDING || item.status == DownloadDatabase.STATUS_SCHEDULED || item.status == DownloadManager.STATUS_RUNNING) {
-                    row.actions.addView(action(translate("إيقاف")) { repository.pauseDownload(item.id); render() })
-                } else if (item.status == DownloadManager.STATUS_PAUSED || item.status == DownloadManager.STATUS_FAILED) {
-                    row.actions.addView(action(translate("استكمال")) { repository.resumeDownload(item.id); render() })
-                }
-                if (item.status != DownloadManager.STATUS_SUCCESSFUL) {
-                    row.actions.addView(action(translate("إلغاء")) { repository.deleteDownload(item.id); render() })
+            if (!dialog.isShowing || activity.isFinishing || activity.isDestroyed ||
+                !refreshInProgress.compareAndSet(false, true)
+            ) return
+            refreshExecutor.execute {
+                val entriesResult = runCatching { repository.getDownloads().take(8) }
+                handler.post {
+                    refreshInProgress.set(false)
+                    if (!dialog.isShowing || activity.isFinishing || activity.isDestroyed) return@post
+                    val entries = entriesResult.getOrElse {
+                        android.util.Log.w("MarcoDownloadPanel", "Unable to refresh downloads", it)
+                        return@post
+                    }
+                    val ids = entries.map { it.id }.toSet()
+                    rows.keys.filter { it !in ids }.forEach { id ->
+                        rows.remove(id)?.let { list.removeView(it.card) }
+                        speedSamples.remove(id)
+                    }
+                    if (entries.isEmpty()) {
+                        if (list.childCount == 0) list.addView(TextView(activity).apply {
+                            text = translate("لا توجد تنزيلات في القائمة")
+                            textSize = 12f; setTextColor(muted); gravity = Gravity.CENTER
+                            setPadding(0, dp(25), 0, dp(25))
+                        })
+                        return@post
+                    }
+                    entries.forEachIndexed { index, item ->
+                        val row = rows[item.id] ?: makeRow(item.title).also {
+                            rows[item.id] = it
+                            list.addView(it.card, index.coerceAtMost(list.childCount), LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(7) })
+                        }
+                        if (list.indexOfChild(row.card) != index) {
+                            list.removeView(row.card)
+                            list.addView(row.card, index.coerceAtMost(list.childCount))
+                        }
+                        if (row.title.text.toString() != item.title) row.title.text = item.title
+                        val statusLabel = when (item.status) {
+                            DownloadManager.STATUS_PENDING, DownloadDatabase.STATUS_SCHEDULED -> translate("في الانتظار")
+                            DownloadManager.STATUS_RUNNING -> translate("قيد التنزيل")
+                            DownloadManager.STATUS_PAUSED -> translate("متوقف مؤقتاً")
+                            DownloadManager.STATUS_SUCCESSFUL -> translate("اكتمل")
+                            DownloadManager.STATUS_FAILED -> translate("فشل")
+                            else -> translate("غير معروف")
+                        }
+                        val percent = if (item.totalBytes > 0L) (item.downloadedBytes * 100L / item.totalBytes).coerceIn(0L, 100L).toInt() else 0
+                        val now = SystemClock.elapsedRealtime()
+                        val previous = speedSamples[item.id]
+                        val speed = if (item.status == DownloadManager.STATUS_RUNNING && previous != null && now > previous.second && item.downloadedBytes >= previous.first) {
+                            ((item.downloadedBytes - previous.first) * 1000L) / (now - previous.second).coerceAtLeast(1L)
+                        } else 0L
+                        if (item.status == DownloadManager.STATUS_RUNNING) speedSamples[item.id] = item.downloadedBytes to now else speedSamples.remove(item.id)
+                        row.status.text = if (item.totalBytes > 0L) "$statusLabel • $percent%" else statusLabel
+                        val downloaded = android.text.format.Formatter.formatFileSize(activity, item.downloadedBytes.coerceAtLeast(0L))
+                        val total = if (item.totalBytes > 0L) android.text.format.Formatter.formatFileSize(activity, item.totalBytes) else translate("حجم غير معروف")
+                        val speedText = if (item.status == DownloadManager.STATUS_RUNNING) " • " + android.text.format.Formatter.formatFileSize(activity, speed) + "/s" else ""
+                        val etaText = if (speed > 0L && item.totalBytes > item.downloadedBytes) {
+                            val seconds = ((item.totalBytes - item.downloadedBytes) / speed).coerceAtLeast(0L)
+                            val eta = if (seconds >= 3600L) "${seconds / 3600L}h ${(seconds % 3600L) / 60L}m"
+                                else if (seconds >= 60L) "${seconds / 60L}m ${seconds % 60L}s" else "${seconds}s"
+                            " • " + translate("متبقي") + " " + eta
+                        } else ""
+                        row.details.text = "$downloaded / $total$speedText$etaText"
+                        row.progress.isIndeterminate = item.status == DownloadManager.STATUS_RUNNING && item.totalBytes <= 0L
+                        if (!row.progress.isIndeterminate) row.progress.progress = percent
+                        row.progress.visibility = if (item.status == DownloadManager.STATUS_SUCCESSFUL || item.status == DownloadManager.STATUS_FAILED) View.GONE else View.VISIBLE
+                        row.actions.removeAllViews()
+                        if (item.status == DownloadManager.STATUS_PENDING || item.status == DownloadDatabase.STATUS_SCHEDULED || item.status == DownloadManager.STATUS_RUNNING) {
+                            row.actions.addView(action(translate("إيقاف")) {
+                                refreshExecutor.execute {
+                                    repository.pauseDownload(item.id)
+                                    handler.post { if (dialog.isShowing) render() }
+                                }
+                            })
+                        } else if (item.status == DownloadManager.STATUS_PAUSED || item.status == DownloadManager.STATUS_FAILED) {
+                            row.actions.addView(action(translate("استكمال")) {
+                                refreshExecutor.execute {
+                                    repository.resumeDownload(item.id)
+                                    handler.post { if (dialog.isShowing) render() }
+                                }
+                            })
+                        }
+                        if (item.status != DownloadManager.STATUS_SUCCESSFUL) {
+                            row.actions.addView(action(translate("إلغاء")) {
+                                refreshExecutor.execute {
+                                    repository.deleteDownload(item.id)
+                                    handler.post { if (dialog.isShowing) render() }
+                                }
+                            })
+                        }
+                    }
                 }
             }
         }
@@ -224,7 +259,7 @@ internal class DownloadMiniPanelDialog(
             override fun run() {
                 if (dialog.isShowing) {
                     render()
-                    handler.postDelayed(this, 900L)
+                    handler.postDelayed(this, 1_200L)
                 }
             }
         }
@@ -235,6 +270,7 @@ internal class DownloadMiniPanelDialog(
         val lifecycleOwner = activity as? LifecycleOwner
         dialog.setOnDismissListener {
             handler.removeCallbacks(refresh)
+            refreshExecutor.shutdownNow()
             lifecycleObserver?.let { lifecycleOwner?.lifecycle?.removeObserver(it) }
         }
         dialog.show()
