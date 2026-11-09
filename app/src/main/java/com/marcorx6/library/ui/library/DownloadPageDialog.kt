@@ -597,11 +597,11 @@ internal class DownloadPageDialog(
             minWidth = dp(17)
             minHeight = dp(17)
             setPadding(dp(3), 0, dp(3), 0)
-            background = GradientDrawable().apply {
+            setBackground(GradientDrawable().apply {
                 setColor(Color.rgb(75, 82, 94))
                 cornerRadius = dp(10).toFloat()
                 setStroke(dp(1), surface)
-            }
+            })
         }
         val shieldContainer = android.widget.FrameLayout(activity).apply {
             addView(adToggle, android.widget.FrameLayout.LayoutParams(dp(46), dp(46)))
@@ -609,9 +609,6 @@ internal class DownloadPageDialog(
         }
         addressRow.addView(shieldContainer, LinearLayout.LayoutParams(dp(46), dp(46)).apply { marginStart = dp(7) })
         val activePageUrl = AtomicReference(safeStartUrl)
-        fun isBlockedRedirectDestination(url: String): Boolean =
-            LocalBrowserAdBlocker.shouldBlockNavigation(url, adBlockerEnabled, allowedHosts)
-
         fun isBlockedAdRequest(url: String): Boolean =
             LocalBrowserAdBlocker.shouldBlockRequest(
                 url = url,
