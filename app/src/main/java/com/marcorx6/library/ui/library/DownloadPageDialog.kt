@@ -77,8 +77,26 @@ internal class DownloadPageDialog(
             setPadding(dp(12), dp(10), dp(12), dp(10))
         }
         val webView = WebView(activity)
-        val adFilter = AdFilter.get(activity)
-        adFilter.setupWebView(webView)
+        // Filter initialization is isolated from app startup and must never take down the browser.
+        val adFilter = runCatching { AdFilter.get(activity) }.getOrNull()
+        if (adFilter == null) {
+            Toast.makeText(activity, translate("تعذر تشغيل محرك الحجب؛ سيعمل المتصفح بالحماية الأساسية."), Toast.LENGTH_LONG).show()
+        } else {
+            runCatching { adFilter.setupWebView(webView) }
+            runCatching {
+                if (!adFilter.hasInstallation) {
+                    val subscriptions = linkedMapOf(
+                        "EasyList" to "https://easylist.to/easylist/easylist.txt",
+                        "EasyPrivacy" to "https://easylist.to/easylist/easyprivacy.txt",
+                        "AdGuard Annoyances" to "https://filters.adtidy.org/extension/chromium/filters/14.txt"
+                    )
+                    subscriptions.forEach { (name, url) ->
+                        val subscription = adFilter.viewModel.addFilter(name, url)
+                        adFilter.viewModel.download(subscription.id)
+                    }
+                }
+            }
+        }
         val browserHistory = mutableListOf<Pair<String, String>>()
         val browserBookmarks = mutableListOf<Pair<String, String>>()
         val browserTabs = mutableListOf<Pair<String, String>>()
@@ -737,13 +755,11 @@ internal class DownloadPageDialog(
         }
         webView.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): android.webkit.WebResourceResponse? {
-                if (adBlockerEnabled) {
-                    val engineResult = if (request.isForMainFrame) {
-                        adFilter.shouldIntercept(request.url.toString(), view.url ?: safeStartUrl, ResourceType.SUBDOCUMENT)
-                    } else {
-                        adFilter.shouldIntercept(view, request)
-                    }
-                    if (engineResult.shouldBlock) {
+                if (adBlockerEnabled && !request.isForMainFrame) {
+                    val engineResult = runCatching {
+                        adFilter?.shouldIntercept(view, request)
+                    }.getOrNull()
+                    if (engineResult?.shouldBlock == true) {
                         recordBlocked()
                         return engineResult.resourceResponse ?: android.webkit.WebResourceResponse("text/plain", "utf-8", ByteArrayInputStream(ByteArray(0)))
                     }
@@ -765,7 +781,7 @@ internal class DownloadPageDialog(
                 if (scheme != "https") return true
                 val destination = request.url.toString()
                 val engineBlocksNavigation = adBlockerEnabled && runCatching {
-                    adFilter.shouldIntercept(destination, view.url ?: safeStartUrl, ResourceType.SUBDOCUMENT).shouldBlock
+                    adFilter?.shouldIntercept(destination, view.url ?: safeStartUrl, ResourceType.SUBDOCUMENT)?.shouldBlock == true
                 }.getOrDefault(false)
                 if (adBlockerEnabled &&
                     (engineBlocksNavigation || isBlockedRedirectDestination(destination) || isBlockedAdRequest(destination))
@@ -781,7 +797,7 @@ internal class DownloadPageDialog(
             }
 
             override fun onPageStarted(view: WebView, url: String, favicon: android.graphics.Bitmap?) {
-                if (adBlockerEnabled) adFilter.performScript(view, url)
+                if (adBlockerEnabled) runCatching { adFilter?.performScript(view, url) }
                 if (activeTabIndex in browserTabs.indices && url.startsWith("https://")) {
                     browserTabs[activeTabIndex] = browserTabs[activeTabIndex].first to url
                 }
