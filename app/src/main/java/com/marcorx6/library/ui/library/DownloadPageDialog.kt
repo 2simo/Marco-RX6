@@ -587,9 +587,27 @@ internal class DownloadPageDialog(
             })
             setOnClickListener { showAdSettings() }
         }
-        addressRow.addView(adToggle, LinearLayout.LayoutParams(dp(46), dp(46)).apply { marginStart = dp(7) })
-
         val blockedRequests = AtomicInteger(0)
+        val blockedBadge = TextView(activity).apply {
+            text = "0"
+            textSize = 9f
+            setTypeface(null, Typeface.BOLD)
+            setTextColor(Color.WHITE)
+            gravity = Gravity.CENTER
+            minWidth = dp(17)
+            minHeight = dp(17)
+            setPadding(dp(3), 0, dp(3), 0)
+            background = GradientDrawable().apply {
+                setColor(Color.rgb(75, 82, 94))
+                cornerRadius = dp(10).toFloat()
+                setStroke(dp(1), surface)
+            }
+        }
+        val shieldContainer = android.widget.FrameLayout(activity).apply {
+            addView(adToggle, android.widget.FrameLayout.LayoutParams(dp(46), dp(46)))
+            addView(blockedBadge, android.widget.FrameLayout.LayoutParams(-2, dp(18), Gravity.END or Gravity.TOP))
+        }
+        addressRow.addView(shieldContainer, LinearLayout.LayoutParams(dp(46), dp(46)).apply { marginStart = dp(7) })
         val activePageUrl = AtomicReference(safeStartUrl)
         fun isBlockedRedirectDestination(url: String): Boolean =
             LocalBrowserAdBlocker.shouldBlockNavigation(url, adBlockerEnabled, allowedHosts)
@@ -603,12 +621,13 @@ internal class DownloadPageDialog(
                 isDirectFile = ::isDirectFileUrl
             )
 
-        fun recordBlocked() {
-            val count = blockedRequests.incrementAndGet()
+        fun recordBlocked(amount: Int = 1) {
+            if (amount <= 0) return
+            val count = blockedRequests.addAndGet(amount)
             activity.runOnUiThread {
-                if (blockedStats.isAttachedToWindow) {
-                    blockedStats.text = translate("الإعلانات والمتتبعات المحجوبة: $count")
-                }
+                blockedBadge.text = if (count > 999) "999+" else count.toString()
+                blockedBadge.contentDescription = translate("عدد الإعلانات المحجوبة: $count")
+                blockedStats.text = translate("الإعلانات والمتتبعات المحجوبة: $count")
             }
         }
         fun applyCosmeticFiltering() {
@@ -635,15 +654,15 @@ internal class DownloadPageDialog(
                 'a[href*="propellerads.com"]','a[href*="exoclick.com"]'];
               function hideAds(root){var n=0;selectors.forEach(function(s){
                 try{
-                  if(root&&root.nodeType===1&&root.matches&&root.matches(s)){
+                  if(root&&root.nodeType===1&&root.matches&&root.matches(s)&&root.getAttribute('data-marco-ad-hidden')!=='1'){
                     root.style.setProperty('display','none','important');root.setAttribute('data-marco-ad-hidden','1');n++;
                   }
                   root.querySelectorAll(s).forEach(function(e){
-                    if(n<240){e.style.setProperty('display','none','important');e.setAttribute('data-marco-ad-hidden','1');n++;}
+                    if(n<240&&e.getAttribute('data-marco-ad-hidden')!=='1'){e.style.setProperty('display','none','important');e.setAttribute('data-marco-ad-hidden','1');n++;}
                   });
                 }catch(ignore){}
               });}
-              hideAds(document);
+              var newlyHidden=hideAds(document);
               if(!window.__marcoAdObserver){
                 var pending=false;
                 window.__marcoAdObserver=new MutationObserver(function(records){
@@ -657,8 +676,14 @@ internal class DownloadPageDialog(
                 });
                 window.__marcoAdObserver.observe(document.documentElement,{childList:true,subtree:true});
               }
-            }catch(e){}})();"""
-            webView.evaluateJavascript(script, null)
+              return newlyHidden;
+            }catch(e){return 0;}})();"""
+            webView.evaluateJavascript(script) { raw ->
+                val newlyHidden = runCatching {
+                    (JSONTokener(raw ?: "0").nextValue() as? Number)?.toInt() ?: 0
+                }.getOrDefault(0)
+                recordBlocked(newlyHidden)
+            }
         }
         webView.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): android.webkit.WebResourceResponse? {
@@ -678,9 +703,7 @@ internal class DownloadPageDialog(
                 val scheme = request.url.scheme?.lowercase()
                 if (scheme != "https") return true
                 val destination = request.url.toString()
-                if (adBlockerEnabled &&
-                    (isBlockedRedirectDestination(destination) || isBlockedAdRequest(destination))
-                ) {
+                if (adBlockerEnabled && isBlockedAdRequest(destination)) {
                     recordBlocked()
                     return true
                 }
