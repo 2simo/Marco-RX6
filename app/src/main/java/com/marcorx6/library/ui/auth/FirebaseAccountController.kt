@@ -1249,7 +1249,7 @@ internal class FirebaseAccountController(
         val addedGames = catalog.filter {
             "${it.platform.trim().lowercase()}::${it.name.trim().lowercase()}" in addedKeys
         }.distinctBy { "${it.platform}::${it.name}" }.take(30)
-        notifications.addNewGameNotifications(uid, addedGames.map { it.name to it.platform })
+        notifications.addNewGameNotifications(uid, addedGames)
             .addOnSuccessListener {
                 preferences.edit().putStringSet(key, current).apply()
             }
