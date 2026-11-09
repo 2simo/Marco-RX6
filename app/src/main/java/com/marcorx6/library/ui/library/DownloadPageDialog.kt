@@ -352,6 +352,8 @@ internal class DownloadPageDialog(
 
 
 
+        root.addView(addressRow, LinearLayout.LayoutParams(-1, -2))
+
         val progress = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
             max = 100
             progressTintList = android.content.res.ColorStateList.valueOf(primary)
