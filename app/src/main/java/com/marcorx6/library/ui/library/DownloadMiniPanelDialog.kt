@@ -231,7 +231,12 @@ internal class DownloadMiniPanelDialog(
         dialog.setContentView(root)
         dialog.setCancelable(true)
         dialog.setCanceledOnTouchOutside(true)
-        dialog.setOnDismissListener { handler.removeCallbacks(refresh) }
+        var lifecycleObserver: DefaultLifecycleObserver? = null
+        val lifecycleOwner = activity as? LifecycleOwner
+        dialog.setOnDismissListener {
+            handler.removeCallbacks(refresh)
+            lifecycleObserver?.let { lifecycleOwner?.lifecycle?.removeObserver(it) }
+        }
         dialog.show()
         dialog.window?.apply {
             setBackgroundDrawableResource(android.R.color.transparent)
@@ -247,12 +252,14 @@ internal class DownloadMiniPanelDialog(
         }
         render()
         handler.postDelayed(refresh, 900L)
-        (activity as? LifecycleOwner)?.lifecycle?.addObserver(object : DefaultLifecycleObserver {
+        val observer = object : DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
                 if (dialog.isShowing) dialog.dismiss()
                 handler.removeCallbacks(refresh)
                 owner.lifecycle.removeObserver(this)
             }
-        })
+        }
+        lifecycleObserver = observer
+        lifecycleOwner?.lifecycle?.addObserver(observer)
     }
 }
