@@ -534,8 +534,8 @@ internal class MainLibraryInterfaceController(
                     card.scaleX = 1f - depth * 0.105f
                     card.scaleY = 1f - depth * 0.105f
                     card.translationY = depth * dp(9).toFloat() - (1f - depth) * dp(3).toFloat()
-                    card.translationZ = dp((1f - depth) * 10f).toFloat()
-                    card.elevation = dp(7 + (1f - depth) * 9f).toFloat()
+                    card.translationZ = (dp(10) * (1f - depth))
+                    card.elevation = (dp(7) + dp(9) * (1f - depth)).toFloat()
                     card.alpha = 1f - depth * 0.16f
                 }
             }
