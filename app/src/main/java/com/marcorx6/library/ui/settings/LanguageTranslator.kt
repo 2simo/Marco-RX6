@@ -699,6 +699,7 @@ internal object LanguageTranslator {
             "الملف الشخصي غير متاح." to listOf("Profile unavailable.", "Profil indisponible.", "Perfil no disponible."),
             "تعذر إرسال الرسالة." to listOf("Could not send the message.", "Impossible d’envoyer le message.", "No se pudo enviar el mensaje."),
             "تعذر تحديث المحادثة. تحقق من الاتصال." to listOf("Could not update the conversation. Check your connection.", "Impossible de mettre à jour la conversation. Vérifiez votre connexion.", "No se pudo actualizar la conversación. Comprueba tu conexión."),
+            "الرسائل" to listOf("Messages", "Messages", "Mensajes"),
             "الرسائل الخاصة" to listOf("Private messages", "Messages privés", "Mensajes privados"),
             "رجوع إلى الحساب" to listOf("Back to account", "Retour au compte", "Volver a la cuenta"),
             "العودة إلى القائمة الرئيسية" to listOf("Back to main library", "Retour à la bibliothèque principale", "Volver a la biblioteca principal"),
