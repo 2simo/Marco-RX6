@@ -2,6 +2,7 @@
 package com.marcorx6.library.ui.activity
 
 import com.marcorx6.library.BuildConfig
+import com.marcorx6.library.R
 
 import com.marcorx6.library.ui.appearance.AppearanceRuntimeFeature
 import com.marcorx6.library.ui.appearance.AppearancePaletteRuntimeFeature
