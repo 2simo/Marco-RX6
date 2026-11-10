@@ -1048,7 +1048,9 @@ internal class MainLibraryInterfaceController(
             // When typing, reclaim the dock's reserved space so the focused field
             // and the final form controls remain reachable above the keyboard.
             val effectiveSafeTop = 0
-            val bottomContentSpace = if (imeVisible) dp(16) + safeBottom else dp(84) + safeBottom
+            // Keep a little more clearance than the dock's measured visual height,
+            // including its bottom margin, so the final card is never trapped underneath it.
+            val bottomContentSpace = if (imeVisible) dp(16) + safeBottom else dp(104) + safeBottom
             pageScroll.setPadding(0, effectiveSafeTop, 0, bottomContentSpace)
             insets
         }
