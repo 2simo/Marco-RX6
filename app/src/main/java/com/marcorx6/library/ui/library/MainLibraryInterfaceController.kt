@@ -509,8 +509,37 @@ internal class MainLibraryInterfaceController(
             val popularTrack = LinearLayout(context).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
+                clipChildren = false
+                clipToPadding = false
             }
             val popularCards = mutableListOf<View>()
+
+            // Build a restrained 3D cover-flow: the centered game rises forward,
+            // while neighboring covers turn away with perspective and softer depth.
+            fun updatePopularDepth() {
+                if (popularScroll.width <= 0) return
+                val viewportCenter = popularScroll.scrollX +
+                    (popularScroll.width / 2f) - popularScroll.paddingLeft
+                popularCards.forEach { card ->
+                    if (card.width <= 0) return@forEach
+                    val cardCenter = card.left + card.width / 2f
+                    val relative = ((cardCenter - viewportCenter) / card.width.toFloat())
+                        .coerceIn(-1.35f, 1.35f)
+                    val depth = kotlin.math.abs(relative).coerceIn(0f, 1f)
+                    card.pivotX = card.width / 2f
+                    card.pivotY = card.height * 0.48f
+                    card.cameraDistance = dp(1400).toFloat()
+                    card.rotationY = -relative * 22f
+                    card.rotationX = depth * 2.5f
+                    card.scaleX = 1f - depth * 0.105f
+                    card.scaleY = 1f - depth * 0.105f
+                    card.translationY = depth * dp(9).toFloat() - (1f - depth) * dp(3).toFloat()
+                    card.translationZ = dp((1f - depth) * 10f).toFloat()
+                    card.elevation = dp(7 + (1f - depth) * 9f).toFloat()
+                    card.alpha = 1f - depth * 0.16f
+                }
+            }
+
             popularByPlatform.forEachIndexed { index, game ->
                 val card = LinearLayout(context).apply {
                     orientation = LinearLayout.VERTICAL
@@ -610,6 +639,7 @@ internal class MainLibraryInterfaceController(
                 false
             }
             popularScroll.setOnScrollChangeListener { _, _, _, _, _ ->
+                updatePopularDepth()
                 if (popularSnapInProgress) return@setOnScrollChangeListener
                 popularSnapRunnable?.let(mainHandler::removeCallbacks)
                 val pendingSnap = Runnable { snapPopularToNearest() }
@@ -632,6 +662,7 @@ internal class MainLibraryInterfaceController(
                 val maxScroll = (popularTrack.width + popularScroll.paddingLeft +
                     popularScroll.paddingRight - popularScroll.width).coerceAtLeast(0)
                 popularScroll.scrollTo(initialTarget.coerceIn(0, maxScroll), 0)
+                popularTrack.post { updatePopularDepth() }
             }
         }
 
