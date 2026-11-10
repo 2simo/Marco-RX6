@@ -262,13 +262,13 @@ internal class GameLibraryRenderer(
                     val surface = GradientDrawable(
                         GradientDrawable.Orientation.TL_BR,
                         if (isDarkMode()) intArrayOf(Color.argb(232, 35, 38, 45), Color.argb(220, 15, 17, 22))
-                        else intArrayOf(Color.argb(240, 255, 255, 255), Color.argb(228, 222, 226, 232))
+                        else intArrayOf(Color.argb(245, 250, 251, 253), Color.argb(235, 213, 219, 227))
                     ).apply {
                         cornerRadius = dp(18).toFloat()
                         setStroke(
                             dp(1),
                             if (isDarkMode()) Color.argb(175, 130, 138, 151)
-                            else Color.argb(185, 160, 168, 181)
+                            else Color.argb(205, 133, 143, 157)
                         )
                     }
                     background = android.graphics.drawable.RippleDrawable(
