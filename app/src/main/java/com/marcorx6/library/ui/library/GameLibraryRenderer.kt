@@ -35,7 +35,10 @@ internal class GameLibraryRenderer(
         val filterLabels: List<String>,
         val colors: List<Int>,
         val darkMode: Boolean,
-        val gameLabel: String
+        val gameLabel: String,
+        // Game instances are mutable; identity-only checks miss in-place edits to
+        // platform/favorite metadata and can leave the count out of sync with cards.
+        val filterData: List<String>
     )
 
     /**
@@ -82,7 +85,17 @@ internal class GameLibraryRenderer(
             } },
             colors = listOf(bg, panel, red, white, gray),
             darkMode = isDarkMode(),
-            gameLabel = tr("لعبة")
+            gameLabel = tr("لعبة"),
+            filterData = games.map { game ->
+                listOf(
+                    game.name,
+                    game.platform,
+                    game.genre,
+                    game.releaseYear,
+                    game.isFavorite.toString(),
+                    game.blogImported.toString()
+                ).joinToString("\u001F")
+            }
         )
         // Skip rebuilding the entire carousel when a caller requests a render with
         // unchanged data and presentation state. This prevents card/cover flicker
