@@ -24,6 +24,7 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import com.marcorx6.library.ui.SystemBarPolicy
+import com.marcorx6.library.ui.KeyboardLayoutController
 import com.marcorx6.library.data.Game
 import com.marcorx6.library.data.GameEngagementRepository
 import com.marcorx6.library.data.auth.FirebaseAuthRepository
@@ -2676,9 +2677,10 @@ internal class FirebaseAccountController(
         page.translationY = 0f
         setContentView(page)
         activity.window.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
-        activity.window.statusBarColor = Color.TRANSPARENT
-        activity.window.navigationBarColor = Color.TRANSPARENT
+        // This page owns a direct Activity content swap, so explicitly install
+        // both shared window policies instead of relying on MainActivity routing.
         SystemBarPolicy.apply(activity.window, dark)
+        KeyboardLayoutController.install(activity.window, page)
         androidx.core.view.ViewCompat.requestApplyInsets(page)
     }
 
@@ -2708,13 +2710,11 @@ internal class FirebaseAccountController(
         scroll.alpha = 1f
         scroll.translationY = 0f
         setContentView(scroll)
-        activity.window.statusBarColor = Color.TRANSPARENT
-        activity.window.navigationBarColor = Color.TRANSPARENT
-        androidx.core.view.WindowInsetsControllerCompat(activity.window, activity.window.decorView).apply {
-            isAppearanceLightStatusBars = !dark
-            isAppearanceLightNavigationBars = !dark
-            hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
-        }
+        activity.window.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        // Account pages also bypass MainActivity.showRootScreen(). Apply the
+        // same persistent IME/status-bar policy used by normal app screens.
+        SystemBarPolicy.apply(activity.window, dark)
+        KeyboardLayoutController.install(activity.window, scroll)
         androidx.core.view.ViewCompat.requestApplyInsets(scroll)
     }
 
