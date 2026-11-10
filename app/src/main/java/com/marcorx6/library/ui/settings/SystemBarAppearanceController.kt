@@ -14,10 +14,8 @@ import com.marcorx6.library.AppDiagnostics
  * Single owner of the Activity status-bar policy.
  *
  * IME transitions can make Android 15/16 vendor builds briefly restore the
- * status-bar surface. Keep the policy here (rather than competing keyboard
- * listeners), reassert it through the complete IME animation, and use an
- * opaque fallback color so a transient system reveal never becomes a pink/
- * keyboard-tinted strip.
+ * status-bar surface. Keep the policy here and reassert it through the
+ * complete IME animation.
  */
 internal class SystemBarAppearanceController(
     private val activity: Activity,
@@ -37,8 +35,6 @@ internal class SystemBarAppearanceController(
                 "systemUi=0x${decor.systemUiVisibility.toString(16)}"
         )
 
-        // Keep a solid dark system surface as a fallback if the OS momentarily
-        // exposes the status bar during keyboard/window transitions.
         window.statusBarColor = Color.rgb(8, 9, 12)
         window.navigationBarColor =
             if (isDarkMode()) Color.rgb(8, 9, 12) else Color.rgb(245, 247, 250)
@@ -56,10 +52,10 @@ internal class SystemBarAppearanceController(
         }
 
         installImeStatusBarGuard(window, decor)
-        // Posting after the current layout/insets pass avoids a competing
-        // synchronous request while Android is dispatching IME insets.
         decor.post {
-            if (!activity.isFinishing && !activity.isDestroyed) hideStatusBar(window, decor, "post-layout")
+            if (!activity.isFinishing && !activity.isDestroyed) {
+                hideStatusBar(window, decor, "post-layout")
+            }
         }
     }
 
@@ -73,8 +69,8 @@ internal class SystemBarAppearanceController(
             ) {
                 override fun onStart(
                     animation: WindowInsetsAnimationCompat,
-                    bounds: WindowInsetsAnimationCompat.Bounds
-                ): WindowInsetsAnimationCompat.Bounds {
+                    bounds: WindowInsetsAnimationCompat.BoundsCompat
+                ): WindowInsetsAnimationCompat.BoundsCompat {
                     if (animation.typeMask and WindowInsetsCompat.Type.ime() != 0) {
                         hideStatusBar(window, decor, "ime-start")
                     }
@@ -85,10 +81,10 @@ internal class SystemBarAppearanceController(
                     insets: WindowInsetsCompat,
                     runningAnimations: MutableList<WindowInsetsAnimationCompat>
                 ): WindowInsetsCompat {
-                    if (runningAnimations.any {
-                            it.typeMask and WindowInsetsCompat.Type.ime() != 0
-                        } && insets.isVisible(WindowInsetsCompat.Type.statusBars())
-                    ) {
+                    val imeAnimating = runningAnimations.any {
+                        it.typeMask and WindowInsetsCompat.Type.ime() != 0
+                    }
+                    if (imeAnimating && insets.isVisible(WindowInsetsCompat.Type.statusBars())) {
                         hideStatusBar(window, decor, "ime-progress")
                     }
                     return insets
