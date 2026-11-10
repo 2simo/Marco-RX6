@@ -241,4 +241,20 @@ class LanguageTranslatorTest {
         }
     }
 
+    @Test
+    fun translatesDownloadDialogsAndFileControlsIntoAllSupportedLanguages() {
+        val cases = listOf(
+            "إضافة إلى التنزيلات" to listOf("Add to downloads", "Ajouter aux téléchargements", "Añadir a descargas"),
+            "رابط التنزيل" to listOf("Download link", "Lien de téléchargement", "Enlace de descarga"),
+            "اسم الملف" to listOf("File name", "Nom du fichier", "Nombre del archivo"),
+            "مجلد الحفظ" to listOf("Save folder", "Dossier d’enregistrement", "Carpeta de guardado"),
+            "لا توجد تنزيلات في القائمة" to listOf("There are no downloads in the list", "Aucun téléchargement dans la liste", "No hay descargas en la lista")
+        )
+        cases.forEach { (source, expected) ->
+            assertEquals(expected[0], LanguageTranslator.translate(source, "en"))
+            assertEquals(expected[1], LanguageTranslator.translate(source, "fr"))
+            assertEquals(expected[2], LanguageTranslator.translate(source, "es"))
+        }
+    }
+
 }
