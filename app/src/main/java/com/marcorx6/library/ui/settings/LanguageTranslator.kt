@@ -738,6 +738,8 @@ internal object LanguageTranslator {
             "الصيغة (مثال: PKG)" to listOf("Format (example: PKG)", "Format (exemple : PKG)", "Formato (ejemplo: PKG)"),
             "+ تبويب جديد" to listOf("+ New tab", "+ Nouvel onglet", "+ Nueva pestaña"),
             "في الخلفية • قابل للاستئناف" to listOf("Background transfer • Resumable", "Transfert en arrière-plan • Reprise possible", "Transferencia en segundo plano • Reanudable"),
+            "تصدير سجل التشخيص" to listOf("Export diagnostic log", "Exporter le journal de diagnostic", "Exportar el registro de diagnóstico"),
+            "احفظ سجل الأعطال والأحداث محلياً وشاركه عند الحاجة؛ لا يتم إرساله تلقائياً" to listOf("Save the crash and event log locally and share it when needed; it is not sent automatically.", "Enregistrez localement le journal des erreurs et des événements et partagez-le si nécessaire ; il n’est pas envoyé automatiquement.", "Guarda localmente el registro de errores y eventos y compártelo cuando sea necesario; no se envía automáticamente."),
             "التنزيل عبر Wi-Fi فقط" to listOf("Download over Wi-Fi only", "Télécharger uniquement via Wi-Fi", "Descargar solo por Wi-Fi"),
         )
 
