@@ -7,7 +7,6 @@ import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowManager
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.CheckBox
@@ -153,17 +152,11 @@ internal class AppearanceUiFactory(
             setStroke(dp(1), if (isDarkMode()) Color.rgb(130, 138, 151) else Color.rgb(211, 215, 222))
         })
         dialog.window?.let { window ->
-            // Alert dialogs use their own window: keep system bars visible and let
-            // Android place the dialog inside the safe area on edge-to-edge devices.
+            // Dialogs are separate Windows: apply the same immersive/IME policy
+            // instead of clearing fullscreen flags and relying on a one-time hide.
             WindowCompat.setDecorFitsSystemWindows(window, true)
-            window.clearFlags(
-                WindowManager.LayoutParams.FLAG_FULLSCREEN or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-            )
-            window.statusBarColor = bg()
             window.navigationBarColor = bg()
-            WindowInsetsControllerCompat(window, window.decorView)
-                .hide(WindowInsetsCompat.Type.statusBars())
+            SystemBarPolicy.apply(window, isDarkMode())
             window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
             window.attributes = window.attributes.apply { dimAmount = 0.66f }
             KeyboardLayoutController.install(window, window.decorView)
