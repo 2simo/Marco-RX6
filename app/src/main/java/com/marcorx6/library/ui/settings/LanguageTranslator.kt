@@ -708,6 +708,34 @@ internal object LanguageTranslator {
             "فتح القسم" to listOf("Open section", "Ouvrir la section", "Abrir sección"),
             "فتح الملف الشخصي" to listOf("Open profile", "Ouvrir le profil", "Abrir perfil"),
             "إرسال" to listOf("Send", "Envoyer", "Enviar"),
+            "فضي معدني  •  مع الأسود الفحمي" to listOf("Metallic silver  •  with charcoal black", "Argent métallisé  •  avec noir charbon", "Plata metálica  •  con negro carbón"),
+            "ملفك الشخصي • MARCO RX6" to listOf("Your profile • MARCO RX6", "Votre profil • MARCO RX6", "Tu perfil • MARCO RX6"),
+            "مرحباً بك في مجتمع MARCO" to listOf("Welcome to the MARCO community", "Bienvenue dans la communauté MARCO", "Te damos la bienvenida a la comunidad MARCO"),
+            "ملف MARCO الشخصي" to listOf("MARCO profile", "Profil MARCO", "Perfil de MARCO"),
+            "مستخدم MARCO" to listOf("MARCO user", "Utilisateur MARCO", "Usuario de MARCO"),
+            "عضو في مجتمع MARCO" to listOf("Member of the MARCO community", "Membre de la communauté MARCO", "Miembro de la comunidad MARCO"),
+            "تقييماتي • " to listOf("My ratings • ", "Mes évaluations • ", "Mis valoraciones • "),
+            "＋ اختر اسم مستخدم فريداً" to listOf("＋ Choose a unique username", "＋ Choisissez un nom d’utilisateur unique", "＋ Elige un nombre de usuario único"),
+            "حدّث معلوماتك بالطريقة التي تظهر بها للآخرين في MARCO" to listOf("Update the information others see about you on MARCO", "Mettez à jour les informations que les autres voient sur MARCO", "Actualiza la información que otros ven sobre ti en MARCO"),
+            "اسم المستخدم يجب أن يكون من 3 إلى 20 حرفاً إنجليزياً أو رقماً أو _." to listOf("Username must be 3–20 English letters, numbers, or underscores (_).", "Le nom d’utilisateur doit contenir de 3 à 20 lettres anglaises, chiffres ou tirets bas (_).", "El nombre de usuario debe tener entre 3 y 20 letras inglesas, números o guiones bajos (_)."),
+            "إدارة البريد الإلكتروني وأمان حساب MARCO" to listOf("Manage your email and MARCO account security", "Gérez votre adresse e-mail et la sécurité de votre compte MARCO", "Gestiona tu correo electrónico y la seguridad de tu cuenta MARCO"),
+            "الخروج من حساب MARCO مع إبقاء جلسة Blogger وGoogle Drive منفصلة" to listOf("Sign out of MARCO while keeping Blogger and Google Drive sessions separate", "Déconnectez-vous de MARCO tout en conservant séparément les sessions Blogger et Google Drive", "Cierra sesión en MARCO y mantén separadas las sesiones de Blogger y Google Drive"),
+            "تسجيل الخروج من MARCO؟" to listOf("Sign out of MARCO?", "Se déconnecter de MARCO ?", "¿Cerrar sesión en MARCO?"),
+            "سيتم تسجيل الخروج من حساب MARCO فقط. ستبقى جلسة Google المستعملة في Blogger وGoogle Drive كما هي، ولن تُحذف مكتبتك أو ملفات التنزيل على هذا الهاتف." to listOf("Only your MARCO account will be signed out. Your Google session for Blogger and Google Drive will remain active, and your library and downloads on this phone will not be deleted.", "Seul votre compte MARCO sera déconnecté. Votre session Google pour Blogger et Google Drive restera active, et votre bibliothèque ainsi que vos téléchargements sur ce téléphone ne seront pas supprimés.", "Solo se cerrará la sesión de tu cuenta MARCO. La sesión de Google de Blogger y Google Drive seguirá activa, y no se eliminarán tu biblioteca ni tus descargas de este teléfono."),
+            "حذف حساب MARCO وبياناته السحابية نهائياً" to listOf("Permanently delete your MARCO account and its cloud data", "Supprimer définitivement votre compte MARCO et ses données cloud", "Eliminar permanentemente tu cuenta MARCO y sus datos en la nube"),
+            "@اسم_المستخدم أو معرّف الملف الشخصي" to listOf("@username or profile ID", "@nom_utilisateur ou identifiant du profil", "@usuario o ID del perfil"),
+            "ملف مستخدم MARCO" to listOf("MARCO user profile", "Profil utilisateur MARCO", "Perfil de usuario de MARCO"),
+            "رسالة جديدة  +" to listOf("New message  +", "Nouveau message  +", "Mensaje nuevo  +"),
+            "رفضت قواعد Firestore قراءة قائمة المتابعين (PERMISSION_DENIED)." to listOf("Firestore rules denied access to the followers list (PERMISSION_DENIED).", "Les règles Firestore ont refusé l’accès à la liste des abonnés (PERMISSION_DENIED).", "Las reglas de Firestore rechazaron el acceso a la lista de seguidores (PERMISSION_DENIED)."),
+            "استعلام المتابعين يحتاج إلى فهرس Firestore (FAILED_PRECONDITION)." to listOf("The followers query requires a Firestore index (FAILED_PRECONDITION).", "La requête des abonnés nécessite un index Firestore (FAILED_PRECONDITION).", "La consulta de seguidores requiere un índice de Firestore (FAILED_PRECONDITION)."),
+            "خدمة Firestore غير متاحة حالياً؛ تحقق من الاتصال." to listOf("Firestore is currently unavailable; check your connection.", "Firestore est actuellement indisponible ; vérifiez votre connexion.", "Firestore no está disponible en este momento; comprueba tu conexión."),
+            "أنشئ حساب MARCO لمتابعة هذا الملف الشخصي" to listOf("Create a MARCO account to follow this profile", "Créez un compte MARCO pour suivre ce profil", "Crea una cuenta MARCO para seguir este perfil"),
+            "تتابعه ✓" to listOf("Following ✓", "Abonné ✓", "Siguiendo ✓"),
+            "＋ متابعة" to listOf("＋ Follow", "＋ Suivre", "＋ Seguir"),
+            "الحجم (مثال: 2.5 GB)" to listOf("Size (example: 2.5 GB)", "Taille (exemple : 2,5 Go)", "Tamaño (ejemplo: 2,5 GB)"),
+            "النسخة (مثال: v1.5)" to listOf("Version (example: v1.5)", "Version (exemple : v1.5)", "Versión (ejemplo: v1.5)"),
+            "الصيغة (مثال: PKG)" to listOf("Format (example: PKG)", "Format (exemple : PKG)", "Formato (ejemplo: PKG)"),
+            "+ تبويب جديد" to listOf("+ New tab", "+ Nouvel onglet", "+ Nueva pestaña"),
         )
 
     fun translate(ar: String, lang: String): String {
@@ -735,7 +763,7 @@ internal object LanguageTranslator {
             val prefix = localized("الإعلانات والمتتبعات المحجوبة:")
             if (prefix != null) return "$prefix ${match.groupValues[1]}"
         }
-        return localized(ar) ?: ar
+        return localized(ar) ?: localized(ar.trim()) ?: ar
     }
 
     /**
