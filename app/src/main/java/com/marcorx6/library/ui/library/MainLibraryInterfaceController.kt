@@ -470,49 +470,8 @@ internal class MainLibraryInterfaceController(
             insets
         }
 
-        val header = LinearLayout(context).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(2), dp(3), dp(2), dp(17))
-        }
-        val brand = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
-        brand.addView(makeText(tr("MARCO  /  مركز الألعاب الرسمي"), 9f, if (isDarkMode()) Color.rgb(190, 198, 210) else Color.rgb(130, 138, 151), true).apply { letterSpacing = 0.08f })
-        brand.addView(makeText("مكتبة الألعاب", 21f, silver, true).apply {
-            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
-            letterSpacing = 0.01f
-        })
-        header.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
-        fun headerAction(iconRes: Int, label: String, action: () -> Unit) = ImageView(context).apply {
-            setImageResource(iconRes)
-            scaleType = ImageView.ScaleType.CENTER_INSIDE
-            imageTintList = android.content.res.ColorStateList.valueOf(if (isDarkMode()) Color.rgb(225, 228, 234) else Color.rgb(130, 138, 151))
-            setPadding(dp(13), dp(13), dp(13), dp(13))
-            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                if (isDarkMode()) intArrayOf(Color.argb(205, 34, 37, 44), Color.argb(180, 15, 17, 22))
-                else intArrayOf(Color.argb(220, 255, 255, 255), Color.argb(190, 222, 226, 232))).apply {
-                cornerRadius = dp(14).toFloat()
-                setStroke(dp(1), if (isDarkMode()) Color.rgb(130, 138, 151) else Color.rgb(160, 168, 181))
-            }
-            minimumWidth = dp(48); minimumHeight = dp(48)
-            contentDescription = label
-            isClickable = true
-            isFocusable = true
-            if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                android.content.res.ColorStateList.valueOf(Color.argb(92, 190, 198, 210)),
-                null,
-                GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(14).toFloat() }
-            )
-            setOnClickListener { action() }
-        }
-        header.addView(headerAction(if (isDarkMode()) R.drawable.ic_action_sun else R.drawable.ic_action_moon, tr(if (isDarkMode()) "الوضع الفاتح" else "الوضع الداكن")) { toggleDarkMode() },
-            LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginEnd = dp(8) })
-        header.addView(headerAction(R.drawable.ic_action_settings, tr("الإعدادات")) { showAppearanceSettings() },
-            LinearLayout.LayoutParams(dp(48), dp(48)))
-        header.addView(headerAction(R.drawable.ic_action_notifications, tr("الإشعارات")) { showNotifications() },
-            LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginStart = dp(8) })
-
-        root.addView(header)
-
+        // The shared application bar now owns the brand. Keep the home page focused
+        // on game content; do not duplicate the old MARCO/library title or actions.
 
         // Featured cover-flow sits above platform filters and uses only real library entries.
         val featuredPlatforms = setOf("PS4", "PS3", "PS2")
