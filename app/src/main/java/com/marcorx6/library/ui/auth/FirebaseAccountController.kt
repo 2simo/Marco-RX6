@@ -2677,11 +2677,7 @@ internal class FirebaseAccountController(
         activity.window.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         activity.window.statusBarColor = Color.TRANSPARENT
         activity.window.navigationBarColor = Color.TRANSPARENT
-        androidx.core.view.WindowInsetsControllerCompat(activity.window, activity.window.decorView).apply {
-            isAppearanceLightStatusBars = !dark
-            isAppearanceLightNavigationBars = !dark
-            hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
-        }
+        SystemBarPolicy.apply(activity.window, dark)
         androidx.core.view.ViewCompat.requestApplyInsets(page)
     }
 
