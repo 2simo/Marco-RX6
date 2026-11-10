@@ -28,7 +28,7 @@ android {
     defaultConfig {
         buildConfigField("boolean", "PLAY_DISTRIBUTION", playDistributionEnabled.toString())
         applicationId = "com.marcorx6.library"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 35
         versionName = "8.18"
