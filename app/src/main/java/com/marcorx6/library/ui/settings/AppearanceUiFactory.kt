@@ -120,13 +120,17 @@ internal class AppearanceUiFactory(
             }
         } else {
             if (isDarkMode()) {
+                // Replace legacy dark-gray labels too, not only near-black text.
+                // This is important for views created before the current palette.
                 when {
-                    value <= 0.20f -> white()
+                    value <= 0.55f -> white()
                     else -> return null
                 }
             } else {
+                // Silver/white labels from old dark-only screens become readable
+                // charcoal labels on the light surface.
                 when {
-                    value >= 0.91f -> white()
+                    value >= 0.58f -> white()
                     else -> return null
                 }
             }
