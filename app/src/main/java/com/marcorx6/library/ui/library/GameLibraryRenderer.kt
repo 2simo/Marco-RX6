@@ -498,6 +498,44 @@ internal class GameLibraryRenderer(
             if (gridMode) {
                 gameList.addView(grid, LinearLayout.LayoutParams(-1, -2))
             } else {
+                // In the ALL library view, each game card participates in a subtle
+                // 3D cover-flow as its position changes inside the horizontal rail.
+                if (selected == "ALL") {
+                    horizontal.clipChildren = false
+                    horizontal.clipToPadding = false
+                    carousel.clipChildren = false
+                    carousel.clipToPadding = false
+
+                    fun updateAllCardsDepth() {
+                        if (horizontal.width <= 0) return
+                        val center = horizontal.scrollX + horizontal.width / 2f
+                        for (index in 0 until carousel.childCount) {
+                            val slot = carousel.getChildAt(index)
+                            if (slot.width <= 0) continue
+                            val relative = ((slot.left + slot.width / 2f - center) /
+                                slot.width.toFloat()).coerceIn(-1.35f, 1.35f)
+                            val depth = kotlin.math.abs(relative).coerceIn(0f, 1f)
+                            slot.pivotX = slot.width / 2f
+                            slot.pivotY = slot.height * 0.48f
+                            slot.cameraDistance = dp(1400).toFloat()
+                            slot.rotationY = -relative * 15f
+                            slot.rotationX = depth * 1.8f
+                            slot.scaleX = 1f - depth * 0.075f
+                            slot.scaleY = 1f - depth * 0.075f
+                            slot.translationY = depth * dp(5).toFloat() -
+                                (1f - depth) * dp(2).toFloat()
+                            slot.translationZ = dp(7) * (1f - depth)
+                            slot.elevation = (dp(3) + dp(6) * (1f - depth)).toFloat()
+                            slot.alpha = 1f - depth * 0.12f
+                        }
+                    }
+
+                    horizontal.setOnScrollChangeListener { _, _, _, _, _ ->
+                        updateAllCardsDepth()
+                    }
+                    horizontal.post { updateAllCardsDepth() }
+                    carousel.post { updateAllCardsDepth() }
+                }
                 horizontal.addView(carousel, FrameLayout.LayoutParams(-2, -2))
                 gameList.addView(horizontal, LinearLayout.LayoutParams(-1, -2))
             }
