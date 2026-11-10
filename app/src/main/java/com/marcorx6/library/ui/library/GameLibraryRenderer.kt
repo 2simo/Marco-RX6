@@ -334,16 +334,18 @@ internal class GameLibraryRenderer(
                         text = languageLabel
                         importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
                         textSize = 9f
-                        setTextColor(Color.WHITE)
+                        setTextColor(if (isDarkMode()) Color.WHITE else Color.rgb(34, 39, 47))
                         typeface = android.graphics.Typeface.create(
                             "sans-serif-medium", android.graphics.Typeface.BOLD
                         )
                         gravity = Gravity.CENTER
                         setPadding(dp(8), dp(4), dp(8), dp(4))
-                        background = GradientDrawable().apply {
-                            setColor(Color.argb(220, 35, 38, 45))
+                        background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                            if (isDarkMode()) intArrayOf(Color.rgb(43, 47, 55), Color.rgb(25, 28, 34))
+                            else intArrayOf(Color.rgb(250, 251, 253), Color.rgb(205, 212, 222))).apply {
                             cornerRadius = dp(9).toFloat()
-                            setStroke(dp(1), Color.argb(210, 145, 153, 166))
+                            setStroke(dp(1), if (isDarkMode()) Color.argb(210, 145, 153, 166)
+                                else Color.rgb(132, 143, 158))
                         }
                     }
                     imageFrame.addView(
