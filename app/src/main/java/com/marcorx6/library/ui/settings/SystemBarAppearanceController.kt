@@ -3,6 +3,7 @@ package com.marcorx6.library.ui
 import android.graphics.Color
 import android.os.Build
 import android.view.Window
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.marcorx6.library.AppDiagnostics
