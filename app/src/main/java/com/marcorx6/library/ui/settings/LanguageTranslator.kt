@@ -855,6 +855,34 @@ internal object LanguageTranslator {
         Regex("^تعذر التحقق من رابط الصورة \\(HTTP ([^،]+)، النوع: (.*)\\)$").matchEntire(ar)?.let { match ->
             return "${localized("تعذر التحقق من رابط الصورة") ?: "تعذر التحقق من رابط الصورة"} (HTTP ${match.groupValues[1]}, type: ${match.groupValues[2]})"
         }
+        Regex("^عرض 8 من (\\d+) لعبة مفضلة$").matchEntire(ar)?.let { match ->
+            val count = match.groupValues[1]
+            return when (lang) {
+                "en" -> "Showing 8 of $count favorite games"
+                "fr" -> "Affichage de 8 jeux favoris sur $count"
+                "es" -> "Se muestran 8 de $count juegos favoritos"
+                else -> ar
+            }
+        }
+        Regex("^(\\d+) لعبة محفوظة في المفضلة$").matchEntire(ar)?.let { match ->
+            val count = match.groupValues[1]
+            return when (lang) {
+                "en" -> "$count games saved as favorites"
+                "fr" -> "$count jeux enregistrés comme favoris"
+                "es" -> "$count juegos guardados como favoritos"
+                else -> ar
+            }
+        }
+        Regex("^تعذر تحميل بيانات الحسابات \\((.*)\\)$").matchEntire(ar)?.let { match ->
+            val code = match.groupValues[1]
+            val prefix = when (lang) {
+                "en" -> "Could not load account data"
+                "fr" -> "Impossible de charger les données des comptes"
+                "es" -> "No se pudieron cargar los datos de las cuentas"
+                else -> "تعذر تحميل بيانات الحسابات"
+            }
+            return "$prefix ($code)"
+        }
         Regex("^خطوة (\\d+)$").matchEntire(ar)?.let { match ->
             val prefix = localized("خطوة")
             if (prefix != null) return "$prefix ${match.groupValues[1]}"
