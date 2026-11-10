@@ -24,6 +24,13 @@ internal object SystemBarPolicy {
 
     fun apply(window: Window, darkMode: Boolean, hideNavigation: Boolean = false) {
         val decor = window.decorView
+        // Android 15+ enforces edge-to-edge for this target SDK. In that mode
+        // statusBarColor is not a reliable backing surface: the status-bar area
+        // is composited from the app window content. Keep the decor's own
+        // background opaque and dark so a transient system-bar reveal during
+        // IME animation cannot expose a theme/launch drawable (including a
+        // tinted or transparent region) as a pale strip.
+        decor.setBackgroundColor(Color.rgb(8, 9, 12))
         window.statusBarColor = Color.rgb(8, 9, 12)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             window.isStatusBarContrastEnforced = false
