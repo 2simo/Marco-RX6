@@ -570,7 +570,7 @@ internal class MainLibraryInterfaceController(
                     }
                     elevation = dp(12).toFloat()
                 }
-                card.addView(surface, FrameLayout.LayoutParams(-1, -1).apply {
+                card.addView(surface, FrameLayout.LayoutParams(-1, -2).apply {
                     bottomMargin = dp(6)
                 })
                 val cover = ImageView(context).apply {
