@@ -18,9 +18,9 @@ internal class AppearancePaletteRuntimeFeature(context: Context) {
         AccentPalette.color()
 
     val bg: Int
-        get() = if (isDarkMode()) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247)
+        get() = if (isDarkMode()) Color.rgb(8, 9, 12) else Color.rgb(235, 239, 244)
     val panel: Int
-        get() = if (isDarkMode()) Color.rgb(25, 28, 34) else Color.rgb(222, 226, 232)
+        get() = if (isDarkMode()) Color.rgb(25, 28, 34) else Color.rgb(213, 219, 227)
     val red: Int
         get() = accentColor()
     val white: Int
