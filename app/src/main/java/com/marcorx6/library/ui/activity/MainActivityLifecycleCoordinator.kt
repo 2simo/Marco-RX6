@@ -37,8 +37,11 @@ internal class MainActivityLifecycleCoordinator(
         createNotificationChannel()
         loadGames()
         restoreAdminSession()
-        createInterface()
+        // Put the splash on screen before composing the full library view. The launch
+        // window already uses the same dark background, so neither the system launch
+        // window nor the Activity's first layout is exposed as a blank intermediate page.
         showStartupExperience()
+        createInterface()
 
         // Background prompts and sync stay away from the full-screen first-run setup.
         // They resume on the next Activity creation after setup has been completed.
