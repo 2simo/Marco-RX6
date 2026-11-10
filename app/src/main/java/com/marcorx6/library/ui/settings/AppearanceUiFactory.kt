@@ -141,7 +141,17 @@ internal class AppearanceUiFactory(
                 themedNeutralColor(drawable.color, true)?.let(drawable::setColor)
             }
             is GradientDrawable -> {
-                if (android.os.Build.VERSION.SDK_INT >= 24) {
+                if (android.os.Build.VERSION.SDK_INT >= 29) {
+                    // Modern Android exposes gradient stops; retint neutral legacy
+                    // black/white gradients as well as single-colour card fills.
+                    val stops = drawable.colors
+                    if (stops != null) {
+                        val themed = stops.map { color ->
+                            themedNeutralColor(color, true) ?: color
+                        }.toIntArray()
+                        if (!stops.contentEquals(themed)) drawable.colors = themed
+                    }
+                } else if (android.os.Build.VERSION.SDK_INT >= 24) {
                     val current = drawable.color?.defaultColor
                     if (current != null) themedNeutralColor(current, true)?.let(drawable::setColor)
                 }
