@@ -29,7 +29,10 @@ internal class SystemBarAppearanceController(
         activity.window.navigationBarColor = if (isDarkMode()) Color.rgb(8, 9, 12) else Color.rgb(245, 247, 250)
         WindowInsetsControllerCompat(activity.window, activity.window.decorView).apply {
             isAppearanceLightNavigationBars = !isDarkMode()
-            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            // This Activity intentionally keeps the status bar hidden. Transient-bar mode
+            // lets the system briefly paint a separate status-bar strip during IME changes
+            // on some Android 15 vendor builds (observed on Xiaomi/HyperOS).
+            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
             hide(WindowInsetsCompat.Type.statusBars())
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
