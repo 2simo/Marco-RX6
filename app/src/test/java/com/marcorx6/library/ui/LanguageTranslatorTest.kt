@@ -231,7 +231,7 @@ class LanguageTranslatorTest {
             "إيقاف الكل" to listOf("Pause all", "Tout mettre en pause", "Pausar todo"),
             "اختيار صورة الغلاف من الهاتف" to listOf("Choose cover image from phone", "Choisir une image de couverture sur le téléphone", "Elegir imagen de portada del teléfono"),
             "اختر القسم الذي تريد تصفحه" to listOf("Choose the section you want to browse", "Choisissez la section à parcourir", "Elige la sección que quieres explorar"),
-            "MARCO  /  PERSONALIZATION" to listOf("MARCO / PERSONALIZATION", "MARCO / PERSONNALISATION", "MARCO / PERSONALIZACIÓN")
+            "MARCO  /  PERSONALIZATION" to listOf("MARCO  /  PERSONALIZATION", "MARCO  /  PERSONNALISATION", "MARCO  /  PERSONALIZACIÓN")
         )
         cases.forEach { (source, expected) ->
             assertEquals(expected[0], LanguageTranslator.translate(source, "en"))
