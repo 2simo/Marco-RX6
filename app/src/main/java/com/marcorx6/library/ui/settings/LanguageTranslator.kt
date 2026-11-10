@@ -138,7 +138,7 @@ internal object LanguageTranslator {
             "استوديو التحرير • MARCO" to listOf("Editing studio • MARCO", "Studio de modification • MARCO", "Estudio de edición • MARCO"),
             "جهّز الغلاف والتفاصيل والمحتوى، ثم عاين المقال قبل إرساله إلى Blogger." to listOf("Prepare the cover, details and content, then preview before sending to Blogger.", "Préparez la couverture, les détails et le contenu, puis prévisualisez avant l’envoi à Blogger.", "Prepara la portada, los detalles y el contenido; luego previsualiza antes de enviarlo a Blogger."),
             "صورة الغلاف" to listOf("Cover image", "Image de couverture", "Imagen de portada"),
-            "اختيار صورة الغلاف من الهاتف" to listOf("Choose cover image from phone", "Choisir une couverture depuis le téléphone", "Elegir portada desde el teléfono"),
+            "اختيار صورة الغلاف من الهاتف" to listOf("Choose cover image from phone", "Choisir une image de couverture sur le téléphone", "Elegir imagen de portada del teléfono"),
             "أقسام المقال • Labels من المدونة" to listOf("Article categories • Blog labels", "Catégories • Libellés du blog", "Categorías • Etiquetas del blog"),
             "محتوى المقال" to listOf("Article content", "Contenu de l’article", "Contenido del artículo"),
             "إنشاء مقال جديد" to listOf("Create new article", "Créer un nouvel article", "Crear artículo nuevo"),
