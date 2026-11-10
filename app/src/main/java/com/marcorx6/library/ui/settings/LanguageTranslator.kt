@@ -736,6 +736,7 @@ internal object LanguageTranslator {
             "النسخة (مثال: v1.5)" to listOf("Version (example: v1.5)", "Version (exemple : v1.5)", "Versión (ejemplo: v1.5)"),
             "الصيغة (مثال: PKG)" to listOf("Format (example: PKG)", "Format (exemple : PKG)", "Formato (ejemplo: PKG)"),
             "+ تبويب جديد" to listOf("+ New tab", "+ Nouvel onglet", "+ Nueva pestaña"),
+            "في الخلفية • قابل للاستئناف" to listOf("Background transfer • Resumable", "Transfert en arrière-plan • Reprise possible", "Transferencia en segundo plano • Reanudable"),
         )
 
     fun translate(ar: String, lang: String): String {
