@@ -20,6 +20,12 @@ internal object KeyboardLayoutController {
 
     fun install(window: Window, root: View) {
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        com.marcorx6.library.AppDiagnostics.log(
+            "DEBUG",
+            "KEYBOARD_LAYOUT",
+            "Installed root=${root.javaClass.simpleName} size=${root.width}x${root.height} " +
+                "softInputMode=0x${window.attributes.softInputMode.toString(16)}"
+        )
 
         val observer = root.viewTreeObserver
         if (!observer.isAlive) return
@@ -28,13 +34,25 @@ internal object KeyboardLayoutController {
             object : ViewTreeObserver.OnGlobalFocusChangeListener {
                 override fun onGlobalFocusChanged(oldFocus: View?, newFocus: View?) {
                     val input = newFocus as? EditText ?: return
+                    com.marcorx6.library.AppDiagnostics.log(
+                        "INFO",
+                        "KEYBOARD_FOCUS",
+                        "field=${input.javaClass.simpleName} id=${input.id} size=${input.width}x${input.height} " +
+                            "inputType=${input.inputType} imeOptions=0x${input.imeOptions.toString(16)} " +
+                            "singleLine=${input.isSingleLine} hasFocus=${input.hasFocus()} shown=${input.isShown}"
+                    )
                     input.post {
                         if (!input.isShown || !input.hasFocus() || input.width <= 0 || input.height <= 0) {
                             return@post
                         }
-                        input.requestRectangleOnScreen(
+                        val requested = input.requestRectangleOnScreen(
                             Rect(0, 0, input.width, input.height),
                             true
+                        )
+                        com.marcorx6.library.AppDiagnostics.log(
+                            "DEBUG",
+                            "KEYBOARD_LAYOUT",
+                            "requestRectangleOnScreen result=$requested fieldSize=${input.width}x${input.height}"
                         )
                     }
                 }
