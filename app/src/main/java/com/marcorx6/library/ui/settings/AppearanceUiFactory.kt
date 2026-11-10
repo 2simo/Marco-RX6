@@ -12,6 +12,7 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.RadioButton
 import android.widget.SeekBar
 import android.widget.Spinner
@@ -100,7 +101,9 @@ internal class AppearanceUiFactory(
     private fun themedNeutralColor(color: Int, background: Boolean): Int? {
         val hsv = FloatArray(3)
         Color.colorToHSV(color, hsv)
-        if (hsv[1] > 0.16f) return null
+        // Include blue-tinted charcoal/silver neutrals used by legacy account and message cards,
+        // while leaving genuinely colored accents and artwork untouched.
+        if (hsv[1] > 0.32f) return null
         val value = hsv[2]
         val replacement = if (background) {
             if (isDarkMode()) {
@@ -113,7 +116,7 @@ internal class AppearanceUiFactory(
             } else {
                 when {
                     value <= 0.07f -> bg()
-                    value <= 0.22f -> panel()
+                    value <= 0.90f -> panel()
                     value >= 0.97f -> Color.WHITE
                     else -> return null
                 }
@@ -130,7 +133,7 @@ internal class AppearanceUiFactory(
                 // Silver/white labels from old dark-only screens become readable
                 // charcoal labels on the light surface.
                 when {
-                    value >= 0.58f -> white()
+                    value >= 0.45f -> white()
                     else -> return null
                 }
             }
@@ -177,6 +180,15 @@ internal class AppearanceUiFactory(
         // Re-theme old hard-coded black/white text and neutral card fills on every
         // newly rendered page. This catches legacy screens that do not use palette
         // callbacks yet, while preserving colored labels and branded controls.
+        if (view is ImageView) {
+            // Recolor neutral navigation/profile glyphs so light pages never retain
+            // low-contrast silver icons. Untinted artwork and colored icons are preserved.
+            view.imageTintList?.defaultColor?.let { current ->
+                themedNeutralColor(current, false)?.let { replacement ->
+                    view.imageTintList = android.content.res.ColorStateList.valueOf(replacement)
+                }
+            }
+        }
         if (view !is Button && view !is EditText && view !is CheckBox && view !is RadioButton) {
             if (view is TextView) {
                 themedNeutralColor(view.currentTextColor, false)?.let(view::setTextColor)
