@@ -10,7 +10,7 @@
         android:name=".MarcoApplication"
         android:allowBackup="false"
         android:usesCleartextTraffic="false"
-        android:label="MARCO"
+        android:label="MARCO/OFFICIAL GAME STORE"
         android:icon="@drawable/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/MarcoAppTheme">
