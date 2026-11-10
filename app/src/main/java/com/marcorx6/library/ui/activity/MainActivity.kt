@@ -86,7 +86,22 @@ class MainActivity : ComponentActivity() {
         // updates during scrolling/resizing, contributing to visible flicker.
         LanguageTranslator.translateViewTree(view, pageLanguage)
         com.marcorx6.library.AppDiagnostics.log("INFO", "Navigation", "Opened screen: ${view.javaClass.simpleName}")
-        setContentView(view)
+
+        // Use one stable app-owned top bar on every Activity screen. The Android
+        // status bar remains visible; the app bar receives the status-bar inset
+        // so page content always begins below both bars instead of drawing behind them.
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
+        val screenHost = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(if (isDarkMode()) android.graphics.Color.rgb(8, 9, 12)
+                else android.graphics.Color.rgb(245, 247, 250))
+        }
+        screenHost.addView(createApplicationTopBar())
+        screenHost.addView(view, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
+        ))
+        setContentView(screenHost)
+        androidx.core.view.ViewCompat.requestApplyInsets(screenHost)
         com.marcorx6.library.ui.KeyboardLayoutController.install(this, view)
         activityServicesRuntimeFeature.applySystemBarAppearance()
         applyMotionPreferences(view)
@@ -102,6 +117,98 @@ class MainActivity : ComponentActivity() {
                 .setInterpolator(android.view.animation.DecelerateInterpolator(1.35f))
                 .start()
         }
+    }
+
+    private fun createApplicationTopBar(): View {
+        val dark = isDarkMode()
+        val surface = if (dark) android.graphics.Color.rgb(8, 9, 12)
+            else android.graphics.Color.rgb(245, 247, 250)
+        val foreground = if (dark) android.graphics.Color.rgb(238, 241, 246)
+            else android.graphics.Color.rgb(25, 29, 36)
+        val muted = if (dark) android.graphics.Color.rgb(160, 168, 181)
+            else android.graphics.Color.rgb(91, 98, 110)
+        val accent = android.graphics.Color.rgb(80, 145, 245)
+
+        val topBar = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(surface)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(dp(14), 0, dp(12), 0)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(58)
+            )
+        }
+        val title = TextView(this).apply {
+            text = "MARCO RX6"
+            textSize = 17f
+            setTextColor(foreground)
+            typeface = android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.BOLD)
+            letterSpacing = 0.045f
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            contentDescription = "MARCO RX6"
+        }
+        row.addView(title, LinearLayout.LayoutParams(0, -1, 1f))
+
+        fun action(icon: Int, description: String, onClick: () -> Unit) {
+            val button = ImageButton(this).apply {
+                setImageResource(icon)
+                imageTintList = android.content.res.ColorStateList.valueOf(accent)
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                    cornerRadius = dp(14).toFloat()
+                    setColor(if (dark) android.graphics.Color.rgb(25, 29, 37)
+                        else android.graphics.Color.rgb(231, 235, 242))
+                    setStroke(dp(1), if (dark) android.graphics.Color.rgb(54, 62, 76)
+                        else android.graphics.Color.rgb(211, 218, 229))
+                }
+                scaleType = ImageView.ScaleType.CENTER_INSIDE
+                setPadding(dp(11), dp(11), dp(11), dp(11))
+                contentDescription = description
+                setOnClickListener { onClick() }
+            }
+            row.addView(button, LinearLayout.LayoutParams(dp(42), dp(42)).apply {
+                marginStart = dp(6)
+            })
+        }
+
+        action(R.drawable.ic_action_notifications, tr("الإشعارات")) {
+            firebaseAccountController.openNotificationsFromLibrary()
+        }
+        action(R.drawable.ic_action_settings, tr("الإعدادات")) {
+            appearanceRuntimeFeature.showAppearanceSettings()
+        }
+        action(
+            if (dark) R.drawable.ic_action_sun else R.drawable.ic_action_moon,
+            tr(if (dark) "الوضع الفاتح" else "الوضع الداكن")
+        ) {
+            appearancePreferences().edit().putBoolean("dark_mode", !isDarkMode()).apply()
+            recreate()
+        }
+
+        topBar.addView(row)
+        topBar.addView(View(this).apply {
+            setBackgroundColor(if (dark) android.graphics.Color.rgb(48, 54, 64)
+                else android.graphics.Color.rgb(215, 220, 229))
+        }, LinearLayout.LayoutParams(-1, dp(1)))
+
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(topBar) { target, insets ->
+            val statusTop = insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.statusBars() or
+                    androidx.core.view.WindowInsetsCompat.Type.displayCutout()
+            ).top
+            if (target.paddingTop != statusTop) {
+                target.setPadding(0, statusTop, 0, 0)
+            }
+            insets
+        }
+        return topBar
     }
 
     private val downloadStoragePreferences by lazy { DownloadStoragePreferences(applicationContext) }
@@ -505,10 +612,6 @@ class MainActivity : ComponentActivity() {
         dialog.window?.let { window ->
             com.marcorx6.library.ui.UiDiagnosticsMonitor.install(window, "AlertDialog")
             LanguageTranslator.translateViewTree(window.decorView, appearanceRuntimeFeature.currentLanguage())
-            androidx.core.view.WindowInsetsControllerCompat(window, window.decorView).apply {
-                systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
-                hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
-            }
             applyMotionPreferences(window.decorView)
         }
     }
