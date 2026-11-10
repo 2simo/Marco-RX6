@@ -758,7 +758,7 @@ internal class DownloadPageDialog(
                 // A crashed WebView renderer must be detached and destroyed. Returning
                 // true keeps the host app alive instead of propagating the renderer crash.
                 rendererGone = true
-                com.marcorx6.library.AppDiagnostics.log("ERROR", "Browser", "WebView renderer exited; didCrash=${detail.didCrash}")
+                com.marcorx6.library.AppDiagnostics.log("ERROR", "Browser", "WebView renderer exited; didCrash=${detail.didCrash()}")
                 swipeRefresh.isRefreshing = false
                 progress.visibility = View.GONE
                 status.text = translate("توقف محرك الصفحة. أغلق هذه النافذة ثم أعد فتح صفحة التحميل.")
