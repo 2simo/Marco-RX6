@@ -7,28 +7,56 @@ import android.view.ViewTreeObserver
 import android.view.Window
 import android.view.WindowManager
 import android.widget.EditText
+import java.util.WeakHashMap
 
 /**
  * Shared IME behavior for app screens and dialogs.
  *
- * ADJUST_RESIZE keeps the usable window above the keyboard. When an input gains
- * focus, asking Android to reveal its rectangle lets enclosing ScrollViews move
- * it into the visible area instead of leaving it underneath the IME.
+ * The ViewTreeObserver belongs to the window, not to an individual page. Installing
+ * a focus listener every time a page is replaced therefore stacks listeners on the
+ * same window and makes every focus transition run the same keyboard work repeatedly.
+ * Keep exactly one listener per Window; dialogs naturally get their own listener.
  */
 internal object KeyboardLayoutController {
+    private val lock = Any()
+    private val installedWindows = WeakHashMap<Window, Boolean>()
+
     fun install(activity: Activity, root: View) = install(activity.window, root)
 
     fun install(window: Window, root: View) {
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+
+        val decor = window.decorView
+        val observer = decor.viewTreeObserver
+        if (!observer.isAlive) {
+            com.marcorx6.library.AppDiagnostics.log(
+                "WARN",
+                "KEYBOARD_LAYOUT",
+                "Skipped listener installation because decor ViewTreeObserver is unavailable"
+            )
+            return
+        }
+
+        synchronized(lock) {
+            if (installedWindows.containsKey(window)) {
+                com.marcorx6.library.AppDiagnostics.log(
+                    "DEBUG",
+                    "KEYBOARD_LAYOUT",
+                    "Listener already installed for window; page root=${root.javaClass.simpleName} " +
+                        "size=${root.width}x${root.height}"
+                )
+                return
+            }
+            installedWindows[window] = true
+        }
+
         com.marcorx6.library.AppDiagnostics.log(
-            "DEBUG",
+            "INFO",
             "KEYBOARD_LAYOUT",
-            "Installed root=${root.javaClass.simpleName} size=${root.width}x${root.height} " +
+            "Installed one window-level focus listener root=${root.javaClass.simpleName} " +
+                "size=${root.width}x${root.height} decor=${decor.width}x${decor.height} " +
                 "softInputMode=0x${window.attributes.softInputMode.toString(16)}"
         )
-
-        val observer = root.viewTreeObserver
-        if (!observer.isAlive) return
 
         observer.addOnGlobalFocusChangeListener(
             object : ViewTreeObserver.OnGlobalFocusChangeListener {
@@ -37,14 +65,23 @@ internal object KeyboardLayoutController {
                     com.marcorx6.library.AppDiagnostics.log(
                         "INFO",
                         "KEYBOARD_FOCUS",
-                        "field=${input.javaClass.simpleName} id=${input.id} size=${input.width}x${input.height} " +
-                            "inputType=${input.inputType} imeOptions=0x${input.imeOptions.toString(16)} " +
-                            "singleLine=${input.maxLines == 1} hasFocus=${input.hasFocus()} shown=${input.isShown}"
+                        "field=${input.javaClass.simpleName} id=${input.id} " +
+                            "size=${input.width}x${input.height} inputType=${input.inputType} " +
+                            "imeOptions=0x${input.imeOptions.toString(16)} " +
+                            "singleLine=${input.maxLines == 1} hasFocus=${input.hasFocus()} " +
+                            "shown=${input.isShown}"
                     )
+
+                    // Wait for the focus/layout pass to finish. Ignore a stale field
+                    // belonging to a page or dialog that has already been detached.
                     input.post {
-                        if (!input.isShown || !input.hasFocus() || input.width <= 0 || input.height <= 0) {
+                        if (input.rootView !== decor || input.windowToken == null ||
+                            !input.isShown || !input.hasFocus() ||
+                            input.width <= 0 || input.height <= 0
+                        ) {
                             return@post
                         }
+
                         val requested = input.requestRectangleOnScreen(
                             Rect(0, 0, input.width, input.height),
                             true
@@ -52,7 +89,8 @@ internal object KeyboardLayoutController {
                         com.marcorx6.library.AppDiagnostics.log(
                             "DEBUG",
                             "KEYBOARD_LAYOUT",
-                            "requestRectangleOnScreen result=$requested fieldSize=${input.width}x${input.height}"
+                            "requestRectangleOnScreen result=$requested " +
+                                "fieldSize=${input.width}x${input.height}"
                         )
                     }
                 }
