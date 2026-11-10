@@ -194,14 +194,16 @@ internal class MainLibraryInterfaceController(
                     val languageBadge = TextView(context).apply {
                         text = languageLabel
                         textSize = 8f
-                        setTextColor(Color.WHITE)
+                        setTextColor(if (isDarkMode()) Color.WHITE else Color.rgb(34, 39, 47))
                         typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
                         gravity = Gravity.CENTER
                         setPadding(dp(6), dp(3), dp(6), dp(3))
-                        background = GradientDrawable().apply {
-                            setColor(Color.argb(224, 35, 38, 45))
+                        background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                            if (isDarkMode()) intArrayOf(Color.rgb(43, 47, 55), Color.rgb(25, 28, 34))
+                            else intArrayOf(Color.rgb(250, 251, 253), Color.rgb(205, 212, 222))).apply {
                             cornerRadius = dp(7).toFloat()
-                            setStroke(dp(1), Color.argb(210, 145, 153, 166))
+                            setStroke(dp(1), if (isDarkMode()) Color.argb(210, 145, 153, 166)
+                                else Color.rgb(132, 143, 158))
                         }
                     }
                     coverFrame.addView(
@@ -600,14 +602,16 @@ internal class MainLibraryInterfaceController(
                     val languageBadge = TextView(context).apply {
                         text = languageLabel
                         textSize = 11f
-                        setTextColor(Color.WHITE)
+                        setTextColor(if (isDarkMode()) Color.WHITE else Color.rgb(34, 39, 47))
                         typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
                         gravity = Gravity.CENTER
                         setPadding(dp(12), dp(7), dp(12), dp(7))
-                        background = GradientDrawable().apply {
-                            setColor(Color.argb(232, 35, 38, 45))
+                        background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                            if (isDarkMode()) intArrayOf(Color.rgb(43, 47, 55), Color.rgb(25, 28, 34))
+                            else intArrayOf(Color.rgb(250, 251, 253), Color.rgb(205, 212, 222))).apply {
                             cornerRadius = dp(10).toFloat()
-                            setStroke(dp(1), Color.argb(225, 165, 175, 190))
+                            setStroke(dp(1), if (isDarkMode()) Color.argb(225, 165, 175, 190)
+                                else Color.rgb(132, 143, 158))
                         }
                         elevation = dp(5).toFloat()
                     }
