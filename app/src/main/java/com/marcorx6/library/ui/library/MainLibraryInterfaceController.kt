@@ -448,7 +448,6 @@ internal class MainLibraryInterfaceController(
         // MARCO visual system: charcoal surfaces with brushed-silver accents.
         val silver = if (isDarkMode()) Color.rgb(225, 228, 234) else Color.rgb(43, 47, 55)
         val muted = gray
-        val silverAccent = red
         val ink = bg
         val glass = panel
         val root = LinearLayout(context).apply {
@@ -684,7 +683,7 @@ internal class MainLibraryInterfaceController(
             }
             filters.addView(chip, LinearLayout.LayoutParams(-2, -2).apply { marginEnd = dp(7) })
         }
-        root.addView(makeText(tr("اختر المنصة"), 11f, red, true).apply {
+        root.addView(makeText(tr("اختر المنصة"), 11f, silver, true).apply {
             setPadding(dp(2), dp(2), dp(2), dp(7))
         })
         filterScroll.addView(filters)
@@ -694,10 +693,8 @@ internal class MainLibraryInterfaceController(
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        val titles = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
-        titles.addView(makeText(tr("MARCO  /  الألعاب"), 8f, silverAccent, true).apply { letterSpacing = 0.14f })
-        titles.addView(makeText(tr("اكتشف الألعاب"), 21f, silver, true))
-        section.addView(titles, LinearLayout.LayoutParams(0, -2, 1f))
+        section.addView(makeText(tr("اكتشف الألعاب"), 21f, silver, true),
+            LinearLayout.LayoutParams(0, -2, 1f))
         countText = makeText("0 " + tr("لعبة"), 10f, muted, true)
         section.addView(countText)
         val sort = ImageView(context).apply {
