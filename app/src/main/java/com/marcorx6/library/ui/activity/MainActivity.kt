@@ -128,57 +128,90 @@ class MainActivity : ComponentActivity() {
             else android.graphics.Color.rgb(25, 29, 36)
         val silver = if (dark) android.graphics.Color.rgb(190, 198, 210)
             else android.graphics.Color.rgb(105, 113, 126)
+        val stroke = if (dark) android.graphics.Color.rgb(105, 113, 126)
+            else android.graphics.Color.rgb(174, 181, 191)
 
         val topBar = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(surface)
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
+            layoutParams = LinearLayout.LayoutParams(-1, -2)
         }
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = android.view.Gravity.CENTER_VERTICAL
-            setPadding(dp(18), 0, dp(16), 0)
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, dp(58)
-            )
+            setPadding(dp(14), 0, dp(12), 0)
+            layoutParams = LinearLayout.LayoutParams(-1, dp(58))
         }
         val title = TextView(this).apply {
-            val brand = android.text.SpannableString("MARCO/OFFICIAL GAME STORE")
-            brand.setSpan(
-                android.text.style.ForegroundColorSpan(foreground),
-                0, 5, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-            brand.setSpan(
-                android.text.style.ForegroundColorSpan(silver),
-                5, brand.length, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-            text = brand
-            textSize = 14f
+            text = "MARCO"
+            textSize = 19f
             setTextColor(foreground)
             typeface = android.graphics.Typeface.create("sans-serif", android.graphics.Typeface.BOLD)
-            letterSpacing = 0.025f
+            letterSpacing = 0.10f
             gravity = android.view.Gravity.CENTER_VERTICAL
             maxLines = 1
-            contentDescription = "MARCO/OFFICIAL GAME STORE"
+            contentDescription = "MARCO"
         }
-        row.addView(title, LinearLayout.LayoutParams(-1, -1))
-        topBar.addView(row)
-        topBar.addView(View(this).apply {
-            setBackgroundColor(if (dark) android.graphics.Color.rgb(92, 99, 111)
-                else android.graphics.Color.rgb(174, 181, 191))
-        }, LinearLayout.LayoutParams(-1, dp(1)))
+        row.addView(title, LinearLayout.LayoutParams(0, -1, 1f))
 
+        fun action(icon: Int, label: String, click: () -> Unit): ImageView =
+            ImageView(this).apply {
+                setImageResource(icon)
+                scaleType = ImageView.ScaleType.CENTER_INSIDE
+                imageTintList = android.content.res.ColorStateList.valueOf(silver)
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    setColor(if (dark) android.graphics.Color.rgb(25, 28, 34)
+                        else android.graphics.Color.rgb(232, 235, 240))
+                    cornerRadius = dp(13).toFloat()
+                    setStroke(dp(1), stroke)
+                }
+                contentDescription = label
+                isClickable = true
+                isFocusable = true
+                setPadding(dp(11), dp(11), dp(11), dp(11))
+                minimumWidth = dp(44)
+                minimumHeight = dp(44)
+                if (android.os.Build.VERSION.SDK_INT >= 23) {
+                    foreground = android.graphics.drawable.RippleDrawable(
+                        android.content.res.ColorStateList.valueOf(
+                            android.graphics.Color.argb(65, 150, 160, 175)
+                        ),
+                        null,
+                        android.graphics.drawable.GradientDrawable().apply {
+                            setColor(android.graphics.Color.WHITE)
+                            cornerRadius = dp(13).toFloat()
+                        }
+                    )
+                }
+                setOnClickListener { click() }
+            }
+
+        row.addView(action(
+            R.drawable.ic_action_notifications, tr("الإشعارات")
+        ) { firebaseAccountController.openNotificationsFromLibrary() },
+            LinearLayout.LayoutParams(dp(44), dp(44)).apply { marginStart = dp(7) })
+        row.addView(action(
+            R.drawable.ic_action_settings, tr("الإعدادات")
+        ) { appearanceRuntimeFeature.showAppearanceSettings() },
+            LinearLayout.LayoutParams(dp(44), dp(44)).apply { marginStart = dp(7) })
+        row.addView(action(
+            if (dark) R.drawable.ic_action_sun else R.drawable.ic_action_moon,
+            tr(if (dark) "الوضع الفاتح" else "الوضع الداكن")
+        ) {
+            getSharedPreferences("app_settings", MODE_PRIVATE).edit()
+                .putBoolean("dark_mode", !isDarkMode()).apply()
+            recreate()
+        }, LinearLayout.LayoutParams(dp(44), dp(44)).apply { marginStart = dp(7) })
+
+        topBar.addView(row)
+        topBar.addView(View(this).apply { setBackgroundColor(stroke) },
+            LinearLayout.LayoutParams(-1, dp(1)))
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(topBar) { target, insets ->
             val statusTop = insets.getInsets(
                 androidx.core.view.WindowInsetsCompat.Type.statusBars() or
                     androidx.core.view.WindowInsetsCompat.Type.displayCutout()
             ).top
-            if (target.paddingTop != statusTop) {
-                target.setPadding(0, statusTop, 0, 0)
-            }
+            if (target.paddingTop != statusTop) target.setPadding(0, statusTop, 0, 0)
             insets
         }
         return topBar
