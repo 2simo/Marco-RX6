@@ -715,6 +715,8 @@ internal object LanguageTranslator {
             "ملف MARCO الشخصي" to listOf("MARCO profile", "Profil MARCO", "Perfil de MARCO"),
             "مستخدم MARCO" to listOf("MARCO user", "Utilisateur MARCO", "Usuario de MARCO"),
             "عضو في مجتمع MARCO" to listOf("Member of the MARCO community", "Membre de la communauté MARCO", "Miembro de la comunidad MARCO"),
+            "حساب موثّق" to listOf("Verified account", "Compte vérifié", "Cuenta verificada"),
+            "حساب موثوق" to listOf("Verified account", "Compte vérifié", "Cuenta verificada"),
             "تقييماتي • " to listOf("My ratings • ", "Mes évaluations • ", "Mis valoraciones • "),
             "＋ اختر اسم مستخدم فريداً" to listOf("＋ Choose a unique username", "＋ Choisissez un nom d’utilisateur unique", "＋ Elige un nombre de usuario único"),
             "حدّث معلوماتك بالطريقة التي تظهر بها للآخرين في MARCO" to listOf("Update the information others see about you on MARCO", "Mettez à jour les informations que les autres voient sur MARCO", "Actualiza la información que otros ven sobre ti en MARCO"),
