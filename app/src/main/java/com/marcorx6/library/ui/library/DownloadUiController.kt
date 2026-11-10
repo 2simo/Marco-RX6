@@ -871,11 +871,7 @@ internal class DownloadUiController(
         activity.window?.apply {
             statusBarColor = Color.TRANSPARENT
             navigationBarColor = Color.TRANSPARENT
-            androidx.core.view.WindowInsetsControllerCompat(this, decorView).apply {
-                isAppearanceLightStatusBars = !dark
-                isAppearanceLightNavigationBars = !dark
-                hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
-            }
+            SystemBarPolicy.apply(this, dark)
         }
         androidx.core.view.ViewCompat.requestApplyInsets(root)
     }
