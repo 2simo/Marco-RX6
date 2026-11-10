@@ -126,9 +126,8 @@ class MainActivity : ComponentActivity() {
             else android.graphics.Color.rgb(245, 247, 250)
         val foreground = if (dark) android.graphics.Color.rgb(238, 241, 246)
             else android.graphics.Color.rgb(25, 29, 36)
-        val muted = if (dark) android.graphics.Color.rgb(160, 168, 181)
-            else android.graphics.Color.rgb(91, 98, 110)
-        val accent = android.graphics.Color.rgb(80, 145, 245)
+        val silver = if (dark) android.graphics.Color.rgb(190, 198, 210)
+            else android.graphics.Color.rgb(105, 113, 126)
 
         val topBar = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -141,62 +140,35 @@ class MainActivity : ComponentActivity() {
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = android.view.Gravity.CENTER_VERTICAL
-            setPadding(dp(14), 0, dp(12), 0)
+            setPadding(dp(18), 0, dp(16), 0)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, dp(58)
             )
         }
         val title = TextView(this).apply {
-            text = "MARCO RX6"
-            textSize = 17f
+            val brand = android.text.SpannableString("MARCO/OFFICIAL GAME STORE")
+            brand.setSpan(
+                android.text.style.ForegroundColorSpan(foreground),
+                0, 5, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            brand.setSpan(
+                android.text.style.ForegroundColorSpan(silver),
+                5, brand.length, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            text = brand
+            textSize = 14f
             setTextColor(foreground)
-            typeface = android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.BOLD)
-            letterSpacing = 0.045f
+            typeface = android.graphics.Typeface.create("sans-serif", android.graphics.Typeface.BOLD)
+            letterSpacing = 0.025f
             gravity = android.view.Gravity.CENTER_VERTICAL
-            contentDescription = "MARCO RX6"
+            maxLines = 1
+            contentDescription = "MARCO/OFFICIAL GAME STORE"
         }
-        row.addView(title, LinearLayout.LayoutParams(0, -1, 1f))
-
-        fun action(icon: Int, description: String, onClick: () -> Unit) {
-            val button = ImageButton(this).apply {
-                setImageResource(icon)
-                imageTintList = android.content.res.ColorStateList.valueOf(accent)
-                background = android.graphics.drawable.GradientDrawable().apply {
-                    shape = android.graphics.drawable.GradientDrawable.RECTANGLE
-                    cornerRadius = dp(14).toFloat()
-                    setColor(if (dark) android.graphics.Color.rgb(25, 29, 37)
-                        else android.graphics.Color.rgb(231, 235, 242))
-                    setStroke(dp(1), if (dark) android.graphics.Color.rgb(54, 62, 76)
-                        else android.graphics.Color.rgb(211, 218, 229))
-                }
-                scaleType = ImageView.ScaleType.CENTER_INSIDE
-                setPadding(dp(11), dp(11), dp(11), dp(11))
-                contentDescription = description
-                setOnClickListener { onClick() }
-            }
-            row.addView(button, LinearLayout.LayoutParams(dp(42), dp(42)).apply {
-                marginStart = dp(6)
-            })
-        }
-
-        action(R.drawable.ic_action_notifications, tr("الإشعارات")) {
-            firebaseAccountController.openNotificationsFromLibrary()
-        }
-        action(R.drawable.ic_action_settings, tr("الإعدادات")) {
-            appearanceRuntimeFeature.showAppearanceSettings()
-        }
-        action(
-            if (dark) R.drawable.ic_action_sun else R.drawable.ic_action_moon,
-            tr(if (dark) "الوضع الفاتح" else "الوضع الداكن")
-        ) {
-            appearancePreferences().edit().putBoolean("dark_mode", !isDarkMode()).apply()
-            recreate()
-        }
-
+        row.addView(title, LinearLayout.LayoutParams(-1, -1))
         topBar.addView(row)
         topBar.addView(View(this).apply {
-            setBackgroundColor(if (dark) android.graphics.Color.rgb(48, 54, 64)
-                else android.graphics.Color.rgb(215, 220, 229))
+            setBackgroundColor(if (dark) android.graphics.Color.rgb(92, 99, 111)
+                else android.graphics.Color.rgb(174, 181, 191))
         }, LinearLayout.LayoutParams(-1, dp(1)))
 
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(topBar) { target, insets ->
