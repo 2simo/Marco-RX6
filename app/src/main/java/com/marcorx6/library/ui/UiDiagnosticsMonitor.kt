@@ -51,7 +51,7 @@ internal object UiDiagnosticsMonitor {
                             }.getOrDefault("id-${view.id}")
                             val inputDetails = if (view is EditText) {
                                 " inputType=${view.inputType} imeOptions=0x${view.imeOptions.toString(16)}" +
-                                    " singleLine=${view.isSingleLine} enabled=${view.isEnabled}" +
+                                    " maxLines=${view.maxLines} enabled=${view.isEnabled}" +
                                     " textLength=${view.text?.length ?: 0}"
                             } else ""
                             return "${view.javaClass.simpleName}(id=$idName,w=${view.width},h=${view.height},shown=${view.isShown})$inputDetails"
