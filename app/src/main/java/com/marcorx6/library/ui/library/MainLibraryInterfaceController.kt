@@ -541,19 +541,38 @@ internal class MainLibraryInterfaceController(
             }
 
             popularByPlatform.forEachIndexed { index, game ->
-                val card = LinearLayout(context).apply {
-                    orientation = LinearLayout.VERTICAL
-                    gravity = Gravity.CENTER_HORIZONTAL
-                    setPadding(dp(7), dp(7), dp(7), dp(9))
-                    background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                        intArrayOf(Color.argb(150, 37, 40, 47), Color.argb(90, 16, 18, 23))).apply {
-                        cornerRadius = dp(20).toFloat()
-                        setStroke(dp(1), Color.argb(110, 145, 153, 166))
-                    }
+                // A layered shell gives the featured cover a real raised-card silhouette:
+                // metallic face, blue edge, and a visible lower extrusion beneath it.
+                val card = FrameLayout(context).apply {
+                    clipChildren = false
+                    clipToPadding = false
                     isClickable = true
                     isFocusable = true
                     setOnClickListener { showDetails(game) }
                 }
+                val cardExtrusion = View(context).apply {
+                    background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                        intArrayOf(Color.rgb(38, 91, 158), Color.rgb(17, 43, 78))).apply {
+                        cornerRadius = dp(21).toFloat()
+                    }
+                }
+                card.addView(cardExtrusion, FrameLayout.LayoutParams(-1, -1).apply {
+                    topMargin = dp(6)
+                })
+                val surface = LinearLayout(context).apply {
+                    orientation = LinearLayout.VERTICAL
+                    gravity = Gravity.CENTER_HORIZONTAL
+                    setPadding(dp(5), dp(5), dp(5), dp(9))
+                    background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                        intArrayOf(Color.rgb(68, 76, 91), Color.rgb(30, 35, 45), Color.rgb(12, 15, 21))).apply {
+                        cornerRadius = dp(20).toFloat()
+                        setStroke(dp(1), Color.argb(235, 100, 158, 230))
+                    }
+                    elevation = dp(12).toFloat()
+                }
+                card.addView(surface, FrameLayout.LayoutParams(-1, -1).apply {
+                    bottomMargin = dp(6)
+                })
                 val cover = ImageView(context).apply {
                     scaleType = ImageView.ScaleType.CENTER_CROP
                     background = rounded(ink, 15)
@@ -593,13 +612,13 @@ internal class MainLibraryInterfaceController(
                         }
                     )
                 }
-                card.addView(coverFrame, LinearLayout.LayoutParams(dp(218), dp(276)))
-                card.addView(makeText(game.name, 13f, silver, true).apply {
+                surface.addView(coverFrame, LinearLayout.LayoutParams(dp(204), dp(258)))
+                surface.addView(makeText(game.name, 13f, silver, true).apply {
                     gravity = Gravity.CENTER
                     maxLines = 2
                     setPadding(dp(5), dp(8), dp(5), dp(2))
-                }, LinearLayout.LayoutParams(dp(218), -2))
-                card.addView(makeText(GameLibraryManager.normalizePlatform(game.platform) ?: game.platform,
+                }, LinearLayout.LayoutParams(dp(204), -2))
+                surface.addView(makeText(GameLibraryManager.normalizePlatform(game.platform) ?: game.platform,
                     10f, muted, true).apply { gravity = Gravity.CENTER },
                     LinearLayout.LayoutParams(-1, -2))
                 popularTrack.addView(card, LinearLayout.LayoutParams(dp(224), -2).apply {
