@@ -23,6 +23,7 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import com.marcorx6.library.ui.SystemBarPolicy
 import com.marcorx6.library.data.Game
 import com.marcorx6.library.data.GameEngagementRepository
 import com.marcorx6.library.data.auth.FirebaseAuthRepository
