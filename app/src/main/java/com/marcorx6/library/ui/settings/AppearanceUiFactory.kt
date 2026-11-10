@@ -93,8 +93,76 @@ internal class AppearanceUiFactory(
         installGlassInteraction(button)
     }
 
+    /**
+     * Recolors only neutral grayscale surfaces. Accent-colored controls, artwork,
+     * and custom illustrations are intentionally left untouched.
+     */
+    private fun themedNeutralColor(color: Int, background: Boolean): Int? {
+        val hsv = FloatArray(3)
+        Color.colorToHSV(color, hsv)
+        if (hsv[1] > 0.16f) return null
+        val value = hsv[2]
+        val replacement = if (background) {
+            if (isDarkMode()) {
+                when {
+                    value >= 0.88f -> panel()
+                    value <= 0.10f -> bg()
+                    value <= 0.25f -> panel()
+                    else -> return null
+                }
+            } else {
+                when {
+                    value <= 0.07f -> bg()
+                    value <= 0.22f -> panel()
+                    value >= 0.97f -> Color.WHITE
+                    else -> return null
+                }
+            }
+        } else {
+            if (isDarkMode()) {
+                when {
+                    value <= 0.20f -> white()
+                    else -> return null
+                }
+            } else {
+                when {
+                    value >= 0.91f -> white()
+                    else -> return null
+                }
+            }
+        }
+        return Color.argb(Color.alpha(color), Color.red(replacement),
+            Color.green(replacement), Color.blue(replacement))
+    }
+
+    private fun rethemeBackground(drawable: android.graphics.drawable.Drawable?) {
+        when (drawable) {
+            is android.graphics.drawable.ColorDrawable -> {
+                themedNeutralColor(drawable.color, true)?.let(drawable::setColor)
+            }
+            is GradientDrawable -> {
+                if (android.os.Build.VERSION.SDK_INT >= 24) {
+                    val current = drawable.color?.defaultColor
+                    if (current != null) themedNeutralColor(current, true)?.let(drawable::setColor)
+                }
+            }
+            is android.graphics.drawable.RippleDrawable -> {
+                if (drawable.numberOfLayers > 0) rethemeBackground(drawable.getDrawable(0))
+            }
+        }
+    }
+
     fun applyUnifiedSkin(view: View) {
         installGlassInteraction(view)
+        // Re-theme old hard-coded black/white text and neutral card fills on every
+        // newly rendered page. This catches legacy screens that do not use palette
+        // callbacks yet, while preserving colored labels and branded controls.
+        if (view !is Button && view !is EditText && view !is CheckBox && view !is RadioButton) {
+            if (view is TextView) {
+                themedNeutralColor(view.currentTextColor, false)?.let(view::setTextColor)
+            }
+            rethemeBackground(view.background)
+        }
         if (view is TextView && view !is EditText) {
             val compoundIcons = view.compoundDrawablesRelative
             if (compoundIcons.any { it != null }) {
