@@ -306,11 +306,7 @@ internal class DownloadConfirmationPanel(
             attributes = attributes.apply { dimAmount = 0.55f }
             navigationBarColor = background
             setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
-            androidx.core.view.WindowInsetsControllerCompat(this, decorView).apply {
-                isAppearanceLightNavigationBars = !dark
-                systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
-            }
+            SystemBarPolicy.apply(this, dark)
         }
         if (motionEnabled) {
             root.animate().cancel()
