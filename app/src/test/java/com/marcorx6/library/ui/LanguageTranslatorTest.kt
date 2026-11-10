@@ -223,4 +223,22 @@ class LanguageTranslatorTest {
             assertEquals(source, LanguageTranslator.translate(source, "ar"))
         }
     }
+    @Test
+    fun translatesExpandedAppWideControlsIntoAllSupportedLanguages() {
+        val cases = listOf(
+            "التشخيص وسجل الأخطاء" to listOf("Diagnostics & error log", "Diagnostics et journal d’erreurs", "Diagnóstico y registro de errores"),
+            "عدد التنزيلات المتزامنة" to listOf("Concurrent downloads", "Téléchargements simultanés", "Descargas simultáneas"),
+            "إيقاف الكل" to listOf("Pause all", "Tout mettre en pause", "Pausar todo"),
+            "اختيار صورة الغلاف من الهاتف" to listOf("Choose cover image from phone", "Choisir une image de couverture sur le téléphone", "Elegir imagen de portada del teléfono"),
+            "اختر القسم الذي تريد تصفحه" to listOf("Choose the section you want to browse", "Choisissez la section à parcourir", "Elige la sección que quieres explorar"),
+            "MARCO  /  PERSONALIZATION" to listOf("MARCO / PERSONALIZATION", "MARCO / PERSONNALISATION", "MARCO / PERSONALIZACIÓN")
+        )
+        cases.forEach { (source, expected) ->
+            assertEquals(expected[0], LanguageTranslator.translate(source, "en"))
+            assertEquals(expected[1], LanguageTranslator.translate(source, "fr"))
+            assertEquals(expected[2], LanguageTranslator.translate(source, "es"))
+            assertEquals(source, LanguageTranslator.translate(source, "ar"))
+        }
+    }
+
 }
