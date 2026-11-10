@@ -1,6 +1,5 @@
 package com.marcorx6.library.ui
 
-import android.app.Activity
 import android.graphics.Color
 import android.os.Build
 import android.view.Window
@@ -9,59 +8,54 @@ import androidx.core.view.WindowInsetsAnimationCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.marcorx6.library.AppDiagnostics
+import java.util.WeakHashMap
 
 /**
- * Single owner of the Activity status-bar policy.
+ * One policy for every app-owned Window (Activity, Dialog and bottom panel).
  *
- * IME transitions can make Android 15/16 vendor builds briefly restore the
- * status-bar surface. Keep the policy here and reassert it through the
- * complete IME animation.
+ * The previous implementation only guarded MainActivity and skipped hide()
+ * when root insets were stale during IME animation. Dialog windows had no IME
+ * guard at all. Both paths allowed Android/OEM window transitions to reveal
+ * the status bar while the keyboard was opening.
  */
-internal class SystemBarAppearanceController(
-    private val activity: Activity,
-    private val isDarkMode: () -> Boolean
-) {
-    private var imeCallbackInstalled = false
+internal object SystemBarPolicy {
+    private val lock = Any()
+    private val guardedDecorViews = WeakHashMap<android.view.View, Boolean>()
 
-    fun apply() {
-        val window = activity.window
+    fun apply(window: Window, darkMode: Boolean, hideNavigation: Boolean = false) {
         val decor = window.decorView
-        val beforeInsets = ViewCompat.getRootWindowInsets(decor)
-        AppDiagnostics.log(
-            "DEBUG",
-            "SYSTEM_BARS",
-            "apply statusVisible=${beforeInsets?.isVisible(WindowInsetsCompat.Type.statusBars()) == true} " +
-                "imeVisible=${beforeInsets?.isVisible(WindowInsetsCompat.Type.ime()) == true} " +
-                "systemUi=0x${decor.systemUiVisibility.toString(16)}"
-        )
-
-        window.statusBarColor = Color.rgb(8, 9, 12)
-        window.navigationBarColor =
-            if (isDarkMode()) Color.rgb(8, 9, 12) else Color.rgb(245, 247, 250)
-
-        WindowInsetsControllerCompat(window, decor).apply {
-            isAppearanceLightStatusBars = false
-            isAppearanceLightNavigationBars = !isDarkMode()
-            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
-            hide(WindowInsetsCompat.Type.statusBars())
-        }
-
+        window.statusBarColor = Color.TRANSPARENT
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             window.isStatusBarContrastEnforced = false
             window.isNavigationBarContrastEnforced = false
         }
-
-        installImeStatusBarGuard(window, decor)
+        WindowInsetsControllerCompat(window, decor).apply {
+            isAppearanceLightStatusBars = false
+            isAppearanceLightNavigationBars = !darkMode
+            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
+            hide(
+                WindowInsetsCompat.Type.statusBars() or
+                    if (hideNavigation) WindowInsetsCompat.Type.navigationBars() else 0
+            )
+        }
+        installImeGuard(window, decor, hideNavigation)
+        // Always issue hide, not only when cached root insets report visible:
+        // cached insets can lag behind the animation callback's insets snapshot.
         decor.post {
-            if (!activity.isFinishing && !activity.isDestroyed) {
-                hideStatusBar(window, decor, "post-layout")
+            if (decor.isAttachedToWindow) {
+                WindowInsetsControllerCompat(window, decor).hide(WindowInsetsCompat.Type.statusBars())
+                if (hideNavigation) {
+                    WindowInsetsControllerCompat(window, decor).hide(WindowInsetsCompat.Type.navigationBars())
+                }
             }
         }
     }
 
-    private fun installImeStatusBarGuard(window: Window, decor: android.view.View) {
-        if (imeCallbackInstalled) return
-        imeCallbackInstalled = true
+    private fun installImeGuard(window: Window, decor: android.view.View, hideNavigation: Boolean) {
+        synchronized(lock) {
+            if (guardedDecorViews.containsKey(decor)) return
+            guardedDecorViews[decor] = true
+        }
         ViewCompat.setWindowInsetsAnimationCallback(
             decor,
             object : WindowInsetsAnimationCompat.Callback(
@@ -72,7 +66,7 @@ internal class SystemBarAppearanceController(
                     bounds: WindowInsetsAnimationCompat.BoundsCompat
                 ): WindowInsetsAnimationCompat.BoundsCompat {
                     if (animation.typeMask and WindowInsetsCompat.Type.ime() != 0) {
-                        hideStatusBar(window, decor, "ime-start")
+                        hideBars(window, decor, hideNavigation)
                     }
                     return bounds
                 }
@@ -84,31 +78,46 @@ internal class SystemBarAppearanceController(
                     val imeAnimating = runningAnimations.any {
                         it.typeMask and WindowInsetsCompat.Type.ime() != 0
                     }
-                    if (imeAnimating && insets.isVisible(WindowInsetsCompat.Type.statusBars())) {
-                        hideStatusBar(window, decor, "ime-progress")
+                    if (imeAnimating || insets.isVisible(WindowInsetsCompat.Type.statusBars())) {
+                        hideBars(window, decor, hideNavigation)
                     }
                     return insets
                 }
 
                 override fun onEnd(animation: WindowInsetsAnimationCompat) {
                     if (animation.typeMask and WindowInsetsCompat.Type.ime() == 0) return
-                    decor.post {
-                        if (!activity.isFinishing && !activity.isDestroyed) {
-                            hideStatusBar(window, decor, "ime-end")
-                        }
-                    }
+                    decor.post { hideBars(window, decor, hideNavigation) }
                 }
             }
         )
-        AppDiagnostics.log("INFO", "SYSTEM_BARS", "Installed centralized IME/status-bar guard")
+        AppDiagnostics.log("INFO", "SYSTEM_BARS", "IME guard installed for window decor=${decor.javaClass.simpleName}")
     }
 
-    private fun hideStatusBar(window: Window, decor: android.view.View, source: String) {
+    private fun hideBars(window: Window, decor: android.view.View, hideNavigation: Boolean) {
+        if (!decor.isAttachedToWindow) return
+        val types = WindowInsetsCompat.Type.statusBars() or
+            if (hideNavigation) WindowInsetsCompat.Type.navigationBars() else 0
+        WindowInsetsControllerCompat(window, decor).hide(types)
+        AppDiagnostics.log("DEBUG", "SYSTEM_BARS", "Unconditionally reasserted hidden bars during IME/window transition")
+    }
+}
+
+internal class SystemBarAppearanceController(
+    private val activity: android.app.Activity,
+    private val isDarkMode: () -> Boolean
+) {
+    fun apply() {
+        val decor = activity.window.decorView
         val insets = ViewCompat.getRootWindowInsets(decor)
-        if (insets?.isVisible(WindowInsetsCompat.Type.statusBars()) == true) {
-            WindowInsetsControllerCompat(window, decor)
-                .hide(WindowInsetsCompat.Type.statusBars())
-            AppDiagnostics.log("INFO", "SYSTEM_BARS", "Re-hid status bar source=$source")
-        }
+        AppDiagnostics.log(
+            "DEBUG",
+            "SYSTEM_BARS",
+            "apply statusVisible=${insets?.isVisible(WindowInsetsCompat.Type.statusBars()) == true} " +
+                "imeVisible=${insets?.isVisible(WindowInsetsCompat.Type.ime()) == true} " +
+                "windowFlags=0x${activity.window.attributes.flags.toString(16)}"
+        )
+        activity.window.navigationBarColor =
+            if (isDarkMode()) Color.rgb(8, 9, 12) else Color.rgb(245, 247, 250)
+        SystemBarPolicy.apply(activity.window, isDarkMode())
     }
 }
