@@ -82,7 +82,7 @@ internal class FirebaseAccountController(
         clearAccountListeners()
         returnToProfileEditorAfterPhotoPick = false
         // Keep the social profile strictly monochrome, independent of the app reading theme.
-        val dark = true
+        val dark = isDarkMode()
         val page = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             layoutDirection = View.LAYOUT_DIRECTION_RTL
@@ -1011,7 +1011,7 @@ internal class FirebaseAccountController(
                 toast("هذا الملف الشخصي غير متاح أو لم يسمح صاحبه بعرضه")
                 return@addOnSuccessListener
             }
-            val dark = true
+            val dark = isDarkMode()
             val page = LinearLayout(activity).apply {
                 orientation = LinearLayout.VERTICAL
                 layoutDirection = View.LAYOUT_DIRECTION_RTL
@@ -1394,6 +1394,7 @@ internal class FirebaseAccountController(
                         }
                     }
                 }
+                applyUnifiedSkin(row)
                 list.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(9) })
             }
         }
@@ -1553,6 +1554,7 @@ internal class FirebaseAccountController(
                             true
                         }
                     }
+                    applyUnifiedSkin(row)
                     list.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
                 }.addOnFailureListener { error ->
                     android.util.Log.w("MarcoMessages", "Inbox profile load failed", error)
@@ -1901,6 +1903,7 @@ internal class FirebaseAccountController(
                                 gravity = if (mine) Gravity.END else Gravity.START
                                 addView(bubble)
                             }
+                            applyUnifiedSkin(line)
                             messages.addView(line, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(7) })
                         }
                         scroll.post { scroll.fullScroll(View.FOCUS_DOWN) }
@@ -2661,7 +2664,7 @@ internal class FirebaseAccountController(
 
     /** Keep the composer above the keyboard while only the message list resizes. */
     private fun showConversationPage(page: LinearLayout) {
-        val dark = true
+        val dark = isDarkMode()
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(page) { view, insets ->
             val safe = insets.getInsets(
                 androidx.core.view.WindowInsetsCompat.Type.systemBars() or
@@ -2676,6 +2679,7 @@ internal class FirebaseAccountController(
         page.alpha = 1f
         page.translationY = 0f
         setContentView(page)
+        applyUnifiedSkin(page)
         activity.window.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         // This page owns a direct Activity content swap, so explicitly install
         // both shared window policies instead of relying on MainActivity routing.
@@ -2685,7 +2689,7 @@ internal class FirebaseAccountController(
     }
 
     private fun showAccountPage(page: LinearLayout) {
-        val dark = true
+        val dark = isDarkMode()
         val scroll = ScrollView(activity).apply {
             isFillViewport = true
             clipToPadding = false
@@ -2710,6 +2714,9 @@ internal class FirebaseAccountController(
         scroll.alpha = 1f
         scroll.translationY = 0f
         setContentView(scroll)
+        // Account, notifications and inbox pages bypass MainActivity.showRootScreen;
+        // explicitly apply the live palette to their complete view tree here.
+        applyUnifiedSkin(scroll)
         activity.window.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         // Account pages also bypass MainActivity.showRootScreen(). Apply the
         // same persistent IME/status-bar policy used by normal app screens.
