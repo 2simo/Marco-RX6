@@ -24,7 +24,7 @@ internal object SystemBarPolicy {
 
     fun apply(window: Window, darkMode: Boolean, hideNavigation: Boolean = false) {
         val decor = window.decorView
-        window.statusBarColor = Color.TRANSPARENT
+        window.statusBarColor = Color.rgb(8, 9, 12)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             window.isStatusBarContrastEnforced = false
             window.isNavigationBarContrastEnforced = false
