@@ -154,6 +154,12 @@ internal class AppearanceUiFactory(
                             themedNeutralColor(color, true) ?: color
                         }.toIntArray()
                         if (!stops.contentEquals(themed)) drawable.colors = themed
+                    } else {
+                        // Most account/message cards use a solid GradientDrawable,
+                        // whose colors array is null even on current Android.
+                        drawable.color?.defaultColor?.let { current ->
+                            themedNeutralColor(current, true)?.let(drawable::setColor)
+                        }
                     }
                 } else if (android.os.Build.VERSION.SDK_INT >= 24) {
                     val current = drawable.color?.defaultColor
