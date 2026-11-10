@@ -41,7 +41,16 @@ object AppDiagnostics {
             }
             initialized = true
         }
-        log("INFO", "Application", "Diagnostic logging initialized")
+        val packageInfo = runCatching { context.packageManager.getPackageInfo(context.packageName, 0) }.getOrNull()
+        log(
+            "INFO",
+            "Application",
+            "Diagnostic logging initialized appVersion=${packageInfo?.versionName ?: "unknown"} " +
+                "versionCode=${if (android.os.Build.VERSION.SDK_INT >= 28) packageInfo?.longVersionCode ?: -1L else packageInfo?.versionCode ?: -1} " +
+                "device=${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL} " +
+                "android=${android.os.Build.VERSION.RELEASE} sdk=${android.os.Build.VERSION.SDK_INT} " +
+                "targetSdk=${context.applicationInfo.targetSdkVersion} pid=${android.os.Process.myPid()}"
+        )
     }
 
     fun log(level: String, tag: String, message: String, error: Throwable? = null) {
@@ -109,6 +118,11 @@ object AppDiagnostics {
                     }
             }
         }
+        log(
+            "INFO",
+            "Diagnostics",
+            "Diagnostic export created bytes=${output.length()} entries=${source.listFiles()?.count { it.isFile && (it.name == LOG_NAME || it.name.startsWith("$LOG_NAME.")) } ?: 0}"
+        )
         return output
     }
 }
