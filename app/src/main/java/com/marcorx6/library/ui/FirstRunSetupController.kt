@@ -269,11 +269,7 @@ internal class FirstRunSetupController(
             WindowCompat.setDecorFitsSystemWindows(window, false)
             window.statusBarColor = Color.TRANSPARENT
             window.navigationBarColor = Color.TRANSPARENT
-            WindowInsetsControllerCompat(window, window.decorView).apply {
-                isAppearanceLightStatusBars = false
-                isAppearanceLightNavigationBars = false
-                hide(WindowInsetsCompat.Type.statusBars())
-            }
+            SystemBarPolicy.apply(window, darkMode = true)
         }
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
             val safe = insets.getInsets(
