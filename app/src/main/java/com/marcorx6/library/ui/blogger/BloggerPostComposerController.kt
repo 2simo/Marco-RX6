@@ -439,18 +439,46 @@ internal class BloggerPostComposerController(
                     )
         }
 
+        var imeWasVisible = false
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(page) { view, insets ->
             val safeTop = insets.getInsets(
                 androidx.core.view.WindowInsetsCompat.Type.statusBars() or
                     androidx.core.view.WindowInsetsCompat.Type.displayCutout()
             ).top
-            // Gesture navigation can reserve a bottom swipe area even when the
-            // navigation-bar inset is smaller or zero on some Android versions.
-            val safeBottom = insets.getInsets(
-                androidx.core.view.WindowInsetsCompat.Type.navigationBars() or
-                    androidx.core.view.WindowInsetsCompat.Type.mandatorySystemGestures()
+            val navigationBottom = insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.navigationBars()
             ).bottom
-            view.setPadding(dp(14), baseTop, dp(14), baseBottom + safeBottom)
+            val gestureBottom = insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.mandatorySystemGestures()
+            ).bottom
+            // The IME inset is essential on edge-to-edge Android versions where
+            // adjustResize alone does not move a custom full-screen root above the keyboard.
+            val imeBottom = insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.ime()
+            ).bottom
+            val imeVisible = insets.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime())
+            val safeBottom = maxOf(navigationBottom, gestureBottom, imeBottom)
+
+            view.setPadding(dp(14), baseTop + safeTop, dp(14), baseBottom + safeBottom)
+
+            // Keep the editor viewport as large as possible while typing. The
+            // fixed toolbar/actions are restored as soon as the keyboard closes.
+            if (imeVisible != imeWasVisible) {
+                imeWasVisible = imeVisible
+                toolbar.visibility = if (imeVisible) View.GONE else View.VISIBLE
+                actions.visibility = if (imeVisible) View.GONE else View.VISIBLE
+                if (imeVisible) {
+                    view.post {
+                        val focusedInput = view.findFocus() as? EditText
+                        if (focusedInput != null && focusedInput.isShown && focusedInput.hasFocus()) {
+                            focusedInput.requestRectangleOnScreen(
+                                android.graphics.Rect(0, 0, focusedInput.width, focusedInput.height),
+                                true
+                            )
+                        }
+                    }
+                }
+            }
             insets
         }
         setContentView(page)
