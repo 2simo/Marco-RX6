@@ -7,6 +7,10 @@ import android.view.ViewTreeObserver
 import android.view.Window
 import android.view.WindowManager
 import android.widget.EditText
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsAnimationCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import java.util.WeakHashMap
 
 /**
@@ -56,6 +60,36 @@ internal object KeyboardLayoutController {
             "Installed one window-level focus listener root=${root.javaClass.simpleName} " +
                 "size=${root.width}x${root.height} decor=${decor.width}x${decor.height} " +
                 "softInputMode=0x${window.attributes.softInputMode.toString(16)}"
+        )
+
+        // The IME can cause some Android 15 vendor skins to reveal the hidden
+        // status bar while resizing the window. Re-assert the app's existing
+        // immersive policy once the keyboard animation finishes; do not alter
+        // IME visibility, focus, or navigation-bar behavior.
+        ViewCompat.setWindowInsetsAnimationCallback(
+            decor,
+            object : WindowInsetsAnimationCompat.Callback(
+                WindowInsetsAnimationCompat.Callback.DISPATCH_MODE_CONTINUE_ON_SUBTREE
+            ) {
+                override fun onProgress(
+                    insets: WindowInsetsCompat,
+                    runningAnimations: MutableList<WindowInsetsAnimationCompat>
+                ): WindowInsetsCompat = insets
+
+                override fun onEnd(animation: WindowInsetsAnimationCompat) {
+                    if (animation.typeMask and WindowInsetsCompat.Type.ime() == 0) return
+                    val current = ViewCompat.getRootWindowInsets(decor) ?: return
+                    if (current.isVisible(WindowInsetsCompat.Type.statusBars())) {
+                        WindowInsetsControllerCompat(window, decor)
+                            .hide(WindowInsetsCompat.Type.statusBars())
+                        com.marcorx6.library.AppDiagnostics.log(
+                            "INFO",
+                            "SYSTEM_BARS",
+                            "Re-hid status bar after IME animation completed"
+                        )
+                    }
+                }
+            }
         )
 
         observer.addOnGlobalFocusChangeListener(
