@@ -13,6 +13,18 @@ internal class CoverDisplayController(
         val resolvedImageUrl = normalizeUrl(imageUrl)
         if (localPath.isBlank() && resolvedImageUrl.isBlank()) {
             image.tag = null
+            // The system gallery glyph looks oversized in full-width cover previews.
+            // Keep the empty state centered and visually quiet until a real cover exists.
+            image.scaleType = ImageView.ScaleType.CENTER_INSIDE
+            image.setPadding(
+                (image.resources.displayMetrics.density * 28).toInt(),
+                (image.resources.displayMetrics.density * 28).toInt(),
+                (image.resources.displayMetrics.density * 28).toInt(),
+                (image.resources.displayMetrics.density * 28).toInt()
+            )
+            image.imageTintList = android.content.res.ColorStateList.valueOf(
+                android.graphics.Color.rgb(145, 153, 166)
+            )
             image.setImageResource(android.R.drawable.ic_menu_gallery)
             return
         }
@@ -27,6 +39,9 @@ internal class CoverDisplayController(
 
         val state = RequestState(key)
         image.tag = state
+        image.scaleType = ImageView.ScaleType.CENTER_CROP
+        image.setPadding(0, 0, 0, 0)
+        image.imageTintList = null
         image.setImageResource(android.R.drawable.ic_menu_gallery)
         loadBitmap(localPath, resolvedImageUrl) { bitmap ->
             if (image.tag === state) {
