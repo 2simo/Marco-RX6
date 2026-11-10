@@ -152,11 +152,7 @@ internal class GameDetailsController(
                 insets
             }
             androidx.core.view.ViewCompat.requestApplyInsets(root)
-            androidx.core.view.WindowInsetsControllerCompat(window, window.decorView).apply {
-                isAppearanceLightNavigationBars = !isDarkMode()
-                systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                hide(androidx.core.view.WindowInsetsCompat.Type.statusBars() or androidx.core.view.WindowInsetsCompat.Type.navigationBars())
-            }
+            SystemBarPolicy.apply(window, isDarkMode(), hideNavigation = true)
         }
         val motionEnabled = activity.getSharedPreferences("app_settings", Activity.MODE_PRIVATE)
             .getBoolean("animations", true)
