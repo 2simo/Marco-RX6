@@ -168,9 +168,9 @@ class MainActivity : ComponentActivity() {
                 contentDescription = label
                 isClickable = true
                 isFocusable = true
-                setPadding(dp(11), dp(11), dp(11), dp(11))
-                minimumWidth = dp(44)
-                minimumHeight = dp(44)
+                setPadding(dp(8), dp(8), dp(8), dp(8))
+                minimumWidth = dp(36)
+                minimumHeight = dp(36)
                 if (android.os.Build.VERSION.SDK_INT >= 23) {
                     background = android.graphics.drawable.RippleDrawable(
                         android.content.res.ColorStateList.valueOf(
@@ -191,19 +191,21 @@ class MainActivity : ComponentActivity() {
         row.addView(action(
             R.drawable.ic_action_notifications, tr("الإشعارات")
         ) { firebaseAccountController.openNotificationsFromLibrary() },
-            LinearLayout.LayoutParams(dp(44), dp(44)).apply { marginStart = dp(7) })
+            LinearLayout.LayoutParams(dp(36), dp(36)).apply { marginStart = dp(6) })
         row.addView(action(
             R.drawable.ic_action_settings, tr("الإعدادات")
         ) { appearanceRuntimeFeature.showAppearanceSettings() },
-            LinearLayout.LayoutParams(dp(44), dp(44)).apply { marginStart = dp(7) })
+            LinearLayout.LayoutParams(dp(36), dp(36)).apply { marginStart = dp(6) })
         row.addView(action(
             if (dark) R.drawable.ic_action_sun else R.drawable.ic_action_moon,
             tr(if (dark) "الوضع الفاتح" else "الوضع الداكن")
         ) {
-            getSharedPreferences("app_settings", MODE_PRIVATE).edit()
-                .putBoolean("dark_mode", !isDarkMode()).apply()
+            // Use the same preference store read by AppearancePaletteRuntimeFeature.
+            appearancePreferences().edit()
+                .putBoolean("dark_mode", !isDarkMode())
+                .apply()
             recreate()
-        }, LinearLayout.LayoutParams(dp(44), dp(44)).apply { marginStart = dp(7) })
+        }, LinearLayout.LayoutParams(dp(36), dp(36)).apply { marginStart = dp(6) })
 
         topBar.addView(row)
         topBar.addView(View(this).apply { setBackgroundColor(stroke) },
