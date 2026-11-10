@@ -39,7 +39,7 @@ internal object KeyboardLayoutController {
                         "KEYBOARD_FOCUS",
                         "field=${input.javaClass.simpleName} id=${input.id} size=${input.width}x${input.height} " +
                             "inputType=${input.inputType} imeOptions=0x${input.imeOptions.toString(16)} " +
-                            "singleLine=${input.isSingleLine} hasFocus=${input.hasFocus()} shown=${input.isShown}"
+                            "singleLine=${input.maxLines == 1} hasFocus=${input.hasFocus()} shown=${input.isShown}"
                     )
                     input.post {
                         if (!input.isShown || !input.hasFocus() || input.width <= 0 || input.height <= 0) {
