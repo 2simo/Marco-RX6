@@ -87,7 +87,7 @@ internal class FirebaseAccountController(
             orientation = LinearLayout.VERTICAL
             layoutDirection = View.LAYOUT_DIRECTION_RTL
             setPadding(dp(20), dp(18), dp(20), dp(30))
-            setBackgroundColor(Color.rgb(7, 8, 10))
+            setBackgroundColor(if (dark) Color.rgb(7, 8, 10) else Color.rgb(246, 248, 251))
         }
         val user = authRepository.currentUser
         if (user != null && !user.isAnonymous) syncNewGameNotifications(user.uid)
@@ -138,7 +138,7 @@ internal class FirebaseAccountController(
         val accountHandleView = TextView(activity).apply {
             textSize = 12f
             gravity = Gravity.CENTER
-            setTextColor(Color.rgb(155, 162, 173))
+            setTextColor(if (dark) Color.rgb(155, 162, 173) else Color.rgb(91, 98, 110))
             visibility = View.GONE
         }
         // A compact identity panel makes the account state immediately clear.
@@ -199,7 +199,7 @@ internal class FirebaseAccountController(
                 textSize = 23f
                 setTypeface(null, android.graphics.Typeface.BOLD)
                 gravity = Gravity.CENTER
-                setTextColor(Color.WHITE)
+                setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
                 setPadding(0, dp(7), 0, dp(4))
             })
             accountNameRow.addView(ImageView(activity).apply {
@@ -229,7 +229,7 @@ internal class FirebaseAccountController(
                     text = emailAddress
                     textSize = 11f
                     gravity = Gravity.CENTER
-                    setTextColor(Color.rgb(155, 162, 173))
+                    setTextColor(if (dark) Color.rgb(155, 162, 173) else Color.rgb(91, 98, 110))
                     setPadding(0, 0, 0, dp(6))
                 })
             }
@@ -238,12 +238,12 @@ internal class FirebaseAccountController(
                 textSize = 10f
                 setTypeface(null, android.graphics.Typeface.BOLD)
                 gravity = Gravity.CENTER
-                setTextColor(Color.rgb(205, 211, 220))
+                setTextColor(if (dark) Color.rgb(225, 230, 237) else Color.rgb(39, 49, 64))
                 setPadding(dp(12), dp(6), dp(12), dp(6))
                 background = GradientDrawable().apply {
                     cornerRadius = dp(30).toFloat()
-                    setColor(Color.rgb(35, 39, 46))
-                    setStroke(dp(1), Color.rgb(100, 108, 120))
+                    setColor(if (dark) Color.rgb(35, 39, 46) else Color.rgb(231, 236, 243))
+                    setStroke(dp(1), if (dark) Color.rgb(100, 108, 120) else Color.rgb(184, 194, 207))
                 }
             })
 
