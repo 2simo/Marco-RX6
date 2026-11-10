@@ -35,7 +35,7 @@ internal object SystemBarPolicy {
             systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
             hide(
                 WindowInsetsCompat.Type.statusBars() or
-                    if (hideNavigation) WindowInsetsCompat.Type.navigationBars() else 0
+                    (if (hideNavigation) WindowInsetsCompat.Type.navigationBars() else 0)
             )
         }
         installImeGuard(window, decor, hideNavigation)
@@ -96,7 +96,7 @@ internal object SystemBarPolicy {
     private fun hideBars(window: Window, decor: android.view.View, hideNavigation: Boolean) {
         if (!decor.isAttachedToWindow) return
         val types = WindowInsetsCompat.Type.statusBars() or
-            if (hideNavigation) WindowInsetsCompat.Type.navigationBars() else 0
+            (if (hideNavigation) WindowInsetsCompat.Type.navigationBars() else 0)
         WindowInsetsControllerCompat(window, decor).hide(types)
         AppDiagnostics.log("DEBUG", "SYSTEM_BARS", "Unconditionally reasserted hidden bars during IME/window transition")
     }
