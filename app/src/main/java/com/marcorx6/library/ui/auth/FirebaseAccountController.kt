@@ -1300,7 +1300,7 @@ internal class FirebaseAccountController(
                 }
             }
             if (filtered.isEmpty()) {
-                list.addView(TextView(activity).apply {
+                val emptyState = TextView(activity).apply {
                     text = translate(when (selectedSection) {
                         "game" -> "لا توجد ألعاب جديدة حالياً."
                         "follow" -> "لا يوجد متابعون جدد حالياً."
@@ -1309,7 +1309,9 @@ internal class FirebaseAccountController(
                     textSize = 13f
                     setTextColor(Color.rgb(165, 173, 185))
                     setPadding(dp(12), dp(28), dp(12), dp(28))
-                })
+                }
+                applyUnifiedSkin(emptyState)
+                list.addView(emptyState)
             }
             filtered.forEach { item ->
                 val type = item.getString("type").orEmpty()
@@ -1517,11 +1519,13 @@ internal class FirebaseAccountController(
             if (activity.isFinishing || activity.isDestroyed) return@listenInbox
             list.removeAllViews()
             if (conversations.isEmpty()) {
-                list.addView(TextView(activity).apply {
+                val emptyState = TextView(activity).apply {
                     text = translate("لا توجد محادثات بعد. ابدأ محادثة مع شخص يتابعك وتتابعه.")
                     setTextColor(Color.rgb(165, 173, 185))
                     setPadding(dp(12), dp(24), dp(12), dp(24))
-                })
+                }
+                applyUnifiedSkin(emptyState)
+                list.addView(emptyState)
             }
             conversations.forEach { conversation ->
                 if ((conversation.get("deletedFor") as? List<*>)?.contains(user.uid) == true) return@forEach
