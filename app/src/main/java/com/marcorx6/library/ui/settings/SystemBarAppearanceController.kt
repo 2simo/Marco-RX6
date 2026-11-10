@@ -4,6 +4,7 @@ import android.app.Activity
 import android.graphics.Color
 import android.os.Build
 import com.marcorx6.library.AppDiagnostics
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 
@@ -12,12 +13,14 @@ internal class SystemBarAppearanceController(
     private val isDarkMode: () -> Boolean
 ) {
     fun apply() {
-        val before = WindowInsetsControllerCompat(activity.window, activity.window.decorView)
+        val windowInsets = ViewCompat.getRootWindowInsets(activity.window.decorView)
+        val beforeStatusVisible = windowInsets?.isVisible(WindowInsetsCompat.Type.statusBars()) == true
+        val beforeNavigationVisible = windowInsets?.isVisible(WindowInsetsCompat.Type.navigationBars()) == true
         AppDiagnostics.log(
             "DEBUG",
             "SYSTEM_BARS",
-            "apply before statusVisible=${before.isVisible(WindowInsetsCompat.Type.statusBars())} " +
-                "navigationVisible=${before.isVisible(WindowInsetsCompat.Type.navigationBars())} " +
+            "apply before statusVisible=${beforeStatusVisible} " +
+                "navigationVisible=${beforeNavigationVisible} " +
                 "systemUi=0x${activity.window.decorView.systemUiVisibility.toString(16)}"
         )
         // Hide only the top status bar. Keep navigation gestures and the bottom
@@ -33,12 +36,14 @@ internal class SystemBarAppearanceController(
             activity.window.isStatusBarContrastEnforced = false
             activity.window.isNavigationBarContrastEnforced = false
         }
-        val after = WindowInsetsControllerCompat(activity.window, activity.window.decorView)
+        val afterInsets = ViewCompat.getRootWindowInsets(activity.window.decorView)
+        val afterStatusVisible = afterInsets?.isVisible(WindowInsetsCompat.Type.statusBars()) == true
+        val afterNavigationVisible = afterInsets?.isVisible(WindowInsetsCompat.Type.navigationBars()) == true
         AppDiagnostics.log(
             "DEBUG",
             "SYSTEM_BARS",
-            "apply after statusVisible=${after.isVisible(WindowInsetsCompat.Type.statusBars())} " +
-                "navigationVisible=${after.isVisible(WindowInsetsCompat.Type.navigationBars())} " +
+            "apply after statusVisible=${afterStatusVisible} " +
+                "navigationVisible=${afterNavigationVisible} " +
                 "statusColor=0x${activity.window.statusBarColor.toUInt().toString(16)} " +
                 "navigationColor=0x${activity.window.navigationBarColor.toUInt().toString(16)}"
         )
