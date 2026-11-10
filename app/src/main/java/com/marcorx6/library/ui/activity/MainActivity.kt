@@ -172,15 +172,17 @@ class MainActivity : ComponentActivity() {
                 minimumWidth = dp(44)
                 minimumHeight = dp(44)
                 if (android.os.Build.VERSION.SDK_INT >= 23) {
-                    foreground = android.graphics.drawable.RippleDrawable(
+                    background = android.graphics.drawable.RippleDrawable(
                         android.content.res.ColorStateList.valueOf(
                             android.graphics.Color.argb(65, 150, 160, 175)
                         ),
-                        null,
                         android.graphics.drawable.GradientDrawable().apply {
-                            setColor(android.graphics.Color.WHITE)
+                            setColor(if (dark) android.graphics.Color.rgb(25, 28, 34)
+                                else android.graphics.Color.rgb(232, 235, 240))
                             cornerRadius = dp(13).toFloat()
-                        }
+                            setStroke(dp(1), stroke)
+                        },
+                        null
                     )
                 }
                 setOnClickListener { click() }
