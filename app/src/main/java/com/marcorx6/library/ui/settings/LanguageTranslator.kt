@@ -737,6 +737,7 @@ internal object LanguageTranslator {
             "الصيغة (مثال: PKG)" to listOf("Format (example: PKG)", "Format (exemple : PKG)", "Formato (ejemplo: PKG)"),
             "+ تبويب جديد" to listOf("+ New tab", "+ Nouvel onglet", "+ Nueva pestaña"),
             "في الخلفية • قابل للاستئناف" to listOf("Background transfer • Resumable", "Transfert en arrière-plan • Reprise possible", "Transferencia en segundo plano • Reanudable"),
+            "التنزيل عبر Wi-Fi فقط" to listOf("Download over Wi-Fi only", "Télécharger uniquement via Wi-Fi", "Descargar solo por Wi-Fi"),
         )
 
     fun translate(ar: String, lang: String): String {
