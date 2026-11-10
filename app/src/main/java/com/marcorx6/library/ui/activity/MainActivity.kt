@@ -395,6 +395,15 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        com.marcorx6.library.ui.UiDiagnosticsMonitor.install(this)
+        com.marcorx6.library.ui.UiDiagnosticsMonitor.logLifecycle(this, "onCreate")
+        com.marcorx6.library.AppDiagnostics.log(
+            "INFO",
+            "ACTIVITY_STATE",
+            "savedInstanceStatePresent=${savedInstanceState != null} sdk=${android.os.Build.VERSION.SDK_INT} " +
+                "density=${resources.displayMetrics.density} scaledDensity=${resources.displayMetrics.scaledDensity} " +
+                "screen=${resources.displayMetrics.widthPixels}x${resources.displayMetrics.heightPixels}"
+        )
         val appCheckProvider: AppCheckProviderFactory? = when {
             BuildConfig.DEBUG -> DebugAppCheckProviderFactory.getInstance()
             BuildConfig.PLAY_DISTRIBUTION -> PlayIntegrityAppCheckProviderFactory.getInstance()
@@ -410,6 +419,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
+        com.marcorx6.library.ui.UiDiagnosticsMonitor.logWindowFocus(this, hasFocus)
         if (hasFocus && !isFinishing && !isDestroyed) {
             // Dialogs and external activities can temporarily change system-bar visibility.
             // Reapply the immersive policy only after this Activity regains focus.
@@ -419,9 +429,20 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        com.marcorx6.library.ui.UiDiagnosticsMonitor.logLifecycle(this, "onResume")
         FirebasePushTokenRepository().syncCurrentToken()
         firebaseSessionCoordinator.ensureGuestSession()
         lifecycleCoordinator.onResume()
+    }
+
+    override fun onPause() {
+        com.marcorx6.library.ui.UiDiagnosticsMonitor.logLifecycle(this, "onPause")
+        super.onPause()
+    }
+
+    override fun onStop() {
+        com.marcorx6.library.ui.UiDiagnosticsMonitor.logLifecycle(this, "onStop")
+        super.onStop()
     }
 
     override fun onTrimMemory(level: Int) {
@@ -432,6 +453,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        com.marcorx6.library.ui.UiDiagnosticsMonitor.logLifecycle(this, "onDestroy")
         lifecycleCoordinator.onDestroy()
         firebaseSessionCoordinator.stop()
         super.onDestroy()
