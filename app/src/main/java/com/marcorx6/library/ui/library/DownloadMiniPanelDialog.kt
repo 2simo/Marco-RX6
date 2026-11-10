@@ -287,11 +287,7 @@ internal class DownloadMiniPanelDialog(
             setGravity(Gravity.BOTTOM)
             addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
             setDimAmount(0.18f)
-            androidx.core.view.WindowInsetsControllerCompat(this, decorView).apply {
-                isAppearanceLightNavigationBars = !dark
-                systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
-            }
+            SystemBarPolicy.apply(this, dark)
         }
         val observer = object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) {
