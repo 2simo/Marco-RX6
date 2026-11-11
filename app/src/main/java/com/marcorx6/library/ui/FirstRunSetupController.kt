@@ -132,7 +132,7 @@ internal class FirstRunSetupController(
                 GradientDrawable.Orientation.LEFT_RIGHT,
                 intArrayOf(activeAccent, accentShade(activeAccent))
             ).apply { cornerRadius = dp(8).toFloat() }
-            stepCount.setTextColor(activeAccent)
+            stepCount.setTextColor(AccentPalette.readableAccentText(accentKey, darkMode))
             stepCount.text = "${step + 1} / ${steps.size}"
             progressTrack.post {
                 val params = progressFill.layoutParams as FrameLayout.LayoutParams
