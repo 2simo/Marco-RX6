@@ -42,7 +42,7 @@ internal class AppearanceUiFactory(
     private fun glassRipple(): android.graphics.drawable.Drawable =
         android.graphics.drawable.RippleDrawable(
             android.content.res.ColorStateList.valueOf(
-                if (isDarkMode()) Color.argb(78, 190, 198, 210) else Color.argb(58, 145, 153, 165)
+                Color.argb(if (isDarkMode()) 78 else 58, Color.red(red()), Color.green(red()), Color.blue(red()))
             ),
             null,
             android.graphics.drawable.ColorDrawable(Color.WHITE)
@@ -75,11 +75,11 @@ internal class AppearanceUiFactory(
 
     fun stylePrimaryButton(button: Button, primary: Boolean = false) {
         button.background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-            if (primary) intArrayOf(Color.argb(238, 220, 224, 231), Color.argb(220, 150, 160, 174))
+            if (primary) intArrayOf(\n                Color.argb(238, Color.red(red()), Color.green(red()), Color.blue(red())),\n                Color.argb(220, (Color.red(red()) * 0.72f).toInt(), (Color.green(red()) * 0.72f).toInt(), (Color.blue(red()) * 0.72f).toInt())\n            )
             else if (isDarkMode()) intArrayOf(Color.argb(205, 34, 37, 44), Color.argb(190, 15, 17, 22))
             else intArrayOf(Color.argb(218, 255, 255, 255), Color.argb(205, 225, 228, 234))).apply {
             cornerRadius = dp(16).toFloat()
-            setStroke(dp(1), if (primary) Color.argb(190, 150, 160, 174)
+            setStroke(dp(1), if (primary) Color.argb(190, Color.red(red()), Color.green(red()), Color.blue(red()))
                 else if (isDarkMode()) Color.argb(165, 130, 138, 151) else Color.argb(175, 160, 168, 181))
         }
         button.setTextColor(if (primary) accentForeground() else white())
@@ -329,7 +329,7 @@ internal class AppearanceUiFactory(
                 intArrayOf(Color.WHITE, Color.rgb(225, 228, 234))
             }
             val normalStroke = if (isDarkMode()) Color.rgb(130, 138, 151) else Color.rgb(160, 168, 181)
-            val focusedStroke = Color.rgb(190, 198, 210)
+            val focusedStroke = red()
             addState(intArrayOf(android.R.attr.state_focused), GradientDrawable(
                 GradientDrawable.Orientation.TL_BR, fill
             ).apply {
