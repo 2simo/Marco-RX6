@@ -28,7 +28,15 @@ internal object AccentPalette {
 
     fun foreground(id: String = DEFAULT_ID): Int {
         val color = color(id)
-        val luminance = (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255.0
-        return if (luminance > 0.66) Color.rgb(20, 23, 29) else Color.WHITE
+        fun linear(channel: Int): Double {
+            val value = channel / 255.0
+            return if (value <= 0.04045) value / 12.92
+            else Math.pow((value + 0.055) / 1.055, 2.4)
+        }
+        val luminance = 0.2126 * linear(Color.red(color)) +
+            0.7152 * linear(Color.green(color)) +
+            0.0722 * linear(Color.blue(color))
+        // WCAG's 0.179 crossover gives the stronger black/white contrast.
+        return if (luminance > 0.179) Color.rgb(20, 23, 29) else Color.WHITE
     }
 }
