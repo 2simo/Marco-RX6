@@ -631,13 +631,16 @@ internal class MainLibraryInterfaceController(
                     val languageBadge = TextView(context).apply {
                         text = languageLabel
                         textSize = 11f
-                        setTextColor(if (isDarkMode()) Color.WHITE else Color.rgb(34, 39, 47))
+                        // Keep the language label readable against every selected
+                        // primary accent, including light and saturated palettes.
+                        setTextColor(AccentPalette.foregroundForColor(red))
                         typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
                         gravity = Gravity.CENTER
                         setPadding(dp(12), dp(7), dp(12), dp(7))
-                        background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                            if (isDarkMode()) intArrayOf(Color.rgb(43, 47, 55), Color.rgb(25, 28, 34))
-                            else intArrayOf(Color.rgb(250, 251, 253), Color.rgb(205, 212, 222))).apply {
+                        background = GradientDrawable(
+                            GradientDrawable.Orientation.TL_BR,
+                            intArrayOf(red, accentShade())
+                        ).apply {
                             cornerRadius = dp(10).toFloat()
                             setStroke(dp(1), red)
                         }
