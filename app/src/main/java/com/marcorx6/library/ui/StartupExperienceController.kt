@@ -38,12 +38,13 @@ internal class StartupExperienceController(
         if (!isActivityUsable() || dialog?.isShowing == true) return
         animator?.cancel()
         completion?.let(handler::removeCallbacks)
+        val dark = isDarkMode()
         val splash = Dialog(activity, android.R.style.Theme_Material_NoActionBar)
         dialog = splash
         val content = FrameLayout(activity).apply {
-            setBackground(GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(
-                Color.rgb(7, 8, 11), Color.rgb(15, 17, 22), Color.rgb(4, 5, 8)
-            )))
+            setBackground(GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                if (dark) intArrayOf(Color.rgb(7, 8, 11), Color.rgb(15, 17, 22), Color.rgb(4, 5, 8))
+                else intArrayOf(Color.rgb(250, 251, 253), Color.rgb(232, 236, 242), Color.rgb(245, 247, 250))))
         }
         val center = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
@@ -53,7 +54,7 @@ internal class StartupExperienceController(
         val logoHalo = FrameLayout(activity).apply {
             background = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
-                setColor(Color.rgb(25, 28, 34))
+                setColor(if (dark) Color.rgb(25, 28, 34) else Color.WHITE)
                 setStroke(dp(3), Color.rgb(190, 198, 210))
             }
             elevation = dp(18).toFloat()
@@ -74,7 +75,7 @@ internal class StartupExperienceController(
         }
         logoHalo.addView(logo, FrameLayout.LayoutParams(-1, -1))
         center.addView(logoHalo, LinearLayout.LayoutParams(dp(230), dp(230)).apply { bottomMargin = dp(25) })
-        center.addView(makeText("MARCO", 25f, Color.WHITE, true).apply {
+        center.addView(makeText("MARCO", 25f, if (dark) Color.WHITE else Color.rgb(25, 29, 36), true).apply {
             gravity = Gravity.CENTER
             letterSpacing = 0.16f
         })
@@ -83,7 +84,7 @@ internal class StartupExperienceController(
             letterSpacing = 0.28f
             setPadding(0, dp(9), 0, 0)
         })
-        val loading = makeText(translate("جارٍ تجهيز عالم الألعاب..."), 11f, Color.rgb(170, 176, 186), false).apply {
+        val loading = makeText(translate("جارٍ تجهيز عالم الألعاب..."), 11f, if (dark) Color.rgb(170, 176, 186) else Color.rgb(91, 98, 110), false).apply {
             gravity = Gravity.CENTER
             setPadding(0, dp(34), 0, 0)
         }
@@ -92,16 +93,16 @@ internal class StartupExperienceController(
             max = 100
             this.progress = 1
             progressTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
-            progressBackgroundTintList = android.content.res.ColorStateList.valueOf(Color.rgb(57, 61, 70))
+            progressBackgroundTintList = android.content.res.ColorStateList.valueOf(if (dark) Color.rgb(57, 61, 70) else Color.rgb(210, 216, 225))
             progressDrawable = progressDrawable.mutate().apply {
                 if (this is android.graphics.drawable.LayerDrawable) {
-                    findDrawableByLayerId(android.R.id.background)?.let { it.setTint(Color.rgb(57, 61, 70)) }
+                    findDrawableByLayerId(android.R.id.background)?.let { it.setTint(if (dark) Color.rgb(57, 61, 70) else Color.rgb(210, 216, 225)) }
                     findDrawableByLayerId(android.R.id.progress)?.let { it.setTint(Color.rgb(190, 198, 210)) }
                 }
             }
         }
         center.addView(progress, LinearLayout.LayoutParams(dp(238), dp(7)).apply { topMargin = dp(18) })
-        val percent = makeText("1%", 12f, Color.rgb(190, 198, 210), true).apply {
+        val percent = makeText("1%", 12f, if (dark) Color.rgb(190, 198, 210) else Color.rgb(65, 73, 86), true).apply {
             gravity = Gravity.CENTER
             setPadding(0, dp(9), 0, 0)
         }
@@ -117,7 +118,7 @@ internal class StartupExperienceController(
             WindowCompat.setDecorFitsSystemWindows(window, false)
             window.statusBarColor = Color.TRANSPARENT
             window.navigationBarColor = Color.TRANSPARENT
-            SystemBarPolicy.apply(window, darkMode = true)
+            SystemBarPolicy.apply(window, darkMode = dark)
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
                 window.isStatusBarContrastEnforced = false
                 window.isNavigationBarContrastEnforced = false
