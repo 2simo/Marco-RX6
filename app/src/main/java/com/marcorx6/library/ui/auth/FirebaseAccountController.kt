@@ -84,6 +84,15 @@ internal class FirebaseAccountController(
         return AccentPalette.color(id)
     }
 
+    private fun accentTextColor(dark: Boolean = isDarkMode()): Int {
+        val preferences = AppearancePreferencesStore.appearance(activity)
+        val id = preferences.getString(AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID)
+            ?: AccentPalette.DEFAULT_ID
+        return if (id == "black_silver") {
+            if (dark) Color.rgb(218, 225, 235) else Color.rgb(43, 49, 59)
+        } else selectedAccentColor()
+    }
+
     private fun accentSurface(base: Int, amount: Float): Int =
         AccentPalette.surface(base, selectedAccentColor(), amount)
 
@@ -199,7 +208,7 @@ internal class FirebaseAccountController(
                 textSize = 11f
                 setTypeface(null, android.graphics.Typeface.BOLD)
                 letterSpacing = 0.16f
-                setTextColor(selectedAccentColor())
+                setTextColor(accentTextColor(dark))
             })
             identityCard.addView(TextView(activity).apply {
                 text = translate("مرحباً بك في مجتمع MARCO")
@@ -219,7 +228,7 @@ internal class FirebaseAccountController(
                 textSize = 11f
                 setTypeface(null, android.graphics.Typeface.BOLD)
                 letterSpacing = 0.12f
-                setTextColor(selectedAccentColor())
+                setTextColor(accentTextColor(dark))
             })
             val accountNameRow = LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL
@@ -326,7 +335,7 @@ internal class FirebaseAccountController(
                 text = translate("مكتبتك على هذا الجهاز")
                 textSize = 12f
                 setTypeface(null, android.graphics.Typeface.BOLD)
-                setTextColor(if (dark) selectedAccentColor() else Color.rgb(75, 83, 96))
+                setTextColor(accentTextColor(dark))
                 setPadding(0, 0, 0, dp(10))
             })
             val metrics = LinearLayout(activity).apply {
@@ -365,7 +374,7 @@ internal class FirebaseAccountController(
                 text = translate("ألعابك المفضلة")
                 textSize = 16f
                 setTypeface(null, android.graphics.Typeface.BOLD)
-                setTextColor(selectedAccentColor())
+                setTextColor(accentTextColor(dark))
             })
             favoritesCard.addView(TextView(activity).apply {
                 text = if (favoriteCount > 8) translate("عرض 8 من " + favoriteCount + " لعبة مفضلة")
@@ -416,7 +425,7 @@ internal class FirebaseAccountController(
                 text = translate("تقييماتي")
                 textSize = 16f
                 setTypeface(null, android.graphics.Typeface.BOLD)
-                setTextColor(selectedAccentColor())
+                setTextColor(accentTextColor(dark))
             }
             ratingsCard.addView(ratingsHeading)
             val ratingsContent = LinearLayout(activity).apply {
@@ -534,7 +543,7 @@ internal class FirebaseAccountController(
 
             val profileBioPreview = TextView(activity).apply {
                 textSize = 13f
-                setTextColor(if (dark) selectedAccentColor() else Color.rgb(75, 83, 96))
+                setTextColor(accentTextColor(dark))
                 setPadding(dp(15), dp(12), dp(15), dp(12))
                 background = GradientDrawable().apply {
                     cornerRadius = dp(14).toFloat()
@@ -619,7 +628,7 @@ internal class FirebaseAccountController(
                 text = translate("معرّف ملفك الشخصي")
                 textSize = 13f
                 setTypeface(null, android.graphics.Typeface.BOLD)
-                setTextColor(selectedAccentColor())
+                setTextColor(accentTextColor(dark))
             })
             profileIdCard.addView(TextView(activity).apply {
                 text = user.uid
@@ -783,7 +792,7 @@ internal class FirebaseAccountController(
             val showFavoritesToggle = CheckBox(activity).apply {
                 text = translate("إظهار ألعابي المفضلة في الملف العام")
                 textSize = 12f
-                setTextColor(if (dark) selectedAccentColor() else Color.rgb(75, 83, 96))
+                setTextColor(accentTextColor(dark))
                 buttonTintList = android.content.res.ColorStateList.valueOf(Color.rgb(180, 190, 205))
                 isEnabled = false
             }
@@ -949,7 +958,7 @@ internal class FirebaseAccountController(
                 text = translate("نسخ")
                 textSize = 12f
                 setTypeface(null, android.graphics.Typeface.BOLD)
-                setTextColor(selectedAccentColor())
+                setTextColor(accentTextColor(dark))
                 setPadding(dp(12), dp(10), dp(12), dp(10))
                 isClickable = true
                 isFocusable = true
@@ -1063,7 +1072,7 @@ internal class FirebaseAccountController(
                 text = translate("رجوع")
                 textSize = 15f
                 setTypeface(null, android.graphics.Typeface.BOLD)
-                setTextColor(selectedAccentColor())
+                setTextColor(accentTextColor(dark))
                 setPadding(dp(8), dp(12), dp(18), dp(12))
                 isClickable = true
                 isFocusable = true
@@ -1184,7 +1193,7 @@ internal class FirebaseAccountController(
                 }
                 tabItems.forEach { (view, key) ->
                     val active = key == selected
-                    view.setTextColor(if (active) AccentPalette.foregroundForColor(selectedAccentColor()) else selectedAccentColor())
+                    view.setTextColor(if (active) AccentPalette.foregroundForColor(selectedAccentColor()) else accentTextColor(dark))
                     (view.background as? GradientDrawable)?.setColor(
                         if (active) selectedAccentColor() else Color.TRANSPARENT
                     )
@@ -1196,7 +1205,7 @@ internal class FirebaseAccountController(
                     gravity = Gravity.CENTER
                     textSize = 13f
                     setTypeface(null, android.graphics.Typeface.BOLD)
-                    setTextColor(selectedAccentColor())
+                    setTextColor(accentTextColor(dark))
                     setPadding(dp(16), dp(11), dp(16), dp(11))
                     background = GradientDrawable().apply {
                         cornerRadius = dp(12).toFloat()
@@ -1250,7 +1259,7 @@ internal class FirebaseAccountController(
                 ratingsSection.addView(TextView(activity).apply {
                     text = translate("تعذر تحميل التقييمات حالياً.")
                     textSize = 12f
-                    setTextColor(selectedAccentColor())
+                    setTextColor(accentTextColor(dark))
                     setPadding(dp(4), dp(8), dp(4), dp(8))
                 })
             })
@@ -1556,7 +1565,7 @@ internal class FirebaseAccountController(
         page.addView(TextView(activity).apply {
             text = translate("العودة إلى القائمة الرئيسية")
             textSize = 13f
-            setTextColor(selectedAccentColor())
+            setTextColor(accentTextColor(dark))
             setPadding(dp(8), dp(14), dp(8), dp(14))
             setOnClickListener {
                 inboxListener?.remove()
@@ -1762,7 +1771,7 @@ internal class FirebaseAccountController(
                     }
                     header.addView(TextView(activity).apply {
                         text = translate("رجوع")
-                        setTextColor(selectedAccentColor())
+                        setTextColor(accentTextColor(dark))
                         setPadding(dp(8), dp(12), dp(16), dp(12))
                         setOnClickListener { messagesListener?.remove(); messagesListener = null; showInbox() }
                     })
@@ -1997,7 +2006,7 @@ internal class FirebaseAccountController(
         val loading = TextView(activity).apply {
             text = translate("جارٍ تحميل القائمة...")
             textSize = 13f
-            setTextColor(selectedAccentColor())
+            setTextColor(accentTextColor(dark))
             setPadding(dp(4), dp(18), dp(4), dp(18))
         }
         listContainer.addView(loading)
@@ -2212,14 +2221,14 @@ internal class FirebaseAccountController(
             text = "—  " + translate("المتابعون")
             gravity = Gravity.CENTER
             textSize = 12f
-            setTextColor(selectedAccentColor())
+            setTextColor(accentTextColor(dark))
             setPadding(dp(16), dp(10), dp(16), dp(10))
         }
         val following = TextView(activity).apply {
             text = "—  " + translate("يتابع")
             gravity = Gravity.CENTER
             textSize = 12f
-            setTextColor(selectedAccentColor())
+            setTextColor(accentTextColor(dark))
             setPadding(dp(16), dp(10), dp(16), dp(10))
         }
         stats.addView(followers, LinearLayout.LayoutParams(0, -2, 1f))
@@ -2290,7 +2299,7 @@ internal class FirebaseAccountController(
                 setColor(if (dark) Color.rgb(35, 38, 45) else Color.WHITE)
                 setStroke(dp(1), if (dark) Color.rgb(105, 113, 126) else Color.rgb(199, 207, 218))
             }
-            setTextColor(if (dark) selectedAccentColor() else Color.rgb(65, 73, 86))
+            setTextColor(accentTextColor(dark))
             contentDescription = translate("جارٍ التحقق من حالة المتابعة")
             isEnabled = false
         }
@@ -2888,7 +2897,7 @@ internal class FirebaseAccountController(
             text = translate("إظهار كلمة المرور")
             textSize = 12f
             gravity = Gravity.END
-            setTextColor(selectedAccentColor())
+            setTextColor(accentTextColor(dark))
             minHeight = dp(48)
             minWidth = dp(48)
             contentDescription = translate("إظهار كلمة المرور")
@@ -2919,7 +2928,7 @@ internal class FirebaseAccountController(
                 text = translate("نسيت كلمة المرور؟")
                 textSize = 12f
                 gravity = Gravity.END
-                setTextColor(selectedAccentColor())
+                setTextColor(accentTextColor(dark))
                 minHeight = dp(48)
                 minWidth = dp(48)
                 contentDescription = translate("نسيت كلمة المرور؟")
