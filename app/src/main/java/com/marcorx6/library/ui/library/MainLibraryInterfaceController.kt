@@ -90,9 +90,9 @@ internal class MainLibraryInterfaceController(
     }
 
     private fun accentShade(): Int = Color.rgb(
-        (Color.red(red) * 0.72f).toInt(),
-        (Color.green(red) * 0.72f).toInt(),
-        (Color.blue(red) * 0.72f).toInt()
+        (Color.red(red) * 0.95f).toInt(),
+        (Color.green(red) * 0.95f).toInt(),
+        (Color.blue(red) * 0.95f).toInt()
     )
 
     private fun makeText(value: String, size: Float, color: Int, bold: Boolean = false): TextView =
