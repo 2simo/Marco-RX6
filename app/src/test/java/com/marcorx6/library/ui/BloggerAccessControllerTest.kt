@@ -33,25 +33,30 @@ class BloggerAccessControllerTest {
 
     @Test
     fun keepsExistingAdminGrantWhileTheSameAccountAndBlogAreRechecked() {
-        var admin = true
-        var background: (() -> Unit)? = null
-        var ui: (() -> Unit)? = null
+        var admin = false
+        val background = ArrayDeque<() -> Unit>()
+        val ui = ArrayDeque<() -> Unit>()
         val controller = BloggerAccessController(
-            executor = Executor { command -> background = command },
+            executor = Executor { command -> background.addLast(command) },
             checkAccess = { true },
             currentAccountId = { "account-1" },
             currentBlogId = { "blog-1" },
             setAdmin = { admin = it },
-            postToUi = { action -> ui = action },
+            postToUi = { action -> ui.addLast(action) },
             refreshUi = {},
             onDenied = {}
         )
 
         controller.refresh("blog-1", "account-1", true)
+        background.removeFirst().invoke()
+        ui.removeFirst().invoke()
         assertEquals(true, admin)
-        background?.invoke()
+
+        controller.refresh("blog-1", "account-1", true)
         assertEquals(true, admin)
-        ui?.invoke()
+        background.removeFirst().invoke()
+        assertEquals(true, admin)
+        ui.removeFirst().invoke()
         assertEquals(true, admin)
     }
 
