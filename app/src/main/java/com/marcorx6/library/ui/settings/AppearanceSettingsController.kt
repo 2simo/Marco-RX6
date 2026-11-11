@@ -126,22 +126,24 @@ internal class AppearanceSettingsController(
                 setStroke(dp(1), Color.argb(175, Color.red(silverAccent), Color.green(silverAccent), Color.blue(silverAccent)))
             }
         }
+        val paletteCardInk = if (selectedAccentId == "black_silver") Color.WHITE else ink
+        val paletteCardMuted = if (selectedAccentId == "black_silver") Color.rgb(225, 230, 239) else muted
         colorCard.addView(TextView(activity).apply {
             text = translate("اللون الرئيسي")
             textSize = 16f
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(ink)
+            setTextColor(paletteCardInk)
         })
         colorCard.addView(TextView(activity).apply {
             text = translate("غيّر اللون الأساسي لواجهات التطبيق والبطاقات والأزرار والأيقونات والعناصر التفاعلية")
             textSize = 12f
-            setTextColor(muted)
+            setTextColor(paletteCardMuted)
             setPadding(0, dp(8), 0, dp(12))
         })
         colorCard.addView(TextView(activity).apply {
             text = translate("اختر اللون الأساسي للتطبيق")
             textSize = 12f
-            setTextColor(muted)
+            setTextColor(paletteCardMuted)
             setPadding(0, dp(8), 0, dp(12))
         })
         val paletteRows = LinearLayout(activity).apply {
