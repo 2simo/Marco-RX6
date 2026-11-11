@@ -1925,7 +1925,7 @@ internal class FirebaseAccountController(
                                 text = snapshot.getString("text").orEmpty()
                                 maxWidth = dp(250)
                                 textSize = 14f
-                                setTextColor(if (mine) Color.rgb(18, 20, 24) else if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+                                setTextColor(if (mine) AccentPalette.foregroundForColor(selectedAccentColor()) else if (dark) Color.WHITE else Color.rgb(25, 29, 36))
                                 textDirection = View.TEXT_DIRECTION_FIRST_STRONG
                                 gravity = Gravity.START
                             }, LinearLayout.LayoutParams(-1, -2))
@@ -2313,7 +2313,7 @@ internal class FirebaseAccountController(
             gravity = Gravity.CENTER
             textSize = 14f
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(Color.rgb(18, 20, 24))
+            setTextColor(AccentPalette.foregroundForColor(selectedAccentColor()))
             setPadding(dp(18), dp(13), dp(18), dp(13))
             background = GradientDrawable().apply {
                 cornerRadius = dp(15).toFloat()
@@ -2348,7 +2348,11 @@ internal class FirebaseAccountController(
                     }
                 }
                 followButton.setTextColor(
-                    if (followingState) Color.rgb(215, 220, 228) else Color.rgb(20, 23, 29)
+                    if (followingState) {
+                        if (dark) Color.rgb(218, 225, 235) else Color.rgb(43, 49, 59)
+                    } else {
+                        AccentPalette.foregroundForColor(selectedAccentColor())
+                    }
                 )
             }
             updateLabel()
