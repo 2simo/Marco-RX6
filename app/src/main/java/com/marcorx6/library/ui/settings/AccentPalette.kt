@@ -28,6 +28,16 @@ internal object AccentPalette {
 
     fun foreground(id: String = DEFAULT_ID): Int = foregroundForColor(color(id))
 
+    /** Blend a neutral surface with the selected primary color without turning it into a flat accent block. */
+    fun surface(base: Int, accent: Int, amount: Float): Int {
+        val t = amount.coerceIn(0f, 1f)
+        return Color.rgb(
+            (Color.red(base) * (1f - t) + Color.red(accent) * t).toInt().coerceIn(0, 255),
+            (Color.green(base) * (1f - t) + Color.green(accent) * t).toInt().coerceIn(0, 255),
+            (Color.blue(base) * (1f - t) + Color.blue(accent) * t).toInt().coerceIn(0, 255)
+        )
+    }
+
     fun foregroundForColor(color: Int): Int {
         fun linear(channel: Int): Double {
             val value = channel / 255.0
