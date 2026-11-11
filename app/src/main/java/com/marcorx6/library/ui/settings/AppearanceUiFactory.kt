@@ -126,7 +126,11 @@ internal class AppearanceUiFactory(
         )
         val darkAccentTokens = setOf(
             Color.rgb(105, 113, 126),
-            Color.rgb(104, 113, 126)
+            Color.rgb(104, 113, 126),
+            Color.rgb(105, 116, 132),
+            Color.rgb(75, 83, 96),
+            Color.rgb(65, 72, 84),
+            Color.rgb(65, 73, 86)
         )
         val accent = red()
         val factor = if (rgb in darkAccentTokens) 0.72f else 1f
@@ -298,7 +302,16 @@ internal class AppearanceUiFactory(
                 view.buttonTintList = android.content.res.ColorStateList.valueOf(red())
                 view.minHeight = dp(48)
             }
-            is Button -> stylePrimaryButton(view, view.tag == "marco_primary_action")
+            is Button -> {
+                val legacyPrimary = rethemeBackground(view.background)
+                stylePrimaryButton(view, view.tag == "marco_primary_action" || legacyPrimary)
+            }
+            is android.widget.RatingBar -> {
+                view.progressTintList = android.content.res.ColorStateList.valueOf(red())
+                view.secondaryProgressTintList = android.content.res.ColorStateList.valueOf(
+                    Color.argb(95, Color.red(red()), Color.green(red()), Color.blue(red()))
+                )
+            }
             is SeekBar -> {
                 view.progressTintList = android.content.res.ColorStateList.valueOf(red())
                 view.thumbTintList = android.content.res.ColorStateList.valueOf(red())
