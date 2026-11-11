@@ -299,6 +299,21 @@ class MainActivity : ComponentActivity() {
 
     private val appearancePaletteFeature: AppearancePaletteRuntimeFeature by lazy { AppearancePaletteRuntimeFeature(this) }
 
+    // A palette selection can happen while a page, RecyclerView or dialog is
+    // already alive. Re-skin the current window immediately instead of waiting
+    // for navigation or an Activity restart.
+    private val appearancePreferenceListener =
+        android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == com.marcorx6.library.ui.AccentPalette.PREFERENCE_KEY || key == "dark_mode") {
+                window.decorView.post {
+                    if (!isFinishing && !isDestroyed) {
+                        applyUnifiedSkin(window.decorView)
+                        activityServicesRuntimeFeature.applySystemBarAppearance()
+                    }
+                }
+            }
+        }
+
     private fun appearancePreferences() = appearancePaletteFeature.preferences()
     private fun isDarkMode() = appearancePaletteFeature.isDarkMode()
     private val bg: Int get() = appearancePaletteFeature.bg
@@ -534,6 +549,7 @@ class MainActivity : ComponentActivity() {
             FirebaseAppCheck.getInstance().installAppCheckProviderFactory(it)
         }
         onBackPressedDispatcher.addCallback(this, secondaryScreenBackCallback)
+        appearancePreferences().registerOnSharedPreferenceChangeListener(appearancePreferenceListener)
         firebaseSessionCoordinator.start()
         lifecycleCoordinator.onCreate()
     }
@@ -575,6 +591,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         com.marcorx6.library.ui.UiDiagnosticsMonitor.logLifecycle(this, "onDestroy")
+        appearancePreferences().unregisterOnSharedPreferenceChangeListener(appearancePreferenceListener)
         lifecycleCoordinator.onDestroy()
         firebaseSessionCoordinator.stop()
         super.onDestroy()
