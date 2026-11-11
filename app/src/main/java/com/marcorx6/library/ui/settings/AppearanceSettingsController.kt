@@ -34,9 +34,13 @@ internal class AppearanceSettingsController(
     fun show() {
         fun dp(value: Int) = (value * activity.resources.displayMetrics.density).toInt()
         val dark = preferences.getBoolean("dark_mode", true)
-        val bg = if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247)
-        val selectedAccentId = preferences.getString(AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID) ?: AccentPalette.DEFAULT_ID
+        val selectedAccentId = preferences.getString(AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID)
+            ?.takeIf { id -> AccentPalette.options.any { it.id == id } } ?: AccentPalette.DEFAULT_ID
         val silverAccent = AccentPalette.color(selectedAccentId)
+        val bg = if (dark) AccentPalette.surface(Color.rgb(8, 9, 12), silverAccent, 0.20f)
+            else AccentPalette.surface(Color.rgb(245, 247, 250), silverAccent, 0.10f)
+        val panelSurface = if (dark) AccentPalette.surface(Color.rgb(25, 28, 34), silverAccent, 0.30f)
+            else AccentPalette.surface(Color.rgb(224, 229, 237), silverAccent, 0.20f)
         val ink = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
         val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
         fun addGlassTouch(view: View) {
@@ -107,9 +111,15 @@ internal class AppearanceSettingsController(
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(16), dp(16), dp(16))
             background = GradientDrawable().apply {
-                setColors(if (dark) intArrayOf(Color.argb(225, 35, 38, 45), Color.argb(215, 15, 17, 22)) else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(216, 222, 226, 232)))
+                setColors(if (dark) intArrayOf(
+                    AccentPalette.surface(Color.rgb(35, 38, 45), silverAccent, 0.28f),
+                    AccentPalette.surface(Color.rgb(15, 17, 22), silverAccent, 0.22f)
+                ) else intArrayOf(
+                    AccentPalette.surface(Color.WHITE, silverAccent, 0.16f),
+                    panelSurface
+                ))
                 cornerRadius = dp(20).toFloat()
-                setStroke(dp(1), if (dark) Color.argb(165, 130, 138, 151) else Color.argb(175, 160, 168, 181))
+                setStroke(dp(1), Color.argb(175, Color.red(silverAccent), Color.green(silverAccent), Color.blue(silverAccent)))
             }
         }
         colorCard.addView(TextView(activity).apply {
@@ -119,7 +129,7 @@ internal class AppearanceSettingsController(
             setTextColor(ink)
         })
         colorCard.addView(TextView(activity).apply {
-            text = translate("غيّر لون الأزرار والأيقونات والعناصر التفاعلية مع الحفاظ على هوية MARCO")
+            text = translate("غيّر اللون الأساسي لواجهات التطبيق والبطاقات والأزرار والأيقونات والعناصر التفاعلية")
             textSize = 12f
             setTextColor(muted)
             setPadding(0, dp(8), 0, dp(12))
@@ -160,6 +170,9 @@ internal class AppearanceSettingsController(
                     setOnClickListener {
                         if (preferences.getString(AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID) != option.id) {
                             preferences.edit().putString(AccentPalette.PREFERENCE_KEY, option.id).apply()
+                            // Rebuild this live settings page immediately. setContentView routes
+                            // through MainActivity.showRootScreen, which skins the whole Activity
+                            // tree using the newly saved palette; no app restart is needed.
                             show()
                         }
                     }
