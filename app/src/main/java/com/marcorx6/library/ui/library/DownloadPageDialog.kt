@@ -59,9 +59,10 @@ internal class DownloadPageDialog(
         }
 
         fun dp(value: Int): Int = (value * activity.resources.displayMetrics.density).toInt()
-        val appPreferences = activity.getSharedPreferences("app_settings", Activity.MODE_PRIVATE)
-        // The in-app appearance setting is authoritative; do not follow the device theme.
-        val dark = appPreferences.getBoolean("dark_mode", true)
+        // Use the exact shared appearance store used by the app-wide theme switch.
+        // Reading app_settings here silently defaulted this browser to dark mode.
+        val appPreferences = AppearancePreferencesStore.appearance(activity)
+        val dark = AppearancePreferencesStore.isDarkMode(appPreferences)
         val background = if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247)
         val surface = if (dark) Color.rgb(25, 28, 34) else Color.WHITE
         val primary = if (dark) Color.rgb(205, 212, 222) else Color.rgb(105, 113, 126)

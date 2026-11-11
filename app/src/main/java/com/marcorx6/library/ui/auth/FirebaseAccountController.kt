@@ -437,7 +437,7 @@ internal class FirebaseAccountController(
                 ratingsContent.addView(TextView(activity).apply {
                     text = translate("تعذر تحميل تقييماتك الآن. ") + details
                     textSize = 12f
-                    setTextColor(Color.rgb(165, 173, 185))
+                    setTextColor(if (dark) Color.rgb(165, 173, 185) else Color.rgb(91, 98, 110))
                 })
             })
 
@@ -1058,7 +1058,7 @@ internal class FirebaseAccountController(
                     text = "@$handle"
                     textSize = 13f
                     gravity = Gravity.CENTER
-                    setTextColor(Color.rgb(165, 173, 185))
+                    setTextColor(if (dark) Color.rgb(165, 173, 185) else Color.rgb(91, 98, 110))
                     setPadding(0, dp(3), 0, dp(4))
                 })
             }
@@ -1093,7 +1093,7 @@ internal class FirebaseAccountController(
                         addView(TextView(activity).apply {
                             text = translate("لم يشارك هذا المستخدم ألعاباً مفضلة بعد.")
                             textSize = 12f
-                            setTextColor(Color.rgb(150, 158, 171))
+                            setTextColor(if (dark) Color.rgb(150, 158, 171) else Color.rgb(105, 113, 124))
                             setPadding(dp(12), dp(14), dp(12), dp(14))
                         })
                     } else {
@@ -1121,7 +1121,7 @@ internal class FirebaseAccountController(
                 addView(TextView(activity).apply {
                     text = translate("جارٍ تحميل التقييمات...")
                     textSize = 12f
-                    setTextColor(Color.rgb(150, 158, 171))
+                    setTextColor(if (dark) Color.rgb(150, 158, 171) else Color.rgb(105, 113, 124))
                     setPadding(dp(4), dp(8), dp(4), dp(8))
                 })
             }
@@ -1189,7 +1189,7 @@ internal class FirebaseAccountController(
                     ratingsSection.addView(TextView(activity).apply {
                         text = translate("لا توجد تقييمات عامة متاحة لهذا المستخدم بعد.")
                         textSize = 12f
-                        setTextColor(Color.rgb(150, 158, 171))
+                        setTextColor(if (dark) Color.rgb(150, 158, 171) else Color.rgb(105, 113, 124))
                         setPadding(dp(4), dp(8), dp(4), dp(8))
                     })
                 } else {
@@ -1312,7 +1312,7 @@ internal class FirebaseAccountController(
                         else -> "لا توجد رسائل جديدة حالياً."
                     })
                     textSize = 13f
-                    setTextColor(Color.rgb(165, 173, 185))
+                    setTextColor(if (dark) Color.rgb(165, 173, 185) else Color.rgb(91, 98, 110))
                     setPadding(dp(12), dp(28), dp(12), dp(28))
                 }
                 applyUnifiedSkin(emptyState)
@@ -1386,7 +1386,7 @@ internal class FirebaseAccountController(
                     textColumn.addView(TextView(activity).apply {
                         text = body
                         textSize = 11f
-                        setTextColor(Color.rgb(165, 173, 185))
+                        setTextColor(if (dark) Color.rgb(165, 173, 185) else Color.rgb(91, 98, 110))
                         setPadding(0, dp(5), 0, 0)
                     })
                     addView(textColumn, LinearLayout.LayoutParams(0, -2, 1f))
@@ -1422,12 +1422,14 @@ internal class FirebaseAccountController(
                 textSize = 11f
                 gravity = Gravity.CENTER
                 setTypeface(null, android.graphics.Typeface.BOLD)
-                setTextColor(Color.rgb(205, 211, 220))
+                setTextColor(if (dark) Color.rgb(205, 211, 220) else Color.rgb(65, 73, 86))
                 setPadding(dp(9), dp(11), dp(9), dp(11))
                 background = GradientDrawable().apply {
                     cornerRadius = dp(13).toFloat()
-                    setColor(if (selectedSection == key) Color.rgb(55, 60, 70) else Color.rgb(20, 22, 27))
-                    setStroke(dp(1), Color.rgb(90, 98, 111))
+                    setColor(if (selectedSection == key) {
+                        if (dark) Color.rgb(55, 60, 70) else Color.rgb(218, 224, 232)
+                    } else if (dark) Color.rgb(20, 22, 27) else Color.WHITE)
+                    setStroke(dp(1), if (dark) Color.rgb(90, 98, 111) else Color.rgb(199, 207, 218))
                 }
                 setOnClickListener {
                     selectedSection = key
@@ -1435,8 +1437,10 @@ internal class FirebaseAccountController(
                         val child = tabs.getChildAt(i) as? TextView ?: continue
                         child.background = GradientDrawable().apply {
                             cornerRadius = dp(13).toFloat()
-                            setColor(if (child.tag == key) Color.rgb(55, 60, 70) else Color.rgb(20, 22, 27))
-                            setStroke(dp(1), Color.rgb(90, 98, 111))
+                            setColor(if (child.tag == key) {
+                                if (dark) Color.rgb(55, 60, 70) else Color.rgb(218, 224, 232)
+                            } else if (dark) Color.rgb(20, 22, 27) else Color.WHITE)
+                            setStroke(dp(1), if (dark) Color.rgb(90, 98, 111) else Color.rgb(199, 207, 218))
                         }
                     }
                     renderItems()
@@ -1492,7 +1496,7 @@ internal class FirebaseAccountController(
         page.addView(TextView(activity).apply {
             text = translate("اضغط مطولاً على المحادثة لحذفها من قائمتك فقط")
             textSize = 11f
-            setTextColor(Color.rgb(145, 155, 170))
+            setTextColor(if (dark) Color.rgb(145, 155, 170) else Color.rgb(91, 98, 110))
             setPadding(0, 0, 0, dp(14))
         })
         val list = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
@@ -1533,7 +1537,7 @@ internal class FirebaseAccountController(
             if (conversations.isEmpty()) {
                 val emptyState = TextView(activity).apply {
                     text = translate("لا توجد محادثات بعد. ابدأ محادثة مع شخص يتابعك وتتابعه.")
-                    setTextColor(Color.rgb(165, 173, 185))
+                    setTextColor(if (dark) Color.rgb(165, 173, 185) else Color.rgb(91, 98, 110))
                     setPadding(dp(12), dp(24), dp(12), dp(24))
                 }
                 applyUnifiedSkin(emptyState)
@@ -1583,6 +1587,7 @@ internal class FirebaseAccountController(
     }
 
     private fun showFollowersForNewMessage() {
+        val dark = isDarkMode()
         val user = authRepository.currentUser ?: return
         val dialogContent = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
@@ -1639,12 +1644,12 @@ internal class FirebaseAccountController(
                             text = (profile.getString("displayName") ?: profile.getString("username") ?: "MARCO") +
                                 (profile.getString("username")?.let { "\n@$it" } ?: "")
                             textSize = 14f
-                            setTextColor(Color.rgb(225, 230, 237))
+                            setTextColor(if (dark) Color.rgb(225, 230, 237) else Color.rgb(25, 29, 36))
                             setPadding(dp(14), dp(14), dp(14), dp(14))
                             background = GradientDrawable().apply {
                                 cornerRadius = dp(13).toFloat()
-                                setColor(Color.rgb(25, 28, 34))
-                                setStroke(dp(1), Color.rgb(75, 83, 96))
+                                setColor(if (dark) Color.rgb(25, 28, 34) else Color.WHITE)
+                                setStroke(dp(1), if (dark) Color.rgb(75, 83, 96) else Color.rgb(199, 207, 218))
                             }
                             setOnClickListener {
                                 dialog.dismiss()
@@ -1741,7 +1746,7 @@ internal class FirebaseAccountController(
                     page.addView(TextView(activity).apply {
                         text = translate("اضغط على الرسالة للرد، واضغط مطولاً لحذفها لدى الطرفين")
                         textSize = 11f
-                        setTextColor(Color.rgb(145, 155, 170))
+                        setTextColor(if (dark) Color.rgb(145, 155, 170) else Color.rgb(91, 98, 110))
                         setPadding(dp(3), dp(5), dp(3), dp(5))
                     })
                     val replyPreview = TextView(activity).apply {
@@ -1943,6 +1948,7 @@ internal class FirebaseAccountController(
     }
 
     private fun showSocialConnections(uid: String, showFollowers: Boolean) {
+        val dark = isDarkMode()
         val currentUser = authRepository.currentUser
         if (currentUser == null || currentUser.isAnonymous || currentUser.uid != uid) {
             toast("قوائم المتابعين متاحة لصاحب الحساب فقط.")
@@ -1995,8 +2001,8 @@ internal class FirebaseAccountController(
                             setPadding(dp(12), dp(11), dp(12), dp(11))
                             background = GradientDrawable().apply {
                                 cornerRadius = dp(17).toFloat()
-                                setColor(Color.rgb(23, 26, 32))
-                                setStroke(dp(1), Color.rgb(76, 84, 97))
+                                setColor(if (dark) Color.rgb(23, 26, 32) else Color.WHITE)
+                                setStroke(dp(1), if (dark) Color.rgb(76, 84, 97) else Color.rgb(199, 207, 218))
                             }
                             isClickable = true
                             isFocusable = true
@@ -2025,14 +2031,14 @@ internal class FirebaseAccountController(
                             text = name
                             textSize = 14f
                             setTypeface(null, android.graphics.Typeface.BOLD)
-                            setTextColor(Color.WHITE)
+                            setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
                             maxLines = 1
                             ellipsize = android.text.TextUtils.TruncateAt.END
                         })
                         if (bio.isNotBlank()) identity.addView(TextView(activity).apply {
                             text = bio
                             textSize = 11f
-                            setTextColor(Color.rgb(160, 168, 181))
+                            setTextColor(if (dark) Color.rgb(160, 168, 181) else Color.rgb(91, 98, 110))
                             maxLines = 2
                             ellipsize = android.text.TextUtils.TruncateAt.END
                             setPadding(0, dp(3), 0, 0)
@@ -2081,7 +2087,7 @@ internal class FirebaseAccountController(
                         listContainer.addView(TextView(activity).apply {
                             text = translate("لا توجد ملفات عامة متاحة للعرض حالياً.")
                             textSize = 12f
-                            setTextColor(Color.rgb(160, 168, 181))
+                            setTextColor(if (dark) Color.rgb(160, 168, 181) else Color.rgb(91, 98, 110))
                             setPadding(dp(4), dp(18), dp(4), dp(18))
                         })
                     }
@@ -2285,7 +2291,7 @@ internal class FirebaseAccountController(
                 followButton.background = GradientDrawable().apply {
                     cornerRadius = dp(16).toFloat()
                     if (followingState) {
-                        setColor(Color.rgb(30, 33, 40))
+                        setColor(if (dark) Color.rgb(30, 33, 40) else Color.rgb(235, 238, 243))
                         setStroke(dp(1), Color.rgb(190, 198, 210))
                     } else {
                         setColor(Color.rgb(190, 198, 210))
