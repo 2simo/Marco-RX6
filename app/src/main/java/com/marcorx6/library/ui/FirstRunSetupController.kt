@@ -161,7 +161,7 @@ internal class FirstRunSetupController(
 
             val choices = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
             fun addChoice(label: String, detail: String = "", selectedNow: Boolean, action: () -> Unit) {
-                val card = viewFactory.optionCard(label, selectedNow, detail, darkMode)
+                val card = viewFactory.optionCard(label, selectedNow, detail, darkMode, activeAccent, AccentPalette.foreground(accentKey))
                 choices.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(11) })
                 card.setOnClickListener {
                     action()
@@ -198,7 +198,9 @@ internal class FirstRunSetupController(
                             tr(option.label),
                             selected,
                             tr("اللون الرئيسي"),
-                            darkMode
+                            darkMode,
+                            option.color,
+                            AccentPalette.foreground(option.id)
                         )
                         val dot = View(activity).apply {
                             background = rounded(option.color, 20)
@@ -225,7 +227,9 @@ internal class FirstRunSetupController(
                         tr("اختيار مجلد التنزيلات"),
                         true,
                         tr("اختر مجلداً لحفظ التنزيلات فيه."),
-                        darkMode
+                        darkMode,
+                        activeAccent,
+                        AccentPalette.foreground(accentKey)
                     )
                     folderCard.setOnClickListener { launchDownloadFolderPicker() }
                     choices.addView(folderCard, LinearLayout.LayoutParams(-1, -2).apply {
@@ -242,7 +246,14 @@ internal class FirstRunSetupController(
                     }, LinearLayout.LayoutParams(-1, -2))
                 }
                 6 -> {
-                    val readyCard = viewFactory.optionCard(tr("مكتبتك جاهزة!"), true, tr("تم حفظ المنصة واللغة والمظهر واللون والإشعارات ومكان التنزيلات.") + "\n" + tr("المجلد الحالي:") + " " + downloadFolderName(), darkMode)
+                    val readyCard = viewFactory.optionCard(
+                        tr("مكتبتك جاهزة!"),
+                        true,
+                        tr("تم حفظ المنصة واللغة والمظهر واللون والإشعارات ومكان التنزيلات.") + "\n" + tr("المجلد الحالي:") + " " + downloadFolderName(),
+                        darkMode,
+                        activeAccent,
+                        AccentPalette.foreground(accentKey)
+                    )
                     choices.addView(readyCard, LinearLayout.LayoutParams(-1, -2))
                     if (animate && motionEnabled) viewFactory.animateIn(readyCard)
                 }
@@ -290,7 +301,8 @@ internal class FirstRunSetupController(
                             dp = dp,
                             makeText = makeText,
                             translate = { value -> LanguageTranslator.translate(value, languageCode) },
-                            isDarkMode = isDarkMode
+                            isDarkMode = isDarkMode,
+                            red = { AccentPalette.color(accentKey) }
                         ).show {
                             settings.edit().putBoolean("community_channels_prompted", true).apply()
                             recreateActivity()
