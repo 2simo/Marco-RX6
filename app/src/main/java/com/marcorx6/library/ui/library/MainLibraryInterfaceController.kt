@@ -169,6 +169,8 @@ internal class MainLibraryInterfaceController(
                     gravity = Gravity.CENTER
                     setPadding(dp(12), dp(48), dp(12), dp(48))
                 })
+                // Empty-state views are created after the search screen's first skin pass.
+                applyUnifiedSkin(results)
                 return
             }
             matches.forEach { game ->
@@ -240,6 +242,9 @@ internal class MainLibraryInterfaceController(
                 })
                 card.addView(details, LinearLayout.LayoutParams(0, -2, 1f))
                 slot.addView(card, FrameLayout.LayoutParams(-1, -2))
+                // Search cards are built lazily after the initial screen skin pass.
+                // Apply the selected palette now, without tinting the game's cover artwork.
+                applyUnifiedSkin(card)
                 }
                 runWhenVisible(slot) { buildCard() }
                 results.addView(slot, LinearLayout.LayoutParams(-1, -2).apply {
