@@ -227,7 +227,8 @@ internal class FirstRunSetupController(
             }
             page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
             content.addView(page, FrameLayout.LayoutParams(-1, -1))
-            applyUnifiedSkin(page)
+            // This setup has a temporary, not-yet-saved theme selection.
+            // Do not run the global skin pass, which reads the previously saved theme.
             applyMotionPreferences(page)
             if (animate && motionEnabled) viewFactory.animateIn(page)
             next.setOnClickListener {
@@ -292,7 +293,7 @@ internal class FirstRunSetupController(
             insets
         }
         androidx.core.view.ViewCompat.requestApplyInsets(root)
-        applyUnifiedSkin(root)
+        // The setup's local theme choice is authoritative until it is saved.
         renderStep(0, true)
         dialog.window?.decorView?.let(applyMotionPreferences)
     }
