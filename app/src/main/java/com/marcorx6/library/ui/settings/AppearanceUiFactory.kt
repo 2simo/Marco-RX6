@@ -184,7 +184,7 @@ internal class AppearanceUiFactory(
         } else {
             intArrayOf(
                 Color.argb(238, Color.red(red()), Color.green(red()), Color.blue(red())),
-                Color.argb(220, (Color.red(red()) * 0.72f).toInt(), (Color.green(red()) * 0.72f).toInt(), (Color.blue(red()) * 0.72f).toInt())
+                Color.argb(220, (Color.red(red()) * 0.95f).toInt(), (Color.green(red()) * 0.95f).toInt(), (Color.blue(red()) * 0.95f).toInt())
             )
         }
         button.background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
