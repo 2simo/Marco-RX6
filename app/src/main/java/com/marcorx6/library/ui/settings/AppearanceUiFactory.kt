@@ -20,6 +20,7 @@ import android.widget.TextView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import java.util.WeakHashMap
 
 /**
  * Context-bound appearance and formatting helpers extracted from MainActivity.
@@ -56,6 +57,47 @@ internal class AppearanceUiFactory(
         Color.rgb(65, 72, 84),
         Color.rgb(65, 73, 86)
     )
+
+    // Keep the unthemed source values. Without these snapshots, the first palette
+    // pass permanently turns a neutral surface into a saturated color; the next
+    // pass then mistakes that previous accent for branded artwork and leaves it.
+    // Weak keys let detached RecyclerView/dialog rows be collected normally.
+    private val originalBackgrounds = WeakHashMap<View, android.graphics.drawable.Drawable.ConstantState>()
+    private val originalTextColors = WeakHashMap<TextView, android.content.res.ColorStateList>()
+    private val originalImageTints = WeakHashMap<ImageView, android.content.res.ColorStateList>()
+    private val originalCompoundTints = WeakHashMap<TextView, android.content.res.ColorStateList>()
+
+    private fun restoreOriginalStyle(view: View) {
+        if (view !is EditText && view.background != null) {
+            val saved = originalBackgrounds[view]
+            if (saved == null) {
+                view.background.constantState?.let { originalBackgrounds[view] = it }
+            } else {
+                view.background = saved.newDrawable(activity.resources).mutate()
+            }
+        }
+        if (view is TextView) {
+            val savedText = originalTextColors[view]
+            if (savedText == null) originalTextColors[view] = view.textColors
+            else view.setTextColor(savedText)
+            if (android.os.Build.VERSION.SDK_INT >= 23) {
+                val tint = view.compoundDrawableTintList
+                if (tint != null) {
+                    val savedTint = originalCompoundTints[view]
+                    if (savedTint == null) originalCompoundTints[view] = tint
+                    else view.compoundDrawableTintList = savedTint
+                }
+            }
+        }
+        if (view is ImageView) {
+            val tint = view.imageTintList
+            if (tint != null) {
+                val savedTint = originalImageTints[view]
+                if (savedTint == null) originalImageTints[view] = tint
+                else view.imageTintList = savedTint
+            }
+        }
+    }
 
     private fun glassRipple(): android.graphics.drawable.Drawable =
         android.graphics.drawable.RippleDrawable(
@@ -240,13 +282,36 @@ internal class AppearanceUiFactory(
                 }
             }
             is android.graphics.drawable.RippleDrawable -> {
-                if (drawable.numberOfLayers > 0) return rethemeBackground(drawable.getDrawable(0))
+                var changed = false
+                for (index in 0 until drawable.numberOfLayers) {
+                    if (rethemeBackground(drawable.getDrawable(index))) changed = true
+                }
+                return changed
+            }
+            is android.graphics.drawable.LayerDrawable -> {
+                var changed = false
+                for (index in 0 until drawable.numberOfLayers) {
+                    if (rethemeBackground(drawable.getDrawable(index))) changed = true
+                }
+                return changed
+            }
+            is android.graphics.drawable.InsetDrawable -> {
+                return rethemeBackground(drawable.drawable)
+            }
+            is android.graphics.drawable.ScaleDrawable -> {
+                return rethemeBackground(drawable.drawable)
+            }
+            is android.graphics.drawable.ClipDrawable -> {
+                return rethemeBackground(drawable.drawable)
             }
         }
         return false
     }
 
     fun applyUnifiedSkin(view: View) {
+        // Always start from the original drawable/tint/text values so a second,
+        // third or later color selection replaces the previous palette cleanly.
+        restoreOriginalStyle(view)
         installGlassInteraction(view)
         // Re-theme old hard-coded black/white text and neutral card fills on every
         // newly rendered page. This catches legacy screens that do not use palette
