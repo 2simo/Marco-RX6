@@ -234,36 +234,33 @@ internal class AppearanceUiFactory(
         legacyAccentReplacement(color)?.let { return it }
         val hsv = FloatArray(3)
         Color.colorToHSV(color, hsv)
-        // Include blue-tinted charcoal/silver neutrals used by legacy account and message cards,
-        // while leaving genuinely colored accents and artwork untouched.
+        // Keep photographs, game artwork and intentionally colored illustrations intact.
+        // Neutral surfaces, however, must all inherit a visible tint from the selected
+        // accent instead of only changing the few legacy silver tokens we knew in advance.
         if (hsv[1] > 0.32f) return null
         val value = hsv[2]
         val replacement = if (background) {
-            if (isDarkMode()) {
+            val amount = if (isDarkMode()) {
                 when {
-                    value >= 0.88f -> panel()
-                    value <= 0.10f -> bg()
-                    value <= 0.48f -> panel()
-                    else -> return null
+                    value <= 0.10f -> 0.22f
+                    value >= 0.88f -> 0.15f
+                    else -> 0.20f
                 }
             } else {
                 when {
-                    value <= 0.07f -> bg()
-                    value <= 0.97f -> panel()
-                    else -> return null
+                    value <= 0.08f -> 0.13f
+                    value >= 0.90f -> 0.10f
+                    else -> 0.15f
                 }
             }
+            AccentPalette.surface(color, red(), amount)
         } else {
             if (isDarkMode()) {
-                // Replace legacy dark-gray labels too, not only near-black text.
-                // This is important for views created before the current palette.
                 when {
                     value <= 0.55f -> white()
                     else -> return null
                 }
             } else {
-                // Silver/white labels from old dark-only screens become readable
-                // charcoal labels on the light surface.
                 when {
                     value >= 0.45f -> white()
                     else -> return null
