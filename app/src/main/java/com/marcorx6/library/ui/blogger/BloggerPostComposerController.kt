@@ -92,10 +92,18 @@ internal class BloggerPostComposerController(
             if (primary) tag = "marco_primary_action"
             minHeight = dp(48)
             setTextColor(if (primary) accentForeground() else studioTextColor)
-            background = if (primary) android.graphics.drawable.GradientDrawable(
-                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(android.graphics.Color.rgb(190, 198, 210), android.graphics.Color.rgb(105, 113, 126))
-            ).apply { cornerRadius = dp(13).toFloat() }
+            background = if (primary) {
+                val accent = red()
+                val darkerAccent = android.graphics.Color.rgb(
+                    (android.graphics.Color.red(accent) * 0.72f).toInt(),
+                    (android.graphics.Color.green(accent) * 0.72f).toInt(),
+                    (android.graphics.Color.blue(accent) * 0.72f).toInt()
+                )
+                android.graphics.drawable.GradientDrawable(
+                    android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
+                    intArrayOf(accent, darkerAccent)
+                ).apply { cornerRadius = dp(13).toFloat() }
+            }
             else rounded(panel(), 13)
         }
 
