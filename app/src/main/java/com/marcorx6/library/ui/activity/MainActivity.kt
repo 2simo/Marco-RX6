@@ -126,8 +126,7 @@ class MainActivity : ComponentActivity() {
             else android.graphics.Color.rgb(245, 247, 250)
         val foreground = if (dark) android.graphics.Color.rgb(238, 241, 246)
             else android.graphics.Color.rgb(25, 29, 36)
-        val silver = if (dark) android.graphics.Color.rgb(190, 198, 210)
-            else android.graphics.Color.rgb(105, 113, 126)
+        val silver = red()
         val stroke = if (dark) android.graphics.Color.rgb(105, 113, 126)
             else android.graphics.Color.rgb(174, 181, 191)
 
