@@ -42,9 +42,7 @@ internal class DownloadMiniPanelDialog(
             AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID
         ) ?: AccentPalette.DEFAULT_ID
         val accent = AccentPalette.color(selectedAccentId)
-        val accentText = if (selectedAccentId == "black_silver") {
-            if (dark) Color.rgb(218, 225, 235) else Color.rgb(43, 49, 59)
-        } else accent
+        val accentText = AccentPalette.readableAccentText(selectedAccentId, dark)
 
         val dialog = Dialog(activity)
         val root = LinearLayout(activity).apply {
