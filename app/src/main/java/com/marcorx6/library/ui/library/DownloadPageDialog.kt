@@ -68,7 +68,6 @@ internal class DownloadPageDialog(
         val selectedAccentId = appPreferences.getString(AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID)
             ?: AccentPalette.DEFAULT_ID
         val primary = AccentPalette.color(selectedAccentId)
-        val primaryForeground = AccentPalette.foreground(selectedAccentId)
         val border = if (dark) Color.rgb(70, 77, 89) else Color.rgb(205, 211, 220)
         val heading = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
         val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
@@ -302,7 +301,7 @@ internal class DownloadPageDialog(
                     compoundDrawableTintList = android.content.res.ColorStateList.valueOf(primary)
                     foreground = android.graphics.drawable.RippleDrawable(
                         android.content.res.ColorStateList.valueOf(
-                            if (dark) Color.argb(70, 205, 212, 222) else Color.argb(45, 105, 116, 132)
+                            Color.argb(if (dark) 70 else 45, Color.red(primary), Color.green(primary), Color.blue(primary))
                         ), null, android.graphics.drawable.ColorDrawable(Color.WHITE)
                     )
                 }
