@@ -243,14 +243,13 @@ internal class AppearanceUiFactory(
                 when {
                     value >= 0.88f -> panel()
                     value <= 0.10f -> bg()
-                    value <= 0.25f -> panel()
+                    value <= 0.48f -> panel()
                     else -> return null
                 }
             } else {
                 when {
                     value <= 0.07f -> bg()
-                    value <= 0.90f -> panel()
-                    value >= 0.97f -> bg()
+                    value <= 0.97f -> panel()
                     else -> return null
                 }
             }
