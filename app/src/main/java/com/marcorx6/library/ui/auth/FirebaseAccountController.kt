@@ -1184,7 +1184,7 @@ internal class FirebaseAccountController(
                 }
                 tabItems.forEach { (view, key) ->
                     val active = key == selected
-                    view.setTextColor(if (active) Color.rgb(20, 23, 29) else if (dark) selectedAccentColor() else Color.rgb(91, 98, 110))
+                    view.setTextColor(if (active) AccentPalette.foregroundForColor(selectedAccentColor()) else selectedAccentColor())
                     (view.background as? GradientDrawable)?.setColor(
                         if (active) selectedAccentColor() else Color.TRANSPARENT
                     )
@@ -1196,7 +1196,7 @@ internal class FirebaseAccountController(
                     gravity = Gravity.CENTER
                     textSize = 13f
                     setTypeface(null, android.graphics.Typeface.BOLD)
-                    setTextColor(if (dark) selectedAccentColor() else Color.rgb(65, 73, 86))
+                    setTextColor(selectedAccentColor())
                     setPadding(dp(16), dp(11), dp(16), dp(11))
                     background = GradientDrawable().apply {
                         cornerRadius = dp(12).toFloat()
@@ -2049,8 +2049,8 @@ internal class FirebaseAccountController(
                             imageTintList = android.content.res.ColorStateList.valueOf(selectedAccentColor())
                             background = GradientDrawable().apply {
                                 shape = GradientDrawable.OVAL
-                                setColor(Color.rgb(39, 43, 51))
-                                setStroke(dp(1), Color.rgb(145, 153, 166))
+                                setColor(profileSurface(dark, raised = true))
+                                setStroke(dp(1), profileStroke(dark))
                             }
                             clipToOutline = true
                             contentDescription = translate("صورة الحساب")
