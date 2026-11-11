@@ -80,7 +80,7 @@ internal class AppearanceSettingsController(
             text = translate("MARCO  /  PERSONALIZATION")
             textSize = 9f
             letterSpacing = 0.12f
-            setTextColor(silverAccent)
+            setTextColor(accentText)
         })
         heading.addView(TextView(activity).apply {
             text = translate("الإعدادات والمظهر")
@@ -255,7 +255,7 @@ internal class AppearanceSettingsController(
                 text = translate(if (enabled) "الحركات مفعّلة  ✓" else "الحركات متوقفة").replace("✓", "").trim()
                 setCompoundDrawablesRelativeWithIntrinsicBounds(if (enabled) com.marcorx6.library.R.drawable.ic_action_check else 0, 0, 0, 0)
                 contentDescription = translate(if (enabled) "إيقاف حركات وانتقالات الواجهة" else "تفعيل حركات وانتقالات الواجهة")
-                setTextColor(if (enabled) AccentPalette.foreground(selectedAccentId) else silverAccent)
+                setTextColor(if (enabled) AccentPalette.foreground(selectedAccentId) else accentText)
                 background = GradientDrawable().apply {
                     setColor(if (enabled) Color.argb(218, Color.red(silverAccent), Color.green(silverAccent), Color.blue(silverAccent)) else if (dark) Color.argb(190, 25, 28, 34) else Color.argb(210, 255, 255, 255))
                     cornerRadius = dp(14).toFloat()
