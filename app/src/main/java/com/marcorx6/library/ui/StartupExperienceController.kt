@@ -27,7 +27,8 @@ internal class StartupExperienceController(
     private val showFirstRunSetup: () -> Unit,
     private val showProfile: () -> Unit,
     private val translate: (String) -> String,
-    private val isDarkMode: () -> Boolean
+    private val isDarkMode: () -> Boolean,
+    private val red: () -> Int
 ) {
     private val handler = Handler(Looper.getMainLooper())
     private var animator: ValueAnimator? = null
@@ -55,7 +56,7 @@ internal class StartupExperienceController(
             background = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
                 setColor(if (dark) Color.rgb(25, 28, 34) else Color.WHITE)
-                setStroke(dp(3), Color.rgb(190, 198, 210))
+                setStroke(dp(3), red())
             }
             elevation = dp(18).toFloat()
         }
