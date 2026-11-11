@@ -37,7 +37,11 @@ internal class DownloadMiniPanelDialog(
         val surface = if (dark) Color.rgb(25, 28, 34) else Color.WHITE
         val heading = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
         val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
-        val accent = if (dark) Color.rgb(205, 212, 222) else Color.rgb(105, 113, 126)
+        val appearance = AppearancePreferencesStore.appearance(activity)
+        val selectedAccentId = appearance.getString(
+            AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID
+        ) ?: AccentPalette.DEFAULT_ID
+        val accent = AccentPalette.color(selectedAccentId)
 
         val dialog = Dialog(activity)
         val root = LinearLayout(activity).apply {
