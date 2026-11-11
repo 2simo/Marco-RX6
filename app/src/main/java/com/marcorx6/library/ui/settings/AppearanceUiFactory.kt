@@ -167,7 +167,7 @@ internal class AppearanceUiFactory(
                 when {
                     value <= 0.07f -> bg()
                     value <= 0.90f -> panel()
-                    value >= 0.97f -> Color.WHITE
+                    value >= 0.97f -> bg()
                     else -> return null
                 }
             }
