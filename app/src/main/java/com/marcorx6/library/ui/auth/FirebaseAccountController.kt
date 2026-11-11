@@ -2570,12 +2570,12 @@ internal class FirebaseAccountController(
             setPadding(dp(18), dp(16), dp(18), dp(16))
             background = GradientDrawable(
                 if (primary) GradientDrawable.Orientation.LEFT_RIGHT else GradientDrawable.Orientation.TL_BR,
-                if (primary) intArrayOf(Color.rgb(218, 224, 233), Color.rgb(155, 166, 182))
+                if (primary) intArrayOf(selectedAccentColor(), Color.rgb((Color.red(selectedAccentColor()) * 0.72f).toInt(), (Color.green(selectedAccentColor()) * 0.72f).toInt(), (Color.blue(selectedAccentColor()) * 0.72f).toInt()))
                 else if (dark) intArrayOf(Color.rgb(31, 35, 43), Color.rgb(20, 23, 29))
                 else intArrayOf(Color.WHITE, Color.rgb(239, 242, 247))
             ).apply {
                 cornerRadius = dp(19).toFloat()
-                setStroke(dp(1), if (primary) Color.rgb(145, 156, 173) else if (dark) Color.rgb(83, 92, 106) else Color.rgb(194, 202, 214))
+                setStroke(dp(1), if (primary) selectedAccentColor() else if (dark) Color.rgb(83, 92, 106) else Color.rgb(194, 202, 214))
             }
             elevation = dp(1).toFloat()
             if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
@@ -2589,12 +2589,12 @@ internal class FirebaseAccountController(
             text = title
             textSize = 15f
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(if (primary) Color.rgb(20, 23, 29) else if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+            setTextColor(if (primary) AccentPalette.foregroundForColor(selectedAccentColor()) else if (dark) Color.WHITE else Color.rgb(25, 29, 36))
         })
         card.addView(TextView(activity).apply {
             text = detail
             textSize = 11f
-            setTextColor(if (primary) Color.rgb(20, 23, 29) else if (dark) Color.rgb(160, 168, 181) else Color.rgb(91, 98, 110))
+            setTextColor(if (primary) AccentPalette.foregroundForColor(selectedAccentColor()) else if (dark) Color.rgb(160, 168, 181) else Color.rgb(91, 98, 110))
             setPadding(0, dp(5), 0, 0)
         })
         page.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
