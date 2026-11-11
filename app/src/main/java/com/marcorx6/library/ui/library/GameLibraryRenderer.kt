@@ -36,10 +36,26 @@ internal class GameLibraryRenderer(
         val colors: List<Int>,
         val darkMode: Boolean,
         val gameLabel: String,
-        // Game instances are mutable; identity-only checks miss in-place edits to
-        // platform/favorite metadata and can leave the count out of sync with cards.
-        val filterData: List<String>
+        // Compact fingerprint detects in-place metadata edits without allocating
+        // several temporary lists and joined strings for every game on each render.
+        val filterDataFingerprint: Long
     )
+
+    private fun fingerprintFilterData(games: List<Game>): Long {
+        var hash = -0x340d631b7bdddcdbL // FNV-1a 64-bit offset basis
+        fun mix(value: Int) {
+            hash = (hash xor value.toLong()) * 0x100000001b3L
+        }
+        games.forEach { game ->
+            mix(game.name.hashCode())
+            mix(game.platform.hashCode())
+            mix(game.genre.hashCode())
+            mix(game.releaseYear.hashCode())
+            mix(if (game.isFavorite) 1 else 0)
+            mix(if (game.blogImported) 1 else 0)
+        }
+        return hash
+    }
 
     /**
      * Start expensive image/network and Firestore work only when the corresponding
@@ -86,16 +102,7 @@ internal class GameLibraryRenderer(
             colors = listOf(bg, panel, red, white, gray),
             darkMode = isDarkMode(),
             gameLabel = tr("لعبة"),
-            filterData = games.map { game ->
-                listOf(
-                    game.name,
-                    game.platform,
-                    game.genre,
-                    game.releaseYear,
-                    game.isFavorite.toString(),
-                    game.blogImported.toString()
-                ).joinToString("\u001F")
-            }
+            filterDataFingerprint = fingerprintFilterData(games)
         )
         // Skip rebuilding the entire carousel when a caller requests a render with
         // unchanged data and presentation state. This prevents card/cover flicker
