@@ -14,12 +14,16 @@ import java.net.URL
 import java.security.MessageDigest
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.ConcurrentHashMap
 
 /** Loads and caches cover bitmaps independently of UI widgets. */
 internal class CoverRepository(context: Context) : AutoCloseable {
     private val appContext = context.applicationContext
     private val worker: ExecutorService = Executors.newFixedThreadPool(2)
     private val mainHandler = Handler(Looper.getMainLooper())
+    // Cover identity is resolved by both the display controller and loader; cache
+    // SHA-256 names so the same URL is not hashed/formatted repeatedly on the UI thread.
+    private val stableNames = ConcurrentHashMap<String, String>()
     private val bitmapCache = object : LruCache<String, Bitmap>(
         (Runtime.getRuntime().maxMemory() / 1024 / 16).toInt().coerceAtLeast(1024)
     ) {
@@ -32,9 +36,9 @@ internal class CoverRepository(context: Context) : AutoCloseable {
     private val inFlightLock = Any()
     private val inFlightCallbacks = mutableMapOf<String, MutableList<(Bitmap?) -> Unit>>()
 
-    fun stableCacheName(value: String): String {
-        val digest = MessageDigest.getInstance("SHA-256").digest(value.toByteArray(Charsets.UTF_8))
-        return digest.joinToString("") { "%02x".format(it) }
+    fun stableCacheName(value: String): String = stableNames.computeIfAbsent(value) {
+        val digest = MessageDigest.getInstance("SHA-256").digest(it.toByteArray(Charsets.UTF_8))
+        digest.joinToString("") { byte -> "%02x".format(byte) }
     }
 
     /** Returns a stable request key and delivers the decoded bitmap on the main thread. */
