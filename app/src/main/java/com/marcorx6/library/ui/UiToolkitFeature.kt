@@ -18,7 +18,8 @@ internal class UiToolkitFeature(
     red: () -> Int,
     white: () -> Int,
     gray: () -> Int,
-    accentForeground: () -> Int
+    accentForeground: () -> Int,
+    accentId: () -> String
 ) {
     private val basic = BasicUiFactory(activity)
     private val appearance = AppearanceUiFactory(
@@ -30,7 +31,8 @@ internal class UiToolkitFeature(
         red = red,
         white = white,
         gray = gray,
-        accentForeground = accentForeground
+        accentForeground = accentForeground,
+        selectedAccentId = accentId
     )
 
     fun dp(value: Int): Int = basic.dp(value)
