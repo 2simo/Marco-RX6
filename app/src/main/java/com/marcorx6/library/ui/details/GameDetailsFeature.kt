@@ -73,6 +73,7 @@ internal class GameDetailsFeature(
         dp = dp,
         makeText = makeText,
         isDarkMode = isDarkMode,
+        red = red,
         loadCover = loadCover,
         loadDownloads = { target, callback ->
             loadEngagementSummary(target) { _, _, _, downloads -> callback(downloads) }
@@ -101,6 +102,7 @@ internal class GameDetailsFeature(
         dp = dp,
         makeText = makeText,
         isDarkMode = isDarkMode,
+        red = red,
         white = white,
         gray = gray,
         translate = tr,
