@@ -154,6 +154,7 @@ internal class MainLibraryRuntimeFeature(
         // category sections, before the list/filter/count views are attached.
         // Skip that early request; create() performs the real render after wiring them.
         if (!viewState.isReadyForRendering()) return
+        mainLibraryFeature.updateAdminAction()
         gameLibraryFeature.render()
     }
     fun showAdvancedFilters() = advancedFiltersFeature.show()
