@@ -2824,6 +2824,7 @@ internal class FirebaseAccountController(
 
     private fun accountSubmitButton(label: String, onClick: (TextView) -> Unit): TextView {
         return TextView(activity).apply {
+            tag = "marco_preserve_contrast"
             text = label
             textSize = 14f
             gravity = Gravity.CENTER
@@ -2834,7 +2835,7 @@ internal class FirebaseAccountController(
             setPadding(dp(18), dp(15), dp(18), dp(15))
             background = GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(selectedAccentColor(), accentSurface(Color.rgb(55, 62, 74), 0.30f))
+                intArrayOf(selectedAccentColor(), Color.rgb((Color.red(selectedAccentColor()) * 0.95f).toInt(), (Color.green(selectedAccentColor()) * 0.95f).toInt(), (Color.blue(selectedAccentColor()) * 0.95f).toInt()))
             ).apply {
                 cornerRadius = dp(15).toFloat()
                 setStroke(dp(1), selectedAccentColor())
