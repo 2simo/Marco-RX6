@@ -449,8 +449,8 @@ internal class FirebaseAccountController(
                 setPadding(dp(5), dp(5), dp(5), dp(5))
                 background = GradientDrawable().apply {
                     cornerRadius = dp(17).toFloat()
-                    setColor(Color.rgb(18, 20, 25))
-                    setStroke(dp(1), Color.rgb(70, 77, 89))
+                    setColor(if (dark) Color.rgb(18, 20, 25) else Color.rgb(235, 238, 243))
+                    setStroke(dp(1), if (dark) Color.rgb(70, 77, 89) else Color.rgb(199, 207, 218))
                 }
             }
             val tabLabels = listOf("الكل", "المفضلة", "التقييمات")
@@ -461,7 +461,7 @@ internal class FirebaseAccountController(
                     gravity = Gravity.CENTER
                     setTypeface(null, android.graphics.Typeface.BOLD)
                     setPadding(dp(10), dp(12), dp(10), dp(12))
-                    setTextColor(Color.rgb(155, 163, 176))
+                    setTextColor(if (dark) Color.rgb(155, 163, 176) else Color.rgb(91, 98, 110))
                     background = GradientDrawable().apply {
                         cornerRadius = dp(13).toFloat()
                         setColor(Color.TRANSPARENT)
@@ -477,11 +477,15 @@ internal class FirebaseAccountController(
             fun selectProfileTab(index: Int) {
                 tabViews.forEachIndexed { tabIndex, tab ->
                     val selected = tabIndex == index
-                    tab.setTextColor(if (selected) Color.WHITE else Color.rgb(155, 163, 176))
+                    tab.setTextColor(if (selected) {
+                        if (dark) Color.WHITE else Color.rgb(25, 29, 36)
+                    } else if (dark) Color.rgb(155, 163, 176) else Color.rgb(91, 98, 110))
                     tab.background = GradientDrawable().apply {
                         cornerRadius = dp(13).toFloat()
-                        setColor(if (selected) Color.rgb(62, 68, 79) else Color.TRANSPARENT)
-                        if (selected) setStroke(dp(1), Color.rgb(145, 153, 166))
+                        setColor(if (selected) {
+                            if (dark) Color.rgb(62, 68, 79) else Color.rgb(218, 224, 232)
+                        } else Color.TRANSPARENT)
+                        if (selected) setStroke(dp(1), if (dark) Color.rgb(145, 153, 166) else Color.rgb(174, 181, 191))
                     }
                 }
                 favoritesCard.visibility = if (index == 0 || index == 1) View.VISIBLE else View.GONE
@@ -1016,7 +1020,7 @@ internal class FirebaseAccountController(
                 orientation = LinearLayout.VERTICAL
                 layoutDirection = View.LAYOUT_DIRECTION_RTL
                 setPadding(dp(20), dp(18), dp(20), dp(30))
-                setBackgroundColor(Color.rgb(7, 8, 10))
+                setBackgroundColor(if (dark) Color.rgb(7, 8, 10) else Color.rgb(246, 248, 251))
             }
             val header = LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL
@@ -1130,8 +1134,8 @@ internal class FirebaseAccountController(
                 setPadding(dp(4), dp(4), dp(4), dp(4))
                 background = GradientDrawable().apply {
                     cornerRadius = dp(16).toFloat()
-                    setColor(Color.rgb(19, 22, 28))
-                    setStroke(dp(1), Color.rgb(70, 77, 89))
+                    setColor(if (dark) Color.rgb(19, 22, 28) else Color.WHITE)
+                    setStroke(dp(1), if (dark) Color.rgb(70, 77, 89) else Color.rgb(199, 207, 218))
                 }
             }
             val tabItems = mutableListOf<Pair<TextView, String>>()
@@ -1147,7 +1151,7 @@ internal class FirebaseAccountController(
                 }
                 tabItems.forEach { (view, key) ->
                     val active = key == selected
-                    view.setTextColor(if (active) Color.rgb(12, 14, 18) else Color.rgb(190, 198, 210))
+                    view.setTextColor(if (active) Color.rgb(20, 23, 29) else if (dark) Color.rgb(190, 198, 210) else Color.rgb(91, 98, 110))
                     (view.background as? GradientDrawable)?.setColor(
                         if (active) Color.rgb(190, 198, 210) else Color.TRANSPARENT
                     )
@@ -1258,11 +1262,12 @@ internal class FirebaseAccountController(
         }
         syncNewGameNotifications(user.uid)
         notificationsListener?.remove()
+        val dark = isDarkMode()
         val page = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             layoutDirection = View.LAYOUT_DIRECTION_RTL
             setPadding(dp(18), dp(16), dp(18), dp(24))
-            setBackgroundColor(Color.rgb(7, 8, 10))
+            setBackgroundColor(if (dark) Color.rgb(7, 8, 10) else Color.rgb(246, 248, 251))
         }
         val header = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -1272,7 +1277,7 @@ internal class FirebaseAccountController(
             text = translate("الإشعارات")
             textSize = 24f
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(Color.WHITE)
+            setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
         }, LinearLayout.LayoutParams(0, -2, 1f))
         header.addView(ImageView(activity).apply {
             setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
@@ -1339,8 +1344,12 @@ internal class FirebaseAccountController(
                     setPadding(dp(12), dp(11), dp(12), dp(11))
                     background = GradientDrawable().apply {
                         cornerRadius = dp(15).toFloat()
-                        setColor(if (unread) Color.rgb(35, 38, 45) else Color.rgb(18, 20, 25))
-                        setStroke(dp(1), Color.rgb(75, 82, 94))
+                        setColor(if (dark) {
+                            if (unread) Color.rgb(35, 38, 45) else Color.rgb(18, 20, 25)
+                        } else {
+                            if (unread) Color.rgb(232, 236, 242) else Color.WHITE
+                        })
+                        setStroke(dp(1), if (dark) Color.rgb(75, 82, 94) else Color.rgb(199, 207, 218))
                     }
                     if (type == "game") {
                         val cover = ImageView(activity).apply {
@@ -1348,7 +1357,7 @@ internal class FirebaseAccountController(
                             clipToOutline = true
                             background = GradientDrawable().apply {
                                 cornerRadius = dp(9).toFloat()
-                                setColor(Color.rgb(42, 46, 55))
+                                setColor(if (dark) Color.rgb(42, 46, 55) else Color.rgb(225, 229, 235))
                             }
                             contentDescription = translate("غلاف اللعبة") + " " + gameName
                             if (coverLocalPath.isNotBlank() || coverImageUrl.startsWith("https://", ignoreCase = true)) {
@@ -1370,7 +1379,9 @@ internal class FirebaseAccountController(
                         text = (if (unread) "●  " else "○  ") + title
                         textSize = 13f
                         setTypeface(null, android.graphics.Typeface.BOLD)
-                        setTextColor(if (unread) Color.WHITE else Color.rgb(170, 177, 188))
+                        setTextColor(if (dark) {
+                            if (unread) Color.WHITE else Color.rgb(170, 177, 188)
+                        } else Color.rgb(25, 29, 36))
                     })
                     textColumn.addView(TextView(activity).apply {
                         text = body
@@ -1464,17 +1475,18 @@ internal class FirebaseAccountController(
             return
         }
         inboxListener?.remove()
+        val dark = isDarkMode()
         val page = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             layoutDirection = View.LAYOUT_DIRECTION_RTL
             setPadding(dp(18), dp(16), dp(18), dp(24))
-            setBackgroundColor(Color.rgb(7, 8, 10))
+            setBackgroundColor(if (dark) Color.rgb(7, 8, 10) else Color.rgb(246, 248, 251))
         }
         page.addView(TextView(activity).apply {
             text = translate("الرسائل الخاصة")
             textSize = 23f
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(Color.WHITE)
+            setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
             setPadding(0, 0, 0, dp(3))
         })
         page.addView(TextView(activity).apply {
@@ -1491,12 +1503,12 @@ internal class FirebaseAccountController(
             textSize = 14f
             gravity = Gravity.CENTER
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(Color.rgb(225, 230, 237))
+            setTextColor(if (dark) Color.rgb(225, 230, 237) else Color.rgb(25, 29, 36))
             setPadding(dp(14), dp(15), dp(14), dp(15))
             background = GradientDrawable().apply {
                 cornerRadius = dp(16).toFloat()
-                setColor(Color.rgb(38, 42, 50))
-                setStroke(dp(1), Color.rgb(115, 124, 138))
+                setColor(if (dark) Color.rgb(38, 42, 50) else Color.WHITE)
+                setStroke(dp(1), if (dark) Color.rgb(115, 124, 138) else Color.rgb(190, 198, 210))
             }
             setOnClickListener { showFollowersForNewMessage() }
         }, LinearLayout.LayoutParams(-1, -2).apply {
@@ -1536,12 +1548,12 @@ internal class FirebaseAccountController(
                         text = (profile.getString("displayName") ?: "MARCO") + "\n" +
                             (conversation.getString("lastMessage") ?: "")
                         textSize = 14f
-                        setTextColor(Color.rgb(220, 225, 232))
+                        setTextColor(if (dark) Color.rgb(220, 225, 232) else Color.rgb(25, 29, 36))
                         setPadding(dp(16), dp(16), dp(16), dp(16))
                         background = GradientDrawable().apply {
                             cornerRadius = dp(14).toFloat()
-                            setColor(Color.rgb(25, 28, 34))
-                            setStroke(dp(1), Color.rgb(75, 83, 96))
+                            setColor(if (dark) Color.rgb(25, 28, 34) else Color.WHITE)
+                            setStroke(dp(1), if (dark) Color.rgb(75, 83, 96) else Color.rgb(199, 207, 218))
                         }
                         setOnClickListener { openConversation(otherUid) }
                         setOnLongClickListener {
@@ -1684,6 +1696,7 @@ internal class FirebaseAccountController(
     private fun openConversation(otherUid: String) {
         val user = authRepository.currentUser ?: return
         if (user.isAnonymous) return
+        val dark = isDarkMode()
         messagesListener?.remove()
         inboxListener?.remove()
         messaging.canMessage(user.uid, otherUid).addOnSuccessListener { allowed ->
@@ -1702,7 +1715,7 @@ internal class FirebaseAccountController(
                         orientation = LinearLayout.VERTICAL
                         layoutDirection = View.LAYOUT_DIRECTION_RTL
                         setPadding(dp(14), dp(12), dp(14), dp(12))
-                        setBackgroundColor(Color.rgb(7, 8, 10))
+                        setBackgroundColor(if (dark) Color.rgb(7, 8, 10) else Color.rgb(246, 248, 251))
                     }
                     val header = LinearLayout(activity).apply {
                         orientation = LinearLayout.HORIZONTAL
@@ -1718,7 +1731,7 @@ internal class FirebaseAccountController(
                         text = profile.getString("displayName") ?: translate("محادثة")
                         textSize = 19f
                         setTypeface(null, android.graphics.Typeface.BOLD)
-                        setTextColor(Color.WHITE)
+                        setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
                     })
                     page.addView(header)
                     val messages = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
@@ -1753,13 +1766,13 @@ internal class FirebaseAccountController(
                             InputType.TYPE_TEXT_FLAG_MULTI_LINE or
                             InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
                         imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_SEND
-                        setTextColor(Color.WHITE)
-                        setHintTextColor(Color.rgb(130, 138, 151))
+                        setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+                        setHintTextColor(if (dark) Color.rgb(130, 138, 151) else Color.rgb(105, 113, 126))
                         setPadding(dp(12), dp(10), dp(12), dp(10))
                         background = GradientDrawable().apply {
                             cornerRadius = dp(16).toFloat()
-                            setColor(Color.rgb(24, 27, 33))
-                            setStroke(dp(1), Color.rgb(80, 88, 101))
+                            setColor(if (dark) Color.rgb(24, 27, 33) else Color.WHITE)
+                            setStroke(dp(1), if (dark) Color.rgb(80, 88, 101) else Color.rgb(190, 198, 210))
                         }
                     }
                     composer.addView(input, LinearLayout.LayoutParams(0, -2, 1f))
@@ -1826,7 +1839,7 @@ internal class FirebaseAccountController(
                                 setPadding(dp(12), dp(9), dp(12), dp(7))
                                 background = GradientDrawable().apply {
                                     cornerRadius = dp(16).toFloat()
-                                    setColor(if (mine) Color.rgb(190, 198, 210) else Color.rgb(35, 39, 46))
+                                    setColor(if (mine) Color.rgb(190, 198, 210) else if (dark) Color.rgb(35, 39, 46) else Color.WHITE)
                                 }
                             }
                             if (!replyText.isNullOrBlank()) {
@@ -1835,7 +1848,7 @@ internal class FirebaseAccountController(
                                     setPadding(dp(9), dp(6), dp(9), dp(6))
                                     background = GradientDrawable().apply {
                                         cornerRadius = dp(9).toFloat()
-                                        setColor(if (mine) Color.argb(48, 20, 23, 29) else Color.argb(105, 8, 10, 14))
+                                        setColor(if (mine) Color.argb(48, 20, 23, 29) else if (dark) Color.argb(105, 8, 10, 14) else Color.rgb(235, 238, 243))
                                     }
                                 }
                                 val replySender = if (snapshot.getString("replyToSenderUid") == user.uid) translate("أنت")
@@ -1844,7 +1857,7 @@ internal class FirebaseAccountController(
                                     text = translate("رد على") + " " + replySender
                                     textSize = 10f
                                     setTypeface(null, android.graphics.Typeface.BOLD)
-                                    setTextColor(if (mine) Color.rgb(55, 61, 72) else Color.rgb(190, 198, 210))
+                                    setTextColor(if (mine) Color.rgb(55, 61, 72) else if (dark) Color.rgb(190, 198, 210) else Color.rgb(65, 73, 86))
                                 })
                                 quote.addView(TextView(activity).apply {
                                     text = replyText
@@ -1852,7 +1865,7 @@ internal class FirebaseAccountController(
                                     textSize = 11f
                                     maxLines = 2
                                     ellipsize = android.text.TextUtils.TruncateAt.END
-                                    setTextColor(if (mine) Color.rgb(48, 53, 63) else Color.rgb(220, 224, 231))
+                                    setTextColor(if (mine) Color.rgb(48, 53, 63) else if (dark) Color.rgb(220, 224, 231) else Color.rgb(55, 61, 72))
                                     setPadding(0, dp(2), 0, 0)
                                 })
                                 bubble.addView(quote, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(7) })
@@ -1861,7 +1874,7 @@ internal class FirebaseAccountController(
                                 text = snapshot.getString("text").orEmpty()
                                 maxWidth = dp(250)
                                 textSize = 14f
-                                setTextColor(if (mine) Color.rgb(18, 20, 24) else Color.WHITE)
+                                setTextColor(if (mine) Color.rgb(18, 20, 24) else if (dark) Color.WHITE else Color.rgb(25, 29, 36))
                                 textDirection = View.TEXT_DIRECTION_FIRST_STRONG
                                 gravity = Gravity.START
                             }, LinearLayout.LayoutParams(-1, -2))

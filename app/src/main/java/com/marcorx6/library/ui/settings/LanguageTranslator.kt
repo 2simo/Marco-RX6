@@ -926,6 +926,15 @@ internal object LanguageTranslator {
         Regex("^تعذر التحقق من رابط الصورة \\(HTTP ([^،]+)، النوع: (.*)\\)$").matchEntire(ar)?.let { match ->
             return "${localized("تعذر التحقق من رابط الصورة") ?: "تعذر التحقق من رابط الصورة"} (HTTP ${match.groupValues[1]}, type: ${match.groupValues[2]})"
         }
+        Regex("^تقييماتي • (\\d+)$").matchEntire(ar)?.let { match ->
+            val count = match.groupValues[1]
+            return when (lang) {
+                "en" -> "My ratings • $count"
+                "fr" -> "Mes évaluations • $count"
+                "es" -> "Mis valoraciones • $count"
+                else -> ar
+            }
+        }
         Regex("^عرض 8 من (\\d+) لعبة مفضلة$").matchEntire(ar)?.let { match ->
             val count = match.groupValues[1]
             return when (lang) {

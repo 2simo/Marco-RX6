@@ -54,7 +54,7 @@ class BloggerAccessControllerTest {
 
         controller.refresh("blog-1", "account-1", true)
         assertEquals(true, admin)
-        background.removeFirst().invoke()
+        background.removeFirst().run()
         assertEquals(true, admin)
         ui.removeFirst().invoke()
         assertEquals(true, admin)
