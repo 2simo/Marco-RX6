@@ -98,7 +98,28 @@ class MainActivity : ComponentActivity() {
                 else android.graphics.Color.rgb(245, 247, 250))
         }
         screenHost.addView(createApplicationTopBar())
-        screenHost.addView(view, LinearLayout.LayoutParams(
+
+        // The shared app bar is the single owner of the status-bar/cutout inset.
+        // Several legacy pages also install their own system-bar listeners; without
+        // isolating the content subtree they apply the same top inset a second time,
+        // exposing the host's dark backing surface as a temporary black gap.
+        val pageHost = android.widget.FrameLayout(this).apply {
+            clipToPadding = false
+            clipChildren = false
+            addView(view, android.widget.FrameLayout.LayoutParams(-1, -1))
+        }
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(pageHost) { _, insets ->
+            val withoutTopBars = androidx.core.view.WindowInsetsCompat.Builder(insets)
+                .setInsets(
+                    androidx.core.view.WindowInsetsCompat.Type.statusBars() or
+                        androidx.core.view.WindowInsetsCompat.Type.displayCutout(),
+                    androidx.core.graphics.Insets.NONE
+                )
+                .build()
+            androidx.core.view.ViewCompat.dispatchApplyWindowInsets(pageHost, withoutTopBars)
+            insets
+        }
+        screenHost.addView(pageHost, LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
         ))
         setContentView(screenHost)
