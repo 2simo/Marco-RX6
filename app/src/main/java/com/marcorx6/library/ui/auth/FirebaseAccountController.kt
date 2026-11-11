@@ -84,6 +84,23 @@ internal class FirebaseAccountController(
         return AccentPalette.color(id)
     }
 
+    private fun accentSurface(base: Int, amount: Float): Int =
+        AccentPalette.surface(base, selectedAccentColor(), amount)
+
+    private fun profileSurface(dark: Boolean, raised: Boolean = false): Int =
+        accentSurface(
+            when {
+                dark && raised -> Color.rgb(35, 39, 47)
+                dark -> Color.rgb(19, 22, 28)
+                raised -> Color.rgb(242, 245, 249)
+                else -> Color.WHITE
+            },
+            if (raised) 0.20f else 0.12f
+        )
+
+    private fun profileStroke(dark: Boolean): Int =
+        accentSurface(if (dark) Color.rgb(91, 101, 116) else Color.rgb(190, 199, 211), 0.48f)
+
     fun openNotificationsFromLibrary() = showNotifications()
 
     fun openMessagesFromLibrary() = showInbox()
@@ -158,11 +175,16 @@ internal class FirebaseAccountController(
             setPadding(dp(20), dp(22), dp(20), dp(20))
             background = GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
-                if (dark) intArrayOf(Color.rgb(34, 38, 46), Color.rgb(15, 17, 22))
-                else intArrayOf(Color.WHITE, Color.rgb(229, 233, 239))
+                if (dark) intArrayOf(
+                    accentSurface(Color.rgb(34, 38, 46), 0.24f),
+                    accentSurface(Color.rgb(15, 17, 22), 0.18f)
+                ) else intArrayOf(
+                    accentSurface(Color.WHITE, 0.10f),
+                    accentSurface(Color.rgb(229, 233, 239), 0.16f)
+                )
             ).apply {
                 cornerRadius = dp(24).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(105, 115, 130) else Color.rgb(180, 189, 202))
+                setStroke(dp(1), profileStroke(dark))
             }
         }
         if (user != null && !user.isAnonymous) {
@@ -295,8 +317,8 @@ internal class FirebaseAccountController(
                 setPadding(dp(17), dp(16), dp(17), dp(16))
                 background = GradientDrawable().apply {
                     cornerRadius = dp(20).toFloat()
-                    setColor(if (dark) Color.rgb(21, 24, 30) else Color.WHITE)
-                    setStroke(dp(1), if (dark) Color.rgb(82, 91, 105) else Color.rgb(199, 207, 218))
+                    setColor(profileSurface(dark))
+                    setStroke(dp(1), profileStroke(dark))
                 }
                 elevation = dp(2).toFloat()
             }
@@ -343,7 +365,7 @@ internal class FirebaseAccountController(
                 text = translate("ألعابك المفضلة")
                 textSize = 16f
                 setTypeface(null, android.graphics.Typeface.BOLD)
-                setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+                setTextColor(selectedAccentColor())
             })
             favoritesCard.addView(TextView(activity).apply {
                 text = if (favoriteCount > 8) translate("عرض 8 من " + favoriteCount + " لعبة مفضلة")
@@ -361,7 +383,8 @@ internal class FirebaseAccountController(
                     gravity = Gravity.CENTER
                     background = GradientDrawable().apply {
                         cornerRadius = dp(14).toFloat()
-                        setColor(if (dark) Color.rgb(29, 32, 39) else Color.rgb(244, 246, 249))
+                        setColor(profileSurface(dark, raised = true))
+                        setStroke(dp(1), profileStroke(dark))
                     }
                 })
             } else {
@@ -393,7 +416,7 @@ internal class FirebaseAccountController(
                 text = translate("تقييماتي")
                 textSize = 16f
                 setTypeface(null, android.graphics.Typeface.BOLD)
-                setTextColor(if (dark) Color.WHITE else Color.rgb(25, 29, 36))
+                setTextColor(selectedAccentColor())
             }
             ratingsCard.addView(ratingsHeading)
             val ratingsContent = LinearLayout(activity).apply {
@@ -596,12 +619,12 @@ internal class FirebaseAccountController(
                 text = translate("معرّف ملفك الشخصي")
                 textSize = 13f
                 setTypeface(null, android.graphics.Typeface.BOLD)
-                setTextColor(Color.WHITE)
+                setTextColor(selectedAccentColor())
             })
             profileIdCard.addView(TextView(activity).apply {
                 text = user.uid
                 textSize = 10f
-                setTextColor(Color.rgb(155, 162, 173))
+                setTextColor(if (dark) Color.rgb(215, 221, 230) else Color.rgb(73, 82, 96))
                 setPadding(0, dp(6), 0, dp(10))
             })
             profileIdCard.addView(accountSubmitButton(translate("نسخ المعرّف لمشاركته")) {
@@ -727,8 +750,8 @@ internal class FirebaseAccountController(
                 setPadding(dp(16), dp(12), dp(16), dp(12))
                 background = GradientDrawable().apply {
                     cornerRadius = dp(14).toFloat()
-                    setColor(if (dark) Color.argb(155, 25, 28, 34) else Color.argb(220, 255, 255, 255))
-                    setStroke(dp(1), if (dark) Color.argb(120, 130, 138, 151) else Color.argb(160, 160, 168, 181))
+                    setColor(accentSurface(if (dark) Color.rgb(25, 28, 34) else Color.WHITE, if (dark) 0.24f else 0.12f))
+                    setStroke(dp(1), profileStroke(dark))
                 }
             }
             page.addView(bioInput, LinearLayout.LayoutParams(-1, dp(124)).apply { bottomMargin = dp(2) })
@@ -1522,8 +1545,8 @@ internal class FirebaseAccountController(
             setPadding(dp(14), dp(15), dp(14), dp(15))
             background = GradientDrawable().apply {
                 cornerRadius = dp(16).toFloat()
-                setColor(if (dark) Color.rgb(38, 42, 50) else Color.WHITE)
-                setStroke(dp(1), if (dark) Color.rgb(115, 124, 138) else selectedAccentColor())
+                setColor(profileSurface(dark, raised = true))
+                setStroke(dp(1), selectedAccentColor())
             }
             setOnClickListener { showFollowersForNewMessage() }
         }, LinearLayout.LayoutParams(-1, -2).apply {
@@ -1567,8 +1590,8 @@ internal class FirebaseAccountController(
                         setPadding(dp(16), dp(16), dp(16), dp(16))
                         background = GradientDrawable().apply {
                             cornerRadius = dp(14).toFloat()
-                            setColor(if (dark) Color.rgb(25, 28, 34) else Color.WHITE)
-                            setStroke(dp(1), if (dark) Color.rgb(75, 83, 96) else Color.rgb(199, 207, 218))
+                            setColor(profileSurface(dark, raised = true))
+                            setStroke(dp(1), profileStroke(dark))
                         }
                         setOnClickListener { openConversation(otherUid) }
                         setOnLongClickListener {
@@ -1787,8 +1810,8 @@ internal class FirebaseAccountController(
                         setPadding(dp(12), dp(10), dp(12), dp(10))
                         background = GradientDrawable().apply {
                             cornerRadius = dp(16).toFloat()
-                            setColor(if (dark) Color.rgb(24, 27, 33) else Color.WHITE)
-                            setStroke(dp(1), if (dark) Color.rgb(80, 88, 101) else selectedAccentColor())
+                            setColor(accentSurface(if (dark) Color.rgb(24, 27, 33) else Color.WHITE, if (dark) 0.28f else 0.14f))
+                            setStroke(dp(1), accentSurface(if (dark) Color.rgb(112, 122, 138) else Color.rgb(160, 168, 181), 0.58f))
                         }
                     }
                     composer.addView(input, LinearLayout.LayoutParams(0, -2, 1f))
@@ -1796,11 +1819,12 @@ internal class FirebaseAccountController(
                         text = translate("إرسال")
                         gravity = Gravity.CENTER
                         setTypeface(null, android.graphics.Typeface.BOLD)
-                        setTextColor(Color.rgb(18, 20, 24))
+                        setTextColor(AccentPalette.foregroundForColor(selectedAccentColor()))
                         setPadding(dp(14), dp(14), dp(14), dp(14))
                         background = GradientDrawable().apply {
                             cornerRadius = dp(15).toFloat()
                             setColor(selectedAccentColor())
+                            setStroke(dp(1), selectedAccentColor())
                         }
                     }
                     composer.addView(send, LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(7) })
@@ -2012,8 +2036,8 @@ internal class FirebaseAccountController(
                             setPadding(dp(12), dp(11), dp(12), dp(11))
                             background = GradientDrawable().apply {
                                 cornerRadius = dp(17).toFloat()
-                                setColor(if (dark) Color.rgb(23, 26, 32) else Color.WHITE)
-                                setStroke(dp(1), if (dark) Color.rgb(76, 84, 97) else Color.rgb(199, 207, 218))
+                                setColor(profileSurface(dark, raised = true))
+                                setStroke(dp(1), profileStroke(dark))
                             }
                             isClickable = true
                             isFocusable = true
@@ -2180,8 +2204,8 @@ internal class FirebaseAccountController(
             setPadding(dp(10), dp(8), dp(10), dp(8))
             background = GradientDrawable().apply {
                 cornerRadius = dp(18).toFloat()
-                setColor(if (dark) Color.rgb(19, 22, 28) else Color.WHITE)
-                setStroke(dp(1), if (dark) Color.rgb(82, 91, 105) else Color.rgb(199, 207, 218))
+                setColor(profileSurface(dark))
+                setStroke(dp(1), profileStroke(dark))
             }
         }
         val followers = TextView(activity).apply {
@@ -2207,7 +2231,8 @@ internal class FirebaseAccountController(
                 counter.isFocusable = true
                 counter.background = GradientDrawable().apply {
                     cornerRadius = dp(12).toFloat()
-                    setColor(if (dark) Color.rgb(29, 33, 40) else Color.rgb(235, 238, 243))
+                    setColor(profileSurface(dark, raised = true))
+                    setStroke(dp(1), profileStroke(dark))
                 }
                 counter.setOnClickListener {
                     showSocialConnections(targetUid, counter === followers)
@@ -2361,8 +2386,8 @@ internal class FirebaseAccountController(
         setPadding(dp(16), dp(15), dp(16), dp(14))
         background = GradientDrawable().apply {
             cornerRadius = dp(20).toFloat()
-            setColor(if (dark) Color.rgb(19, 22, 28) else Color.WHITE)
-            setStroke(dp(1), if (dark) Color.rgb(82, 91, 105) else Color.rgb(199, 207, 218))
+            setColor(profileSurface(dark))
+            setStroke(dp(1), profileStroke(dark))
         }
         elevation = dp(2).toFloat()
     }
@@ -2375,11 +2400,13 @@ internal class FirebaseAccountController(
             setPadding(dp(8), dp(8), dp(8), dp(9))
             background = GradientDrawable().apply {
                 cornerRadius = dp(15).toFloat()
-                setColor(if (dark) Color.rgb(30, 33, 40) else Color.rgb(247, 248, 250))
-                setStroke(dp(1), if (dark) Color.rgb(76, 84, 97) else Color.rgb(205, 211, 220))
+                setColor(profileSurface(dark, raised = true))
+                setStroke(dp(1), profileStroke(dark))
             }
             if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                android.content.res.ColorStateList.valueOf(Color.argb(55, 190, 198, 210)),
+                android.content.res.ColorStateList.valueOf(Color.argb(
+                    62, Color.red(selectedAccentColor()), Color.green(selectedAccentColor()), Color.blue(selectedAccentColor())
+                )),
                 null,
                 android.graphics.drawable.ColorDrawable(Color.WHITE)
             )
@@ -2773,8 +2800,8 @@ internal class FirebaseAccountController(
             setPadding(dp(16), dp(12), dp(16), dp(12))
             background = GradientDrawable().apply {
                 cornerRadius = dp(14).toFloat()
-                setColor(if (dark) Color.argb(155, 25, 28, 34) else Color.argb(220, 255, 255, 255))
-                setStroke(dp(1), if (dark) Color.argb(120, 130, 138, 151) else Color.argb(160, 160, 168, 181))
+                setColor(accentSurface(if (dark) Color.rgb(25, 28, 34) else Color.WHITE, if (dark) 0.24f else 0.12f))
+                setStroke(dp(1), profileStroke(dark))
             }
         }
     }
@@ -2785,16 +2812,16 @@ internal class FirebaseAccountController(
             textSize = 14f
             gravity = Gravity.CENTER
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(Color.rgb(20, 23, 29))
+            setTextColor(AccentPalette.foregroundForColor(selectedAccentColor()))
             minHeight = dp(52)
             contentDescription = label
             setPadding(dp(18), dp(15), dp(18), dp(15))
             background = GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(selectedAccentColor(), Color.rgb(105, 113, 126))
+                intArrayOf(selectedAccentColor(), accentSurface(Color.rgb(55, 62, 74), 0.30f))
             ).apply {
                 cornerRadius = dp(15).toFloat()
-                setStroke(dp(1), Color.argb(190, 145, 153, 166))
+                setStroke(dp(1), selectedAccentColor())
             }
             isClickable = true
             isFocusable = true
