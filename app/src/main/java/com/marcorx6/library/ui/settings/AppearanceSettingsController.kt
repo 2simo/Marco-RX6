@@ -151,6 +151,8 @@ internal class AppearanceSettingsController(
             rowOptions.forEach { option ->
                 val isSelected = option.id == selectedAccentId
                 val swatch = TextView(activity).apply {
+                    // Preserve each option's own preview color during global theming.
+                    tag = "marco_palette_swatch"
                     text = if (isSelected) "✓" else ""
                     textSize = 19f
                     setTypeface(null, android.graphics.Typeface.BOLD)
