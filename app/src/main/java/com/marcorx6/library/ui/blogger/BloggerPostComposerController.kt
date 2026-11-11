@@ -208,6 +208,32 @@ internal class BloggerPostComposerController(
         addField(box, size)
         addField(box, version)
         addField(box, format)
+        val languageBadge = android.widget.TextView(activity).apply {
+            text = "🌐  " + translate("لغة المحتوى")
+            textSize = 12f
+            typeface = android.graphics.Typeface.create(
+                "sans-serif-medium", android.graphics.Typeface.BOLD
+            )
+            setTextColor(accentForeground())
+            setPadding(dp(12), dp(7), dp(12), dp(7))
+            background = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                cornerRadius = dp(18).toFloat()
+                setColor(red().let { color ->
+                    android.graphics.Color.argb(
+                        34,
+                        android.graphics.Color.red(color),
+                        android.graphics.Color.green(color),
+                        android.graphics.Color.blue(color)
+                    )
+                })
+                setStroke(dp(1), red())
+            }
+            contentDescription = translate("شارة لغة المحتوى")
+        }
+        box.addView(languageBadge, LinearLayout.LayoutParams(-2, -2).apply {
+            bottomMargin = dp(6)
+        })
         addField(box, language)
         addField(box, password)
         addField(box, rights)
