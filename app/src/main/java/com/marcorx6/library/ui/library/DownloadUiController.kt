@@ -553,7 +553,7 @@ internal class DownloadUiController(
             TextView(activity).apply {
                 text = label; textSize = 11f; gravity = Gravity.CENTER
                 minimumHeight = dp(42); setPadding(dp(13), dp(9), dp(13), dp(9))
-                setTextColor(if (filled) primaryForeground else primary)
+                setTextColor(if (filled) primaryForeground else accentText)
                 this.background = GradientDrawable().apply {
                     setColor(if (filled) Color.argb(225, Color.red(primary), Color.green(primary), Color.blue(primary))
                         else if (dark) Color.argb(190, 35, 38, 45) else Color.WHITE)
