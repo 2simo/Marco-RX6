@@ -49,6 +49,9 @@ internal class DownloadConfirmationPanel(
             AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID
         ) ?: AccentPalette.DEFAULT_ID
         val silver = AccentPalette.color(selectedAccentId)
+        val accentText = if (selectedAccentId == "black_silver") {
+            if (dark) Color.rgb(218, 225, 235) else Color.rgb(43, 49, 59)
+        } else silver
         val background = AccentPalette.surface(
             if (dark) Color.rgb(13, 15, 19) else Color.rgb(247, 248, 250), silver, 0.045f
         )
@@ -270,7 +273,7 @@ internal class DownloadConfirmationPanel(
             text = translate("إلغاء")
             textSize = 12f
             gravity = Gravity.CENTER
-            setTextColor(silver)
+            setTextColor(accentText)
             this.background = shape(surface)
             isClickable = true
             isFocusable = true
