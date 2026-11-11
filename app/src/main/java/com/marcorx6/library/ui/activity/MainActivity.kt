@@ -399,7 +399,10 @@ class MainActivity : ComponentActivity() {
             setAdmin = { googleAccountRuntimeFeature.isAdminSession = it },
             isAdminSession = { googleAccountRuntimeFeature.isAdminSession },
             postToUi = activityServicesRuntimeFeature::postToUi,
-            refreshUi = ::createInterface,
+            // Permission checks finish asynchronously. Refresh only the visible game list;
+            // rebuilding the Activity root here would eject users from whichever section
+            // they opened while Blogger access was being verified.
+            refreshUi = ::renderGames,
             merge = { imported -> GameImportMerger.merge(gameDataRuntimeFeature.libraryStore, imported) },
             setBlogId = { googleAccountRuntimeFeature.blogId = it },
             refreshAccess = { bloggerRuntimeFeature.refreshAccess() },
