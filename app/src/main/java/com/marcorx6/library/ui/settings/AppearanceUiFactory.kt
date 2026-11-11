@@ -346,6 +346,11 @@ internal class AppearanceUiFactory(
     }
 
     fun applyUnifiedSkin(view: View) {
+        // Palette swatches and the shared top bar are authored from explicit palette
+        // values. Do not reinterpret their saturated colors as legacy silver tokens.
+        // The top bar owns its children too, so skipping its subtree preserves its
+        // already-correct icon tints and accent surfaces during a global skin pass.
+        if (view.tag == "marco_palette_swatch" || view.tag == "marco_primary_topbar") return
         // Always start from the original drawable/tint/text values so a second,
         // third or later color selection replaces the previous palette cleanly.
         restoreOriginalStyle(view)
