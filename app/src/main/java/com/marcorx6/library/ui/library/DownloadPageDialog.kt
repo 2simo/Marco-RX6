@@ -63,8 +63,16 @@ internal class DownloadPageDialog(
         // Reading app_settings here silently defaulted this browser to dark mode.
         val appPreferences = AppearancePreferencesStore.appearance(activity)
         val dark = AppearancePreferencesStore.isDarkMode(appPreferences)
-        val background = if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247)
-        val surface = if (dark) Color.rgb(25, 28, 34) else Color.WHITE
+        val background = AccentPalette.surface(
+            if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247),
+            primary,
+            if (dark) 0.20f else 0.10f
+        )
+        val surface = AccentPalette.surface(
+            if (dark) Color.rgb(25, 28, 34) else Color.WHITE,
+            primary,
+            if (dark) 0.30f else 0.16f
+        )
         val selectedAccentId = appPreferences.getString(AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID)
             ?: AccentPalette.DEFAULT_ID
         val primary = AccentPalette.color(selectedAccentId)
