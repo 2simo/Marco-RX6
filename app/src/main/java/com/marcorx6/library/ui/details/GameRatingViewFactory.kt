@@ -10,6 +10,7 @@ import android.widget.RatingBar
 import android.widget.TextView
 import android.widget.Toast
 import com.marcorx6.library.data.Game
+import com.marcorx6.library.ui.AccentPalette
 
 /** Lets a registered user rate the game; engagement summaries are shown on library cards only. */
 internal class GameRatingViewFactory(
