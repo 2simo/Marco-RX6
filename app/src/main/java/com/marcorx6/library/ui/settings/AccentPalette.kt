@@ -33,7 +33,7 @@ internal object AccentPalette {
     fun surface(base: Int, accent: Int, amount: Float, accentId: String? = null): Int {
         // Black & Silver keeps black/white as the dominant surface. Silver is
         // reserved for restrained highlights instead of tinting every surface blue-grey.
-        if (accentId == "black_silver") {
+        if (accentId == "black_silver" || (accentId == null && accent == Color.rgb(197, 206, 219))) {
             val neutral = if (Color.red(base) < 128) Color.rgb(27, 29, 34)
                 else Color.rgb(239, 242, 247)
             val neutralAmount = (amount * 0.18f).coerceIn(0f, 0.035f)
