@@ -97,16 +97,14 @@ internal class GameSimilarGamesViewFactory(
                 val languageBadge = TextView(activity).apply {
                     text = languageLabel
                     textSize = 8.5f
-                    setTextColor(Color.WHITE)
+                    setTextColor(AccentPalette.foregroundForColor(red()))
                     typeface = android.graphics.Typeface.create(
                         "sans-serif-medium", android.graphics.Typeface.BOLD
                     )
                     gravity = Gravity.CENTER
                     setPadding(dp(7), dp(4), dp(7), dp(4))
                     background = GradientDrawable().apply {
-                        setColor(if (dark)
-                            AccentPalette.surface(Color.rgb(35, 38, 45), red(), 0.20f)
-                        else AccentPalette.surface(Color.rgb(242, 244, 247), red(), 0.14f))
+                        setColor(red())
                         cornerRadius = dp(8).toFloat()
                         setStroke(dp(1), red())
                     }
