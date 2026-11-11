@@ -3,6 +3,16 @@ package com.marcorx6.library.ui
 /** Centralized static translations for the app interface. */
 internal object LanguageTranslator {
     private val translations = mapOf(
+            "اختر اللون الأساسي للتطبيق" to listOf("Choose the app primary color", "Choisissez la couleur principale de l’application", "Elige el color principal de la aplicación"),
+            "غيّر لون الأزرار والأيقونات والعناصر التفاعلية مع الحفاظ على هوية MARCO" to listOf("Change buttons, icons and interactive accents while keeping MARCO’s identity", "Changez la couleur des boutons, icônes et éléments interactifs tout en préservant l’identité MARCO", "Cambia el color de botones, iconos y elementos interactivos sin perder la identidad de MARCO"),
+            "فضي" to listOf("Silver", "Argent", "Plateado"),
+            "أزرق" to listOf("Blue", "Bleu", "Azul"),
+            "بنفسجي" to listOf("Purple", "Violet", "Morado"),
+            "أحمر" to listOf("Red", "Rouge", "Rojo"),
+            "أخضر" to listOf("Green", "Vert", "Verde"),
+            "ذهبي" to listOf("Gold", "Or", "Dorado"),
+            "سماوي" to listOf("Cyan", "Cyan", "Cian"),
+            "وردي" to listOf("Pink", "Rose", "Rosa"),
             "المظهر والحركة" to listOf("APPEARANCE & MOTION", "APPARENCE ET MOUVEMENT", "APARIENCIA Y MOVIMIENTO"),
             "الخصوصية والتنزيلات" to listOf("PRIVACY & DOWNLOADS", "CONFIDENTIALITÉ ET TÉLÉCHARGEMENTS", "PRIVACIDAD Y DESCARGAS"),
             "اللغة والمجتمع" to listOf("LANGUAGE & COMMUNITY", "LANGUE ET COMMUNAUTÉ", "IDIOMA Y COMUNIDAD"),
