@@ -44,6 +44,11 @@ internal class DownloadConfirmationPanel(
         fun dp(value: Int): Int =
             (value * activity.resources.displayMetrics.density).toInt()
 
+        val appearance = AppearancePreferencesStore.appearance(activity)
+        val selectedAccentId = appearance.getString(
+            AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID
+        ) ?: AccentPalette.DEFAULT_ID
+        val silver = AccentPalette.color(selectedAccentId)
         val background = AccentPalette.surface(
             if (dark) Color.rgb(13, 15, 19) else Color.rgb(247, 248, 250), silver, 0.045f
         )
@@ -53,11 +58,6 @@ internal class DownloadConfirmationPanel(
         val raised = AccentPalette.surface(
             if (dark) Color.rgb(36, 40, 47) else Color.rgb(239, 242, 246), silver, if (dark) 0.13f else 0.075f
         )
-        val appearance = AppearancePreferencesStore.appearance(activity)
-        val selectedAccentId = appearance.getString(
-            AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID
-        ) ?: AccentPalette.DEFAULT_ID
-        val silver = AccentPalette.color(selectedAccentId)
         val heading = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
         val muted = if (dark) Color.rgb(157, 166, 179) else Color.rgb(103, 111, 124)
         val border = if (dark)
