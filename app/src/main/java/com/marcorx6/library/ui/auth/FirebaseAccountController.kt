@@ -88,9 +88,7 @@ internal class FirebaseAccountController(
         val preferences = AppearancePreferencesStore.appearance(activity)
         val id = preferences.getString(AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID)
             ?: AccentPalette.DEFAULT_ID
-        return if (id == "black_silver") {
-            if (dark) Color.rgb(218, 225, 235) else Color.rgb(43, 49, 59)
-        } else selectedAccentColor()
+        return AccentPalette.readableAccentText(id, dark)
     }
 
     private fun accentSurface(base: Int, amount: Float): Int =
