@@ -35,7 +35,7 @@ internal class AppearanceSettingsController(
         fun dp(value: Int) = (value * activity.resources.displayMetrics.density).toInt()
         val dark = preferences.getBoolean("dark_mode", true)
         val bg = if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247)
-        val silverAccent = Color.rgb(190, 198, 210)
+        val selectedAccentId = preferences.getString(AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID) ?: AccentPalette.DEFAULT_ID\n        val silverAccent = AccentPalette.color(selectedAccentId)
         val ink = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
         val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
         fun addGlassTouch(view: View) {
@@ -118,22 +118,73 @@ internal class AppearanceSettingsController(
             setTextColor(ink)
         })
         colorCard.addView(TextView(activity).apply {
-            text = translate("فضي معدني  •  مع الأسود الفحمي")
+            text = translate("غيّر لون الأزرار والأيقونات والعناصر التفاعلية مع الحفاظ على هوية MARCO")
             textSize = 12f
             setTextColor(muted)
             setPadding(0, dp(8), 0, dp(12))
         })
         colorCard.addView(TextView(activity).apply {
-            text = translate("●   فضي")
-            textSize = 14f
-            setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(Color.rgb(20, 23, 29))
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(15), dp(14), dp(15), dp(14))
-            background = GradientDrawable().apply {
-                setColor(silverAccent); cornerRadius = dp(14).toFloat()
-            }
+            text = translate("اختر اللون الأساسي للتطبيق")
+            textSize = 12f
+            setTextColor(muted)
+            setPadding(0, dp(8), 0, dp(12))
         })
+        val paletteRows = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+        AccentPalette.options.chunked(4).forEach { rowOptions ->
+            val paletteRow = LinearLayout(activity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER
+            }
+            rowOptions.forEach { option ->
+                val isSelected = option.id == selectedAccentId
+                val swatch = TextView(activity).apply {
+                    text = if (isSelected) "✓" else ""
+                    textSize = 19f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    gravity = Gravity.CENTER
+                    setTextColor(AccentPalette.foreground(option.id))
+                    contentDescription = translate(option.label)
+                    background = GradientDrawable().apply {
+                        setColor(option.color)
+                        cornerRadius = dp(15).toFloat()
+                        setStroke(dp(if (isSelected) 3 else 1),
+                            if (isSelected) AccentPalette.foreground(option.id)
+                            else if (dark) Color.argb(110, 190, 198, 210) else Color.argb(130, 105, 113, 126))
+                    }
+                    isClickable = true
+                    isFocusable = true
+                    minimumHeight = dp(44)
+                    setOnClickListener {
+                        if (preferences.getString(AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID) != option.id) {
+                            preferences.edit().putString(AccentPalette.PREFERENCE_KEY, option.id).apply()
+                            show()
+                        }
+                    }
+                }
+                val item = LinearLayout(activity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    gravity = Gravity.CENTER
+                    setPadding(dp(5), dp(4), dp(5), dp(4))
+                    addView(swatch, LinearLayout.LayoutParams(dp(48), dp(44)))
+                    addView(TextView(activity).apply {
+                        text = translate(option.label)
+                        textSize = 10f
+                        gravity = Gravity.CENTER
+                        setTextColor(if (isSelected) silverAccent else muted)
+                        setPadding(0, dp(5), 0, 0)
+                        maxLines = 1
+                    }, LinearLayout.LayoutParams(-1, -2))
+                }
+                paletteRow.addView(item, LinearLayout.LayoutParams(0, -2, 1f))
+            }
+            repeat(4 - rowOptions.size) {
+                paletteRow.addView(View(activity), LinearLayout.LayoutParams(0, dp(1), 1f))
+            }
+            paletteRows.addView(paletteRow, LinearLayout.LayoutParams(-1, -2))
+        }
+        colorCard.addView(paletteRows, LinearLayout.LayoutParams(-1, -2))
         root.addView(colorCard, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
         val animations = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
