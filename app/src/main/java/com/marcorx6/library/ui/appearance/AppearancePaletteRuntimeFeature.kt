@@ -15,7 +15,7 @@ internal class AppearancePaletteRuntimeFeature(context: Context) {
     fun preferences(): SharedPreferences = appearancePreferences
     fun isDarkMode(): Boolean = AppearancePreferencesStore.isDarkMode(appearancePreferences)
 
-    private fun selectedAccentId(): String =
+    fun accentId(): String =
         appearancePreferences.getString(AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID)
             ?: AccentPalette.DEFAULT_ID
 
