@@ -105,8 +105,10 @@ class MainActivity : ComponentActivity() {
         androidx.core.view.ViewCompat.requestApplyInsets(screenHost)
         com.marcorx6.library.ui.KeyboardLayoutController.install(this, view)
         activityServicesRuntimeFeature.applySystemBarAppearance()
-        applyMotionPreferences(view)
-        applyUnifiedSkin(view)
+        applyMotionPreferences(screenHost)
+        // Skin the actual Activity content root, not only the page body. This
+        // includes the shared app bar and every screen child in one pass.
+        applyUnifiedSkin(screenHost)
         if (animationsEnabled) {
             view.animate().cancel()
             view.animate()
