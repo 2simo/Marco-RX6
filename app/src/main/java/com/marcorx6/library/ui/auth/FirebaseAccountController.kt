@@ -1825,6 +1825,7 @@ internal class FirebaseAccountController(
                     }
                     composer.addView(input, LinearLayout.LayoutParams(0, -2, 1f))
                     val send = TextView(activity).apply {
+                        tag = "marco_preserve_contrast"
                         text = translate("إرسال")
                         gravity = Gravity.CENTER
                         setTypeface(null, android.graphics.Typeface.BOLD)
@@ -1883,6 +1884,7 @@ internal class FirebaseAccountController(
                             } ?: "…"
                             val replyText = snapshot.getString("replyToText")
                             val bubble = LinearLayout(activity).apply {
+                                tag = "marco_preserve_contrast"
                                 orientation = LinearLayout.VERTICAL
                                 layoutDirection = View.LAYOUT_DIRECTION_LTR
                                 setPadding(dp(12), dp(9), dp(12), dp(7))
@@ -2289,6 +2291,7 @@ internal class FirebaseAccountController(
             return
         }
         val followButton = TextView(activity).apply {
+            tag = "marco_preserve_contrast"
             text = translate("جارٍ التحقق...")
             gravity = Gravity.CENTER
             textSize = 14f
@@ -2305,6 +2308,7 @@ internal class FirebaseAccountController(
         }
         page.addView(followButton, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
         val messageButton = TextView(activity).apply {
+            tag = "marco_preserve_contrast"
             text = translate("رسالة")
             gravity = Gravity.CENTER
             textSize = 14f
@@ -2404,6 +2408,7 @@ internal class FirebaseAccountController(
     private fun profileGameCard(game: Game, dark: Boolean, footer: String): LinearLayout {
         val card = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
+            if (primary) tag = "marco_preserve_contrast"
             isClickable = true
             isFocusable = true
             setPadding(dp(8), dp(8), dp(8), dp(9))
