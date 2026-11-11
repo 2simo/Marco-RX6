@@ -2565,6 +2565,7 @@ internal class FirebaseAccountController(
     ) {
         val card = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
+            if (primary) tag = "marco_preserve_contrast"
             isClickable = true
             isFocusable = true
             setPadding(dp(18), dp(16), dp(18), dp(16))
