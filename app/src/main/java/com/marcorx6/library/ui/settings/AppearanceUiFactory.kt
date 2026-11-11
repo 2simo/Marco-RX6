@@ -58,6 +58,41 @@ internal class AppearanceUiFactory(
         Color.rgb(65, 73, 86)
     )
 
+    private val paletteAccentTokens = AccentPalette.options.map { it.color and 0x00FFFFFF }.toSet()
+    private val paletteDarkAccentTokens = AccentPalette.options.map { option ->
+        Color.rgb(
+            (Color.red(option.color) * 0.72f).toInt(),
+            (Color.green(option.color) * 0.72f).toInt(),
+            (Color.blue(option.color) * 0.72f).toInt()
+        ) and 0x00FFFFFF
+    }.toSet()
+
+    // Surfaces produced by AccentPalette.surface() are deliberately tinted and
+    // therefore are not grayscale. Remember every supported source blend so an
+    // already-open screen can move from its previous accent to the next one.
+    private val accentSurfaceTokens: Map<Int, Pair<Int, Float>> = run {
+        val bases = listOf(
+            Color.rgb(8, 9, 12) to 0.20f,
+            Color.rgb(245, 247, 250) to 0.10f,
+            Color.rgb(25, 28, 34) to 0.30f,
+            Color.rgb(224, 229, 237) to 0.20f,
+            Color.rgb(35, 38, 45) to 0.28f,
+            Color.rgb(15, 17, 22) to 0.22f,
+            Color.WHITE to 0.16f,
+            Color.rgb(68, 76, 91) to 0.24f,
+            Color.rgb(30, 35, 45) to 0.18f,
+            Color.rgb(12, 15, 21) to 0.12f,
+            Color.rgb(250, 251, 253) to 0.10f,
+            Color.rgb(220, 225, 232) to 0.14f,
+            Color.rgb(185, 193, 204) to 0.16f
+        )
+        AccentPalette.options.flatMap { option ->
+            bases.map { (base, amount) ->
+                (AccentPalette.surface(base, option.color, amount) and 0x00FFFFFF) to (base to amount)
+            }
+        }.toMap()
+    }
+
     // Keep the unthemed source values. Without these snapshots, the first palette
     // pass permanently turns a neutral surface into a saturated color; the next
     // pass then mistakes that previous accent for branded artwork and leaves it.
@@ -177,8 +212,14 @@ internal class AppearanceUiFactory(
      */
     private fun legacyAccentReplacement(color: Int): Int? {
         val rgb = color and 0x00FFFFFF
-        val isDarkAccent = rgb in darkLegacyAccentTokens
-        if (!isDarkAccent && rgb !in lightLegacyAccentTokens) return null
+        val previousSurface = accentSurfaceTokens[rgb]
+        if (previousSurface != null) {
+            val replacement = AccentPalette.surface(previousSurface.first, red(), previousSurface.second)
+            return Color.argb(Color.alpha(color), Color.red(replacement), Color.green(replacement), Color.blue(replacement))
+        }
+        val isDarkAccent = rgb in darkLegacyAccentTokens || rgb in paletteDarkAccentTokens
+        val isAccent = isDarkAccent || rgb in lightLegacyAccentTokens || rgb in paletteAccentTokens
+        if (!isAccent) return null
         val accent = red()
         val factor = if (isDarkAccent) 0.72f else 1f
         return Color.argb(
