@@ -60,8 +60,15 @@ internal class FirstRunSetupController(
         dialog.setOnDismissListener { if (getSetupDialog() === dialog) setSetupDialog(null) }
         fun setupBackground(dark: Boolean) = GradientDrawable(
             GradientDrawable.Orientation.TL_BR,
-            if (dark) intArrayOf(Color.rgb(7, 8, 11), Color.rgb(16, 18, 23), Color.rgb(5, 6, 9))
-            else intArrayOf(Color.rgb(250, 251, 253), Color.rgb(232, 236, 242), Color.rgb(245, 247, 250))
+            if (dark) intArrayOf(
+                AccentPalette.surface(Color.rgb(7, 8, 11), activeAccent, 0.22f),
+                AccentPalette.surface(Color.rgb(16, 18, 23), activeAccent, 0.18f),
+                AccentPalette.surface(Color.rgb(5, 6, 9), activeAccent, 0.16f)
+            ) else intArrayOf(
+                AccentPalette.surface(Color.rgb(250, 251, 253), activeAccent, 0.12f),
+                AccentPalette.surface(Color.rgb(232, 236, 242), activeAccent, 0.14f),
+                AccentPalette.surface(Color.rgb(245, 247, 250), activeAccent, 0.10f)
+            )
         ).apply { cornerRadius = dp(24).toFloat() }
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
