@@ -32,11 +32,11 @@ internal class MainLibraryInterfaceController(
     private val rounded: (Int, Int) -> GradientDrawable,
     private val createText: (String, Float, Int, Boolean) -> TextView,
     private val games: () -> List<com.marcorx6.library.data.Game>,
-    private val bg: Int,
-    private val panel: Int,
-    private val red: Int,
-    private val white: Int,
-    private val gray: Int,
+    private var bg: Int,
+    private var panel: Int,
+    private var red: Int,
+    private var white: Int,
+    private var gray: Int,
     private val adminSession: () -> Boolean,
     private val getSelected: () -> String,
     private val setSelected: (String) -> Unit,
@@ -72,6 +72,14 @@ internal class MainLibraryInterfaceController(
         get() = getSortMode()
         set(value) = setSortMode(value)
     private var activeDockTab: String = "HOME"
+
+    fun updatePalette(bg: Int, panel: Int, red: Int, white: Int, gray: Int) {
+        this.bg = bg
+        this.panel = panel
+        this.red = red
+        this.white = white
+        this.gray = gray
+    }
 
     private fun isDarkMode(): Boolean = darkMode()
 
