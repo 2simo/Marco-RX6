@@ -218,6 +218,42 @@ internal class AppearanceUiFactory(
      * centrally so older screens inherit the selected accent without recoloring
      * ordinary neutral text, borders, or black/silver surfaces.
      */
+    private fun recoverAccentSurface(color: Int): Int? {
+        val observedRed = Color.red(color)
+        val observedGreen = Color.green(color)
+        val observedBlue = Color.blue(color)
+        val activeId = selectedAccentId()
+        for (option in AccentPalette.options) {
+            if (option.id == "black_silver" || option.id == activeId) continue
+            for (step in 5..100) {
+                val amount = step * 0.005f
+                val remainder = 1f - amount
+                val baseRed = ((observedRed - Color.red(option.color) * amount) / remainder).toInt()
+                val baseGreen = ((observedGreen - Color.green(option.color) * amount) / remainder).toInt()
+                val baseBlue = ((observedBlue - Color.blue(option.color) * amount) / remainder).toInt()
+                if (baseRed !in 0..255 || baseGreen !in 0..255 || baseBlue !in 0..255) continue
+                val base = Color.rgb(baseRed, baseGreen, baseBlue)
+                val hsv = FloatArray(3)
+                Color.colorToHSV(base, hsv)
+                if (hsv[1] > 0.24f) continue
+                val expected = AccentPalette.surface(base, option.color, amount, option.id)
+                if (kotlin.math.abs(Color.red(expected) - observedRed) <= 1 &&
+                    kotlin.math.abs(Color.green(expected) - observedGreen) <= 1 &&
+                    kotlin.math.abs(Color.blue(expected) - observedBlue) <= 1
+                ) {
+                    val replacement = AccentPalette.surface(base, red(), amount, activeId)
+                    return Color.argb(
+                        Color.alpha(color),
+                        Color.red(replacement),
+                        Color.green(replacement),
+                        Color.blue(replacement)
+                    )
+                }
+            }
+        }
+        return null
+    }
+
     private fun legacyAccentReplacement(color: Int): Int? {
         val rgb = color and 0x00FFFFFF
         val previousSurface = accentSurfaceTokens[rgb]
@@ -225,6 +261,7 @@ internal class AppearanceUiFactory(
             val replacement = AccentPalette.surface(previousSurface.first, red(), previousSurface.second, selectedAccentId())
             return Color.argb(Color.alpha(color), Color.red(replacement), Color.green(replacement), Color.blue(replacement))
         }
+        recoverAccentSurface(color)?.let { return it }
         val isDarkAccent = rgb in darkLegacyAccentTokens || rgb in paletteDarkAccentTokens
         val isAccent = isDarkAccent || rgb in lightLegacyAccentTokens || rgb in paletteAccentTokens
         if (!isAccent) return null
