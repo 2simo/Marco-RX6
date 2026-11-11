@@ -547,8 +547,8 @@ internal class MainLibraryInterfaceController(
             }
 
             popularByPlatform.forEachIndexed { index, game ->
-                // A layered shell gives the featured cover a real raised-card silhouette:
-                // metallic face, blue edge, and a visible lower extrusion beneath it.
+                // A layered shell gives the featured cover a raised-card silhouette.
+                // Its metallic edge follows the selected app accent; cover artwork stays untouched.
                 val card = FrameLayout(context).apply {
                     clipChildren = false
                     clipToPadding = false
@@ -558,8 +558,7 @@ internal class MainLibraryInterfaceController(
                 }
                 val cardExtrusion = View(context).apply {
                     background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                        if (isDarkMode()) intArrayOf(Color.rgb(38, 91, 158), Color.rgb(17, 43, 78))
-                        else intArrayOf(Color.rgb(125, 136, 151), Color.rgb(65, 73, 85))).apply {
+                        intArrayOf(accentShade(), red)).apply {
                         cornerRadius = dp(21).toFloat()
                     }
                 }
@@ -572,13 +571,20 @@ internal class MainLibraryInterfaceController(
                     setPadding(dp(5), dp(5), dp(5), dp(9))
                     background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
                         if (isDarkMode()) {
-                            intArrayOf(Color.rgb(68, 76, 91), Color.rgb(30, 35, 45), Color.rgb(12, 15, 21))
+                            intArrayOf(
+                                AccentPalette.surface(Color.rgb(68, 76, 91), red, 0.24f),
+                                AccentPalette.surface(Color.rgb(30, 35, 45), red, 0.18f),
+                                AccentPalette.surface(Color.rgb(12, 15, 21), red, 0.12f)
+                            )
                         } else {
-                            intArrayOf(Color.rgb(250, 251, 253), Color.rgb(220, 225, 232), Color.rgb(185, 193, 204))
+                            intArrayOf(
+                                AccentPalette.surface(Color.rgb(250, 251, 253), red, 0.10f),
+                                AccentPalette.surface(Color.rgb(220, 225, 232), red, 0.14f),
+                                AccentPalette.surface(Color.rgb(185, 193, 204), red, 0.16f)
+                            )
                         }).apply {
                         cornerRadius = dp(20).toFloat()
-                        setStroke(dp(1), if (isDarkMode()) Color.argb(235, 100, 158, 230)
-                            else Color.argb(220, 112, 123, 139))
+                        setStroke(dp(1), red)
                     }
                     elevation = dp(12).toFloat()
                 }
