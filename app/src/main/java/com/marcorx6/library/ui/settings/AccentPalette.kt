@@ -7,7 +7,7 @@ import android.graphics.Color
  * the selected accent is used for interactive controls, highlights and states.
  */
 internal object AccentPalette {
-    const val PREFERENCE_KEY = "primary_color"
+    const val PREFERENCE_KEY = "accent"
     const val DEFAULT_ID = "silver"
 
     data class Option(val id: String, val label: String, val color: Int) 
