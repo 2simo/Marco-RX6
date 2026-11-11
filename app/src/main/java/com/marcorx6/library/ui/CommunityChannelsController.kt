@@ -82,7 +82,7 @@ internal class CommunityChannelsController(
             text = translate("متابعة إلى التطبيق")
             isAllCaps = false
             textSize = 14f
-            setTextColor(Color.rgb(20, 23, 29))
+            setTextColor(AccentPalette.foregroundForColor(red()))
             background = GradientDrawable().apply {
                 setColor(red())
                 cornerRadius = dp(16).toFloat()
