@@ -91,5 +91,6 @@ internal class MainLibraryFeature(
     fun refreshPalette(bg: Int, panel: Int, red: Int, white: Int, gray: Int) =
         controller.updatePalette(bg, panel, red, white, gray)
     fun create() = controller.create()
+    fun updateAdminAction() = controller.updateAdminAction()
     fun dispose() = controller.dispose()
 }
