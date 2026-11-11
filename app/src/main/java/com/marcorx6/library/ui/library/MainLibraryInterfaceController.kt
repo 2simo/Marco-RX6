@@ -745,13 +745,24 @@ internal class MainLibraryInterfaceController(
                 minimumHeight = dp(48)
                 contentDescription = text.toString()
                 setPadding(dp(14), dp(9), dp(14), dp(9))
+                val chipBaseStart = if (isDarkMode()) Color.rgb(35, 38, 45) else Color.rgb(255, 255, 255)
+                val chipBaseEnd = if (isDarkMode()) Color.rgb(15, 17, 22) else Color.rgb(222, 226, 232)
                 background = GradientDrawable(
                     GradientDrawable.Orientation.LEFT_RIGHT,
-                    if (isDarkMode()) intArrayOf(Color.argb(210, 35, 38, 45), Color.argb(192, 15, 17, 22))
-                    else intArrayOf(Color.argb(228, 255, 255, 255), Color.argb(211, 222, 226, 232))
+                    intArrayOf(
+                        AccentPalette.surface(chipBaseStart, red, if (isDarkMode()) 0.24f else 0.13f),
+                        AccentPalette.surface(chipBaseEnd, red, if (isDarkMode()) 0.20f else 0.17f)
+                    )
                 ).apply {
                     cornerRadius = dp(18).toFloat()
-                    setStroke(dp(1), if (isDarkMode()) Color.argb(145, 130, 138, 151) else Color.argb(155, 160, 168, 181))
+                    setStroke(
+                        dp(1),
+                        AccentPalette.surface(
+                            if (isDarkMode()) Color.rgb(130, 138, 151) else Color.rgb(160, 168, 181),
+                            red,
+                            if (isDarkMode()) 0.48f else 0.42f
+                        )
+                    )
                 }
                 setTextColor(muted)
                 isClickable = true
