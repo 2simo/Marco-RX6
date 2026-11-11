@@ -29,14 +29,41 @@ internal object AccentPalette {
 
     fun foreground(id: String = DEFAULT_ID): Int = foregroundForColor(color(id))
 
-    /** Accent-colored text on light surfaces is darkened to maintain readable contrast. */
+    /** Return an accent-hued foreground that meets WCAG AA against the app's neutral surface. */
     fun readableAccentText(id: String = DEFAULT_ID, darkMode: Boolean): Int {
         val accent = color(id)
-        if (darkMode) return accent
+        val referenceSurface = if (darkMode) Color.rgb(25, 28, 34) else Color.rgb(246, 248, 251)
+        fun channel(value: Int): Double {
+            val normalized = value / 255.0
+            return if (normalized <= 0.04045) normalized / 12.92
+            else Math.pow((normalized + 0.055) / 1.055, 2.4)
+        }
+        fun luminance(value: Int): Double =
+            0.2126 * channel(Color.red(value)) +
+                0.7152 * channel(Color.green(value)) +
+                0.0722 * channel(Color.blue(value))
+        fun contrast(first: Int, second: Int): Double {
+            val one = luminance(first)
+            val two = luminance(second)
+            return (maxOf(one, two) + 0.05) / (minOf(one, two) + 0.05)
+        }
+        if (contrast(accent, referenceSurface) >= 4.5) return accent
+        val target = if (darkMode) Color.WHITE else Color.BLACK
+        var low = 0f
+        var high = 1f
+        repeat(18) {
+            val amount = (low + high) / 2f
+            val candidate = Color.rgb(
+                (Color.red(accent) * (1f - amount) + Color.red(target) * amount).toInt(),
+                (Color.green(accent) * (1f - amount) + Color.green(target) * amount).toInt(),
+                (Color.blue(accent) * (1f - amount) + Color.blue(target) * amount).toInt()
+            )
+            if (contrast(candidate, referenceSurface) >= 4.5) high = amount else low = amount
+        }
         return Color.rgb(
-            (Color.red(accent) * 0.53f).toInt(),
-            (Color.green(accent) * 0.53f).toInt(),
-            (Color.blue(accent) * 0.53f).toInt()
+            (Color.red(accent) * (1f - high) + Color.red(target) * high).toInt(),
+            (Color.green(accent) * (1f - high) + Color.green(target) * high).toInt(),
+            (Color.blue(accent) * (1f - high) + Color.blue(target) * high).toInt()
         )
     }
 
