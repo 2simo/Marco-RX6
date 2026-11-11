@@ -327,6 +327,10 @@ internal class AppearanceUiFactory(
                 view.progressTintList = android.content.res.ColorStateList.valueOf(red())
                 view.thumbTintList = android.content.res.ColorStateList.valueOf(red())
             }
+            is android.widget.ProgressBar -> {
+                view.progressTintList = android.content.res.ColorStateList.valueOf(red())
+                view.indeterminateTintList = android.content.res.ColorStateList.valueOf(red())
+            }
             is Spinner -> {
                 view.backgroundTintList = android.content.res.ColorStateList.valueOf(gray())
                 view.minimumHeight = dp(48)
