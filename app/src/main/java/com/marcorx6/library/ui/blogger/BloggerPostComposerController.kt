@@ -68,16 +68,28 @@ internal class BloggerPostComposerController(
         // The app supports an in-app dark/light choice that can differ from uiMode.
         val isNight = isDarkMode()
         val studioTextColor = white()
+        fun studioSurface(base: Int, amount: Float) =
+            AccentPalette.surface(base, red(), amount)
+        val studioBorder = studioSurface(
+            if (isNight) android.graphics.Color.rgb(130, 138, 151)
+            else android.graphics.Color.rgb(160, 168, 181),
+            0.48f
+        )
         val box = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(12), dp(16), dp(12))
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
-                if (isNight) intArrayOf(android.graphics.Color.rgb(8, 9, 12), android.graphics.Color.rgb(17, 19, 24))
-                else intArrayOf(android.graphics.Color.WHITE, android.graphics.Color.rgb(242, 244, 247))
+                if (isNight) intArrayOf(
+                    studioSurface(android.graphics.Color.rgb(8, 9, 12), 0.20f),
+                    studioSurface(android.graphics.Color.rgb(17, 19, 24), 0.24f)
+                ) else intArrayOf(
+                    studioSurface(android.graphics.Color.WHITE, 0.10f),
+                    studioSurface(android.graphics.Color.rgb(242, 244, 247), 0.16f)
+                )
             ).apply {
                 cornerRadius = dp(22).toFloat()
-                setStroke(dp(1), android.graphics.Color.argb(150, 130, 138, 151))
+                setStroke(dp(1), studioBorder)
             }
         }
         fun section(text: String) = makeText(text, 13f, studioTextColor, true).apply {
@@ -113,19 +125,15 @@ internal class BloggerPostComposerController(
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
                 if (isNight) intArrayOf(
-                    android.graphics.Color.rgb(65, 70, 80),
-                    android.graphics.Color.rgb(28, 31, 38)
+                    studioSurface(android.graphics.Color.rgb(65, 70, 80), 0.25f),
+                    studioSurface(android.graphics.Color.rgb(28, 31, 38), 0.20f)
                 ) else intArrayOf(
-                    android.graphics.Color.rgb(239, 241, 245),
-                    android.graphics.Color.rgb(220, 224, 231)
+                    studioSurface(android.graphics.Color.rgb(239, 241, 245), 0.14f),
+                    studioSurface(android.graphics.Color.rgb(220, 224, 231), 0.18f)
                 )
             ).apply {
                 cornerRadius = dp(17).toFloat()
-                setStroke(
-                    dp(1),
-                    if (isNight) android.graphics.Color.argb(150, 145, 153, 166)
-                    else android.graphics.Color.rgb(160, 168, 181)
-                )
+                setStroke(dp(1), studioBorder)
             }
         }
         intro.addView(makeText(
@@ -151,19 +159,15 @@ internal class BloggerPostComposerController(
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
                 if (isNight) intArrayOf(
-                    android.graphics.Color.rgb(39, 42, 50),
-                    android.graphics.Color.rgb(17, 19, 24)
+                    studioSurface(android.graphics.Color.rgb(39, 42, 50), 0.22f),
+                    studioSurface(android.graphics.Color.rgb(17, 19, 24), 0.18f)
                 ) else intArrayOf(
-                    android.graphics.Color.rgb(239, 241, 245),
-                    android.graphics.Color.rgb(220, 224, 231)
+                    studioSurface(android.graphics.Color.rgb(239, 241, 245), 0.13f),
+                    studioSurface(android.graphics.Color.rgb(220, 224, 231), 0.17f)
                 )
             ).apply {
                 cornerRadius = dp(15).toFloat()
-                setStroke(
-                    dp(1),
-                    if (isNight) android.graphics.Color.rgb(130, 138, 151)
-                    else android.graphics.Color.rgb(160, 168, 181)
-                )
+                setStroke(dp(1), studioBorder)
             }
         }
         setCoverFields(coverUrl, coverPreview)
@@ -216,7 +220,19 @@ internal class BloggerPostComposerController(
             val row = LinearLayout(activity).apply {
                 orientation = LinearLayout.VERTICAL
                 setPadding(dp(12), dp(10), dp(12), dp(10))
-                background = rounded(panel(), 14)
+                background = android.graphics.drawable.GradientDrawable(
+                    android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
+                    if (isNight) intArrayOf(
+                        studioSurface(android.graphics.Color.rgb(35, 38, 45), 0.22f),
+                        studioSurface(android.graphics.Color.rgb(15, 17, 22), 0.18f)
+                    ) else intArrayOf(
+                        studioSurface(android.graphics.Color.WHITE, 0.12f),
+                        studioSurface(android.graphics.Color.rgb(230, 234, 240), 0.17f)
+                    )
+                ).apply {
+                    cornerRadius = dp(14).toFloat()
+                    setStroke(dp(1), studioBorder)
+                }
             }
             val label = EditText(activity).apply {
                 hint = translate("اسم الرابط (مثال: Google Drive)")
@@ -280,7 +296,7 @@ internal class BloggerPostComposerController(
         val page = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(14), baseTop, dp(14), baseBottom)
-            setBackgroundColor(bg())
+            setBackgroundColor(studioSurface(bg(), if (isNight) 0.08f else 0.06f))
         }
         val toolbar = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
