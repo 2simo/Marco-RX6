@@ -103,9 +103,7 @@ internal class DownloadUiController(
             AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID
         ) ?: AccentPalette.DEFAULT_ID
         val primary = AccentPalette.color(selectedAccentId)
-        val accentText = if (selectedAccentId == "black_silver") {
-            if (dark) Color.rgb(218, 225, 235) else Color.rgb(43, 49, 59)
-        } else primary
+        val accentText = AccentPalette.readableAccentText(selectedAccentId, dark)
         val primaryForeground = AccentPalette.foreground(selectedAccentId)
         val background = AccentPalette.surface(
             if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247),
