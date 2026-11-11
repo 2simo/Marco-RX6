@@ -39,6 +39,24 @@ internal class AppearanceUiFactory(
     private val accentForeground: () -> Int
 ) {
 
+    // Cached once: applyUnifiedSkin traverses large view trees and these exact
+    // legacy tokens are checked for every text, icon, gradient and outline.
+    private val lightLegacyAccentTokens = setOf(
+        Color.rgb(190, 198, 210),
+        Color.rgb(205, 211, 220),
+        Color.rgb(205, 212, 222),
+        Color.rgb(210, 216, 225),
+        Color.rgb(220, 224, 231)
+    )
+    private val darkLegacyAccentTokens = setOf(
+        Color.rgb(105, 113, 126),
+        Color.rgb(104, 113, 126),
+        Color.rgb(105, 116, 132),
+        Color.rgb(75, 83, 96),
+        Color.rgb(65, 72, 84),
+        Color.rgb(65, 73, 86)
+    )
+
     private fun glassRipple(): android.graphics.drawable.Drawable =
         android.graphics.drawable.RippleDrawable(
             android.content.res.ColorStateList.valueOf(
@@ -117,24 +135,10 @@ internal class AppearanceUiFactory(
      */
     private fun legacyAccentReplacement(color: Int): Int? {
         val rgb = color and 0x00FFFFFF
-        val lightAccentTokens = setOf(
-            Color.rgb(190, 198, 210), // original primary silver
-            Color.rgb(205, 211, 220),
-            Color.rgb(205, 212, 222),
-            Color.rgb(210, 216, 225),
-            Color.rgb(220, 224, 231)
-        )
-        val darkAccentTokens = setOf(
-            Color.rgb(105, 113, 126),
-            Color.rgb(104, 113, 126),
-            Color.rgb(105, 116, 132),
-            Color.rgb(75, 83, 96),
-            Color.rgb(65, 72, 84),
-            Color.rgb(65, 73, 86)
-        )
+        val isDarkAccent = rgb in darkLegacyAccentTokens
+        if (!isDarkAccent && rgb !in lightLegacyAccentTokens) return null
         val accent = red()
-        val factor = if (rgb in darkAccentTokens) 0.72f else 1f
-        if (rgb !in lightAccentTokens && rgb !in darkAccentTokens) return null
+        val factor = if (isDarkAccent) 0.72f else 1f
         return Color.argb(
             Color.alpha(color),
             (Color.red(accent) * factor).toInt().coerceIn(0, 255),
