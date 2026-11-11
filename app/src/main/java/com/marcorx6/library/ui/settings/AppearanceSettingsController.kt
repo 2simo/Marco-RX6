@@ -37,6 +37,7 @@ internal class AppearanceSettingsController(
         val selectedAccentId = preferences.getString(AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID)
             ?.takeIf { id -> AccentPalette.options.any { it.id == id } } ?: AccentPalette.DEFAULT_ID
         val silverAccent = AccentPalette.color(selectedAccentId)
+        val accentText = AccentPalette.readableAccentText(selectedAccentId, dark)
         val bg = if (dark) AccentPalette.surface(Color.rgb(8, 9, 12), silverAccent, 0.20f, selectedAccentId)
             else AccentPalette.surface(Color.rgb(245, 247, 250), silverAccent, 0.10f, selectedAccentId)
         val panelSurface = if (dark) AccentPalette.surface(Color.rgb(25, 28, 34), silverAccent, 0.30f, selectedAccentId)
@@ -59,7 +60,7 @@ internal class AppearanceSettingsController(
             textSize = 10f
             letterSpacing = 0.10f
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(silverAccent)
+            setTextColor(accentText)
             setPadding(dp(3), dp(18), dp(3), dp(8))
         }
         val root = LinearLayout(activity).apply {
@@ -91,7 +92,7 @@ internal class AppearanceSettingsController(
         header.addView(heading, LinearLayout.LayoutParams(0, -2, 1f))
         header.addView(android.widget.ImageView(activity).apply {
             setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
-            imageTintList = android.content.res.ColorStateList.valueOf(silverAccent)
+            imageTintList = android.content.res.ColorStateList.valueOf(accentText)
             scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
             contentDescription = translate("رجوع")
             minimumWidth = dp(48)
@@ -200,7 +201,7 @@ internal class AppearanceSettingsController(
                         text = translate(option.label)
                         textSize = 10f
                         gravity = Gravity.CENTER
-                        setTextColor(if (isSelected) silverAccent else muted)
+                        setTextColor(if (isSelected) accentText else muted)
                         setPadding(0, dp(5), 0, 0)
                         maxLines = 1
                     }, LinearLayout.LayoutParams(-1, -2))
@@ -239,7 +240,7 @@ internal class AppearanceSettingsController(
             }
             textSize = 13f
             gravity = Gravity.CENTER
-            setTextColor(if (preferences.getBoolean("animations", true)) AccentPalette.foreground(selectedAccentId) else silverAccent)
+            setTextColor(if (preferences.getBoolean("animations", true)) AccentPalette.foreground(selectedAccentId) else accentText)
             setPadding(dp(14), dp(13), dp(14), dp(13))
             background = GradientDrawable().apply {
                 setColor(if (preferences.getBoolean("animations", true)) Color.argb(218, Color.red(silverAccent), Color.green(silverAccent), Color.blue(silverAccent)) else if (dark) Color.argb(190, 25, 28, 34) else Color.argb(210, 255, 255, 255))
