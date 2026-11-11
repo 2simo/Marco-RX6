@@ -452,10 +452,18 @@ internal class AppearanceUiFactory(
 
     fun styleAlertDialog(dialog: AlertDialog) {
         dialog.window?.setBackgroundDrawable(GradientDrawable(GradientDrawable.Orientation.TL_BR,
-            if (isDarkMode()) intArrayOf(Color.rgb(25, 28, 34), Color.rgb(8, 9, 12))
-            else intArrayOf(Color.WHITE, Color.rgb(242, 244, 247))).apply {
+            if (isDarkMode()) intArrayOf(
+                AccentPalette.surface(Color.rgb(25, 28, 34), red(), 0.22f),
+                AccentPalette.surface(Color.rgb(8, 9, 12), red(), 0.16f)
+            ) else intArrayOf(
+                AccentPalette.surface(Color.WHITE, red(), 0.10f),
+                AccentPalette.surface(Color.rgb(242, 244, 247), red(), 0.14f)
+            )).apply {
             cornerRadius = dp(24).toFloat()
-            setStroke(dp(1), if (isDarkMode()) Color.rgb(130, 138, 151) else Color.rgb(211, 215, 222))
+            setStroke(dp(1), AccentPalette.surface(
+                if (isDarkMode()) Color.rgb(130, 138, 151) else Color.rgb(180, 188, 200),
+                red(), 0.48f
+            ))
         })
         dialog.window?.let { window ->
             // Dialogs are separate Windows: apply the same immersive/IME policy
@@ -529,11 +537,21 @@ internal class AppearanceUiFactory(
     private fun inputBackground(): android.graphics.drawable.StateListDrawable =
         android.graphics.drawable.StateListDrawable().apply {
             val fill = if (isDarkMode()) {
-                intArrayOf(Color.rgb(35, 38, 45), Color.rgb(15, 17, 22))
+                intArrayOf(
+                    AccentPalette.surface(Color.rgb(35, 38, 45), red(), 0.24f),
+                    AccentPalette.surface(Color.rgb(15, 17, 22), red(), 0.19f)
+                )
             } else {
-                intArrayOf(Color.WHITE, Color.rgb(225, 228, 234))
+                intArrayOf(
+                    AccentPalette.surface(Color.WHITE, red(), 0.13f),
+                    AccentPalette.surface(Color.rgb(225, 228, 234), red(), 0.17f)
+                )
             }
-            val normalStroke = if (isDarkMode()) Color.rgb(130, 138, 151) else Color.rgb(160, 168, 181)
+            val normalStroke = AccentPalette.surface(
+                if (isDarkMode()) Color.rgb(130, 138, 151) else Color.rgb(160, 168, 181),
+                red(),
+                0.48f
+            )
             val focusedStroke = red()
             addState(intArrayOf(android.R.attr.state_focused), GradientDrawable(
                 GradientDrawable.Orientation.TL_BR, fill
