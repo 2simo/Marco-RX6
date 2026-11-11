@@ -65,6 +65,7 @@ internal class MainLibraryInterfaceController(
     private lateinit var filters: LinearLayout
     private lateinit var countText: TextView
     private lateinit var gameList: LinearLayout
+    private var publishAction: TextView? = null
     private var selected: String
         get() = getSelected()
         set(value) = setSelected(value)
@@ -82,6 +83,11 @@ internal class MainLibraryInterfaceController(
     }
 
     private fun isDarkMode(): Boolean = darkMode()
+
+    /** Reflect asynchronous Blogger permission changes without rebuilding the active screen. */
+    fun updateAdminAction() {
+        publishAction?.visibility = if (adminSession()) View.VISIBLE else View.GONE
+    }
 
     private fun accentShade(): Int = Color.rgb(
         (Color.red(red) * 0.72f).toInt(),
@@ -867,35 +873,35 @@ internal class MainLibraryInterfaceController(
 
         root.addView(gameList, LinearLayout.LayoutParams(-1, -2))
 
-        if (adminSession()) {
-            val publish = TextView(context).apply {
-                text = tr("نشر")
-                setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.ic_action_add, 0, 0, 0)
-                compoundDrawablePadding = dp(7)
-                if (android.os.Build.VERSION.SDK_INT >= 23) compoundDrawableTintList =
-                    android.content.res.ColorStateList.valueOf(Color.WHITE)
-                textSize = 11f
-                setTextColor(AccentPalette.foregroundForColor(red))
-                typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
-                gravity = Gravity.CENTER
-                background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-                    intArrayOf(red, accentShade())).apply {
-                    cornerRadius = dp(15).toFloat()
-                    setStroke(dp(1), Color.argb(190, Color.red(red), Color.green(red), Color.blue(red)))
-                }
-                isClickable = true
-                isFocusable = true
-                if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                    android.content.res.ColorStateList.valueOf(Color.argb(100, Color.red(red), Color.green(red), Color.blue(red))),
-                    null,
-                    GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(15).toFloat() }
-                )
-                setPadding(dp(18), dp(13), dp(18), dp(13))
-                elevation = dp(3).toFloat()
-                setOnClickListener { showGameDialog() }
+        val publish = TextView(context).apply {
+            text = tr("نشر")
+            setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.ic_action_add, 0, 0, 0)
+            compoundDrawablePadding = dp(7)
+            if (android.os.Build.VERSION.SDK_INT >= 23) compoundDrawableTintList =
+                android.content.res.ColorStateList.valueOf(Color.WHITE)
+            textSize = 11f
+            setTextColor(AccentPalette.foregroundForColor(red))
+            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+            gravity = Gravity.CENTER
+            background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(red, accentShade())).apply {
+                cornerRadius = dp(15).toFloat()
+                setStroke(dp(1), Color.argb(190, Color.red(red), Color.green(red), Color.blue(red)))
             }
-            root.addView(publish, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(9) })
+            isClickable = true
+            isFocusable = true
+            if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
+                android.content.res.ColorStateList.valueOf(Color.argb(100, Color.red(red), Color.green(red), Color.blue(red))),
+                null,
+                GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(15).toFloat() }
+            )
+            setPadding(dp(18), dp(13), dp(18), dp(13))
+            elevation = dp(3).toFloat()
+            setOnClickListener { showGameDialog() }
+            visibility = if (adminSession()) View.VISIBLE else View.GONE
         }
+        publishAction = publish
+        root.addView(publish, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(9) })
 
         applyTypography(root)
         val pageScroll = ScrollView(context).apply {
