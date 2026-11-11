@@ -17,13 +17,23 @@ import com.marcorx6.library.AppDiagnostics
  * the status bar while the keyboard was opening.
  */
 internal object SystemBarPolicy {
+    fun surfaceColor(context: android.content.Context, darkMode: Boolean): Int {
+        val preferences = AppearancePreferencesStore.appearance(context)
+        val selectedId = preferences.getString(AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID)
+            ?.takeIf { id -> AccentPalette.options.any { it.id == id } } ?: AccentPalette.DEFAULT_ID
+        val accent = AccentPalette.color(selectedId)
+        val base = if (darkMode) Color.rgb(8, 9, 12) else Color.rgb(245, 247, 250)
+        return AccentPalette.surface(base, accent, if (darkMode) 0.20f else 0.10f)
+    }
+
     fun apply(window: Window, darkMode: Boolean, hideNavigation: Boolean = false) {
-        val surface = if (darkMode) Color.rgb(8, 9, 12) else Color.rgb(245, 247, 250)
+        val surface = surfaceColor(window.context, darkMode)
         val decor = window.decorView
         // Keep the system-bar backing surface identical to the app's top surface.
         // The status bar is intentionally visible; the Activity app bar owns its inset.
         decor.setBackgroundColor(surface)
         window.statusBarColor = surface
+        window.navigationBarColor = surface
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             window.isStatusBarContrastEnforced = false
             window.isNavigationBarContrastEnforced = false
@@ -53,8 +63,7 @@ internal class SystemBarAppearanceController(
                 "imeVisible=${insets?.isVisible(WindowInsetsCompat.Type.ime()) == true} " +
                 "windowFlags=0x${activity.window.attributes.flags.toString(16)}"
         )
-        activity.window.navigationBarColor =
-            if (isDarkMode()) Color.rgb(8, 9, 12) else Color.rgb(245, 247, 250)
+        activity.window.navigationBarColor = SystemBarPolicy.surfaceColor(activity, isDarkMode())
         SystemBarPolicy.apply(activity.window, isDarkMode())
     }
 }
