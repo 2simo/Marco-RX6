@@ -204,13 +204,6 @@ internal class AppearanceUiFactory(
             }
             is GradientDrawable -> {
                 if (android.os.Build.VERSION.SDK_INT >= 29) {
-                    // Legacy cards often store the old accent in the outline rather
-                    // than the fill. Retint that stroke while preserving its width.
-                    drawable.strokeColor?.defaultColor?.let { oldStroke ->
-                        legacyAccentReplacement(oldStroke)?.let { newStroke ->
-                            drawable.setStroke(drawable.strokeWidth, newStroke)
-                        }
-                    }
                     // Resolve known legacy accent stops before neutral surface colors.
                     val stops = drawable.colors
                     if (stops != null) {
