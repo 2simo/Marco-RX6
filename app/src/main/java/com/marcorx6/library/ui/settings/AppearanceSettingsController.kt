@@ -35,14 +35,15 @@ internal class AppearanceSettingsController(
         fun dp(value: Int) = (value * activity.resources.displayMetrics.density).toInt()
         val dark = preferences.getBoolean("dark_mode", true)
         val bg = if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247)
-        val selectedAccentId = preferences.getString(AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID) ?: AccentPalette.DEFAULT_ID\n        val silverAccent = AccentPalette.color(selectedAccentId)
+        val selectedAccentId = preferences.getString(AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID) ?: AccentPalette.DEFAULT_ID
+        val silverAccent = AccentPalette.color(selectedAccentId)
         val ink = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
         val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
         fun addGlassTouch(view: View) {
             if (android.os.Build.VERSION.SDK_INT >= 23) {
                 view.foreground = android.graphics.drawable.RippleDrawable(
                     android.content.res.ColorStateList.valueOf(
-                        if (dark) Color.argb(72, 190, 198, 210) else Color.argb(55, 130, 138, 151)
+                        Color.argb(if (dark) 72 else 55, Color.red(silverAccent), Color.green(silverAccent), Color.blue(silverAccent))
                     ),
                     null,
                     android.graphics.drawable.ColorDrawable(Color.WHITE)
@@ -211,10 +212,10 @@ internal class AppearanceSettingsController(
             }
             textSize = 13f
             gravity = Gravity.CENTER
-            setTextColor(if (preferences.getBoolean("animations", true)) Color.rgb(20, 23, 29) else silverAccent)
+            setTextColor(if (preferences.getBoolean("animations", true)) AccentPalette.foreground(selectedAccentId) else silverAccent)
             setPadding(dp(14), dp(13), dp(14), dp(13))
             background = GradientDrawable().apply {
-                setColor(if (preferences.getBoolean("animations", true)) Color.argb(218, 190, 198, 210) else if (dark) Color.argb(190, 25, 28, 34) else Color.argb(210, 255, 255, 255))
+                setColor(if (preferences.getBoolean("animations", true)) Color.argb(218, Color.red(silverAccent), Color.green(silverAccent), Color.blue(silverAccent)) else if (dark) Color.argb(190, 25, 28, 34) else Color.argb(210, 255, 255, 255))
                 cornerRadius = dp(14).toFloat()
                 if (!preferences.getBoolean("animations", true)) setStroke(dp(1), silverAccent)
             }
@@ -226,9 +227,9 @@ internal class AppearanceSettingsController(
                 text = translate(if (enabled) "الحركات مفعّلة  ✓" else "الحركات متوقفة").replace("✓", "").trim()
                 setCompoundDrawablesRelativeWithIntrinsicBounds(if (enabled) com.marcorx6.library.R.drawable.ic_action_check else 0, 0, 0, 0)
                 contentDescription = translate(if (enabled) "إيقاف حركات وانتقالات الواجهة" else "تفعيل حركات وانتقالات الواجهة")
-                setTextColor(if (enabled) Color.rgb(20, 23, 29) else silverAccent)
+                setTextColor(if (enabled) AccentPalette.foreground(selectedAccentId) else silverAccent)
                 background = GradientDrawable().apply {
-                    setColor(if (enabled) Color.argb(218, 190, 198, 210) else if (dark) Color.argb(190, 25, 28, 34) else Color.argb(210, 255, 255, 255))
+                    setColor(if (enabled) Color.argb(218, Color.red(silverAccent), Color.green(silverAccent), Color.blue(silverAccent)) else if (dark) Color.argb(190, 25, 28, 34) else Color.argb(210, 255, 255, 255))
                     cornerRadius = dp(14).toFloat()
                     if (!enabled) setStroke(dp(1), silverAccent)
                 }
