@@ -2568,7 +2568,7 @@ internal class FirebaseAccountController(
             setPadding(dp(18), dp(16), dp(18), dp(16))
             background = GradientDrawable(
                 if (primary) GradientDrawable.Orientation.LEFT_RIGHT else GradientDrawable.Orientation.TL_BR,
-                if (primary) intArrayOf(selectedAccentColor(), Color.rgb((Color.red(selectedAccentColor()) * 0.72f).toInt(), (Color.green(selectedAccentColor()) * 0.72f).toInt(), (Color.blue(selectedAccentColor()) * 0.72f).toInt()))
+                if (primary) intArrayOf(selectedAccentColor(), Color.rgb((Color.red(selectedAccentColor()) * 0.95f).toInt(), (Color.green(selectedAccentColor()) * 0.95f).toInt(), (Color.blue(selectedAccentColor()) * 0.95f).toInt()))
                 else if (dark) intArrayOf(Color.rgb(31, 35, 43), Color.rgb(20, 23, 29))
                 else intArrayOf(Color.WHITE, Color.rgb(239, 242, 247))
             ).apply {
