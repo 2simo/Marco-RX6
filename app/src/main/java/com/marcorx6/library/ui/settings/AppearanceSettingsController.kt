@@ -159,8 +159,14 @@ internal class AppearanceSettingsController(
                     gravity = Gravity.CENTER
                     setTextColor(AccentPalette.foreground(option.id))
                     contentDescription = translate(option.label)
-                    background = GradientDrawable().apply {
-                        setColor(option.color)
+                    background = GradientDrawable(
+                        GradientDrawable.Orientation.TL_BR,
+                        if (option.id == "black_silver") intArrayOf(
+                            Color.rgb(7, 8, 11),
+                            Color.rgb(91, 101, 117),
+                            Color.rgb(205, 212, 223)
+                        ) else intArrayOf(option.color)
+                    ).apply {
                         cornerRadius = dp(15).toFloat()
                         setStroke(dp(if (isSelected) 3 else 1),
                             if (isSelected) AccentPalette.foreground(option.id)
