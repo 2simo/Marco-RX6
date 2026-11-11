@@ -1167,8 +1167,8 @@ internal class FirebaseAccountController(
                 setPadding(dp(4), dp(4), dp(4), dp(4))
                 background = GradientDrawable().apply {
                     cornerRadius = dp(16).toFloat()
-                    setColor(if (dark) Color.rgb(19, 22, 28) else Color.WHITE)
-                    setStroke(dp(1), if (dark) Color.rgb(70, 77, 89) else Color.rgb(199, 207, 218))
+                    setColor(profileSurface(dark))
+                    setStroke(dp(1), profileStroke(dark))
                 }
             }
             val tabItems = mutableListOf<Pair<TextView, String>>()
