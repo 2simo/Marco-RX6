@@ -14,7 +14,7 @@ internal object AccentPalette {
 
     val options = listOf(
         Option("silver", "فضي", Color.rgb(190, 198, 210)),
-        Option("black_silver", "أسود فضي", Color.rgb(145, 158, 178)),
+        Option("black_silver", "أسود فضي", Color.rgb(197, 206, 219)),
         Option("blue", "أزرق", Color.rgb(55, 132, 255)),
         Option("purple", "بنفسجي", Color.rgb(145, 92, 255)),
         Option("red", "أحمر", Color.rgb(235, 70, 80)),
@@ -30,7 +30,19 @@ internal object AccentPalette {
     fun foreground(id: String = DEFAULT_ID): Int = foregroundForColor(color(id))
 
     /** Blend a neutral surface with the selected primary color without turning it into a flat accent block. */
-    fun surface(base: Int, accent: Int, amount: Float): Int {
+    fun surface(base: Int, accent: Int, amount: Float, accentId: String? = null): Int {
+        // Black & Silver keeps black/white as the dominant surface. Silver is
+        // reserved for restrained highlights instead of tinting every surface blue-grey.
+        if (accentId == "black_silver") {
+            val neutral = if (Color.red(base) < 128) Color.rgb(27, 29, 34)
+                else Color.rgb(239, 242, 247)
+            val neutralAmount = (amount * 0.18f).coerceIn(0f, 0.035f)
+            return Color.rgb(
+                (Color.red(base) * (1f - neutralAmount) + Color.red(neutral) * neutralAmount).toInt(),
+                (Color.green(base) * (1f - neutralAmount) + Color.green(neutral) * neutralAmount).toInt(),
+                (Color.blue(base) * (1f - neutralAmount) + Color.blue(neutral) * neutralAmount).toInt()
+            )
+        }
         val t = amount.coerceIn(0f, 1f)
         return Color.rgb(
             (Color.red(base) * (1f - t) + Color.red(accent) * t).toInt().coerceIn(0, 255),
