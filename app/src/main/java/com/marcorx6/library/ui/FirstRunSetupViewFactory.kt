@@ -11,19 +11,25 @@ internal class FirstRunSetupViewFactory(
     private val dp: (Int) -> Int,
     private val makeText: (String, Float, Int, Boolean) -> android.widget.TextView
 ) {
-    fun optionCard(label: String, selected: Boolean, detail: String = ""): LinearLayout {
+    fun optionCard(label: String, selected: Boolean, detail: String = "", dark: Boolean = true): LinearLayout {
         return LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             gravity = android.view.Gravity.CENTER_VERTICAL
             setPadding(dp(18), dp(14), dp(18), dp(14))
             background = GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
-                if (selected) intArrayOf(
+                if (dark && selected) intArrayOf(
                     android.graphics.Color.argb(238, 92, 98, 109),
                     android.graphics.Color.argb(225, 43, 47, 55)
-                ) else intArrayOf(
+                ) else if (dark) intArrayOf(
                     android.graphics.Color.argb(218, 34, 37, 44),
                     android.graphics.Color.argb(205, 17, 19, 24)
+                ) else if (selected) intArrayOf(
+                    android.graphics.Color.rgb(218, 224, 232),
+                    android.graphics.Color.rgb(194, 202, 213)
+                ) else intArrayOf(
+                    android.graphics.Color.WHITE,
+                    android.graphics.Color.rgb(239, 242, 247)
                 )
             ).apply {
                 cornerRadius = dp(17).toFloat()
@@ -54,7 +60,7 @@ internal class FirstRunSetupViewFactory(
             }
             addView(optionHeader)
             if (detail.isNotBlank()) {
-                addView(makeText(detail, 10f, android.graphics.Color.rgb(166, 173, 184), false).apply {
+                addView(makeText(detail, 10f, if (dark) android.graphics.Color.rgb(166, 173, 184) else android.graphics.Color.rgb(91, 98, 110), false).apply {
                     setPadding(0, dp(5), 0, 0)
                 })
             }

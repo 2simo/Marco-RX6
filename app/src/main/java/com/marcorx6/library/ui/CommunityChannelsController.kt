@@ -20,10 +20,12 @@ internal class CommunityChannelsController(
     private val activity: Activity,
     private val dp: (Int) -> Int,
     private val makeText: (String, Float, Int, Boolean) -> TextView,
-    private val translate: (String) -> String
+    private val translate: (String) -> String,
+    private val isDarkMode: () -> Boolean
 ) {
     fun show(onContinue: () -> Unit = {}) {
         if (activity.isFinishing || activity.isDestroyed) return
+        val dark = isDarkMode()
         val dialog = Dialog(activity, android.R.style.Theme_Material_NoActionBar)
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
@@ -31,20 +33,21 @@ internal class CommunityChannelsController(
             setPadding(dp(24), dp(28), dp(24), dp(24))
             background = GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(7, 8, 11), Color.rgb(15, 17, 22), Color.rgb(7, 8, 11))
+                if (dark) intArrayOf(Color.rgb(7, 8, 11), Color.rgb(15, 17, 22), Color.rgb(7, 8, 11))
+                else intArrayOf(Color.rgb(250, 251, 253), Color.rgb(232, 236, 242), Color.rgb(245, 247, 250))
             )
         }
         root.addView(makeText("MARCO", 12f, Color.rgb(190, 198, 210), true).apply {
             gravity = Gravity.CENTER
             letterSpacing = 0.16f
         })
-        root.addView(makeText(translate("مرحباً بك في MARCO"), 25f, Color.WHITE, true).apply {
+        root.addView(makeText(translate("مرحباً بك في MARCO"), 25f, if (dark) Color.WHITE else Color.rgb(25, 29, 36), true).apply {
             gravity = Gravity.CENTER
             setPadding(0, dp(14), 0, dp(8))
         })
         root.addView(makeText(
             translate("تابع قنواتنا الرسمية لتصلك أخبار التطبيق والتحديثات الجديدة."),
-            13f, Color.rgb(178, 184, 194), false
+            13f, if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110), false
         ).apply {
             gravity = Gravity.CENTER
             setPadding(0, 0, 0, dp(28))
@@ -97,7 +100,7 @@ internal class CommunityChannelsController(
             WindowCompat.setDecorFitsSystemWindows(window, false)
             window.statusBarColor = Color.TRANSPARENT
             window.navigationBarColor = Color.TRANSPARENT
-            SystemBarPolicy.apply(window, darkMode = true)
+            SystemBarPolicy.apply(window, darkMode = dark)
         }
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
             val safe = insets.getInsets(

@@ -55,8 +55,7 @@ internal class FirstRunSetupController(
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(22), dp(24), dp(22), dp(18))
-            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(7, 8, 11), Color.rgb(16, 18, 23), Color.rgb(5, 6, 9)))
+            background = setupBackground(darkMode)
         }
         val top = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -69,7 +68,7 @@ internal class FirstRunSetupController(
         root.addView(top)
 
         val progressTrack = FrameLayout(activity).apply {
-            background = rounded(Color.rgb(57, 61, 70), 8)
+            background = rounded(if (darkMode) Color.rgb(57, 61, 70) else Color.rgb(210, 216, 225), 8)
             clipToOutline = true
         }
         val progressFill = View(activity).apply {
@@ -90,6 +89,11 @@ internal class FirstRunSetupController(
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
+        fun setupBackground(dark: Boolean) = GradientDrawable(
+            GradientDrawable.Orientation.TL_BR,
+            if (dark) intArrayOf(Color.rgb(7, 8, 11), Color.rgb(16, 18, 23), Color.rgb(5, 6, 9))
+            else intArrayOf(Color.rgb(250, 251, 253), Color.rgb(232, 236, 242), Color.rgb(245, 247, 250))
+        ).apply { cornerRadius = dp(24).toFloat() }
         lateinit var renderStep: (Int, Boolean) -> Unit
         val back = Button(activity).apply { setOnClickListener { renderStep(step - 1, true) } }
         val next = Button(activity).apply { tag = "marco_primary_action" }
@@ -102,7 +106,14 @@ internal class FirstRunSetupController(
         renderStep = { target: Int, animate: Boolean ->
             step = target.coerceIn(0, steps.lastIndex)
             val tr: (String) -> String = { value -> LanguageTranslator.translate(value, languageCode) }
+            root.background = setupBackground(darkMode)
+            progressTrack.background = rounded(if (darkMode) Color.rgb(57, 61, 70) else Color.rgb(210, 216, 225), 8)
             root.layoutDirection = if (languageCode == "ar") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
+            dialog.window?.let { SystemBarPolicy.apply(it, darkMode = darkMode) }
+            back.setTextColor(if (darkMode) Color.rgb(225, 230, 237) else Color.rgb(35, 41, 51))
+            back.background = rounded(if (darkMode) Color.rgb(35, 39, 46) else Color.WHITE, 14)
+            next.setTextColor(Color.rgb(20, 23, 29))
+            next.background = rounded(Color.rgb(190, 198, 210), 14)
             stepCount.text = "${step + 1} / ${steps.size}"
             progressTrack.post {
                 val params = progressFill.layoutParams as FrameLayout.LayoutParams
@@ -121,7 +132,7 @@ internal class FirstRunSetupController(
                 setPadding(0, dp(8), 0, dp(8))
             }
             page.addView(makeText(tr("خطوة ${step + 1}"), 10f, Color.rgb(190, 198, 210), true))
-            page.addView(makeText(tr(steps[step]), 27f, Color.WHITE, true).apply {
+            page.addView(makeText(tr(steps[step]), 27f, if (darkMode) Color.WHITE else Color.rgb(25, 29, 36), true).apply {
                 setPadding(0, dp(8), 0, dp(8))
             })
             val description = when (step) {
@@ -133,13 +144,13 @@ internal class FirstRunSetupController(
                 5 -> "اختر المجلد الذي تريد حفظ الملفات التي تنزّلها فيه. هذه الخطوة اختيارية ويمكنك تخطيها."
                 else -> "تم إعداد مكتبتك. اختياراتك محفوظة ويمكنك تغييرها لاحقاً من الإعدادات."
             }
-            page.addView(makeText(tr(description), 13f, Color.rgb(170, 176, 186), false).apply {
+            page.addView(makeText(tr(description), 13f, if (darkMode) Color.rgb(170, 176, 186) else Color.rgb(91, 98, 110), false).apply {
                 setPadding(0, 0, 0, dp(24))
             })
 
             val choices = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
             fun addChoice(label: String, detail: String = "", selectedNow: Boolean, action: () -> Unit) {
-                val card = viewFactory.optionCard(label, selectedNow, detail)
+                val card = viewFactory.optionCard(label, selectedNow, detail, darkMode)
                 choices.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(11) })
                 card.setOnClickListener {
                     action()
@@ -170,7 +181,7 @@ internal class FirstRunSetupController(
                 2 -> listOf(true to "الوضع الليلي", false to "الوضع النهاري")
                     .forEach { (dark, label) -> addChoice(tr(label), "", darkMode == dark) { darkMode = dark } }
                 3 -> {
-                    val card = viewFactory.optionCard(tr("فضي"), true, tr("اللون الرسمي المعتمد في MARCO"))
+                    val card = viewFactory.optionCard(tr("فضي"), true, tr("اللون الرسمي المعتمد في MARCO"), darkMode)
                     val dot = View(activity).apply {
                         background = rounded(Color.rgb(190, 198, 210), 20)
                     }
@@ -186,7 +197,8 @@ internal class FirstRunSetupController(
                     val folderCard = viewFactory.optionCard(
                         tr("اختيار مجلد التنزيلات"),
                         true,
-                        tr("اختر مجلداً لحفظ التنزيلات فيه.")
+                        tr("اختر مجلداً لحفظ التنزيلات فيه."),
+                        darkMode
                     )
                     folderCard.setOnClickListener { launchDownloadFolderPicker() }
                     choices.addView(folderCard, LinearLayout.LayoutParams(-1, -2).apply {
@@ -196,14 +208,14 @@ internal class FirstRunSetupController(
                     choices.addView(makeText(
                         tr("يمكنك تخطي هذه الخطوة والمتابعة بالتخزين الافتراضي."),
                         11f,
-                        Color.rgb(170, 176, 186),
+                        if (darkMode) Color.rgb(170, 176, 186) else Color.rgb(91, 98, 110),
                         false
                     ).apply {
                         setPadding(dp(4), dp(12), dp(4), dp(4))
                     }, LinearLayout.LayoutParams(-1, -2))
                 }
                 6 -> {
-                    val readyCard = viewFactory.optionCard(tr("مكتبتك جاهزة!"), true, tr("تم حفظ المنصة واللغة والمظهر واللون والإشعارات ومكان التنزيلات.") + "\n" + tr("المجلد الحالي:") + " " + downloadFolderName())
+                    val readyCard = viewFactory.optionCard(tr("مكتبتك جاهزة!"), true, tr("تم حفظ المنصة واللغة والمظهر واللون والإشعارات ومكان التنزيلات.") + "\n" + tr("المجلد الحالي:") + " " + downloadFolderName(), darkMode)
                     choices.addView(readyCard, LinearLayout.LayoutParams(-1, -2))
                     if (animate && motionEnabled) viewFactory.animateIn(readyCard)
                 }
@@ -249,7 +261,8 @@ internal class FirstRunSetupController(
                             activity = activity,
                             dp = dp,
                             makeText = makeText,
-                            translate = { value -> LanguageTranslator.translate(value, languageCode) }
+                            translate = { value -> LanguageTranslator.translate(value, languageCode) },
+                            isDarkMode = isDarkMode
                         ).show {
                             settings.edit().putBoolean("community_channels_prompted", true).apply()
                             recreateActivity()
@@ -269,7 +282,7 @@ internal class FirstRunSetupController(
             WindowCompat.setDecorFitsSystemWindows(window, false)
             window.statusBarColor = Color.TRANSPARENT
             window.navigationBarColor = Color.TRANSPARENT
-            SystemBarPolicy.apply(window, darkMode = true)
+            SystemBarPolicy.apply(window, darkMode = darkMode)
         }
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
             val safe = insets.getInsets(
