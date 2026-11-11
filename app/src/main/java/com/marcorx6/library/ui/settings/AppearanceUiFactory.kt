@@ -267,6 +267,15 @@ internal class AppearanceUiFactory(
                 }
             }
         }
+        if (view is TextView && android.os.Build.VERSION.SDK_INT >= 23) {
+            // Search, publish and navigation actions frequently tint compound icons
+            // through TextView rather than using a standalone ImageView.
+            view.compoundDrawableTintList?.defaultColor?.let { current ->
+                themedNeutralColor(current, false)?.let { replacement ->
+                    view.compoundDrawableTintList = android.content.res.ColorStateList.valueOf(replacement)
+                }
+            }
+        }
         if (view !is Button && view !is EditText && view !is CheckBox && view !is RadioButton) {
             if (view is TextView) {
                 themedNeutralColor(view.currentTextColor, false)?.let(view::setTextColor)
