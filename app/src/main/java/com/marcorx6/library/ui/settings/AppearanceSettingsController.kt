@@ -37,10 +37,10 @@ internal class AppearanceSettingsController(
         val selectedAccentId = preferences.getString(AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID)
             ?.takeIf { id -> AccentPalette.options.any { it.id == id } } ?: AccentPalette.DEFAULT_ID
         val silverAccent = AccentPalette.color(selectedAccentId)
-        val bg = if (dark) AccentPalette.surface(Color.rgb(8, 9, 12), silverAccent, 0.20f)
-            else AccentPalette.surface(Color.rgb(245, 247, 250), silverAccent, 0.10f)
-        val panelSurface = if (dark) AccentPalette.surface(Color.rgb(25, 28, 34), silverAccent, 0.30f)
-            else AccentPalette.surface(Color.rgb(224, 229, 237), silverAccent, 0.20f)
+        val bg = if (dark) AccentPalette.surface(Color.rgb(8, 9, 12), silverAccent, 0.20f, selectedAccentId)
+            else AccentPalette.surface(Color.rgb(245, 247, 250), silverAccent, 0.10f, selectedAccentId)
+        val panelSurface = if (dark) AccentPalette.surface(Color.rgb(25, 28, 34), silverAccent, 0.30f, selectedAccentId)
+            else AccentPalette.surface(Color.rgb(224, 229, 237), silverAccent, 0.20f, selectedAccentId)
         val ink = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
         val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
         fun addGlassTouch(view: View) {
@@ -111,11 +111,15 @@ internal class AppearanceSettingsController(
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(16), dp(16), dp(16))
             background = GradientDrawable().apply {
-                setColors(if (dark) intArrayOf(
-                    AccentPalette.surface(Color.rgb(35, 38, 45), silverAccent, 0.28f),
-                    AccentPalette.surface(Color.rgb(15, 17, 22), silverAccent, 0.22f)
+                setColors(if (selectedAccentId == "black_silver") intArrayOf(
+                    Color.rgb(7, 8, 11),
+                    Color.rgb(82, 91, 106),
+                    Color.rgb(197, 206, 219)
+                ) else if (dark) intArrayOf(
+                    AccentPalette.surface(Color.rgb(35, 38, 45), silverAccent, 0.28f, selectedAccentId),
+                    AccentPalette.surface(Color.rgb(15, 17, 22), silverAccent, 0.22f, selectedAccentId)
                 ) else intArrayOf(
-                    AccentPalette.surface(Color.WHITE, silverAccent, 0.16f),
+                    AccentPalette.surface(Color.WHITE, silverAccent, 0.16f, selectedAccentId),
                     panelSurface
                 ))
                 cornerRadius = dp(20).toFloat()
@@ -163,8 +167,8 @@ internal class AppearanceSettingsController(
                         GradientDrawable.Orientation.TL_BR,
                         if (option.id == "black_silver") intArrayOf(
                             Color.rgb(7, 8, 11),
-                            Color.rgb(91, 101, 117),
-                            Color.rgb(205, 212, 223)
+                            Color.rgb(82, 91, 106),
+                            Color.rgb(197, 206, 219)
                         ) else intArrayOf(option.color, option.color)
                     ).apply {
                         cornerRadius = dp(15).toFloat()
@@ -406,7 +410,7 @@ internal class AppearanceSettingsController(
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
 
         root.addView(TextView(activity).apply {
-            text = "MARCO  •  BLACK / BLACK / SILVER EXPERIENCE"
+            text = "MARCO  •  BLACK / SILVER EXPERIENCE"
             textSize = 9f
             gravity = Gravity.CENTER
             setTextColor(muted)
