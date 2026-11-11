@@ -65,7 +65,7 @@ internal class AppearanceUiFactory(
             val base = view.background.constantState?.newDrawable()?.mutate() ?: view.background.mutate()
             view.background = android.graphics.drawable.RippleDrawable(
                 android.content.res.ColorStateList.valueOf(
-                    if (isDarkMode()) Color.argb(78, 190, 198, 210) else Color.argb(58, 145, 153, 165)
+                    Color.argb(if (isDarkMode()) 78 else 58, Color.red(red()), Color.green(red()), Color.blue(red()))
                 ),
                 base,
                 android.graphics.drawable.ColorDrawable(Color.WHITE)
