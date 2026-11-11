@@ -178,18 +178,25 @@ internal class AppearanceUiFactory(
     }
 
     fun stylePrimaryButton(button: Button, primary: Boolean = false) {
-        button.background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-            if (primary) intArrayOf(
+        val blackSilver = selectedAccentId() == "black_silver"
+        val primaryStops = if (blackSilver) {
+            intArrayOf(Color.rgb(43, 47, 55), Color.rgb(8, 9, 12))
+        } else {
+            intArrayOf(
                 Color.argb(238, Color.red(red()), Color.green(red()), Color.blue(red())),
                 Color.argb(220, (Color.red(red()) * 0.72f).toInt(), (Color.green(red()) * 0.72f).toInt(), (Color.blue(red()) * 0.72f).toInt())
             )
+        }
+        button.background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
+            if (primary) primaryStops
             else if (isDarkMode()) intArrayOf(Color.argb(205, 34, 37, 44), Color.argb(190, 15, 17, 22))
             else intArrayOf(Color.argb(218, 255, 255, 255), Color.argb(205, 225, 228, 234))).apply {
             cornerRadius = dp(16).toFloat()
-            setStroke(dp(1), if (primary) Color.argb(190, Color.red(red()), Color.green(red()), Color.blue(red()))
+            setStroke(dp(1), if (primary) Color.argb(220, Color.red(red()), Color.green(red()), Color.blue(red()))
                 else if (isDarkMode()) Color.argb(165, 130, 138, 151) else Color.argb(175, 160, 168, 181))
         }
-        button.setTextColor(if (primary) accentForeground() else white())
+        button.setTextColor(if (primary && blackSilver) Color.rgb(225, 231, 240)
+            else if (primary) accentForeground() else white())
         button.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
         button.textSize = 13.5f
         button.isAllCaps = false
