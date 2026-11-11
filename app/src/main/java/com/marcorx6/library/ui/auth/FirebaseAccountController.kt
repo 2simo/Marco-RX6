@@ -2897,7 +2897,7 @@ internal class FirebaseAccountController(
             text = translate("إظهار كلمة المرور")
             textSize = 12f
             gravity = Gravity.END
-            setTextColor(accentTextColor(dark))
+            setTextColor(accentTextColor())
             minHeight = dp(48)
             minWidth = dp(48)
             contentDescription = translate("إظهار كلمة المرور")
@@ -2928,7 +2928,7 @@ internal class FirebaseAccountController(
                 text = translate("نسيت كلمة المرور؟")
                 textSize = 12f
                 gravity = Gravity.END
-                setTextColor(accentTextColor(dark))
+                setTextColor(accentTextColor())
                 minHeight = dp(48)
                 minWidth = dp(48)
                 contentDescription = translate("نسيت كلمة المرور؟")
