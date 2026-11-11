@@ -42,6 +42,9 @@ internal class DownloadMiniPanelDialog(
             AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID
         ) ?: AccentPalette.DEFAULT_ID
         val accent = AccentPalette.color(selectedAccentId)
+        val accentText = if (selectedAccentId == "black_silver") {
+            if (dark) Color.rgb(218, 225, 235) else Color.rgb(43, 49, 59)
+        } else accent
 
         val dialog = Dialog(activity)
         val root = LinearLayout(activity).apply {
@@ -71,7 +74,7 @@ internal class DownloadMiniPanelDialog(
         header.addView(TextView(activity).apply {
             text = translate("إغلاق")
             textSize = 12f
-            setTextColor(accent)
+            setTextColor(accentText)
             gravity = Gravity.CENTER
             setPadding(dp(13), dp(9), dp(13), dp(9))
             this.background = GradientDrawable().apply {
@@ -132,7 +135,7 @@ internal class DownloadMiniPanelDialog(
             text = label
             textSize = 10f
             gravity = Gravity.CENTER
-            setTextColor(accent)
+            setTextColor(accentText)
             setPadding(dp(10), dp(7), dp(10), dp(7))
             this.background = GradientDrawable().apply {
                 setColor(surface); cornerRadius = dp(9).toFloat()
@@ -158,7 +161,7 @@ internal class DownloadMiniPanelDialog(
                 text = name; textSize = 12f; setTypeface(null, Typeface.BOLD); setTextColor(heading)
                 maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END
             }
-            val statusView = TextView(activity).apply { textSize = 10f; setTextColor(accent); setPadding(0, dp(3), 0, 0) }
+            val statusView = TextView(activity).apply { textSize = 10f; setTextColor(accentText); setPadding(0, dp(3), 0, 0) }
             val detailsView = TextView(activity).apply { textSize = 10f; setTextColor(muted); setPadding(0, dp(3), 0, 0) }
             val bar = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
                 max = 100
