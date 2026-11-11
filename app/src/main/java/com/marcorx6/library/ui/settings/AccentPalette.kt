@@ -14,6 +14,7 @@ internal object AccentPalette {
 
     val options = listOf(
         Option("silver", "فضي", Color.rgb(190, 198, 210)),
+        Option("black_silver", "أسود فضي", Color.rgb(145, 158, 178)),
         Option("blue", "أزرق", Color.rgb(55, 132, 255)),
         Option("purple", "بنفسجي", Color.rgb(145, 92, 255)),
         Option("red", "أحمر", Color.rgb(235, 70, 80)),
