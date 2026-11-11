@@ -254,14 +254,14 @@ internal class AppearanceUiFactory(
         return null
     }
 
-    private fun legacyAccentReplacement(color: Int): Int? {
+    private fun legacyAccentReplacement(color: Int, includeSurfaceBlend: Boolean = true): Int? {
         val rgb = color and 0x00FFFFFF
-        val previousSurface = accentSurfaceTokens[rgb]
+        val previousSurface = if (includeSurfaceBlend) accentSurfaceTokens[rgb] else null
         if (previousSurface != null) {
             val replacement = AccentPalette.surface(previousSurface.first, red(), previousSurface.second, selectedAccentId())
             return Color.argb(Color.alpha(color), Color.red(replacement), Color.green(replacement), Color.blue(replacement))
         }
-        recoverAccentSurface(color)?.let { return it }
+        if (includeSurfaceBlend) recoverAccentSurface(color)?.let { return it }
         val isDarkAccent = rgb in darkLegacyAccentTokens || rgb in paletteDarkAccentTokens
         val isAccent = isDarkAccent || rgb in lightLegacyAccentTokens || rgb in paletteAccentTokens
         if (!isAccent) return null
@@ -276,7 +276,7 @@ internal class AppearanceUiFactory(
     }
 
     private fun themedNeutralColor(color: Int, background: Boolean): Int? {
-        legacyAccentReplacement(color)?.let { return it }
+        legacyAccentReplacement(color, includeSurfaceBlend = background)?.let { return it }
         val hsv = FloatArray(3)
         Color.colorToHSV(color, hsv)
         // Keep photographs, game artwork and intentionally colored illustrations intact.
