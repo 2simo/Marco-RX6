@@ -56,6 +56,7 @@ internal class StorageSettingsController(
             AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID
         ) ?: AccentPalette.DEFAULT_ID
         val silverAccent = AccentPalette.color(selectedAccentId)
+        val accentText = AccentPalette.readableAccentText(selectedAccentId, dark)
 
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
@@ -71,7 +72,7 @@ internal class StorageSettingsController(
             text = "MARCO  /  STORAGE"
             textSize = 9f
             letterSpacing = 0.12f
-            setTextColor(silverAccent)
+            setTextColor(accentText)
         })
         heading.addView(TextView(activity).apply {
             text = translate("التخزين")
@@ -82,7 +83,7 @@ internal class StorageSettingsController(
         header.addView(heading, LinearLayout.LayoutParams(0, -2, 1f))
         header.addView(android.widget.ImageView(activity).apply {
             setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
-            imageTintList = android.content.res.ColorStateList.valueOf(silverAccent)
+            imageTintList = android.content.res.ColorStateList.valueOf(accentText)
             scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
             contentDescription = translate("رجوع")
             isClickable = true
@@ -153,7 +154,7 @@ internal class StorageSettingsController(
             textSize = 13f
             gravity = Gravity.CENTER
             minHeight = dp(48)
-            setTextColor(Color.rgb(20, 23, 29))
+            setTextColor(AccentPalette.foregroundForColor(silverAccent))
             background = GradientDrawable().apply {
                 setColor(silverAccent)
                 cornerRadius = dp(14).toFloat()
