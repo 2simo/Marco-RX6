@@ -126,15 +126,28 @@ internal class GameLibraryRenderer(
             chip.background = GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
                 if (active) intArrayOf(red, red)
-                else if (isDarkMode()) intArrayOf(Color.argb(205, 35, 38, 45), Color.argb(188, 15, 17, 22))
-                else intArrayOf(Color.argb(228, 255, 255, 255), Color.argb(210, 222, 226, 232))
+                else intArrayOf(
+                    AccentPalette.surface(
+                        if (isDarkMode()) Color.rgb(35, 38, 45) else Color.rgb(255, 255, 255),
+                        red,
+                        if (isDarkMode()) 0.24f else 0.13f
+                    ),
+                    AccentPalette.surface(
+                        if (isDarkMode()) Color.rgb(15, 17, 22) else Color.rgb(222, 226, 232),
+                        red,
+                        if (isDarkMode()) 0.20f else 0.17f
+                    )
+                )
             ).apply {
                 cornerRadius = dp(18).toFloat()
                 setStroke(
                     dp(1),
                     if (active) red
-                    else if (isDarkMode()) Color.argb(145, 130, 138, 151)
-                    else Color.argb(155, 160, 168, 181)
+                    else AccentPalette.surface(
+                        if (isDarkMode()) Color.rgb(130, 138, 151) else Color.rgb(160, 168, 181),
+                        red,
+                        if (isDarkMode()) 0.48f else 0.42f
+                    )
                 )
             }
             chip.setTextColor(if (active) accentForeground() else gray)
