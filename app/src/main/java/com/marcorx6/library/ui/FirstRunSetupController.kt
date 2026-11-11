@@ -317,6 +317,9 @@ internal class FirstRunSetupController(
         dialog.setCancelable(false)
         dialog.setCanceledOnTouchOutside(false)
         dialog.show()
+        // The onboarding dialog is a separate Window, so explicitly skin its
+        // complete content tree with the same selected palette as app screens.
+        applyUnifiedSkin(root)
         dialog.window?.let { window ->
             window.setBackgroundDrawableResource(android.R.color.transparent)
             window.setLayout(-1, -1)
