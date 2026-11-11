@@ -11,22 +11,30 @@ internal class FirstRunSetupViewFactory(
     private val dp: (Int) -> Int,
     private val makeText: (String, Float, Int, Boolean) -> android.widget.TextView
 ) {
-    fun optionCard(label: String, selected: Boolean, detail: String = "", dark: Boolean = true): LinearLayout {
+    fun optionCard(
+        label: String,
+        selected: Boolean,
+        detail: String = "",
+        dark: Boolean = true,
+        accentColor: Int = android.graphics.Color.rgb(190, 198, 210),
+        accentForeground: Int = android.graphics.Color.rgb(20, 23, 29)
+    ): LinearLayout {
         return LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             gravity = android.view.Gravity.CENTER_VERTICAL
             setPadding(dp(18), dp(14), dp(18), dp(14))
             background = GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
-                if (dark && selected) intArrayOf(
-                    android.graphics.Color.argb(238, 92, 98, 109),
-                    android.graphics.Color.argb(225, 43, 47, 55)
+                if (selected) intArrayOf(
+                    accentColor,
+                    android.graphics.Color.rgb(
+                        (android.graphics.Color.red(accentColor) * 0.72f).toInt(),
+                        (android.graphics.Color.green(accentColor) * 0.72f).toInt(),
+                        (android.graphics.Color.blue(accentColor) * 0.72f).toInt()
+                    )
                 ) else if (dark) intArrayOf(
                     android.graphics.Color.argb(218, 34, 37, 44),
                     android.graphics.Color.argb(205, 17, 19, 24)
-                ) else if (selected) intArrayOf(
-                    android.graphics.Color.rgb(218, 224, 232),
-                    android.graphics.Color.rgb(194, 202, 213)
                 ) else intArrayOf(
                     android.graphics.Color.WHITE,
                     android.graphics.Color.rgb(239, 242, 247)
@@ -35,7 +43,7 @@ internal class FirstRunSetupViewFactory(
                 cornerRadius = dp(17).toFloat()
                 setStroke(
                     dp(if (selected) 2 else 1),
-                    if (selected) android.graphics.Color.argb(235, 190, 198, 210)
+                    if (selected) accentColor
                     else android.graphics.Color.argb(125, 130, 138, 151)
                 )
             }
@@ -47,13 +55,13 @@ internal class FirstRunSetupViewFactory(
             optionHeader.addView(makeText(
                 label,
                 16f,
-                if (selected) android.graphics.Color.WHITE else android.graphics.Color.rgb(230, 233, 239),
+                if (selected) accentForeground else android.graphics.Color.rgb(230, 233, 239),
                 true
             ), LinearLayout.LayoutParams(0, -2, 1f))
             if (selected) {
                 optionHeader.addView(android.widget.ImageView(activity).apply {
                     setImageResource(com.marcorx6.library.R.drawable.ic_action_check)
-                    imageTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.WHITE)
+                    imageTintList = android.content.res.ColorStateList.valueOf(accentForeground)
                     contentDescription = "Selected"
                     scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
                 }, LinearLayout.LayoutParams(dp(22), dp(22)))
@@ -68,7 +76,7 @@ internal class FirstRunSetupViewFactory(
             isFocusable = true
             if (android.os.Build.VERSION.SDK_INT >= 23) {
                 foreground = android.graphics.drawable.RippleDrawable(
-                    android.content.res.ColorStateList.valueOf(android.graphics.Color.argb(70, 190, 198, 210)),
+                    android.content.res.ColorStateList.valueOf(android.graphics.Color.argb(70, android.graphics.Color.red(accentColor), android.graphics.Color.green(accentColor), android.graphics.Color.blue(accentColor))),
                     null,
                     android.graphics.drawable.ColorDrawable(android.graphics.Color.WHITE)
                 )
