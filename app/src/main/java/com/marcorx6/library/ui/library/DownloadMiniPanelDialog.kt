@@ -91,11 +91,11 @@ internal class DownloadMiniPanelDialog(
             text = translate("متابعة التصفح")
             textSize = 13f
             setTypeface(null, Typeface.BOLD)
-            setTextColor(if (dark) Color.rgb(20, 23, 29) else Color.WHITE)
+            setTextColor(AccentPalette.foreground(selectedAccentId))
             gravity = Gravity.CENTER
             setPadding(dp(14), dp(12), dp(14), dp(12))
             this.background = GradientDrawable().apply {
-                setColor(if (dark) Color.rgb(205, 212, 222) else Color.rgb(105, 113, 126))
+                setColor(accent)
                 cornerRadius = dp(14).toFloat()
             }
             setOnClickListener { dialog.dismiss() }
