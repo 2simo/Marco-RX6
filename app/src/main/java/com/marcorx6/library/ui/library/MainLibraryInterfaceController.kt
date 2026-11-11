@@ -200,16 +200,14 @@ internal class MainLibraryInterfaceController(
                     val languageBadge = TextView(context).apply {
                         text = languageLabel
                         textSize = 8f
-                        setTextColor(if (isDarkMode()) Color.WHITE else Color.rgb(34, 39, 47))
+                        setTextColor(AccentPalette.foregroundForColor(red))
                         typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
                         gravity = Gravity.CENTER
                         setPadding(dp(6), dp(3), dp(6), dp(3))
                         background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                            if (isDarkMode()) intArrayOf(Color.rgb(43, 47, 55), Color.rgb(25, 28, 34))
-                            else intArrayOf(Color.rgb(250, 251, 253), Color.rgb(205, 212, 222))).apply {
+                            intArrayOf(red, accentShade())).apply {
                             cornerRadius = dp(7).toFloat()
-                            setStroke(dp(1), if (isDarkMode()) Color.argb(210, 145, 153, 166)
-                                else Color.rgb(132, 143, 158))
+                            setStroke(dp(1), red)
                         }
                     }
                     coverFrame.addView(
@@ -616,8 +614,7 @@ internal class MainLibraryInterfaceController(
                             if (isDarkMode()) intArrayOf(Color.rgb(43, 47, 55), Color.rgb(25, 28, 34))
                             else intArrayOf(Color.rgb(250, 251, 253), Color.rgb(205, 212, 222))).apply {
                             cornerRadius = dp(10).toFloat()
-                            setStroke(dp(1), if (isDarkMode()) Color.argb(225, 165, 175, 190)
-                                else Color.rgb(132, 143, 158))
+                            setStroke(dp(1), red)
                         }
                         elevation = dp(5).toFloat()
                     }
