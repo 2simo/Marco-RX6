@@ -102,6 +102,10 @@ internal class AppearanceUiFactory(
      * and custom illustrations are intentionally left untouched.
      */
     private fun themedNeutralColor(color: Int, background: Boolean): Int? {
+        // Legacy screens use MARCO's exact brushed-silver accent directly instead
+        // of a palette token. Resolve that brand color here so those existing
+        // labels, icons and accent gradient stops follow the selected primary color.
+        if (color == Color.rgb(190, 198, 210)) return red()
         val hsv = FloatArray(3)
         Color.colorToHSV(color, hsv)
         // Include blue-tinted charcoal/silver neutrals used by legacy account and message cards,
