@@ -153,7 +153,7 @@ internal class DownloadUiController(
             this.background = GradientDrawable().apply {
                 setColor(surface)
                 cornerRadius = dp(12).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(78, 85, 98) else Color.rgb(210, 216, 225))
+                setStroke(dp(1), if (dark) AccentPalette.surface(Color.rgb(78, 85, 98), primary, 0.42f) else AccentPalette.surface(Color.rgb(210, 216, 225), primary, 0.38f))
             }
             setOnClickListener {
                 val options = arrayOf("1", "2", "3", "4", "5")
@@ -184,7 +184,7 @@ internal class DownloadUiController(
             this.background = GradientDrawable().apply {
                 setColor(surface)
                 cornerRadius = dp(12).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(78, 85, 98) else Color.rgb(210, 216, 225))
+                setStroke(dp(1), if (dark) AccentPalette.surface(Color.rgb(78, 85, 98), primary, 0.42f) else AccentPalette.surface(Color.rgb(210, 216, 225), primary, 0.38f))
             }
             contentDescription = translate("عدد الاتصالات لكل ملف")
             setOnClickListener {
@@ -217,7 +217,7 @@ internal class DownloadUiController(
             this.background = GradientDrawable().apply {
                 setColor(surface)
                 cornerRadius = dp(12).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(78, 85, 98) else Color.rgb(210, 216, 225))
+                setStroke(dp(1), if (dark) AccentPalette.surface(Color.rgb(78, 85, 98), primary, 0.42f) else AccentPalette.surface(Color.rgb(210, 216, 225), primary, 0.38f))
             }
             contentDescription = translate("التنزيل عبر Wi-Fi فقط")
             setOnClickListener {
@@ -273,7 +273,7 @@ internal class DownloadUiController(
             this.background = GradientDrawable().apply {
                 cornerRadius = dp(13).toFloat()
                 setColor(surface)
-                setStroke(dp(1), if (dark) Color.rgb(78, 85, 98) else Color.rgb(210, 216, 225))
+                setStroke(dp(1), if (dark) AccentPalette.surface(Color.rgb(78, 85, 98), primary, 0.42f) else AccentPalette.surface(Color.rgb(210, 216, 225), primary, 0.38f))
             }
             setTextColor(primary)
         }
@@ -306,7 +306,7 @@ internal class DownloadUiController(
             this.background = GradientDrawable().apply {
                 setColor(surface)
                 cornerRadius = dp(12).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(78, 85, 98) else Color.rgb(210, 216, 225))
+                setStroke(dp(1), if (dark) AccentPalette.surface(Color.rgb(78, 85, 98), primary, 0.42f) else AccentPalette.surface(Color.rgb(210, 216, 225), primary, 0.38f))
             }
             isClickable = true
             isFocusable = true
@@ -361,7 +361,7 @@ internal class DownloadUiController(
             this.background = GradientDrawable().apply {
                 setColor(surface)
                 cornerRadius = dp(12).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(78, 85, 98) else Color.rgb(210, 216, 225))
+                setStroke(dp(1), if (dark) AccentPalette.surface(Color.rgb(78, 85, 98), primary, 0.42f) else AccentPalette.surface(Color.rgb(210, 216, 225), primary, 0.38f))
             }
             setOnClickListener {
                 val values = longArrayOf(0L, 256L * 1024L, 512L * 1024L, 1024L * 1024L, 2L * 1024L * 1024L, 5L * 1024L * 1024L)
@@ -416,10 +416,18 @@ internal class DownloadUiController(
             setPadding(dp(24), dp(42), dp(24), dp(42))
             this.background = GradientDrawable().apply {
                 setColors(if (dark)
-                    intArrayOf(Color.argb(220, 35, 38, 45), Color.argb(208, 15, 17, 22))
-                else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(218, 222, 226, 232)))
+                    intArrayOf(
+                        AccentPalette.surface(Color.rgb(35, 38, 45), primary, 0.15f),
+                        AccentPalette.surface(Color.rgb(15, 17, 22), primary, 0.11f)
+                    )
+                else intArrayOf(
+                    AccentPalette.surface(Color.WHITE, primary, 0.08f),
+                    AccentPalette.surface(Color.rgb(222, 226, 232), primary, 0.11f)
+                ))
                 cornerRadius = dp(22).toFloat()
-                setStroke(dp(1), if (dark) Color.argb(165, 130, 138, 151) else Color.argb(175, 160, 168, 181))
+                setStroke(dp(1), if (dark)
+                    AccentPalette.surface(Color.rgb(130, 138, 151), primary, 0.40f)
+                else AccentPalette.surface(Color.rgb(160, 168, 181), primary, 0.34f))
             }
             addView(android.widget.ImageView(activity).apply {
                 setImageResource(com.marcorx6.library.R.drawable.ic_action_download)
@@ -708,10 +716,18 @@ internal class DownloadUiController(
                 setPadding(dp(15), dp(14), dp(15), dp(14))
                 this.background = GradientDrawable().apply {
                     setColors(if (dark)
-                        intArrayOf(Color.argb(221, 35, 38, 45), Color.argb(209, 15, 17, 22))
-                    else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(218, 222, 226, 232)))
+                        intArrayOf(
+                            AccentPalette.surface(Color.rgb(35, 38, 45), primary, 0.16f),
+                            AccentPalette.surface(Color.rgb(15, 17, 22), primary, 0.12f)
+                        )
+                    else intArrayOf(
+                        AccentPalette.surface(Color.WHITE, primary, 0.08f),
+                        AccentPalette.surface(Color.rgb(222, 226, 232), primary, 0.12f)
+                    ))
                     cornerRadius = dp(17).toFloat()
-                    setStroke(dp(1), if (dark) Color.argb(165, 130, 138, 151) else Color.argb(175, 160, 168, 181))
+                    setStroke(dp(1), if (dark)
+                        AccentPalette.surface(Color.rgb(130, 138, 151), primary, 0.42f)
+                    else AccentPalette.surface(Color.rgb(160, 168, 181), primary, 0.36f))
                 }
             }
             val titleView = TextView(activity).apply {
@@ -725,7 +741,8 @@ internal class DownloadUiController(
                 max = 100
                 progressTintList = android.content.res.ColorStateList.valueOf(primary)
                 progressBackgroundTintList = android.content.res.ColorStateList.valueOf(
-                    if (dark) Color.argb(90, 130, 138, 151) else Color.argb(70, 160, 168, 181))
+                    if (dark) AccentPalette.surface(Color.rgb(130, 138, 151), primary, 0.28f)
+                    else AccentPalette.surface(Color.rgb(160, 168, 181), primary, 0.24f))
             }
             val actions = LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
