@@ -643,6 +643,7 @@ class MainActivity : ComponentActivity() {
             white = { white },
             gray = { gray },
             accentForeground = ::accentForeground,
+            accentId = appearancePaletteFeature::accentId,
             showNotifications = activityServicesRuntimeFeature::showNotificationSettings,
             launchDownloadFolderPicker = activityResultRuntimeFeature::launchDownloadFolderPicker,
             downloadFolderName = downloadStoragePreferences::displayName,
