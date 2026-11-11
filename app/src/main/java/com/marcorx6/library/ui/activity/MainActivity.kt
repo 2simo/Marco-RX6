@@ -310,7 +310,9 @@ class MainActivity : ComponentActivity() {
                         applyUnifiedSkin(window.decorView)
                         // Main-library renderers keep cached palette values for fast list updates.
                         // Refresh those values too, so the next card/filter render uses the new accent.
-                        libraryRuntimeFeature.refreshPalette(bg, panel, red, white, gray)
+                        if (libraryRuntimeFeatureDelegate.isInitialized()) {
+                            libraryRuntimeFeature.refreshPalette(bg, panel, red, white, gray)
+                        }
                         activityServicesRuntimeFeature.applySystemBarAppearance()
                     }
                 }
@@ -658,7 +660,7 @@ class MainActivity : ComponentActivity() {
     private fun fontScale(): Float = appearanceRuntimeFeature.fontScale()
     private fun fontFamilyName(): String = appearanceRuntimeFeature.fontFamilyName()
 
-    private val libraryRuntimeFeature: MainLibraryRuntimeFeature by lazy {
+    private val libraryRuntimeFeatureDelegate = lazy {
         MainLibraryRuntimeFeature(
             activity = this,
             context = this,
@@ -702,8 +704,7 @@ class MainActivity : ComponentActivity() {
             },
         )
     }
-
-
+    private val libraryRuntimeFeature: MainLibraryRuntimeFeature by libraryRuntimeFeatureDelegate
 
     private fun showFirstRunSetup() = userExperienceRuntimeFeature.showFirstRunSetup()
     private fun showStartupExperience() = userExperienceRuntimeFeature.showStartupExperience()
