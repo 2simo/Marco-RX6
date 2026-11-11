@@ -26,7 +26,8 @@ internal class StartupExperienceController(
     private val makeText: (String, Float, Int, Boolean) -> TextView,
     private val showFirstRunSetup: () -> Unit,
     private val showProfile: () -> Unit,
-    private val translate: (String) -> String
+    private val translate: (String) -> String,
+    private val isDarkMode: () -> Boolean
 ) {
     private val handler = Handler(Looper.getMainLooper())
     private var animator: ValueAnimator? = null
@@ -164,7 +165,7 @@ internal class StartupExperienceController(
                     showFirstRunSetup()
                 } else if (!settings.getBoolean("community_channels_prompted", true)) {
                     settings.edit().putBoolean("community_channels_prompted", true).apply()
-                    CommunityChannelsController(activity, dp, makeText, translate).show()
+                    CommunityChannelsController(activity, dp, makeText, translate, isDarkMode).show()
                 } else if (!settings.getBoolean("profile_prompted", false)) {
                     settings.edit().putBoolean("profile_prompted", true).apply()
                     showProfile()

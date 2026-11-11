@@ -127,7 +127,8 @@ internal class UserExperienceRuntimeFeature(
             makeText = makeText,
             showFirstRunSetup = showFirstRunSetup,
             showProfile = showProfileForStartup,
-            translate = translate
+            translate = translate,
+            isDarkMode = isDarkMode
         )
     }
     private val startupExperienceController by startupExperienceControllerDelegate
