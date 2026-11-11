@@ -21,7 +21,8 @@ internal class CommunityChannelsController(
     private val dp: (Int) -> Int,
     private val makeText: (String, Float, Int, Boolean) -> TextView,
     private val translate: (String) -> String,
-    private val isDarkMode: () -> Boolean
+    private val isDarkMode: () -> Boolean,
+    private val red: () -> Int
 ) {
     fun show(onContinue: () -> Unit = {}) {
         if (activity.isFinishing || activity.isDestroyed) return
@@ -37,7 +38,7 @@ internal class CommunityChannelsController(
                 else intArrayOf(Color.rgb(250, 251, 253), Color.rgb(232, 236, 242), Color.rgb(245, 247, 250))
             )
         }
-        root.addView(makeText("MARCO", 12f, Color.rgb(190, 198, 210), true).apply {
+        root.addView(makeText("MARCO", 12f, red(), true).apply {
             gravity = Gravity.CENTER
             letterSpacing = 0.16f
         })
@@ -57,7 +58,7 @@ internal class CommunityChannelsController(
                 text = "$label\n$detail"
                 isAllCaps = false
                 textSize = 14f
-                setTextColor(Color.rgb(20, 23, 29))
+                setTextColor(AccentPalette.foregroundForColor(red()))
                 gravity = Gravity.CENTER
                 background = GradientDrawable().apply {
                     setColor(Color.rgb(190, 198, 210))
