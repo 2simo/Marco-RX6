@@ -370,7 +370,7 @@ internal class GameLibraryRenderer(
                         importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
                         setPadding(dp(6), dp(6), dp(6), dp(6))
                         background = GradientDrawable().apply {
-                            setColor(Color.rgb(190, 198, 210))
+                            setColor(red)
                             cornerRadius = dp(17).toFloat()
                         }
                     }
@@ -456,7 +456,7 @@ internal class GameLibraryRenderer(
                         com.marcorx6.library.R.drawable.ic_engagement_views,
                         tr("المشاهدات"),
                         viewsValue,
-                        Color.rgb(190, 198, 210)
+                        red
                     ),
                     LinearLayout.LayoutParams(0, -2, 1f)
                 )
