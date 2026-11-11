@@ -29,6 +29,17 @@ internal object AccentPalette {
 
     fun foreground(id: String = DEFAULT_ID): Int = foregroundForColor(color(id))
 
+    /** Accent-colored text on light surfaces is darkened to maintain readable contrast. */
+    fun readableAccentText(id: String = DEFAULT_ID, darkMode: Boolean): Int {
+        val accent = color(id)
+        if (darkMode) return accent
+        return Color.rgb(
+            (Color.red(accent) * 0.55f).toInt(),
+            (Color.green(accent) * 0.55f).toInt(),
+            (Color.blue(accent) * 0.55f).toInt()
+        )
+    }
+
     /** Blend a neutral surface with the selected primary color without turning it into a flat accent block. */
     fun surface(base: Int, accent: Int, amount: Float, accentId: String? = null): Int {
         // Black & Silver keeps black/white as the dominant surface. Silver is
