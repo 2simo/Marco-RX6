@@ -308,6 +308,9 @@ class MainActivity : ComponentActivity() {
                 window.decorView.post {
                     if (!isFinishing && !isDestroyed) {
                         applyUnifiedSkin(window.decorView)
+                        // Main-library renderers keep cached palette values for fast list updates.
+                        // Refresh those values too, so the next card/filter render uses the new accent.
+                        libraryRuntimeFeature.refreshPalette(bg, panel, red, white, gray)
                         activityServicesRuntimeFeature.applySystemBarAppearance()
                     }
                 }
