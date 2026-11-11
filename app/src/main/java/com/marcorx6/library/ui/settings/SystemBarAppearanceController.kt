@@ -24,7 +24,7 @@ internal object SystemBarPolicy {
         val accent = AccentPalette.color(selectedId)
         val base = if (darkMode) Color.rgb(8, 9, 12) else Color.rgb(245, 247, 250)
         // Keep the Android status-bar backing surface in sync with the app top bar.
-        return AccentPalette.surface(base, accent, 0.32f)
+        return AccentPalette.surface(base, accent, 0.32f, selectedId)
     }
 
     fun apply(window: Window, darkMode: Boolean, hideNavigation: Boolean = false) {
