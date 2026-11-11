@@ -58,8 +58,16 @@ internal class AppearanceUiFactory(
             base?.alpha = if (view.tag == "marco_primary_action") 224 else if (isDarkMode()) 198 else 210
             if (base != null) view.background = base
         }
-        if (android.os.Build.VERSION.SDK_INT >= 23 && view.foreground == null) {
-            view.foreground = glassRipple()
+        if (android.os.Build.VERSION.SDK_INT >= 23) {
+            val accentRipple = android.content.res.ColorStateList.valueOf(
+                Color.argb(if (isDarkMode()) 78 else 58, Color.red(red()), Color.green(red()), Color.blue(red()))
+            )
+            val existingForeground = view.foreground
+            if (existingForeground is android.graphics.drawable.RippleDrawable) {
+                existingForeground.setColor(accentRipple)
+            } else if (existingForeground == null) {
+                view.foreground = glassRipple()
+            }
         } else if (view.background != null && view.background !is android.graphics.drawable.RippleDrawable &&
             view.foreground == null) {
             val base = view.background.constantState?.newDrawable()?.mutate() ?: view.background.mutate()
