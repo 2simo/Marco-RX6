@@ -98,6 +98,12 @@ internal class DownloadUiController(
     fun showDownloadManager() {
         fun dp(value: Int): Int = (value * activity.resources.displayMetrics.density).toInt()
         val dark = isDarkMode()
+        val appearance = AppearancePreferencesStore.appearance(activity)
+        val selectedAccentId = appearance.getString(
+            AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID
+        ) ?: AccentPalette.DEFAULT_ID
+        val primary = AccentPalette.color(selectedAccentId)
+        val primaryForeground = AccentPalette.foreground(selectedAccentId)
         val background = AccentPalette.surface(
             if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247),
             primary, if (dark) 0.22f else 0.12f
@@ -106,12 +112,6 @@ internal class DownloadUiController(
             if (dark) Color.rgb(25, 28, 34) else Color.WHITE,
             primary, if (dark) 0.16f else 0.075f
         )
-        val appearance = AppearancePreferencesStore.appearance(activity)
-        val selectedAccentId = appearance.getString(
-            AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID
-        ) ?: AccentPalette.DEFAULT_ID
-        val primary = AccentPalette.color(selectedAccentId)
-        val primaryForeground = AccentPalette.foreground(selectedAccentId)
         val heading = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
         val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
         fun addGlassTouch(view: View) {
