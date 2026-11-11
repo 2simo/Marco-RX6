@@ -27,14 +27,14 @@ internal class AppearancePaletteRuntimeFeature(context: Context) {
     val bg: Int
         get() {
             val accent = accentColor()
-            return if (isDarkMode()) AccentPalette.surface(Color.rgb(8, 9, 12), accent, 0.20f)
-            else AccentPalette.surface(Color.rgb(245, 247, 250), accent, 0.10f)
+            return if (isDarkMode()) AccentPalette.surface(Color.rgb(8, 9, 12), accent, 0.20f, selectedAccentId())
+            else AccentPalette.surface(Color.rgb(245, 247, 250), accent, 0.10f, selectedAccentId())
         }
     val panel: Int
         get() {
             val accent = accentColor()
-            return if (isDarkMode()) AccentPalette.surface(Color.rgb(25, 28, 34), accent, 0.30f)
-            else AccentPalette.surface(Color.rgb(224, 229, 237), accent, 0.20f)
+            return if (isDarkMode()) AccentPalette.surface(Color.rgb(25, 28, 34), accent, 0.30f, selectedAccentId())
+            else AccentPalette.surface(Color.rgb(224, 229, 237), accent, 0.20f, selectedAccentId())
         }
     val red: Int
         get() = accentColor()
