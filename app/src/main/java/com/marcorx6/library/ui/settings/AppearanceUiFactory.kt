@@ -300,17 +300,18 @@ internal class AppearanceUiFactory(
             }
             AccentPalette.surface(color, red(), amount, selectedAccentId())
         } else {
-            if (isDarkMode()) {
-                when {
-                    value <= 0.55f -> white()
-                    else -> return null
-                }
+            // Neutral text must follow the surface mode, not the selected accent.
+            // Black & Silver uses readable silver on black and charcoal on light;
+            // other palettes use the same semantic contrast rule so changing accent
+            // never leaves legacy neutral labels washed out or nearly invisible.
+            val foreground = if (isDarkMode()) {
+                if (selectedAccentId() == "black_silver") Color.rgb(218, 225, 235)
+                else Color.rgb(245, 247, 250)
             } else {
-                when {
-                    value >= 0.45f -> white()
-                    else -> return null
-                }
+                Color.rgb(25, 29, 36)
             }
+            if (background) return null
+            foreground
         }
         return Color.argb(Color.alpha(color), Color.red(replacement),
             Color.green(replacement), Color.blue(replacement))
