@@ -103,6 +103,9 @@ internal class DownloadUiController(
             AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID
         ) ?: AccentPalette.DEFAULT_ID
         val primary = AccentPalette.color(selectedAccentId)
+        val accentText = if (selectedAccentId == "black_silver") {
+            if (dark) Color.rgb(218, 225, 235) else Color.rgb(43, 49, 59)
+        } else primary
         val primaryForeground = AccentPalette.foreground(selectedAccentId)
         val background = AccentPalette.surface(
             if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247),
@@ -139,7 +142,7 @@ internal class DownloadUiController(
             text = "MARCO  /  ${translate("التنزيلات").uppercase()}"
             textSize = 9f
             letterSpacing = 0.12f
-            setTextColor(primary)
+            setTextColor(accentText)
         })
         titleBox.addView(TextView(activity).apply {
             text = translate("التنزيلات")
@@ -153,7 +156,7 @@ internal class DownloadUiController(
             text = "×${downloadRepository.maxConcurrentDownloads()}"
             textSize = 12f
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(primary)
+            setTextColor(accentText)
             gravity = Gravity.CENTER
             setPadding(dp(12), dp(10), dp(12), dp(10))
             this.background = GradientDrawable().apply {
@@ -184,7 +187,7 @@ internal class DownloadUiController(
             text = "${downloadRepository.maxSegmentConnections()}×"
             textSize = 11f
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(primary)
+            setTextColor(accentText)
             gravity = Gravity.CENTER
             setPadding(dp(10), dp(10), dp(10), dp(10))
             this.background = GradientDrawable().apply {
@@ -217,7 +220,7 @@ internal class DownloadUiController(
             text = if (downloadRepository.wifiOnlyDownloads()) "Wi-Fi" else "ALL"
             textSize = 10f
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(primary)
+            setTextColor(accentText)
             gravity = Gravity.CENTER
             setPadding(dp(10), dp(10), dp(10), dp(10))
             this.background = GradientDrawable().apply {
@@ -269,7 +272,7 @@ internal class DownloadUiController(
                 selectedFilter = key
                 filterButtons.forEach { (filterKey, button) ->
                     val active = filterKey == selectedFilter
-                    button.setTextColor(if (active) primaryForeground else primary)
+                    button.setTextColor(if (active) primaryForeground else accentText)
                     (button.background as? GradientDrawable)?.setColor(
                         if (active) primary else surface
                     )
@@ -281,7 +284,7 @@ internal class DownloadUiController(
                 setColor(surface)
                 setStroke(dp(1), if (dark) AccentPalette.surface(Color.rgb(78, 85, 98), primary, 0.42f) else AccentPalette.surface(Color.rgb(210, 216, 225), primary, 0.38f))
             }
-            setTextColor(primary)
+            setTextColor(accentText)
         }
         val filterRow = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -308,7 +311,7 @@ internal class DownloadUiController(
             textSize = 11f
             gravity = Gravity.CENTER
             setPadding(dp(12), dp(10), dp(12), dp(10))
-            setTextColor(primary)
+            setTextColor(accentText)
             this.background = GradientDrawable().apply {
                 setColor(surface)
                 cornerRadius = dp(12).toFloat()
@@ -362,7 +365,7 @@ internal class DownloadUiController(
             textSize = 11f
             setTypeface(null, android.graphics.Typeface.BOLD)
             gravity = Gravity.CENTER
-            setTextColor(primary)
+            setTextColor(accentText)
             setPadding(dp(14), dp(9), dp(14), dp(9))
             this.background = GradientDrawable().apply {
                 setColor(surface)
