@@ -881,7 +881,7 @@ internal class MainLibraryInterfaceController(
             setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.ic_action_add, 0, 0, 0)
             compoundDrawablePadding = dp(7)
             if (android.os.Build.VERSION.SDK_INT >= 23) compoundDrawableTintList =
-                android.content.res.ColorStateList.valueOf(Color.WHITE)
+                android.content.res.ColorStateList.valueOf(AccentPalette.foregroundForColor(red))
             textSize = 11f
             setTextColor(AccentPalette.foregroundForColor(red))
             typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
