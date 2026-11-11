@@ -61,7 +61,7 @@ internal class CommunityChannelsController(
                 setTextColor(AccentPalette.foregroundForColor(red()))
                 gravity = Gravity.CENTER
                 background = GradientDrawable().apply {
-                    setColor(Color.rgb(190, 198, 210))
+                    setColor(red())
                     cornerRadius = dp(16).toFloat()
                     setStroke(dp(1), Color.argb(100, 145, 153, 166))
                 }
@@ -84,7 +84,7 @@ internal class CommunityChannelsController(
             textSize = 14f
             setTextColor(Color.rgb(20, 23, 29))
             background = GradientDrawable().apply {
-                setColor(Color.rgb(190, 198, 210))
+                setColor(red())
                 cornerRadius = dp(16).toFloat()
             }
             minHeight = dp(52)
