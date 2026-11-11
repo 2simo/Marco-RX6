@@ -20,7 +20,7 @@ internal class GameFavoriteToggleFactory(
             contentDescription = game.name + ", " + if (game.isFavorite) "إزالة من المفضلة" else "إضافة إلى المفضلة"
             textSize = 25f
             gravity = android.view.Gravity.CENTER
-            setTextColor(if (game.isFavorite) android.graphics.Color.rgb(190, 198, 210) else white())
+            setTextColor(if (game.isFavorite) red() else white())
             if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
                 android.content.res.ColorStateList.valueOf(android.graphics.Color.argb(82, 190, 198, 210)),
                 null,
