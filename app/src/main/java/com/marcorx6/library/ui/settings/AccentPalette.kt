@@ -2,9 +2,33 @@ package com.marcorx6.library.ui
 
 import android.graphics.Color
 
-/** MARCO RX6 primary accent: brushed silver with deep black surfaces across the application. */
+/**
+ * MARCO primary accent choices. Silver remains the default brand accent;
+ * the selected accent is used for interactive controls, highlights and states.
+ */
 internal object AccentPalette {
-    fun color(): Int = Color.rgb(190, 198, 210)
+    const val PREFERENCE_KEY = "primary_color"
+    const val DEFAULT_ID = "silver"
 
-    fun foreground(): Int = Color.rgb(20, 23, 29)
+    data class Option(val id: String, val label: String, val color: Int) 
+
+    val options = listOf(
+        Option("silver", "فضي", Color.rgb(190, 198, 210)),
+        Option("blue", "أزرق", Color.rgb(55, 132, 255)),
+        Option("purple", "بنفسجي", Color.rgb(145, 92, 255)),
+        Option("red", "أحمر", Color.rgb(235, 70, 80)),
+        Option("green", "أخضر", Color.rgb(32, 183, 122)),
+        Option("gold", "ذهبي", Color.rgb(214, 168, 75)),
+        Option("cyan", "سماوي", Color.rgb(32, 191, 208)),
+        Option("pink", "وردي", Color.rgb(232, 93, 158))
+    )
+
+    fun color(id: String = DEFAULT_ID): Int =
+        options.firstOrNull { it.id == id }?.color ?: options.first { it.id == DEFAULT_ID }.color
+
+    fun foreground(id: String = DEFAULT_ID): Int {
+        val color = color(id)
+        val luminance = (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255.0
+        return if (luminance > 0.66) Color.rgb(20, 23, 29) else Color.WHITE
+    }
 }
