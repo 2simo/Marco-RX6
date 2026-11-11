@@ -65,7 +65,10 @@ internal class DownloadPageDialog(
         val dark = AppearancePreferencesStore.isDarkMode(appPreferences)
         val background = if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247)
         val surface = if (dark) Color.rgb(25, 28, 34) else Color.WHITE
-        val primary = if (dark) Color.rgb(205, 212, 222) else Color.rgb(105, 113, 126)
+        val selectedAccentId = appPreferences.getString(AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID)
+            ?: AccentPalette.DEFAULT_ID
+        val primary = AccentPalette.color(selectedAccentId)
+        val primaryForeground = AccentPalette.foreground(selectedAccentId)
         val border = if (dark) Color.rgb(70, 77, 89) else Color.rgb(205, 211, 220)
         val heading = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
         val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
