@@ -49,6 +49,7 @@ internal class FirstRunSetupController(
             (Color.green(color) * 0.72f).toInt(),
             (Color.blue(color) * 0.72f).toInt()
         )
+        var activeAccent = AccentPalette.color(accentKey)
         var notificationsEnabled = isNotificationsEnabled()
 
         val steps = listOf(
@@ -110,7 +111,7 @@ internal class FirstRunSetupController(
 
         renderStep = { target: Int, animate: Boolean ->
             step = target.coerceIn(0, steps.lastIndex)
-            val activeAccent = AccentPalette.color(accentKey)
+            activeAccent = AccentPalette.color(accentKey)
             val tr: (String) -> String = { value -> LanguageTranslator.translate(value, languageCode) }
             root.background = setupBackground(darkMode)
             progressTrack.background = rounded(if (darkMode) Color.rgb(57, 61, 70) else Color.rgb(210, 216, 225), 8)
