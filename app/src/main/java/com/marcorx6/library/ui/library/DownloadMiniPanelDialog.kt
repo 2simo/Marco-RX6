@@ -48,9 +48,10 @@ internal class DownloadMiniPanelDialog(
             orientation = LinearLayout.VERTICAL
             setPadding(dp(17), dp(15), dp(17), dp(12))
             this.background = GradientDrawable().apply {
-                setColor(background)
+                setColor(AccentPalette.surface(background, accent, if (dark) 0.05f else 0.035f))
                 cornerRadii = floatArrayOf(dp(22).toFloat(), dp(22).toFloat(), dp(22).toFloat(), dp(22).toFloat(), 0f, 0f, 0f, 0f)
-                setStroke(dp(1), if (dark) Color.rgb(70, 77, 89) else Color.rgb(205, 211, 220))
+                setStroke(dp(1), if (dark) AccentPalette.surface(Color.rgb(70, 77, 89), accent, 0.42f)
+                    else AccentPalette.surface(Color.rgb(205, 211, 220), accent, 0.36f))
             }
         }
         val header = LinearLayout(activity).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
@@ -75,7 +76,8 @@ internal class DownloadMiniPanelDialog(
             setPadding(dp(13), dp(9), dp(13), dp(9))
             this.background = GradientDrawable().apply {
                 setColor(surface); cornerRadius = dp(12).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(70, 77, 89) else Color.rgb(205, 211, 220))
+                setStroke(dp(1), if (dark) AccentPalette.surface(Color.rgb(70, 77, 89), accent, 0.42f)
+                    else AccentPalette.surface(Color.rgb(205, 211, 220), accent, 0.36f))
             }
             setOnClickListener { dialog.dismiss() }
         })
@@ -134,7 +136,8 @@ internal class DownloadMiniPanelDialog(
             setPadding(dp(10), dp(7), dp(10), dp(7))
             this.background = GradientDrawable().apply {
                 setColor(surface); cornerRadius = dp(9).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(70, 77, 89) else Color.rgb(205, 211, 220))
+                setStroke(dp(1), if (dark) AccentPalette.surface(Color.rgb(70, 77, 89), accent, 0.42f)
+                    else AccentPalette.surface(Color.rgb(205, 211, 220), accent, 0.36f))
             }
             setOnClickListener { onClick() }
         }
@@ -144,8 +147,11 @@ internal class DownloadMiniPanelDialog(
                 orientation = LinearLayout.VERTICAL
                 setPadding(dp(12), dp(10), dp(12), dp(10))
                 this.background = GradientDrawable().apply {
-                    setColor(surface); cornerRadius = dp(14).toFloat()
-                    setStroke(dp(1), if (dark) Color.rgb(70, 77, 89) else Color.rgb(205, 211, 220))
+                    setColor(AccentPalette.surface(surface, accent, if (dark) 0.12f else 0.07f))
+                    cornerRadius = dp(14).toFloat()
+                    setStroke(dp(1), if (dark)
+                        AccentPalette.surface(Color.rgb(130, 138, 151), accent, 0.42f)
+                    else AccentPalette.surface(Color.rgb(160, 168, 181), accent, 0.36f))
                 }
             }
             val nameView = TextView(activity).apply {
@@ -157,7 +163,8 @@ internal class DownloadMiniPanelDialog(
             val bar = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
                 max = 100
                 progressTintList = android.content.res.ColorStateList.valueOf(accent)
-                progressBackgroundTintList = android.content.res.ColorStateList.valueOf(if (dark) Color.rgb(70, 77, 89) else Color.rgb(205, 211, 220))
+                progressBackgroundTintList = android.content.res.ColorStateList.valueOf(if (dark) AccentPalette.surface(Color.rgb(70, 77, 89), accent, 0.42f)
+                    else AccentPalette.surface(Color.rgb(205, 211, 220), accent, 0.36f))
             }
             val actions = LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL
