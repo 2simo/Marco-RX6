@@ -287,10 +287,10 @@ internal class DownloadConfirmationPanel(
             textSize = 13f
             setTypeface(null, Typeface.BOLD)
             gravity = Gravity.CENTER
-            setTextColor(if (dark) Color.rgb(19, 22, 28) else Color.WHITE)
+            setTextColor(AccentPalette.foregroundForColor(silver))
             setCompoundDrawablesRelativeWithIntrinsicBounds(com.marcorx6.library.R.drawable.ic_action_download, 0, 0, 0)
             compoundDrawablePadding = dp(7)
-            compoundDrawableTintList = android.content.res.ColorStateList.valueOf(if (dark) Color.rgb(19, 22, 28) else Color.WHITE)
+            compoundDrawableTintList = android.content.res.ColorStateList.valueOf(AccentPalette.foregroundForColor(silver))
             this.background = GradientDrawable().apply {
                 setColor(silver)
                 cornerRadius = dp(15).toFloat()
