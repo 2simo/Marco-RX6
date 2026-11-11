@@ -30,6 +30,30 @@ class GameLibraryManagerTest {
         assertEquals(2, current.size)
     }
 
+    @Test fun mergeUpdatesOnlyTheFirstExistingMatchingPostForRepeatedImports() {
+        val original = game("Game A", "PS2")
+        val current = mutableListOf(original)
+        val firstImport = game("Game A updated", "PS4").copy(sourcePostUrl = original.sourcePostUrl)
+        val secondImport = game("Game A latest", "PS3").copy(sourcePostUrl = original.sourcePostUrl)
+
+        val result = GameLibraryManager.merge(current, listOf(firstImport, secondImport))
+
+        assertEquals(0, result.added)
+        assertEquals(2, result.updated)
+        assertEquals(1, current.size)
+        assertEquals("Game A latest", current.single().name)
+    }
+
+    @Test fun mergeMatchesManualDuplicatesWithoutCaseSensitivity() {
+        val current = mutableListOf(game("Local Game", "PS3", imported = false))
+        val imported = game("local game", "PS4")
+        val result = GameLibraryManager.merge(current, listOf(imported))
+
+        assertEquals(0, result.added)
+        assertEquals(0, result.updated)
+        assertEquals(1, current.size)
+    }
+
     @Test fun legacyPlatformsRemainInAllLibraryButNotCurrentPlatformFilter() {
         val legacy = game("Legacy PSP", "PSP")
         val current = game("Current PS3", "PS3", true)
