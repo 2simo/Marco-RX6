@@ -402,7 +402,7 @@ internal class AppearanceUiFactory(
                     val layer = drawable.getDrawable(0)
                     when (layer) {
                         is android.graphics.drawable.ColorDrawable -> listOf(layer.color)
-                        is GradientDrawable -> if (android.os.Build.VERSION.SDK_INT >= 29) drawable.colors?.toList() else null
+                        is GradientDrawable -> if (android.os.Build.VERSION.SDK_INT >= 29) layer.colors?.toList() else layer.color?.let { listOf(it.defaultColor) }
                         else -> null
                     }
                 } else null
@@ -411,9 +411,9 @@ internal class AppearanceUiFactory(
         }.orEmpty()
         if (colors.isEmpty()) return accentForeground()
         val average = Color.rgb(
-            colors.map(Color::red).average().toInt(),
-            colors.map(Color::green).average().toInt(),
-            colors.map(Color::blue).average().toInt()
+            colors.map { Color.red(it) }.average().toInt(),
+            colors.map { Color.green(it) }.average().toInt(),
+            colors.map { Color.blue(it) }.average().toInt()
         )
         return AccentPalette.foregroundForColor(average)
     }
