@@ -616,12 +616,25 @@ internal class AppearanceUiFactory(
         }
 
     private fun styleInput(input: EditText) {
+        // Input foregrounds are semantic colors, never derived from the selected
+        // accent. This keeps typed text readable even when the accent is very light
+        // (silver/yellow/pink) or very dark, in both app appearance modes.
+        val inputForeground = if (isDarkMode()) Color.rgb(245, 247, 250)
+            else Color.rgb(25, 29, 36)
+        val inputHint = if (isDarkMode()) Color.rgb(178, 184, 194)
+            else Color.rgb(91, 98, 110)
         input.background = inputBackground()
         input.setPadding(dp(14), dp(12), dp(14), dp(12))
         input.minHeight = dp(54)
         input.textSize = 14f
-        input.setTextColor(white())
-        input.setHintTextColor(gray())
+        input.setTextColor(android.content.res.ColorStateList.valueOf(inputForeground))
+        input.setHintTextColor(android.content.res.ColorStateList.valueOf(inputHint))
+        input.highlightColor = Color.argb(
+            76, Color.red(red()), Color.green(red()), Color.blue(red())
+        )
+        if (android.os.Build.VERSION.SDK_INT >= 29) {
+            input.textCursorDrawable?.setTint(red())
+        }
         input.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
     }
 
