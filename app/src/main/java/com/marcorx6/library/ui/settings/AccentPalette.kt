@@ -34,9 +34,9 @@ internal object AccentPalette {
         val accent = color(id)
         if (darkMode) return accent
         return Color.rgb(
-            (Color.red(accent) * 0.55f).toInt(),
-            (Color.green(accent) * 0.55f).toInt(),
-            (Color.blue(accent) * 0.55f).toInt()
+            (Color.red(accent) * 0.53f).toInt(),
+            (Color.green(accent) * 0.53f).toInt(),
+            (Color.blue(accent) * 0.53f).toInt()
         )
     }
 
