@@ -263,7 +263,7 @@ internal class DownloadUiController(
                 selectedFilter = key
                 filterButtons.forEach { (filterKey, button) ->
                     val active = filterKey == selectedFilter
-                    button.setTextColor(if (active) Color.rgb(20, 23, 29) else primary)
+                    button.setTextColor(if (active) primaryForeground else primary)
                     (button.background as? GradientDrawable)?.setColor(
                         if (active) primary else surface
                     )
@@ -289,7 +289,7 @@ internal class DownloadUiController(
             })
         }
         filterButtons["all"]?.apply {
-            setTextColor(Color.rgb(20, 23, 29))
+            setTextColor(primaryForeground)
             (background as? GradientDrawable)?.setColor(primary)
         }
         val bulkRow = LinearLayout(activity).apply {
@@ -536,9 +536,9 @@ internal class DownloadUiController(
             TextView(activity).apply {
                 text = label; textSize = 11f; gravity = Gravity.CENTER
                 minimumHeight = dp(42); setPadding(dp(13), dp(9), dp(13), dp(9))
-                setTextColor(if (filled) Color.rgb(20, 23, 29) else primary)
+                setTextColor(if (filled) primaryForeground else primary)
                 this.background = GradientDrawable().apply {
-                    setColor(if (filled) Color.argb(225, 205, 212, 222)
+                    setColor(if (filled) Color.argb(225, Color.red(primary), Color.green(primary), Color.blue(primary))
                         else if (dark) Color.argb(190, 35, 38, 45) else Color.WHITE)
                     cornerRadius = dp(12).toFloat(); setStroke(dp(1), primary)
                 }
