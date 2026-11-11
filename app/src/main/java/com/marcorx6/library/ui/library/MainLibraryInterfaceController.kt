@@ -75,6 +75,12 @@ internal class MainLibraryInterfaceController(
 
     private fun isDarkMode(): Boolean = darkMode()
 
+    private fun accentShade(): Int = Color.rgb(
+        (Color.red(red) * 0.72f).toInt(),
+        (Color.green(red) * 0.72f).toInt(),
+        (Color.blue(red) * 0.72f).toInt()
+    )
+
     private fun makeText(value: String, size: Float, color: Int, bold: Boolean = false): TextView =
         createText(value, size, color, bold)
 
@@ -97,7 +103,7 @@ internal class MainLibraryInterfaceController(
 
     private fun showSmartSearch() {
         val ink = bg
-        val accent = Color.rgb(190, 198, 210)
+        val accent = red
         val searchBaseTop = dp(18)
         val searchBaseBottom = dp(18)
         val root = LinearLayout(context).apply {
@@ -842,18 +848,18 @@ internal class MainLibraryInterfaceController(
                 if (android.os.Build.VERSION.SDK_INT >= 23) compoundDrawableTintList =
                     android.content.res.ColorStateList.valueOf(Color.WHITE)
                 textSize = 11f
-                setTextColor(Color.rgb(20, 23, 29))
+                setTextColor(AccentPalette.foregroundForColor(red))
                 typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
                 gravity = Gravity.CENTER
                 background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-                    intArrayOf(Color.rgb(190, 198, 210), Color.rgb(105, 113, 126))).apply {
+                    intArrayOf(red, accentShade())).apply {
                     cornerRadius = dp(15).toFloat()
-                    setStroke(dp(1), Color.argb(190, 210, 216, 225))
+                    setStroke(dp(1), Color.argb(190, Color.red(red), Color.green(red), Color.blue(red)))
                 }
                 isClickable = true
                 isFocusable = true
                 if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                    android.content.res.ColorStateList.valueOf(Color.argb(100, 145, 190, 255)),
+                    android.content.res.ColorStateList.valueOf(Color.argb(100, Color.red(red), Color.green(red), Color.blue(red))),
                     null,
                     GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(15).toFloat() }
                 )
@@ -913,10 +919,10 @@ internal class MainLibraryInterfaceController(
                     }
                 ).apply {
                     cornerRadius = dp(16).toFloat()
-                    setStroke(dp(1), if (active) Color.argb(185, 145, 153, 166)
+                    setStroke(dp(1), if (active) Color.argb(185, Color.red(red), Color.green(red), Color.blue(red))
                     else Color.TRANSPARENT)
                 }
-                val iconTint = if (active) Color.WHITE
+                val iconTint = if (active) AccentPalette.foregroundForColor(red)
                     else if (isDarkMode()) Color.rgb(225, 228, 234) else Color.rgb(91, 98, 110)
                 (item.getChildAt(0) as? ImageView)?.imageTintList =
                     android.content.res.ColorStateList.valueOf(iconTint)
