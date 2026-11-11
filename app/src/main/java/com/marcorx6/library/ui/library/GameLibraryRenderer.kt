@@ -340,15 +340,19 @@ internal class GameLibraryRenderer(
                         text = languageLabel
                         importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
                         textSize = 9f
-                        setTextColor(if (isDarkMode()) Color.WHITE else Color.rgb(34, 39, 47))
+                        setTextColor(accentForeground())
                         typeface = android.graphics.Typeface.create(
                             "sans-serif-medium", android.graphics.Typeface.BOLD
                         )
                         gravity = Gravity.CENTER
                         setPadding(dp(8), dp(4), dp(8), dp(4))
-                        background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                            if (isDarkMode()) intArrayOf(Color.rgb(43, 47, 55), Color.rgb(25, 28, 34))
-                            else intArrayOf(Color.rgb(250, 251, 253), Color.rgb(205, 212, 222))).apply {
+                        background = GradientDrawable(
+                            GradientDrawable.Orientation.TL_BR,
+                            intArrayOf(
+                                red,
+                                Color.rgb((Color.red(red) * 0.72f).toInt(), (Color.green(red) * 0.72f).toInt(), (Color.blue(red) * 0.72f).toInt())
+                            )
+                        ).apply {
                             cornerRadius = dp(9).toFloat()
                             setStroke(dp(1), if (isDarkMode()) Color.argb(210, 145, 153, 166)
                                 else Color.rgb(132, 143, 158))
