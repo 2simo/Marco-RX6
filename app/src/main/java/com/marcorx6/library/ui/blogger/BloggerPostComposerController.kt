@@ -68,7 +68,8 @@ internal class BloggerPostComposerController(
         // The app supports an in-app dark/light choice that can differ from uiMode.
         val isNight = isDarkMode()
         // Studio labels must follow the app's actual light/dark preference. The legacy white() token is white in both modes and becomes invisible on light surfaces.
-        val studioTextColor = if (isNight) android.graphics.Color.rgb(245, 247, 250)\n            else android.graphics.Color.rgb(25, 29, 36)
+        val studioTextColor = if (isNight) android.graphics.Color.rgb(245, 247, 250)
+            else android.graphics.Color.rgb(25, 29, 36)
         fun studioSurface(base: Int, amount: Float) =
             AccentPalette.surface(base, red(), amount)
         val studioBorder = studioSurface(
