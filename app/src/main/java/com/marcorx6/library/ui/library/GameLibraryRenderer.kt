@@ -508,10 +508,20 @@ internal class GameLibraryRenderer(
                     carousel.clipChildren = false
                     carousel.clipToPadding = false
 
-                    fun updateAllCardsDepth() {
-                        if (horizontal.width <= 0) return
+                    // Coalesce scroll callbacks to one update per display frame and
+                    // transform only cards near the viewport. Updating every card on
+                    // every scroll event made long libraries do O(all cards) UI work.
+                    var depthUpdatePosted = false
+                    val updateDepthOnNextFrame = Runnable {
+                        depthUpdatePosted = false
+                        if (horizontal.width <= 0 || carousel.childCount == 0) return@Runnable
                         val center = horizontal.scrollX + horizontal.width / 2f
-                        for (index in 0 until carousel.childCount) {
+                        val slotStep = dp(168).coerceAtLeast(1)
+                        val firstVisible = ((horizontal.scrollX / slotStep) - 2)
+                            .coerceAtLeast(0)
+                        val lastVisible = (((horizontal.scrollX + horizontal.width) / slotStep) + 2)
+                            .coerceAtMost(carousel.childCount - 1)
+                        for (index in firstVisible..lastVisible) {
                             val slot = carousel.getChildAt(index)
                             if (slot.width <= 0) continue
                             val relative = ((slot.left + slot.width / 2f - center) /
@@ -531,12 +541,17 @@ internal class GameLibraryRenderer(
                             slot.alpha = 1f - depth * 0.12f
                         }
                     }
+                    fun scheduleDepthUpdate() {
+                        if (depthUpdatePosted) return
+                        depthUpdatePosted = true
+                        horizontal.postOnAnimation(updateDepthOnNextFrame)
+                    }
 
                     horizontal.setOnScrollChangeListener { _, _, _, _, _ ->
-                        updateAllCardsDepth()
+                        scheduleDepthUpdate()
                     }
-                    horizontal.post { updateAllCardsDepth() }
-                    carousel.post { updateAllCardsDepth() }
+                    horizontal.post { scheduleDepthUpdate() }
+                    carousel.post { scheduleDepthUpdate() }
                 }
                 horizontal.addView(carousel, FrameLayout.LayoutParams(-2, -2))
                 gameList.addView(horizontal, LinearLayout.LayoutParams(-1, -2))
