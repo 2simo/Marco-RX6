@@ -497,20 +497,19 @@ class MainActivity : ComponentActivity() {
             googleAccountRuntimeFeature.handleSignInResult(
                 data = data,
                 onSuccess = {
+                    // Blogger/Drive OAuth is intentionally a separate Google session
+                    // from the optional Firebase MARCO profile. Do not reject a valid
+                    // Blogger owner account just because its email differs from Firebase.
                     googleAccountRuntimeFeature.isAdminSession = false
-                    val firebaseEmail = firebaseAuthRepository.currentUser?.email?.trim()?.lowercase()
-                    val bloggerEmail = googleAccountRuntimeFeature.currentAccount()?.email?.trim()?.lowercase()
-                    if (firebaseEmail.isNullOrBlank() || bloggerEmail.isNullOrBlank() || firebaseEmail != bloggerEmail) {
-                        googleAccountRuntimeFeature.signOut {
-                            googleAccountRuntimeFeature.isAdminSession = false
-                            createInterface()
-                            Toast.makeText(this, tr("حساب Google المختار مختلف عن حساب MARCO. سجّل بنفس البريد الإلكتروني."), Toast.LENGTH_LONG).show()
-                        }
-                    } else {
-                        createInterface()
-                        bloggerRuntimeFeature.refreshAccess()
-                        Toast.makeText(this, tr("تم ربط نفس حساب Google؛ جارٍ التحقق من صلاحيات Blogger…"), Toast.LENGTH_LONG).show()
-                    }
+                    createInterface()
+                    Toast.makeText(
+                        this,
+                        tr("تم ربط حساب Google؛ جارٍ تحميل مدونة MARCO والتحقق من صلاحيات النشر…"),
+                        Toast.LENGTH_LONG
+                    ).show()
+                    // Resolve the active blog ID before checking write access. This also
+                    // handles fresh installs where no Blogger blog ID has been cached yet.
+                    bloggerRuntimeFeature.sync(showResult = false)
                 },
                 onFailure = { message ->
                     googleAccountRuntimeFeature.isAdminSession = false
