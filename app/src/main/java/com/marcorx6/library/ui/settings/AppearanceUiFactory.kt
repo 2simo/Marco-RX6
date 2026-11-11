@@ -391,6 +391,33 @@ internal class AppearanceUiFactory(
         return false
     }
 
+    private fun foregroundForBackground(drawable: android.graphics.drawable.Drawable?): Int {
+        val colors = when (drawable) {
+            is android.graphics.drawable.ColorDrawable -> listOf(drawable.color)
+            is GradientDrawable -> if (android.os.Build.VERSION.SDK_INT >= 29) {
+                drawable.colors?.toList() ?: drawable.color?.let { listOf(it.defaultColor) }
+            } else drawable.color?.let { listOf(it.defaultColor) }
+            is android.graphics.drawable.RippleDrawable -> {
+                if (drawable.numberOfLayers > 0) {
+                    val layer = drawable.getDrawable(0)
+                    when (layer) {
+                        is android.graphics.drawable.ColorDrawable -> listOf(layer.color)
+                        is GradientDrawable -> if (android.os.Build.VERSION.SDK_INT >= 29) drawable.colors?.toList() else null
+                        else -> null
+                    }
+                } else null
+            }
+            else -> null
+        }.orEmpty()
+        if (colors.isEmpty()) return accentForeground()
+        val average = Color.rgb(
+            colors.map(Color::red).average().toInt(),
+            colors.map(Color::green).average().toInt(),
+            colors.map(Color::blue).average().toInt()
+        )
+        return AccentPalette.foregroundForColor(average)
+    }
+
     fun applyUnifiedSkin(view: View) {
         // Palette swatches and the shared top bar are authored from explicit palette
         // values. Do not reinterpret their saturated colors as legacy silver tokens.
@@ -428,10 +455,12 @@ internal class AppearanceUiFactory(
                 themedNeutralColor(view.currentTextColor, false)?.let(view::setTextColor)
             }
             val hasAccentSurface = rethemeBackground(view.background)
-            // Text placed on a legacy silver primary button must use a foreground
-            // chosen for the currently selected accent, not the old fixed dark ink.
+            // Resolve text against the actual themed surface. A tinted neutral card
+            // is not the same as an accent-filled button; using accentForeground()
+            // for both made light accent colors turn card labels nearly black in
+            // dark mode. The actual drawable is now the source of truth.
             if (hasAccentSurface && view is TextView && view !is EditText) {
-                view.setTextColor(accentForeground())
+                view.setTextColor(foregroundForBackground(view.background))
             }
         }
         if (view is TextView && view !is EditText) {
