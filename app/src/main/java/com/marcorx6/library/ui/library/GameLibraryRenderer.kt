@@ -207,9 +207,13 @@ internal class GameLibraryRenderer(
                 gravity = Gravity.CENTER
                 setPadding(dp(10), dp(5), dp(10), dp(5))
                 background = GradientDrawable().apply {
-                    setColor(if (isDarkMode()) Color.argb(105, 35, 38, 45) else Color.argb(115, 222, 226, 232))
+                    setColor(if (isDarkMode())
+                        AccentPalette.surface(Color.rgb(35, 38, 45), red, 0.16f)
+                    else AccentPalette.surface(Color.rgb(222, 226, 232), red, 0.09f))
                     cornerRadius = dp(12).toFloat()
-                    setStroke(dp(1), if (isDarkMode()) Color.argb(120, 130, 138, 151) else Color.argb(130, 160, 168, 181))
+                    setStroke(dp(1), if (isDarkMode())
+                        AccentPalette.surface(Color.rgb(130, 138, 151), red, 0.36f)
+                    else AccentPalette.surface(Color.rgb(160, 168, 181), red, 0.30f))
                 }
             }
             if (selected == "ALL") {
@@ -223,9 +227,13 @@ internal class GameLibraryRenderer(
                     setTextColor(if (isDarkMode()) Color.rgb(225, 228, 234) else Color.rgb(43, 47, 55))
                     setPadding(dp(10), dp(6), dp(10), dp(6))
                     background = GradientDrawable().apply {
-                        setColor(if (isDarkMode()) Color.argb(105, 35, 38, 45) else Color.argb(115, 222, 226, 232))
+                        setColor(if (isDarkMode())
+                            AccentPalette.surface(Color.rgb(35, 38, 45), red, 0.16f)
+                        else AccentPalette.surface(Color.rgb(222, 226, 232), red, 0.09f))
                         cornerRadius = dp(11).toFloat()
-                        setStroke(dp(1), if (isDarkMode()) Color.argb(145, 130, 138, 151) else Color.argb(155, 160, 168, 181))
+                        setStroke(dp(1), if (isDarkMode())
+                            AccentPalette.surface(Color.rgb(130, 138, 151), red, 0.40f)
+                        else AccentPalette.surface(Color.rgb(160, 168, 181), red, 0.34f))
                     }
                     isClickable = true
                     isFocusable = true
@@ -268,14 +276,19 @@ internal class GameLibraryRenderer(
                     orientation = LinearLayout.VERTICAL
                     val surface = GradientDrawable(
                         GradientDrawable.Orientation.TL_BR,
-                        if (isDarkMode()) intArrayOf(Color.argb(232, 35, 38, 45), Color.argb(220, 15, 17, 22))
-                        else intArrayOf(Color.argb(245, 250, 251, 253), Color.argb(235, 213, 219, 227))
+                        if (isDarkMode()) intArrayOf(
+                            AccentPalette.surface(Color.rgb(35, 38, 45), red, 0.13f),
+                            AccentPalette.surface(Color.rgb(15, 17, 22), red, 0.10f)
+                        ) else intArrayOf(
+                            AccentPalette.surface(Color.rgb(250, 251, 253), red, 0.07f),
+                            AccentPalette.surface(Color.rgb(238, 241, 246), red, 0.10f)
+                        )
                     ).apply {
                         cornerRadius = dp(18).toFloat()
                         setStroke(
                             dp(1),
-                            if (isDarkMode()) Color.argb(175, 130, 138, 151)
-                            else Color.argb(205, 133, 143, 157)
+                            if (isDarkMode()) AccentPalette.surface(Color.rgb(130, 138, 151), red, 0.38f)
+                            else AccentPalette.surface(Color.rgb(160, 168, 181), red, 0.34f)
                         )
                     }
                     background = android.graphics.drawable.RippleDrawable(
@@ -395,12 +408,15 @@ internal class GameLibraryRenderer(
                     image.scaleType = ImageView.ScaleType.CENTER_INSIDE
                 }
                 imageFrame.background = GradientDrawable().apply {
-                    setColor(if (isDarkMode()) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247))
+                    setColor(
+                        if (isDarkMode()) AccentPalette.surface(Color.rgb(8, 9, 12), red, 0.08f)
+                        else AccentPalette.surface(Color.rgb(242, 244, 247), red, 0.05f)
+                    )
                     cornerRadius = dp(13).toFloat()
                     setStroke(
                         dp(1),
-                        if (isDarkMode()) Color.argb(125, 130, 138, 151)
-                        else Color.argb(135, 160, 168, 181)
+                        if (isDarkMode()) AccentPalette.surface(Color.rgb(130, 138, 151), red, 0.32f)
+                        else AccentPalette.surface(Color.rgb(160, 168, 181), red, 0.28f)
                     )
                 }
                 card.addView(imageFrame, LinearLayout.LayoutParams(-1, dp(if (gridMode) 208 else 164)))
