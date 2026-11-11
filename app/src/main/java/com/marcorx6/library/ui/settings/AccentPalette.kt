@@ -26,8 +26,9 @@ internal object AccentPalette {
     fun color(id: String = DEFAULT_ID): Int =
         options.firstOrNull { it.id == id }?.color ?: options.first { it.id == DEFAULT_ID }.color
 
-    fun foreground(id: String = DEFAULT_ID): Int {
-        val color = color(id)
+    fun foreground(id: String = DEFAULT_ID): Int = foregroundForColor(color(id))
+
+    fun foregroundForColor(color: Int): Int {
         fun linear(channel: Int): Double {
             val value = channel / 255.0
             return if (value <= 0.04045) value / 12.92
