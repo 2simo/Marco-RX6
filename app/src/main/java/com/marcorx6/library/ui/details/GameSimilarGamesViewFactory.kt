@@ -21,6 +21,7 @@ internal class GameSimilarGamesViewFactory(
     private val makeText: (String, Float, Int, Boolean) -> TextView,
     private val isDarkMode: () -> Boolean,
     private val white: () -> Int,
+    private val red: () -> Int,
     private val translate: (String) -> String,
     private val loadCover: (ImageView, String, String) -> Unit
 ) {
@@ -39,7 +40,7 @@ internal class GameSimilarGamesViewFactory(
             makeText(
                 translate("اكتشف المزيد  •  قد يعجبك أيضاً"),
                 12f,
-                if (dark) Color.rgb(190, 198, 210) else Color.rgb(130, 138, 151),
+                red(),
                 true
             ).apply { setPadding(0, 0, 0, dp(9)) }
         )
