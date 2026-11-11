@@ -66,6 +66,9 @@ internal class DownloadPageDialog(
         val selectedAccentId = appPreferences.getString(AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID)
             ?: AccentPalette.DEFAULT_ID
         val primary = AccentPalette.color(selectedAccentId)
+        val accentText = if (selectedAccentId == "black_silver") {
+            if (dark) Color.rgb(218, 225, 235) else Color.rgb(43, 49, 59)
+        } else primary
         val background = AccentPalette.surface(
             if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247),
             primary,
@@ -296,7 +299,7 @@ internal class DownloadPageDialog(
                 }
                 textSize = 11f
                 gravity = Gravity.CENTER
-                setTextColor(primary)
+                setTextColor(accentText)
                 minWidth = dp(44)
                 minHeight = dp(44)
                 setPadding(dp(5), dp(5), dp(5), dp(5))
@@ -306,7 +309,7 @@ internal class DownloadPageDialog(
                     setStroke(dp(1), border)
                 })
                 if (android.os.Build.VERSION.SDK_INT >= 23) {
-                    compoundDrawableTintList = android.content.res.ColorStateList.valueOf(primary)
+                    compoundDrawableTintList = android.content.res.ColorStateList.valueOf(accentText)
                     foreground = android.graphics.drawable.RippleDrawable(
                         android.content.res.ColorStateList.valueOf(
                             Color.argb(if (dark) 70 else 45, Color.red(primary), Color.green(primary), Color.blue(primary))
@@ -389,7 +392,7 @@ internal class DownloadPageDialog(
         val blockedStats = TextView(activity).apply {
             text = translate("الإعلانات والمتتبعات المحجوبة: 0")
             textSize = 10f
-            setTextColor(primary)
+            setTextColor(accentText)
             setPadding(dp(3), 0, dp(3), dp(6))
         }
 
