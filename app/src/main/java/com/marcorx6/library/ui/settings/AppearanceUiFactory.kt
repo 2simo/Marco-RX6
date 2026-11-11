@@ -68,7 +68,7 @@ internal class AppearanceUiFactory(
         ) and 0x00FFFFFF
     }.toSet()
 
-    // Surfaces produced by AccentPalette.surface(, selectedAccentId()) are deliberately tinted and
+    // Surfaces produced by AccentPalette.surface() are deliberately tinted and
     // therefore are not grayscale. Remember every supported source blend so an
     // already-open screen can move from its previous accent to the next one.
     private val accentSurfaceTokens: Map<Int, Pair<Int, Float>> = run {
@@ -463,8 +463,10 @@ internal class AppearanceUiFactory(
             cornerRadius = dp(24).toFloat()
             setStroke(dp(1), AccentPalette.surface(
                 if (isDarkMode()) Color.rgb(130, 138, 151) else Color.rgb(180, 188, 200),
-                red(), 0.48f
-            , selectedAccentId()))
+                red(),
+                0.48f,
+                selectedAccentId()
+            ))
         })
         dialog.window?.let { window ->
             // Dialogs are separate Windows: apply the same immersive/IME policy
@@ -551,8 +553,9 @@ internal class AppearanceUiFactory(
             val normalStroke = AccentPalette.surface(
                 if (isDarkMode()) Color.rgb(130, 138, 151) else Color.rgb(160, 168, 181),
                 red(),
-                0.48f
-            , selectedAccentId())
+                0.48f,
+                selectedAccentId()
+            )
             val focusedStroke = red()
             addState(intArrayOf(android.R.attr.state_focused), GradientDrawable(
                 GradientDrawable.Orientation.TL_BR, fill
