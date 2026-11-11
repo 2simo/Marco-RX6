@@ -167,7 +167,7 @@ internal class StartupExperienceController(
                     showFirstRunSetup()
                 } else if (!settings.getBoolean("community_channels_prompted", true)) {
                     settings.edit().putBoolean("community_channels_prompted", true).apply()
-                    CommunityChannelsController(activity, dp, makeText, translate, isDarkMode).show()
+                    CommunityChannelsController(activity, dp, makeText, translate, isDarkMode, red).show()
                 } else if (!settings.getBoolean("profile_prompted", false)) {
                     settings.edit().putBoolean("profile_prompted", true).apply()
                     showProfile()
