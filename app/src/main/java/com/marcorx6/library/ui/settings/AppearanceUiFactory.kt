@@ -109,11 +109,38 @@ internal class AppearanceUiFactory(
      * Recolors only neutral grayscale surfaces. Accent-colored controls, artwork,
      * and custom illustrations are intentionally left untouched.
      */
+    /**
+     * Legacy pages contain several historical shades of MARCO silver for primary
+     * actions (including separate light/dark variants). Resolve those exact tokens
+     * centrally so older screens inherit the selected accent without recoloring
+     * ordinary neutral text, borders, or black/silver surfaces.
+     */
+    private fun legacyAccentReplacement(color: Int): Int? {
+        val rgb = color and 0x00FFFFFF
+        val lightAccentTokens = setOf(
+            Color.rgb(190, 198, 210), // original primary silver
+            Color.rgb(205, 211, 220),
+            Color.rgb(205, 212, 222),
+            Color.rgb(210, 216, 225),
+            Color.rgb(220, 224, 231)
+        )
+        val darkAccentTokens = setOf(
+            Color.rgb(105, 113, 126),
+            Color.rgb(104, 113, 126)
+        )
+        val accent = red()
+        val factor = if (rgb in darkAccentTokens) 0.72f else 1f
+        if (rgb !in lightAccentTokens && rgb !in darkAccentTokens) return null
+        return Color.argb(
+            Color.alpha(color),
+            (Color.red(accent) * factor).toInt().coerceIn(0, 255),
+            (Color.green(accent) * factor).toInt().coerceIn(0, 255),
+            (Color.blue(accent) * factor).toInt().coerceIn(0, 255)
+        )
+    }
+
     private fun themedNeutralColor(color: Int, background: Boolean): Int? {
-        // Legacy screens use MARCO's exact brushed-silver accent directly instead
-        // of a palette token. Resolve that brand color here so those existing
-        // labels, icons and accent gradient stops follow the selected primary color.
-        if (color == Color.rgb(190, 198, 210)) return red()
+        legacyAccentReplacement(color)?.let { return it }
         val hsv = FloatArray(3)
         Color.colorToHSV(color, hsv)
         // Include blue-tinted charcoal/silver neutrals used by legacy account and message cards,
@@ -157,37 +184,58 @@ internal class AppearanceUiFactory(
             Color.green(replacement), Color.blue(replacement))
     }
 
-    private fun rethemeBackground(drawable: android.graphics.drawable.Drawable?) {
+    private fun rethemeBackground(drawable: android.graphics.drawable.Drawable?): Boolean {
         when (drawable) {
             is android.graphics.drawable.ColorDrawable -> {
+                val accent = legacyAccentReplacement(drawable.color)
+                if (accent != null) {
+                    drawable.setColor(accent)
+                    return true
+                }
                 themedNeutralColor(drawable.color, true)?.let(drawable::setColor)
             }
             is GradientDrawable -> {
                 if (android.os.Build.VERSION.SDK_INT >= 29) {
-                    // Modern Android exposes gradient stops; retint neutral legacy
-                    // black/white gradients as well as single-colour card fills.
+                    // Resolve known legacy accent stops before neutral surface colors.
                     val stops = drawable.colors
                     if (stops != null) {
+                        var containsAccent = false
                         val themed = stops.map { color ->
-                            themedNeutralColor(color, true) ?: color
+                            val accent = legacyAccentReplacement(color)
+                            if (accent != null) {
+                                containsAccent = true
+                                accent
+                            } else themedNeutralColor(color, true) ?: color
                         }.toIntArray()
                         if (!stops.contentEquals(themed)) drawable.colors = themed
+                        return containsAccent
                     } else {
-                        // Most account/message cards use a solid GradientDrawable,
-                        // whose colors array is null even on current Android.
                         drawable.color?.defaultColor?.let { current ->
+                            val accent = legacyAccentReplacement(current)
+                            if (accent != null) {
+                                drawable.setColor(accent)
+                                return true
+                            }
                             themedNeutralColor(current, true)?.let(drawable::setColor)
                         }
                     }
                 } else if (android.os.Build.VERSION.SDK_INT >= 24) {
                     val current = drawable.color?.defaultColor
-                    if (current != null) themedNeutralColor(current, true)?.let(drawable::setColor)
+                    if (current != null) {
+                        val accent = legacyAccentReplacement(current)
+                        if (accent != null) {
+                            drawable.setColor(accent)
+                            return true
+                        }
+                        themedNeutralColor(current, true)?.let(drawable::setColor)
+                    }
                 }
             }
             is android.graphics.drawable.RippleDrawable -> {
-                if (drawable.numberOfLayers > 0) rethemeBackground(drawable.getDrawable(0))
+                if (drawable.numberOfLayers > 0) return rethemeBackground(drawable.getDrawable(0))
             }
         }
+        return false
     }
 
     fun applyUnifiedSkin(view: View) {
@@ -208,7 +256,12 @@ internal class AppearanceUiFactory(
             if (view is TextView) {
                 themedNeutralColor(view.currentTextColor, false)?.let(view::setTextColor)
             }
-            rethemeBackground(view.background)
+            val hasAccentSurface = rethemeBackground(view.background)
+            // Text placed on a legacy silver primary button must use a foreground
+            // chosen for the currently selected accent, not the old fixed dark ink.
+            if (hasAccentSurface && view is TextView && view !is EditText) {
+                view.setTextColor(accentForeground())
+            }
         }
         if (view is TextView && view !is EditText) {
             val compoundIcons = view.compoundDrawablesRelative
