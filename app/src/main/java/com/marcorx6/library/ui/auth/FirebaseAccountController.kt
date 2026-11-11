@@ -1163,6 +1163,7 @@ internal class FirebaseAccountController(
                     gravity = Gravity.CENTER
                     textSize = 13f
                     setTypeface(null, android.graphics.Typeface.BOLD)
+                    setTextColor(if (dark) Color.rgb(190, 198, 210) else Color.rgb(65, 73, 86))
                     setPadding(dp(16), dp(11), dp(16), dp(11))
                     background = GradientDrawable().apply {
                         cornerRadius = dp(12).toFloat()
@@ -2169,8 +2170,8 @@ internal class FirebaseAccountController(
             setPadding(dp(10), dp(8), dp(10), dp(8))
             background = GradientDrawable().apply {
                 cornerRadius = dp(18).toFloat()
-                setColor(Color.rgb(19, 22, 28))
-                setStroke(dp(1), Color.rgb(82, 91, 105))
+                setColor(if (dark) Color.rgb(19, 22, 28) else Color.WHITE)
+                setStroke(dp(1), if (dark) Color.rgb(82, 91, 105) else Color.rgb(199, 207, 218))
             }
         }
         val followers = TextView(activity).apply {
@@ -2196,7 +2197,7 @@ internal class FirebaseAccountController(
                 counter.isFocusable = true
                 counter.background = GradientDrawable().apply {
                     cornerRadius = dp(12).toFloat()
-                    setColor(Color.rgb(29, 33, 40))
+                    setColor(if (dark) Color.rgb(29, 33, 40) else Color.rgb(235, 238, 243))
                 }
                 counter.setOnClickListener {
                     showSocialConnections(targetUid, counter === followers)
@@ -2251,10 +2252,10 @@ internal class FirebaseAccountController(
             setPadding(dp(18), dp(14), dp(18), dp(14))
             background = GradientDrawable().apply {
                 cornerRadius = dp(16).toFloat()
-                setColor(Color.rgb(35, 38, 45))
-                setStroke(dp(1), Color.rgb(105, 113, 126))
+                setColor(if (dark) Color.rgb(35, 38, 45) else Color.WHITE)
+                setStroke(dp(1), if (dark) Color.rgb(105, 113, 126) else Color.rgb(199, 207, 218))
             }
-            setTextColor(Color.rgb(190, 198, 210))
+            setTextColor(if (dark) Color.rgb(190, 198, 210) else Color.rgb(65, 73, 86))
             contentDescription = translate("جارٍ التحقق من حالة المتابعة")
             isEnabled = false
         }
