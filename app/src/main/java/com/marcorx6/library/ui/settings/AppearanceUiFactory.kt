@@ -37,7 +37,8 @@ internal class AppearanceUiFactory(
     private val red: () -> Int,
     private val white: () -> Int,
     private val gray: () -> Int,
-    private val accentForeground: () -> Int
+    private val accentForeground: () -> Int,
+    private val selectedAccentId: () -> String
 ) {
 
     // Cached once: applyUnifiedSkin traverses large view trees and these exact
@@ -67,7 +68,7 @@ internal class AppearanceUiFactory(
         ) and 0x00FFFFFF
     }.toSet()
 
-    // Surfaces produced by AccentPalette.surface() are deliberately tinted and
+    // Surfaces produced by AccentPalette.surface(, selectedAccentId()) are deliberately tinted and
     // therefore are not grayscale. Remember every supported source blend so an
     // already-open screen can move from its previous accent to the next one.
     private val accentSurfaceTokens: Map<Int, Pair<Int, Float>> = run {
@@ -88,7 +89,7 @@ internal class AppearanceUiFactory(
         )
         AccentPalette.options.flatMap { option ->
             bases.map { (base, amount) ->
-                (AccentPalette.surface(base, option.color, amount) and 0x00FFFFFF) to (base to amount)
+                (AccentPalette.surface(base, option.color, amount, option.id) and 0x00FFFFFF) to (base to amount)
             }
         }.toMap()
     }
@@ -214,7 +215,7 @@ internal class AppearanceUiFactory(
         val rgb = color and 0x00FFFFFF
         val previousSurface = accentSurfaceTokens[rgb]
         if (previousSurface != null) {
-            val replacement = AccentPalette.surface(previousSurface.first, red(), previousSurface.second)
+            val replacement = AccentPalette.surface(previousSurface.first, red(), previousSurface.second, selectedAccentId())
             return Color.argb(Color.alpha(color), Color.red(replacement), Color.green(replacement), Color.blue(replacement))
         }
         val isDarkAccent = rgb in darkLegacyAccentTokens || rgb in paletteDarkAccentTokens
@@ -253,7 +254,7 @@ internal class AppearanceUiFactory(
                     else -> 0.15f
                 }
             }
-            AccentPalette.surface(color, red(), amount)
+            AccentPalette.surface(color, red(), amount, selectedAccentId())
         } else {
             if (isDarkMode()) {
                 when {
@@ -453,17 +454,17 @@ internal class AppearanceUiFactory(
     fun styleAlertDialog(dialog: AlertDialog) {
         dialog.window?.setBackgroundDrawable(GradientDrawable(GradientDrawable.Orientation.TL_BR,
             if (isDarkMode()) intArrayOf(
-                AccentPalette.surface(Color.rgb(25, 28, 34), red(), 0.22f),
-                AccentPalette.surface(Color.rgb(8, 9, 12), red(), 0.16f)
+                AccentPalette.surface(Color.rgb(25, 28, 34), red(), 0.22f, selectedAccentId()),
+                AccentPalette.surface(Color.rgb(8, 9, 12), red(), 0.16f, selectedAccentId())
             ) else intArrayOf(
-                AccentPalette.surface(Color.WHITE, red(), 0.10f),
-                AccentPalette.surface(Color.rgb(242, 244, 247), red(), 0.14f)
+                AccentPalette.surface(Color.WHITE, red(), 0.10f, selectedAccentId()),
+                AccentPalette.surface(Color.rgb(242, 244, 247), red(), 0.14f, selectedAccentId())
             )).apply {
             cornerRadius = dp(24).toFloat()
             setStroke(dp(1), AccentPalette.surface(
                 if (isDarkMode()) Color.rgb(130, 138, 151) else Color.rgb(180, 188, 200),
                 red(), 0.48f
-            ))
+            , selectedAccentId()))
         })
         dialog.window?.let { window ->
             // Dialogs are separate Windows: apply the same immersive/IME policy
@@ -538,20 +539,20 @@ internal class AppearanceUiFactory(
         android.graphics.drawable.StateListDrawable().apply {
             val fill = if (isDarkMode()) {
                 intArrayOf(
-                    AccentPalette.surface(Color.rgb(35, 38, 45), red(), 0.24f),
-                    AccentPalette.surface(Color.rgb(15, 17, 22), red(), 0.19f)
+                    AccentPalette.surface(Color.rgb(35, 38, 45), red(), 0.24f, selectedAccentId()),
+                    AccentPalette.surface(Color.rgb(15, 17, 22), red(), 0.19f, selectedAccentId())
                 )
             } else {
                 intArrayOf(
-                    AccentPalette.surface(Color.WHITE, red(), 0.13f),
-                    AccentPalette.surface(Color.rgb(225, 228, 234), red(), 0.17f)
+                    AccentPalette.surface(Color.WHITE, red(), 0.13f, selectedAccentId()),
+                    AccentPalette.surface(Color.rgb(225, 228, 234), red(), 0.17f, selectedAccentId())
                 )
             }
             val normalStroke = AccentPalette.surface(
                 if (isDarkMode()) Color.rgb(130, 138, 151) else Color.rgb(160, 168, 181),
                 red(),
                 0.48f
-            )
+            , selectedAccentId())
             val focusedStroke = red()
             addState(intArrayOf(android.R.attr.state_focused), GradientDrawable(
                 GradientDrawable.Orientation.TL_BR, fill
