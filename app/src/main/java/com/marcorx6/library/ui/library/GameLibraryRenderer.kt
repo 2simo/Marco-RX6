@@ -280,8 +280,7 @@ internal class GameLibraryRenderer(
                     }
                     background = android.graphics.drawable.RippleDrawable(
                         android.content.res.ColorStateList.valueOf(
-                            if (isDarkMode()) Color.argb(86, 190, 198, 210)
-                            else Color.argb(62, 140, 148, 160)
+                            Color.argb(if (isDarkMode()) 86 else 62, Color.red(red), Color.green(red), Color.blue(red))
                         ),
                         surface,
                         GradientDrawable().apply {
@@ -314,14 +313,14 @@ internal class GameLibraryRenderer(
                     text = game.platform
                     importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
                     textSize = 9f
-                    setTextColor(Color.rgb(20, 23, 29))
+                    setTextColor(accentForeground())
                     typeface = android.graphics.Typeface.create(
                         "sans-serif-medium", android.graphics.Typeface.BOLD
                     )
                     gravity = Gravity.CENTER
                     setPadding(dp(8), dp(4), dp(8), dp(4))
                     background = GradientDrawable().apply {
-                        setColor(Color.rgb(190, 198, 210))
+                        setColor(red)
                         cornerRadius = dp(9).toFloat()
                     }
                 }
@@ -366,7 +365,7 @@ internal class GameLibraryRenderer(
                 if (game.isFavorite) {
                     val favoriteBadge = ImageView(activity).apply {
                         setImageResource(com.marcorx6.library.R.drawable.ic_nav_favorites)
-                        imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(20, 23, 29))
+                        imageTintList = android.content.res.ColorStateList.valueOf(accentForeground())
                         scaleType = ImageView.ScaleType.CENTER_INSIDE
                         importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
                         setPadding(dp(6), dp(6), dp(6), dp(6))
@@ -448,7 +447,7 @@ internal class GameLibraryRenderer(
                         com.marcorx6.library.R.drawable.ic_engagement_rating,
                         tr("التقييمات"),
                         ratingValue,
-                        Color.rgb(190, 198, 210)
+                        red
                     ),
                     LinearLayout.LayoutParams(0, -2, 1f)
                 )
