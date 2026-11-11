@@ -2412,7 +2412,6 @@ internal class FirebaseAccountController(
     private fun profileGameCard(game: Game, dark: Boolean, footer: String): LinearLayout {
         val card = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            if (primary) tag = "marco_preserve_contrast"
             isClickable = true
             isFocusable = true
             setPadding(dp(8), dp(8), dp(8), dp(9))
