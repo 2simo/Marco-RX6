@@ -116,8 +116,7 @@ class MainActivity : ComponentActivity() {
                     androidx.core.graphics.Insets.NONE
                 )
                 .build()
-            androidx.core.view.ViewCompat.dispatchApplyWindowInsets(pageHost, withoutTopBars)
-            insets
+            withoutTopBars
         }
         screenHost.addView(pageHost, LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
