@@ -72,7 +72,7 @@ internal class FirstRunSetupController(
             gravity = Gravity.CENTER_VERTICAL
         }
         val brand = makeText("MARCO", 13f, Color.WHITE, true).apply { letterSpacing = 0.12f }
-        val stepCount = makeText("1 / ${steps.size}", 11f, Color.rgb(190, 198, 210), true)
+        val stepCount = makeText("1 / ${steps.size}", 11f, activeAccent, true)
         top.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
         top.addView(stepCount)
         root.addView(top)
@@ -83,7 +83,7 @@ internal class FirstRunSetupController(
         }
         val progressFill = View(activity).apply {
             background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(Color.rgb(190, 198, 210), Color.rgb(137, 145, 158))).apply {
+                intArrayOf(activeAccent, accentShade(activeAccent))).apply {
                 cornerRadius = dp(8).toFloat()
             }
         }
