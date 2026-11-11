@@ -69,7 +69,7 @@ internal class GameDownloadLinksViewFactory(
                 setTypeface(null, Typeface.BOLD)
                 background = GradientDrawable(
                     GradientDrawable.Orientation.TL_BR,
-                    intArrayOf(red(), Color.rgb((Color.red(red()) * 0.72f).toInt(), (Color.green(red()) * 0.72f).toInt(), (Color.blue(red()) * 0.72f).toInt()))
+                    intArrayOf(red(), Color.rgb((Color.red(red()) * 0.95f).toInt(), (Color.green(red()) * 0.95f).toInt(), (Color.blue(red()) * 0.95f).toInt()))
                 ).apply {
                     cornerRadius = dp(13).toFloat()
                     setStroke(dp(1), Color.argb(145, Color.red(red()), Color.green(red()), Color.blue(red())))
