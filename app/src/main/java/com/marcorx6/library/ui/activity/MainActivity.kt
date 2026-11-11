@@ -124,8 +124,10 @@ class MainActivity : ComponentActivity() {
 
     private fun createApplicationTopBar(): View {
         val dark = isDarkMode()
-        val surface = if (dark) android.graphics.Color.rgb(8, 9, 12)
+        val surfaceBase = if (dark) android.graphics.Color.rgb(8, 9, 12)
             else android.graphics.Color.rgb(245, 247, 250)
+        // The top bar is a visible primary-brand surface, not a neutral strip.
+        val surface = com.marcorx6.library.ui.AccentPalette.surface(surfaceBase, red, 0.32f)
         val foreground = if (dark) android.graphics.Color.rgb(238, 241, 246)
             else android.graphics.Color.rgb(25, 29, 36)
         val silver = red
@@ -133,6 +135,7 @@ class MainActivity : ComponentActivity() {
             else android.graphics.Color.rgb(174, 181, 191)
 
         val topBar = LinearLayout(this).apply {
+            tag = "marco_primary_topbar"
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(surface)
             layoutParams = LinearLayout.LayoutParams(-1, -2)
@@ -161,10 +164,12 @@ class MainActivity : ComponentActivity() {
                 scaleType = ImageView.ScaleType.CENTER_INSIDE
                 imageTintList = android.content.res.ColorStateList.valueOf(silver)
                 background = android.graphics.drawable.GradientDrawable().apply {
-                    setColor(if (dark) android.graphics.Color.rgb(25, 28, 34)
-                        else android.graphics.Color.rgb(232, 235, 240))
+                    val actionBase = if (dark) android.graphics.Color.rgb(25, 28, 34)
+                        else android.graphics.Color.rgb(232, 235, 240)
+                    setColor(com.marcorx6.library.ui.AccentPalette.surface(actionBase, red, 0.30f))
                     cornerRadius = dp(13).toFloat()
-                    setStroke(dp(1), stroke)
+                    setStroke(dp(1), android.graphics.Color.argb(190,
+                        android.graphics.Color.red(red), android.graphics.Color.green(red), android.graphics.Color.blue(red)))
                 }
                 contentDescription = label
                 isClickable = true
@@ -175,11 +180,13 @@ class MainActivity : ComponentActivity() {
                 if (android.os.Build.VERSION.SDK_INT >= 23) {
                     background = android.graphics.drawable.RippleDrawable(
                         android.content.res.ColorStateList.valueOf(
-                            android.graphics.Color.argb(65, 150, 160, 175)
+                            android.graphics.Color.argb(72, android.graphics.Color.red(red),
+                            android.graphics.Color.green(red), android.graphics.Color.blue(red))
                         ),
                         android.graphics.drawable.GradientDrawable().apply {
-                            setColor(if (dark) android.graphics.Color.rgb(25, 28, 34)
-                                else android.graphics.Color.rgb(232, 235, 240))
+                            val actionBase = if (dark) android.graphics.Color.rgb(25, 28, 34)
+                                else android.graphics.Color.rgb(232, 235, 240)
+                            setColor(com.marcorx6.library.ui.AccentPalette.surface(actionBase, red, 0.30f))
                             cornerRadius = dp(13).toFloat()
                             setStroke(dp(1), stroke)
                         },
