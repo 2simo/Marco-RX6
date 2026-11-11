@@ -460,12 +460,12 @@ internal class AppearanceUiFactory(
             // CompoundButton subclasses Button, so handle them first to avoid
             // applying the generic button background to checkboxes and radio buttons.
             is CheckBox -> {
-                view.setTextColor(white())
+                view.setTextColor(if (isDarkMode()) Color.rgb(245, 247, 250) else Color.rgb(25, 29, 36))
                 view.buttonTintList = android.content.res.ColorStateList.valueOf(red())
                 view.minHeight = dp(48)
             }
             is RadioButton -> {
-                view.setTextColor(white())
+                view.setTextColor(if (isDarkMode()) Color.rgb(245, 247, 250) else Color.rgb(25, 29, 36))
                 view.buttonTintList = android.content.res.ColorStateList.valueOf(red())
                 view.minHeight = dp(48)
             }
