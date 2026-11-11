@@ -11,15 +11,27 @@ internal data class GameMergeResult(
  * Pure library operations. It never owns Android views or persistence.
  */
 internal object GameLibraryManager {
+    private val platformSeparators = Regex("[\\s_-]+")
+
     fun merge(current: MutableList<Game>, imported: List<Game>): GameMergeResult {
         var added = 0
         var updated = 0
 
-        imported.forEach { incoming ->
-            val byPost = current.indexOfFirst {
-                it.sourcePostUrl.isNotBlank() && it.sourcePostUrl == incoming.sourcePostUrl
+        // Index existing posts and manual titles once. The previous repeated
+        // indexOfFirst/any scans became quadratic as Blogger catalogs grew.
+        val postIndexes = HashMap<String, Int>(current.size + imported.size)
+        val manualNames = HashSet<String>(current.size)
+        current.forEachIndexed { index, game ->
+            if (game.sourcePostUrl.isNotBlank()) {
+                postIndexes.putIfAbsent(game.sourcePostUrl, index)
             }
-            if (byPost >= 0) {
+            if (!game.blogImported) manualNames.add(game.name.lowercase(Locale.ROOT))
+        }
+
+        imported.forEach { incoming ->
+            val byPost = if (incoming.sourcePostUrl.isBlank()) null
+                else postIndexes[incoming.sourcePostUrl]
+            if (byPost != null) {
                 val old = current[byPost]
                 current[byPost] = incoming.copy(
                     coverLocalPath = old.coverLocalPath,
@@ -34,11 +46,13 @@ internal object GameLibraryManager {
                 )
                 updated++
             } else {
-                val manualDuplicate = current.any {
-                    !it.blogImported && it.name.equals(incoming.name, ignoreCase = true)
-                }
+                val manualDuplicate = manualNames.contains(incoming.name.lowercase(Locale.ROOT))
                 if (!manualDuplicate) {
+                    val newIndex = current.size
                     current.add(incoming)
+                    if (incoming.sourcePostUrl.isNotBlank()) {
+                        postIndexes.putIfAbsent(incoming.sourcePostUrl, newIndex)
+                    }
                     added++
                 }
             }
@@ -48,7 +62,7 @@ internal object GameLibraryManager {
 
     /** Maps platform aliases to canonical labels used by sections and filters. */
     fun normalizePlatform(value: String): String? {
-        val normalized = value.lowercase(Locale.ROOT).replace(Regex("[\\s_-]+"), "")
+        val normalized = value.lowercase(Locale.ROOT).replace(platformSeparators, "")
         return when {
             normalized == "psp" || normalized.contains("playstationportable") -> "PSP"
             normalized == "ps1" || normalized.contains("playstation1") || normalized.contains("playstationone") -> "PS1"
