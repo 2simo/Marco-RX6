@@ -210,7 +210,7 @@ class MainActivity : ComponentActivity() {
 
         topBar.addView(row)
         // The separator is a primary brand line, not a fixed neutral gray.
-        topBar.addView(View(this).apply { setBackgroundColor(red()) },
+        topBar.addView(View(this).apply { setBackgroundColor(red) },
             LinearLayout.LayoutParams(-1, dp(1)))
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(topBar) { target, insets ->
             val statusTop = insets.getInsets(
