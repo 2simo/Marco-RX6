@@ -14,8 +14,12 @@ internal class AppearancePaletteRuntimeFeature(context: Context) {
 
     fun preferences(): SharedPreferences = appearancePreferences
     fun isDarkMode(): Boolean = AppearancePreferencesStore.isDarkMode(appearancePreferences)
-    fun accentColor(): Int =
-        AccentPalette.color()
+
+    private fun selectedAccentId(): String =
+        appearancePreferences.getString(AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID)
+            ?: AccentPalette.DEFAULT_ID
+
+    fun accentColor(): Int = AccentPalette.color(selectedAccentId())
 
     val bg: Int
         get() = if (isDarkMode()) Color.rgb(8, 9, 12) else Color.rgb(235, 239, 244)
@@ -28,5 +32,5 @@ internal class AppearancePaletteRuntimeFeature(context: Context) {
     val gray: Int
         get() = if (isDarkMode()) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
 
-    fun accentForeground(): Int = AccentPalette.foreground()
+    fun accentForeground(): Int = AccentPalette.foreground(selectedAccentId())
 }
