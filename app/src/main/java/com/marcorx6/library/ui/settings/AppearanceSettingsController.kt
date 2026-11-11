@@ -165,7 +165,7 @@ internal class AppearanceSettingsController(
                             Color.rgb(7, 8, 11),
                             Color.rgb(91, 101, 117),
                             Color.rgb(205, 212, 223)
-                        ) else intArrayOf(option.color)
+                        ) else intArrayOf(option.color, option.color)
                     ).apply {
                         cornerRadius = dp(15).toFloat()
                         setStroke(dp(if (isSelected) 3 else 1),
