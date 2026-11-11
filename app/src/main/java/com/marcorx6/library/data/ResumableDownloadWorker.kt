@@ -224,10 +224,23 @@ internal class ResumableDownloadWorker(
                 }
                 output.absolutePath
             }
-            database.complete(item.id, savedLocation, mime)
+            if (!database.complete(item.id, savedLocation, mime)) {
+                deleteSavedLocation(savedLocation)
+                throw InterruptedException("Download state changed before completion")
+            }
             return Result.success()
         } finally {
             connection?.disconnect()
+        }
+    }
+
+    private fun deleteSavedLocation(location: String) {
+        if (location.startsWith("content://")) {
+            runCatching {
+                DocumentsContract.deleteDocument(applicationContext.contentResolver, android.net.Uri.parse(location))
+            }
+        } else if (location.isNotBlank()) {
+            File(location).delete()
         }
     }
 

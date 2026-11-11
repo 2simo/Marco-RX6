@@ -180,7 +180,14 @@ internal object SegmentedDownloadEngine {
             }
             output.absolutePath
         }
-        database.complete(item.id, savedLocation, mime)
+        if (!database.complete(item.id, savedLocation, mime)) {
+            if (savedLocation.startsWith("content://")) {
+                runCatching { DocumentsContract.deleteDocument(context.contentResolver, android.net.Uri.parse(savedLocation)) }
+            } else {
+                File(savedLocation).delete()
+            }
+            throw InterruptedException("Download state changed before completion")
+        }
         onProgress(total, total)
         return true
     }

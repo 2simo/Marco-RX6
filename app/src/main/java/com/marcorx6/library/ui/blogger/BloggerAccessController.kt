@@ -15,10 +15,14 @@ internal class BloggerAccessController(
 ) {
     // Prevent an older asynchronous access check from overriding a newer session/blog state.
     private var requestVersion = 0L
+    private var verifiedAccountId: String? = null
+    private var verifiedBlogId: String? = null
 
     fun refresh(blogId: String, accountId: String?, hasAccount: Boolean) {
         val version = ++requestVersion
         if (!hasAccount || accountId == null || blogId.isBlank()) {
+            verifiedAccountId = null
+            verifiedBlogId = null
             setAdmin(false)
             postToUi {
                 if (version == requestVersion) {
@@ -31,7 +35,11 @@ internal class BloggerAccessController(
             return
         }
 
-        setAdmin(false)
+        // Keep an existing grant while rechecking the same account/blog pair.
+        // A changed identity must not inherit the previous administrator state.
+        if (verifiedAccountId != accountId || verifiedBlogId != blogId) setAdmin(false)
+        verifiedAccountId = accountId
+        verifiedBlogId = blogId
         executor.execute {
             val result = try {
                 Result.success(checkAccess(blogId))

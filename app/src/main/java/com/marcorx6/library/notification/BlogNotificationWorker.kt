@@ -134,6 +134,6 @@ open class BlogNotificationWorker(context: Context, params: WorkerParameters) : 
     companion object {
         const val WORK_NAME = "marcorx6_blog_post_notifications"
         const val CHANNEL_ID = "marcorx6_new_posts"
-        private const val FEED_URL = "https://marcorx6.blogspot.com/feeds/posts/default?alt=json&max-results=5"
+        private const val FEED_URL = "https://marcorx6.blogspot.com/feeds/posts/default?alt=json&max-results=50"
     }
 }

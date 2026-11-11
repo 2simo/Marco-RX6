@@ -253,11 +253,12 @@ internal class DownloadDatabase private constructor(context: Context) :
     }
 
     @Synchronized
-    fun complete(id: Long, path: String, mime: String) {
-        writableDatabase.update("downloads", ContentValues().apply {
+    fun complete(id: Long, path: String, mime: String): Boolean {
+        val changed = writableDatabase.update("downloads", ContentValues().apply {
             put("local_path", path); put("mime_type", mime)
             put("status", DownloadManager.STATUS_SUCCESSFUL); put("error", "")
-        }, "id=?", arrayOf(id.toString()))
+        }, "id=? AND status=?", arrayOf(id.toString(), DownloadManager.STATUS_RUNNING.toString()))
+        return changed > 0
     }
 
     @Synchronized

@@ -32,6 +32,47 @@ class BloggerAccessControllerTest {
     }
 
     @Test
+    fun keepsExistingAdminGrantWhileTheSameAccountAndBlogAreRechecked() {
+        var admin = true
+        var background: (() -> Unit)? = null
+        var ui: (() -> Unit)? = null
+        val controller = BloggerAccessController(
+            executor = Executor { command -> background = command },
+            checkAccess = { true },
+            currentAccountId = { "account-1" },
+            currentBlogId = { "blog-1" },
+            setAdmin = { admin = it },
+            postToUi = { action -> ui = action },
+            refreshUi = {},
+            onDenied = {}
+        )
+
+        controller.refresh("blog-1", "account-1", true)
+        assertEquals(true, admin)
+        background?.invoke()
+        assertEquals(true, admin)
+        ui?.invoke()
+        assertEquals(true, admin)
+    }
+
+    @Test
+    fun clearsPreviousAdminGrantWhenADifferentAccountIsChecked() {
+        var admin = true
+        val controller = BloggerAccessController(
+            executor = directExecutor,
+            checkAccess = { false },
+            currentAccountId = { "account-2" },
+            currentBlogId = { "blog-1" },
+            setAdmin = { admin = it },
+            postToUi = { it() },
+            refreshUi = {},
+            onDenied = {}
+        )
+        controller.refresh("blog-1", "account-2", true)
+        assertEquals(false, admin)
+    }
+
+    @Test
     fun rejectsAccessResultWhenAccountChangesDuringCheck() {
         var admin = true
         var refreshed = 0
