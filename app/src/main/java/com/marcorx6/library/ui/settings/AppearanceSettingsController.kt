@@ -114,8 +114,8 @@ internal class AppearanceSettingsController(
             background = GradientDrawable().apply {
                 setColors(if (selectedAccentId == "black_silver") intArrayOf(
                     Color.rgb(7, 8, 11),
-                    Color.rgb(82, 91, 106),
-                    Color.rgb(197, 206, 219)
+                    Color.rgb(52, 61, 74),
+                    Color.rgb(90, 100, 115)
                 ) else if (dark) intArrayOf(
                     AccentPalette.surface(Color.rgb(35, 38, 45), silverAccent, 0.28f, selectedAccentId),
                     AccentPalette.surface(Color.rgb(15, 17, 22), silverAccent, 0.22f, selectedAccentId)
@@ -164,14 +164,14 @@ internal class AppearanceSettingsController(
                     textSize = 19f
                     setTypeface(null, android.graphics.Typeface.BOLD)
                     gravity = Gravity.CENTER
-                    setTextColor(AccentPalette.foreground(option.id))
+                    setTextColor(if (option.id == "black_silver") Color.rgb(235, 239, 245) else AccentPalette.foreground(option.id))
                     contentDescription = translate(option.label)
                     background = GradientDrawable(
                         GradientDrawable.Orientation.TL_BR,
                         if (option.id == "black_silver") intArrayOf(
                             Color.rgb(7, 8, 11),
-                            Color.rgb(82, 91, 106),
-                            Color.rgb(197, 206, 219)
+                            Color.rgb(52, 61, 74),
+                            Color.rgb(90, 100, 115)
                         ) else intArrayOf(option.color, option.color)
                     ).apply {
                         cornerRadius = dp(15).toFloat()
