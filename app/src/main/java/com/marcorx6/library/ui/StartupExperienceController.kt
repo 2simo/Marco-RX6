@@ -136,6 +136,8 @@ internal class StartupExperienceController(
         }
         introCompletion = Runnable {
             if (isActivityUsable() && introDialog === intro && intro.isShowing) {
+                introPulseAnimator?.cancel()
+                introPulseAnimator = null
                 introDialog = null
                 introCompletion = null
                 showLoading(intro, onStartupFinished)
