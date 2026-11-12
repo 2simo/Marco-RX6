@@ -94,7 +94,7 @@ service cloud.firestore {
         allow create: if !isAnonymous()
           && request.resource.data.keys().hasOnly([
             'type', 'actorUid', 'conversationId', 'messageId',
-            'gameName', 'platform', 'title', 'body', 'createdAt', 'read', 'pushStatus'
+            'gameName', 'platform', 'coverUrl', 'title', 'body', 'createdAt', 'read', 'pushStatus'
           ])
           && request.resource.data.keys().hasAll([
             'type', 'actorUid', 'title', 'body', 'createdAt', 'read', 'pushStatus'
@@ -117,6 +117,9 @@ service cloud.firestore {
               && request.resource.data.gameName.size() <= 120
               && request.resource.data.platform is string
               && request.resource.data.platform.size() <= 30
+              && (!('coverUrl' in request.resource.data)
+                || (request.resource.data.coverUrl is string
+                  && request.resource.data.coverUrl.size() <= 2000))
               && !('conversationId' in request.resource.data)
               && !('messageId' in request.resource.data)
             )
