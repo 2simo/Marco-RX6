@@ -44,18 +44,61 @@ internal class StartupExperienceController(
         }
         val intro = Dialog(activity, android.R.style.Theme_Material_NoActionBar)
         introDialog = intro
+        val introContent = FrameLayout(activity).apply {
+            setBackgroundColor(Color.BLACK)
+        }
         val artwork = ImageView(activity).apply {
             setImageResource(com.marcorx6.library.R.drawable.marco_dragon_intro)
-            scaleType = ImageView.ScaleType.FIT_CENTER
+            scaleType = ImageView.ScaleType.CENTER_CROP
             setBackgroundColor(Color.BLACK)
-            contentDescription = "MARCO RX6"
+            contentDescription = "MARCO"
         }
-        intro.setContentView(artwork)
+        introContent.addView(artwork, FrameLayout.LayoutParams(-1, -1))
+        val introBranding = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(dp(24), dp(12), dp(24), dp(12))
+            setBackgroundColor(Color.TRANSPARENT)
+            alpha = 0f
+        }
+        val welcome = makeText("WELCOME TO MARCO", 22f, Color.rgb(224, 229, 237), true).apply {
+            gravity = Gravity.CENTER
+            letterSpacing = 0.16f
+            maxLines = 1
+            setShadowLayer(dp(12).toFloat(), 0f, dp(2).toFloat(), Color.BLACK)
+        }
+        val tagline = makeText("NEXT GENERATION GAMING LIBRARY", 8f, Color.rgb(174, 184, 199), true).apply {
+            gravity = Gravity.CENTER
+            letterSpacing = 0.20f
+            maxLines = 1
+            setShadowLayer(dp(8).toFloat(), 0f, dp(1).toFloat(), Color.BLACK)
+        }
+        introBranding.addView(welcome, LinearLayout.LayoutParams(-1, -2).apply {
+            bottomMargin = dp(8)
+        })
+        introBranding.addView(tagline, LinearLayout.LayoutParams(-1, -2))
+        introContent.addView(
+            introBranding,
+            FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
+                leftMargin = dp(12)
+                rightMargin = dp(12)
+                bottomMargin = dp(58)
+            }
+        )
+        intro.setContentView(introContent)
         intro.setCancelable(false)
         intro.setCanceledOnTouchOutside(false)
         intro.show()
         intro.window?.setBackgroundDrawableResource(android.R.color.black)
         intro.window?.setLayout(-1, -1)
+        val introMotionEnabled = activity.getSharedPreferences("app_settings", Activity.MODE_PRIVATE)
+            .getBoolean("animations", true)
+        if (introMotionEnabled) {
+            introBranding.animate().alpha(1f).translationY(-dp(6).toFloat())
+                .setDuration(650L).setInterpolator(OvershootInterpolator(1.04f)).start()
+        } else {
+            introBranding.alpha = 1f
+        }
         intro.window?.let { window ->
             WindowCompat.setDecorFitsSystemWindows(window, false)
             window.statusBarColor = Color.BLACK
