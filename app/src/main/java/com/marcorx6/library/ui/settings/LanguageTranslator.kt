@@ -751,7 +751,7 @@ internal object LanguageTranslator {
             "الصيغة (مثال: PKG)" to listOf("Format (example: PKG)", "Format (exemple : PKG)", "Formato (ejemplo: PKG)"),
             "+ تبويب جديد" to listOf("+ New tab", "+ Nouvel onglet", "+ Nueva pestaña"),
             "في الخلفية • قابل للاستئناف" to listOf("Background transfer • Resumable", "Transfert en arrière-plan • Reprise possible", "Transferencia en segundo plano • Reanudable"),
-            "MARCO RX6" to listOf("MARCO RX6", "MARCO RX6"),
+            "MARCO RX6" to listOf("MARCO RX6", "MARCO RX6", "MARCO RX6"),
             "أنت تستخدم التطبيق كزائر. أنشئ حساباً لحفظ ملفك الشخصي والوصول إليه لاحقاً." to listOf("You are using the app as a guest. Create an account to save your profile and access it later.", "Vous utilisez l’application en invité. Créez un compte pour enregistrer votre profil et y accéder plus tard.", "Estás usando la aplicación como invitado. Crea una cuenta para guardar tu perfil y acceder a él más tarde."),
             "عضو منذ" to listOf("Member since", "Membre depuis", "Miembro desde"),
             "نظرة عامة على مكتبتك" to listOf("Your library overview", "Aperçu de votre bibliothèque", "Resumen de tu biblioteca"),
@@ -967,7 +967,7 @@ internal object LanguageTranslator {
     fun translate(ar: String, lang: String): String {
         if (lang == "ar") return ar
         val index = when (lang) { "en" -> 0; "fr" -> 1; "es" -> 2; else -> return ar }
-        fun localized(key: String): String? = translations[key]?.get(index)
+        fun localized(key: String): String? = translations[key]?.getOrNull(index)
 
         Regex("^الخادم رفض رابط التنزيل \\(HTTP ([^)]+)\\)$").matchEntire(ar)?.let { match ->
             return "${localized("الخادم رفض رابط التنزيل") ?: "الخادم رفض رابط التنزيل"} (HTTP ${match.groupValues[1]})"
