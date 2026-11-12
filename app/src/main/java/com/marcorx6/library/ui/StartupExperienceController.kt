@@ -61,7 +61,7 @@ internal class StartupExperienceController(
             elevation = dp(18).toFloat()
         }
         val logo = ImageView(activity).apply {
-            setImageResource(com.marcorx6.library.R.drawable.marco_splash)
+            setImageResource(com.marcorx6.library.R.drawable.marco_dragon_intro)
             scaleType = ImageView.ScaleType.FIT_CENTER
             contentDescription = "MARCO"
             background = GradientDrawable().apply {
