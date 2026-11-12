@@ -171,7 +171,8 @@ internal class StartupExperienceController(
             gravity = Gravity.CENTER_VERTICAL
         }
         val status = makeText("تهيئة واجهة التطبيق", 11f, silver, true).apply {
-            gravity = Gravity.CENTER_VERTICAL or Gravity.START
+            gravity = Gravity.CENTER
+            textAlignment = View.TEXT_ALIGNMENT_CENTER
             maxLines = 1
             alpha = 0.96f
         }
@@ -201,7 +202,9 @@ internal class StartupExperienceController(
         footer.addView(progress, LinearLayout.LayoutParams(-1, dp(3)))
         content.addView(
             footer,
-            FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL)
+            FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
+                bottomMargin = dp(42)
+            }
         )
         splash.setContentView(content)
         splash.setCancelable(false)
