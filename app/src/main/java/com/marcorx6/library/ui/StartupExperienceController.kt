@@ -106,27 +106,14 @@ internal class StartupExperienceController(
             alpha = 0f
         }
         content.addView(logo, FrameLayout.LayoutParams(-1, -1, Gravity.CENTER))
-        val center = LinearLayout(activity).apply {
+        // Keep the splash artwork unobstructed: loading feedback stays in a
+        // compact footer instead of placing large branding text over the image.
+        val footer = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            setPadding(dp(30), dp(24), dp(30), dp(24))
+            setPadding(dp(42), dp(8), dp(42), dp(22))
+            setBackgroundColor(Color.TRANSPARENT)
         }
-        // Keep the brand and loading information in front of the full-screen artwork.
-        center.setBackgroundColor(Color.TRANSPARENT)
-        center.addView(makeText("MARCO", 25f, Color.WHITE, true).apply {
-            gravity = Gravity.CENTER
-            letterSpacing = 0.16f
-        })
-        center.addView(makeText("GAME LIBRARY", 10f, silver, true).apply {
-            gravity = Gravity.CENTER
-            letterSpacing = 0.28f
-            setPadding(0, dp(9), 0, 0)
-        })
-        val loading = makeText(translate("جارٍ تجهيز عالم الألعاب..."), 11f, silver, false).apply {
-            gravity = Gravity.CENTER
-            setPadding(0, dp(34), 0, 0)
-        }
-        center.addView(loading)
         val progress = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
             max = 100
             this.progress = 1
@@ -139,13 +126,16 @@ internal class StartupExperienceController(
                 }
             }
         }
-        center.addView(progress, LinearLayout.LayoutParams(dp(238), dp(7)).apply { topMargin = dp(18) })
-        val percent = makeText("1%", 12f, silver, true).apply {
+        footer.addView(progress, LinearLayout.LayoutParams(-1, dp(3)))
+        val percent = makeText("1%", 9f, silver, true).apply {
             gravity = Gravity.CENTER
-            setPadding(0, dp(9), 0, 0)
+            setPadding(0, dp(5), 0, 0)
         }
-        center.addView(percent)
-        content.addView(center, FrameLayout.LayoutParams(-1, -1))
+        footer.addView(percent)
+        content.addView(
+            footer,
+            FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL)
+        )
         splash.setContentView(content)
         splash.setCancelable(false)
         splash.setCanceledOnTouchOutside(false)
