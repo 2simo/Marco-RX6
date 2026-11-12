@@ -27,13 +27,17 @@ internal class FirebaseNotificationRepository(
         }
         return firestore.collection("users").document(uid)
             .collection("notifications")
-            .orderBy("createdAt", Query.Direction.DESCENDING)
+            // Do not orderBy createdAt on the server: legacy or externally-created
+            // notifications without that field are otherwise silently omitted.
             .limit(100)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     onError(error)
                 } else {
-                    onChange(snapshot?.documents.orEmpty())
+                    val ordered = snapshot?.documents.orEmpty().sortedByDescending { item ->
+                        item.getTimestamp("createdAt")?.toDate()?.time ?: 0L
+                    }
+                    onChange(ordered)
                 }
             }
     }
