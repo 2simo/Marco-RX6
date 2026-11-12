@@ -564,10 +564,12 @@ class MainActivity : ComponentActivity() {
             loadGames = gameDataRuntimeFeature::loadGames,
             restoreAdminSession = { googleAccountRuntimeFeature.isAdminSession = false; bloggerRuntimeFeature.refreshAccess() },
             createInterface = ::createInterface,
-            showStartupExperience = {
+            showStartupExperience = { onStartupFinished ->
                 if (!startupExperienceShown) {
                     startupExperienceShown = true
-                    showStartupExperience()
+                    showStartupExperience(onStartupFinished)
+                } else {
+                    onStartupFinished()
                 }
             },
             setupCompleted = userExperienceRuntimeFeature::isSetupCompleted,
@@ -760,7 +762,8 @@ class MainActivity : ComponentActivity() {
     private val libraryRuntimeFeature: MainLibraryRuntimeFeature by libraryRuntimeFeatureDelegate
 
     private fun showFirstRunSetup() = userExperienceRuntimeFeature.showFirstRunSetup()
-    private fun showStartupExperience() = userExperienceRuntimeFeature.showStartupExperience()
+    private fun showStartupExperience(onStartupFinished: () -> Unit) =
+        userExperienceRuntimeFeature.showStartupExperience(onStartupFinished)
 
     private fun createInterface() {
         secondaryScreenBackCallback.isEnabled = false
