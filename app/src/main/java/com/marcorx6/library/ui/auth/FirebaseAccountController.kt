@@ -1505,14 +1505,17 @@ internal class FirebaseAccountController(
         val scroll = ScrollView(activity).apply { addView(list) }
         page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
         showAccountPage(page)
+        AppDiagnostics.log("INFO", "Notifications", "Starting notification listener")
         notificationsListener = notifications.listen(user.uid, { items ->
             if (activity.isFinishing || activity.isDestroyed) return@listen
+            AppDiagnostics.log("DEBUG", "Notifications", "Notification snapshot received count=${items.size}")
             allItems = items
             val unread = notifications.unreadCount(items)
             (header.getChildAt(0) as? TextView)?.text =
                 if (unread > 0) "${translate("الإشعارات")} • $unread" else translate("الإشعارات")
             renderItems()
         }, { error ->
+            AppDiagnostics.log("ERROR", "Notifications", "Notification listener failed", error)
             android.util.Log.e("MarcoNotifications", "Notification listener failed", error)
             toast(error.localizedMessage ?: "تعذر تحميل الإشعارات. تحقق من الاتصال.")
         })
@@ -1580,8 +1583,10 @@ internal class FirebaseAccountController(
             }
         })
         showAccountPage(page)
+        AppDiagnostics.log("INFO", "Messages", "Starting inbox listener")
         inboxListener = messaging.listenInbox(user.uid, { conversations ->
             if (activity.isFinishing || activity.isDestroyed) return@listenInbox
+            AppDiagnostics.log("DEBUG", "Messages", "Inbox snapshot received count=${conversations.size}")
             list.removeAllViews()
             if (conversations.isEmpty()) {
                 val emptyState = TextView(activity).apply {
@@ -1630,6 +1635,7 @@ internal class FirebaseAccountController(
                 }
             }
         }, { error ->
+            AppDiagnostics.log("ERROR", "Messages", "Inbox listener failed", error)
             android.util.Log.e("MarcoMessages", "Inbox listener failed", error)
             toast(error.localizedMessage ?: translate("تعذر تحميل الرسائل. تحقق من الاتصال."))
         })
@@ -1850,6 +1856,7 @@ internal class FirebaseAccountController(
                     send.setOnClickListener {
                         val body = input.text.toString().trim()
                         if (body.isEmpty()) return@setOnClickListener
+                        AppDiagnostics.recordAction("Send private message")
                         send.isEnabled = false
                         val reply = selectedReply
                         messaging.sendMessage(
@@ -1858,6 +1865,7 @@ internal class FirebaseAccountController(
                             reply?.getString("text"),
                             reply?.getString("senderUid")
                         ).addOnSuccessListener {
+                            AppDiagnostics.log("INFO", "Messages", "Message send succeeded")
                             input.text.clear()
                             selectedReply = null
                             replyPreview.visibility = View.GONE
@@ -1865,6 +1873,7 @@ internal class FirebaseAccountController(
                         }
                             .addOnFailureListener { error ->
                                 send.isEnabled = true
+                                AppDiagnostics.log("ERROR", "Messages", "Send message failed", error)
                                 android.util.Log.e("MarcoMessages", "Send message failed", error)
                                 toast(error.localizedMessage ?: "تعذر إرسال الرسالة.")
                             }
@@ -1877,8 +1886,10 @@ internal class FirebaseAccountController(
                     }
                     showConversationPage(page)
                     val id = messaging.conversationId(user.uid, otherUid)
+                    AppDiagnostics.log("INFO", "Messages", "Starting conversation listener")
                     messagesListener = messaging.listenMessages(id, { snapshots ->
                         if (activity.isFinishing || activity.isDestroyed) return@listenMessages
+                        AppDiagnostics.log("DEBUG", "Messages", "Conversation snapshot received count=${snapshots.size}")
                         messages.removeAllViews()
                         messaging.markMessagesRead(user.uid, snapshots).addOnFailureListener { error ->
                             android.util.Log.w("MarcoMessages", "Read receipt update failed", error)
@@ -1984,6 +1995,7 @@ internal class FirebaseAccountController(
                         }
                         scroll.post { scroll.fullScroll(View.FOCUS_DOWN) }
                     }, { error ->
+                        AppDiagnostics.log("ERROR", "Messages", "Conversation listener failed", error)
                         android.util.Log.e("MarcoMessages", "Conversation messages listener failed", error)
                         toast(error.localizedMessage ?: "تعذر تحديث المحادثة. تحقق من الاتصال.")
                     })
