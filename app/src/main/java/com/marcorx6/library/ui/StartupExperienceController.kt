@@ -158,10 +158,11 @@ internal class StartupExperienceController(
             setPadding(dp(30), dp(10), dp(30), dp(24))
             setBackgroundColor(Color.TRANSPARENT)
         }
-        val signature = makeText("MARCO RX6  /  SYSTEM STARTUP", 8f, silver, true).apply {
-            gravity = Gravity.START
-            letterSpacing = 0.18f
-            alpha = 0.72f
+        val signature = makeText("MARCO  /  SYSTEM STARTUP", 10f, silver, true).apply {
+            gravity = Gravity.CENTER
+            textAlignment = View.TEXT_ALIGNMENT_CENTER
+            letterSpacing = 0.20f
+            alpha = 0.90f
         }
         footer.addView(signature, LinearLayout.LayoutParams(-1, -2).apply {
             bottomMargin = dp(9)
