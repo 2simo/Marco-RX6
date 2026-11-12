@@ -146,6 +146,21 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * The top bar is intentionally excluded from generic skin traversal because it
+     * owns explicit palette colors. Rebuild it when the palette changes so it never
+     * keeps the previous accent while the rest of the page updates live.
+     */
+    private fun refreshApplicationTopBar() {
+        val current = window.decorView.findViewWithTag<View>("marco_primary_topbar") ?: return
+        val parent = current.parent as? android.view.ViewGroup ?: return
+        val index = parent.indexOfChild(current)
+        if (index < 0) return
+        val layoutParams = current.layoutParams
+        parent.removeViewAt(index)
+        parent.addView(createApplicationTopBar(), index, layoutParams)
+    }
+
     private fun createApplicationTopBar(): View {
         val dark = isDarkMode()
         val surfaceBase = if (dark) android.graphics.Color.rgb(8, 9, 12)
@@ -343,6 +358,7 @@ class MainActivity : ComponentActivity() {
             if (key == com.marcorx6.library.ui.AccentPalette.PREFERENCE_KEY || key == "dark_mode") {
                 window.decorView.post {
                     if (!isFinishing && !isDestroyed) {
+                        refreshApplicationTopBar()
                         applyUnifiedSkin(window.decorView)
                         // Main-library renderers keep cached palette values for fast list updates.
                         // Refresh those values too, so the next card/filter render uses the new accent.
