@@ -925,6 +925,7 @@ internal object LanguageTranslator {
             "لا يوجد متابعون جدد حالياً." to listOf("No new followers right now.", "Aucun nouvel abonné pour le moment.", "No hay nuevos seguidores por ahora."),
             "لا توجد رسائل جديدة حالياً." to listOf("No new messages right now.", "Aucun nouveau message pour le moment.", "No hay mensajes nuevos por ahora."),
             "إشعار جديد" to listOf("New notification", "Nouvelle notification", "Nueva notificación"),
+            "لعبة جديدة في المكتبة" to listOf("New game in the library", "Nouveau jeu dans la bibliothèque", "Nuevo juego en la biblioteca"),
             "الألعاب الجديدة" to listOf("New games", "Nouveaux jeux", "Juegos nuevos"),
             "تعذر تحميل الإشعارات. تحقق من الاتصال." to listOf("Could not load notifications. Check your connection.", "Impossible de charger les notifications. Vérifiez votre connexion.", "No se pudieron cargar las notificaciones. Comprueba tu conexión."),
             "تعذر فتح ملف المستخدم." to listOf("Could not open the user profile.", "Impossible d’ouvrir le profil utilisateur.", "No se pudo abrir el perfil del usuario."),
