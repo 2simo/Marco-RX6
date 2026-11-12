@@ -12,6 +12,14 @@ class LanguageTranslatorTest {
     }
 
     @Test
+    fun translatesBrandNameInAllSupportedLanguagesWithoutIndexOverflow() {
+        assertEquals("MARCO RX6", LanguageTranslator.translate("MARCO RX6", "en"))
+        assertEquals("MARCO RX6", LanguageTranslator.translate("MARCO RX6", "fr"))
+        assertEquals("MARCO RX6", LanguageTranslator.translate("MARCO RX6", "es"))
+        assertEquals("MARCO RX6", LanguageTranslator.translate("MARCO RX6", "ar"))
+    }
+
+    @Test
     fun translatesFormalArabicEmptyState() {
         assertEquals("No downloads yet.", LanguageTranslator.translate("لا توجد تنزيلات حالياً.", "en"))
         assertEquals("Aucun téléchargement pour le moment.", LanguageTranslator.translate("لا توجد تنزيلات حالياً.", "fr"))
