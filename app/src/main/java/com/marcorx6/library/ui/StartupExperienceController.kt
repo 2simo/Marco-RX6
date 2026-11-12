@@ -49,7 +49,7 @@ internal class StartupExperienceController(
         }
         val artwork = ImageView(activity).apply {
             setImageResource(com.marcorx6.library.R.drawable.marco_dragon_intro)
-            scaleType = ImageView.ScaleType.CENTER_CROP
+            scaleType = ImageView.ScaleType.FIT_CENTER
             setBackgroundColor(Color.BLACK)
             contentDescription = "MARCO"
         }
