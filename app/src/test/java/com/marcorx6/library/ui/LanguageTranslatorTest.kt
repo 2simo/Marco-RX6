@@ -257,4 +257,34 @@ class LanguageTranslatorTest {
         }
     }
 
+    @Test
+    fun translatesPreviouslyUntranslatedAccountNotificationAndBrowserLabels() {
+        val cases = listOf(
+            "لا توجد رسائل جديدة حالياً." to listOf("No new messages right now.", "Aucun nouveau message pour le moment.", "No hay mensajes nuevos por ahora."),
+            "تعذر تحميل الإشعارات. تحقق من الاتصال." to listOf("Could not load notifications. Check your connection.", "Impossible de charger les notifications. Vérifiez votre connexion.", "No se pudieron cargar las notificaciones. Comprueba tu conexión."),
+            "لا يوجد متابعون بعد." to listOf("No followers yet.", "Aucun abonné pour le moment.", "Aún no hay seguidores."),
+            "لغة المحتوى" to listOf("Content language", "Langue du contenu", "Idioma del contenido"),
+            "مسح البيانات" to listOf("Clear data", "Effacer les données", "Borrar datos"),
+            "التبويبات المفتوحة" to listOf("Open tabs", "Onglets ouverts", "Pestañas abiertas"),
+            "أدخل رابطاً أو عبارة للبحث" to listOf("Enter a URL or search term", "Saisissez une URL ou un terme de recherche", "Introduce una URL o un término de búsqueda"),
+            "إعدادات حجب الإعلانات" to listOf("Ad-blocking settings", "Paramètres de blocage des publicités", "Ajustes del bloqueo de anuncios")
+        )
+        cases.forEach { (source, expected) ->
+            assertEquals(expected[0], LanguageTranslator.translate(source, "en"))
+            assertEquals(expected[1], LanguageTranslator.translate(source, "fr"))
+            assertEquals(expected[2], LanguageTranslator.translate(source, "es"))
+            assertEquals(source, LanguageTranslator.translate(source, "ar"))
+        }
+    }
+
+    @Test
+    fun translatesDynamicBrowserAndAdBlockLabels() {
+        assertEquals("Tab 3", LanguageTranslator.translate("تبويب 3", "en"))
+        assertEquals("Onglet 4", LanguageTranslator.translate("التبويب 4", "fr"))
+        assertEquals("Pestaña 5", LanguageTranslator.translate("تبويب 5", "es"))
+        assertEquals("Ads blocked: 12", LanguageTranslator.translate("عدد الإعلانات المحجوبة: 12", "en"))
+        assertEquals("Publicités bloquées : 8", LanguageTranslator.translate("عدد الإعلانات المحجوبة: 8", "fr"))
+        assertEquals("No se pudo cargar la lista (403)", LanguageTranslator.translate("تعذر تحميل القائمة (403)", "es"))
+    }
+
 }
