@@ -227,7 +227,7 @@ internal class AppearanceUiFactory(
      */
     private fun recoverAccentSurface(color: Int): Int? {
         val activeId = selectedAccentId()
-        val cacheKey = (color and 0x00FFFFFF) to activeId
+        val cacheKey = color to activeId
         synchronized(recoveredAccentSurfaceCache) {
             if (recoveredAccentSurfaceCache.containsKey(cacheKey)) {
                 return recoveredAccentSurfaceCache[cacheKey]
