@@ -36,6 +36,7 @@ internal class StartupExperienceController(
     private var dialog: Dialog? = null
     private var introDialog: Dialog? = null
     private var introCompletion: Runnable? = null
+    private var introPulseAnimator: ValueAnimator? = null
 
     fun show(onStartupFinished: () -> Unit) {
         if (!isActivityUsable() || dialog?.isShowing == true || introDialog?.isShowing == true) {
@@ -48,41 +49,37 @@ internal class StartupExperienceController(
             setBackgroundColor(Color.BLACK)
         }
         val artwork = ImageView(activity).apply {
-            setImageResource(com.marcorx6.library.R.drawable.marco_dragon_intro)
+            setImageResource(com.marcorx6.library.R.drawable.marco_silver_wolf_intro)
             scaleType = ImageView.ScaleType.FIT_CENTER
             setBackgroundColor(Color.BLACK)
-            contentDescription = "MARCO"
-        }
-        introContent.addView(artwork, FrameLayout.LayoutParams(-1, -1))
-        val introBranding = LinearLayout(activity).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            setPadding(dp(24), dp(12), dp(24), dp(12))
-            setBackgroundColor(Color.TRANSPARENT)
+            contentDescription = "Silver wolf"
             alpha = 0f
+            scaleX = 0.84f
+            scaleY = 0.84f
         }
-        val welcome = makeText("WELCOME TO MARCO", 22f, Color.rgb(224, 229, 237), true).apply {
-            gravity = Gravity.CENTER
-            letterSpacing = 0.16f
-            maxLines = 1
-            setShadowLayer(dp(12).toFloat(), 0f, dp(2).toFloat(), Color.BLACK)
-        }
-        val tagline = makeText("NEXT GENERATION GAMING LIBRARY", 8f, Color.rgb(174, 184, 199), true).apply {
-            gravity = Gravity.CENTER
-            letterSpacing = 0.20f
-            maxLines = 1
-            setShadowLayer(dp(8).toFloat(), 0f, dp(1).toFloat(), Color.BLACK)
-        }
-        introBranding.addView(welcome, LinearLayout.LayoutParams(-1, -2).apply {
-            bottomMargin = dp(8)
-        })
-        introBranding.addView(tagline, LinearLayout.LayoutParams(-1, -2))
         introContent.addView(
-            introBranding,
-            FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
+            artwork,
+            FrameLayout.LayoutParams(-1, -1).apply {
                 leftMargin = dp(12)
                 rightMargin = dp(12)
-                bottomMargin = dp(58)
+                bottomMargin = dp(66)
+            }
+        )
+        val brandName = makeText("MARCO", 30f, Color.rgb(218, 222, 230), true).apply {
+            gravity = Gravity.CENTER
+            textAlignment = View.TEXT_ALIGNMENT_CENTER
+            letterSpacing = 0.28f
+            maxLines = 1
+            alpha = 0f
+            translationY = dp(16).toFloat()
+            setShadowLayer(dp(14).toFloat(), 0f, dp(2).toFloat(), Color.rgb(115, 122, 134))
+        }
+        introContent.addView(
+            brandName,
+            FrameLayout.LayoutParams(-1, dp(62), Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
+                leftMargin = dp(24)
+                rightMargin = dp(24)
+                bottomMargin = dp(28)
             }
         )
         intro.setContentView(introContent)
@@ -94,10 +91,35 @@ internal class StartupExperienceController(
         val introMotionEnabled = activity.getSharedPreferences("app_settings", Activity.MODE_PRIVATE)
             .getBoolean("animations", true)
         if (introMotionEnabled) {
-            introBranding.animate().alpha(1f).translationY(-dp(6).toFloat())
-                .setDuration(650L).setInterpolator(OvershootInterpolator(1.04f)).start()
+            artwork.animate().alpha(1f).scaleX(1f).scaleY(1f)
+                .setDuration(1050L)
+                .setInterpolator(android.view.animation.DecelerateInterpolator(1.5f))
+                .start()
+            brandName.animate().alpha(1f).translationY(0f)
+                .setStartDelay(520L)
+                .setDuration(720L)
+                .setInterpolator(OvershootInterpolator(0.85f))
+                .start()
+            introPulseAnimator = ValueAnimator.ofFloat(1f, 1.025f).apply {
+                duration = 1500L
+                repeatCount = ValueAnimator.INFINITE
+                repeatMode = ValueAnimator.REVERSE
+                startDelay = 1050L
+                addUpdateListener { pulse ->
+                    if (introDialog === intro && intro.isShowing) {
+                        val scale = pulse.animatedValue as Float
+                        artwork.scaleX = scale
+                        artwork.scaleY = scale
+                    }
+                }
+                start()
+            }
         } else {
-            introBranding.alpha = 1f
+            artwork.alpha = 1f
+            artwork.scaleX = 1f
+            artwork.scaleY = 1f
+            brandName.alpha = 1f
+            brandName.translationY = 0f
         }
         intro.window?.let { window ->
             WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -118,7 +140,7 @@ internal class StartupExperienceController(
                 introCompletion = null
                 showLoading(intro, onStartupFinished)
             }
-        }.also { handler.postDelayed(it, 1700L) }
+        }.also { handler.postDelayed(it, 2900L) }
         intro.setOnDismissListener {
             introCompletion?.let(handler::removeCallbacks)
             introCompletion = null
