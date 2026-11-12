@@ -105,6 +105,11 @@ internal class AppearanceUiFactory(
     private val originalImageTints = WeakHashMap<ImageView, android.content.res.ColorStateList>()
     private val originalCompoundTints = WeakHashMap<TextView, android.content.res.ColorStateList>()
 
+    // Accent-surface inference is intentionally conservative and can require several
+    // candidate checks. Cache both matches and misses so repeated legacy colors do not
+    // repeat that work during every full-screen skin pass.
+    private val recoveredAccentSurfaceCache = LinkedHashMap<Int, Int?>()
+
     private fun restoreOriginalStyle(view: View) {
         if (view !is EditText && view.background != null) {
             val saved = originalBackgrounds[view]
@@ -221,11 +226,19 @@ internal class AppearanceUiFactory(
      * ordinary neutral text, borders, or black/silver surfaces.
      */
     private fun recoverAccentSurface(color: Int): Int? {
+        val cacheKey = color and 0x00FFFFFF
+        synchronized(recoveredAccentSurfaceCache) {
+            if (recoveredAccentSurfaceCache.containsKey(cacheKey)) {
+                return recoveredAccentSurfaceCache[cacheKey]
+            }
+        }
+
         val observedRed = Color.red(color)
         val observedGreen = Color.green(color)
         val observedBlue = Color.blue(color)
         val activeId = selectedAccentId()
-        for (option in AccentPalette.options) {
+        var recovered: Int? = null
+        optionLoop@ for (option in AccentPalette.options) {
             if (option.id == "black_silver" || option.id == activeId) continue
             for (step in 5..100) {
                 val amount = step * 0.005f
@@ -244,16 +257,27 @@ internal class AppearanceUiFactory(
                     kotlin.math.abs(Color.blue(expected) - observedBlue) <= 1
                 ) {
                     val replacement = AccentPalette.surface(base, red(), amount, activeId)
-                    return Color.argb(
+                    recovered = Color.argb(
                         Color.alpha(color),
                         Color.red(replacement),
                         Color.green(replacement),
                         Color.blue(replacement)
                     )
+                    break@optionLoop
                 }
             }
         }
-        return null
+        synchronized(recoveredAccentSurfaceCache) {
+            if (recoveredAccentSurfaceCache.size >= 256) {
+                val oldest = recoveredAccentSurfaceCache.keys.iterator()
+                if (oldest.hasNext()) {
+                    oldest.next()
+                    oldest.remove()
+                }
+            }
+            recoveredAccentSurfaceCache[cacheKey] = recovered
+        }
+        return recovered
     }
 
     private fun legacyAccentReplacement(color: Int, includeSurfaceBlend: Boolean = true): Int? {
@@ -370,6 +394,13 @@ internal class AppearanceUiFactory(
                 var changed = false
                 for (index in 0 until drawable.numberOfLayers) {
                     if (rethemeBackground(drawable.getDrawable(index))) changed = true
+                }
+                return changed
+            }
+            is android.graphics.drawable.StateListDrawable -> {
+                var changed = false
+                for (index in 0 until drawable.stateCount) {
+                    if (rethemeBackground(drawable.getStateDrawable(index))) changed = true
                 }
                 return changed
             }
