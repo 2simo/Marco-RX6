@@ -161,36 +161,82 @@ async function processNotification(document, token) {
   console.log(`Notification ${document.name}: delivered to ${delivered} device(s)`);
 }
 
-const token = await accessToken();
-const queryUrl =
-  `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents:runQuery`;
-const query = {
-  structuredQuery: {
-    from: [{ collectionId: "notifications", allDescendants: true }],
-    where: {
-      fieldFilter: {
-        field: { fieldPath: "pushStatus" },
-        op: "EQUAL",
-        value: { stringValue: "pending" }
-      }
-    },
-    limit: 100
+async function sendTargetedTestNotification(token, recipientUid) {
+  if (!/^[A-Za-z0-9_-]{1,128}$/.test(recipientUid)) {
+    throw new Error("Invalid Firebase recipient UID");
   }
-};
 
-const rows = await googleFetch(queryUrl, token, {
-  method: "POST",
-  headers: { "content-type": "application/json" },
-  body: JSON.stringify(query)
-});
-const documents = (rows || []).map(row => row.document).filter(Boolean);
-let processed = 0;
-for (const document of documents) {
-  try {
-    await processNotification(document, token);
-    processed++;
-  } catch (error) {
-    console.error("Notification processing failed:", document.name, error.message);
+  const devicesUrl =
+    `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${encodeURIComponent(recipientUid)}/devices?pageSize=100`;
+  const devicesResult = await googleFetch(devicesUrl, token);
+  const devices = devicesResult.documents || [];
+  if (devices.length === 0) {
+    throw new Error("No registered devices found for the selected UID");
   }
+
+  const data = {
+    title: "MARCO RX6 – TEST",
+    body: "This is a test notification.",
+    type: "test",
+    recipientUid
+  };
+
+  let delivered = 0;
+  let invalid = 0;
+  for (const device of devices) {
+    const fcmToken = stringField(device.fields, "token");
+    if (!fcmToken) continue;
+    try {
+      const result = await sendToDevice(token, fcmToken, data);
+      if (result.invalid) invalid++;
+      else delivered++;
+    } catch (error) {
+      console.error("Test notification delivery failed:", error.message);
+    }
+  }
+
+  if (delivered === 0) {
+    throw new Error(`Test notification was not accepted by FCM. Invalid tokens: ${invalid}`);
+  }
+  console.log(`Targeted test accepted by FCM for ${delivered} device(s). No notification queue was read or modified.`);
 }
-console.log(`MARCO RX6 FCM sweep complete. Found: ${documents.length}; processed: ${processed}`);
+
+const token = await accessToken();
+const testRecipientUid = process.env.FCM_TEST_RECIPIENT_UID?.trim();
+
+if (testRecipientUid) {
+  await sendTargetedTestNotification(token, testRecipientUid);
+} else {
+  const queryUrl =
+    `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents:runQuery`;
+  const query = {
+    structuredQuery: {
+      from: [{ collectionId: "notifications", allDescendants: true }],
+      where: {
+        fieldFilter: {
+          field: { fieldPath: "pushStatus" },
+          op: "EQUAL",
+          value: { stringValue: "pending" }
+        }
+      },
+      limit: 100
+    }
+  };
+
+  const rows = await googleFetch(queryUrl, token, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(query)
+  });
+  const documents = (rows || []).map(row => row.document).filter(Boolean);
+  let processed = 0;
+  for (const document of documents) {
+    try {
+      await processNotification(document, token);
+      processed++;
+    } catch (error) {
+      console.error("Notification processing failed:", document.name, error.message);
+    }
+  }
+  console.log(`MARCO RX6 FCM sweep complete. Found: ${documents.length}; processed: ${processed}`);
+}
