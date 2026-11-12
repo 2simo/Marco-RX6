@@ -98,9 +98,9 @@ internal class StartupExperienceController(
         }
         val logo = ImageView(activity).apply {
             setImageResource(com.marcorx6.library.R.drawable.marco_splash)
-            // Let the complete splash artwork use the full available screen area.
-            // FIT_CENTER preserves the artwork without stretching or cropping it.
-            scaleType = ImageView.ScaleType.FIT_CENTER
+            // Fill the entire edge-to-edge screen. CENTER_CROP removes the
+            // top/bottom letterboxing without distorting the original artwork.
+            scaleType = ImageView.ScaleType.CENTER_CROP
             contentDescription = "MARCO RX6"
             setBackgroundColor(Color.BLACK)
             alpha = 0f
@@ -152,14 +152,7 @@ internal class StartupExperienceController(
                 window.isNavigationBarContrastEnforced = false
             }
         }
-        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(content) { view, insets ->
-            val safe = insets.getInsets(
-                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
-            )
-            view.setPadding(0, safe.top, 0, safe.bottom)
-            insets
-        }
-        androidx.core.view.ViewCompat.requestApplyInsets(content)
+        // Keep the artwork edge-to-edge; do not inset the image below system bars.
         val motionEnabled = activity.getSharedPreferences("app_settings", Activity.MODE_PRIVATE)
             .getBoolean("animations", true)
         if (motionEnabled) {
