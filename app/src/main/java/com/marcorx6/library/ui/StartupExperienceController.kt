@@ -73,7 +73,7 @@ internal class StartupExperienceController(
             if (isActivityUsable() && introDialog === intro && intro.isShowing) {
                 introDialog = null
                 introCompletion = null
-                showLoading(intro)
+                showLoading(intro, onStartupFinished)
             }
         }.also { handler.postDelayed(it, 1700L) }
         intro.setOnDismissListener {
@@ -83,7 +83,7 @@ internal class StartupExperienceController(
         }
     }
 
-    private fun showLoading(existingWindow: Dialog? = null) {
+    private fun showLoading(existingWindow: Dialog? = null, onStartupFinished: () -> Unit) {
         if (!isActivityUsable() || (dialog?.isShowing == true && dialog !== existingWindow)) return
         animator?.cancel()
         completion?.let(handler::removeCallbacks)
