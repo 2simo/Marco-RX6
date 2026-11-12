@@ -36,8 +36,8 @@ object AppDiagnostics {
         { task, executor ->
             if (!executor.isShutdown) {
                 executor.queue.poll()
-                if (!executor.queue.offer(task)) droppedEntries.incrementAndGet()
-                else droppedEntries.incrementAndGet()
+                droppedEntries.incrementAndGet()
+                executor.queue.offer(task)
             } else droppedEntries.incrementAndGet()
         }
     )
@@ -85,14 +85,16 @@ object AppDiagnostics {
         val details = if (error == null) "" else {
             val writer = StringWriter()
             error.printStackTrace(PrintWriter(writer))
-            "\\n" + writer.toString().take(18000)
+            "\n" + writer.toString().take(18000)
         }
         val stamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US).format(Date())
         val safeTag = sanitize(tag).take(80)
+        val dropped = droppedEntries.getAndSet(0L)
         val contextSnapshot = "screen=${sanitize(currentScreen.get()).take(100)} " +
-            "action=${sanitize(lastAction.get()).take(140)} thread=${Thread.currentThread().name}"
+            "action=${sanitize(lastAction.get()).take(140)} thread=${Thread.currentThread().name}" +
+            if (dropped > 0L) " droppedLogEntries=$dropped" else ""
         val safeMessage = sanitize("$contextSnapshot ${message + details}").take(20000)
-        val line = "$stamp [$level] [$safeTag] $safeMessage\\n"
+        val line = "$stamp [$level] [$safeTag] $safeMessage\n"
         if (level.equals("FATAL", ignoreCase = true)) {
             writeLine(context, line)
             return
@@ -179,7 +181,7 @@ object AppDiagnostics {
         val outputDirectory = File(context.cacheDir, "diagnostic_exports")
         if (!outputDirectory.exists()) outputDirectory.mkdirs()
         val output = File(outputDirectory, "MARCO_RX6_diagnostics.zip")
-        synchronized(lock) {
+        synchronized(fileLock) {
             ZipOutputStream(FileOutputStream(output)).use { zip ->
                 source.listFiles()
                     ?.filter { it.isFile && (it.name == LOG_NAME || it.name.startsWith("$LOG_NAME.")) }
