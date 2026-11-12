@@ -86,7 +86,12 @@ class MainActivity : ComponentActivity() {
         // repeatedly traversed the entire view tree and could trigger needless text
         // updates during scrolling/resizing, contributing to visible flicker.
         LanguageTranslator.translateViewTree(view, pageLanguage)
-        com.marcorx6.library.AppDiagnostics.log("INFO", "Navigation", "Opened screen: ${view.javaClass.simpleName}")
+        com.marcorx6.library.AppDiagnostics.setScreen(
+            (view.tag as? String)?.takeIf { it.isNotBlank() }
+                ?: view.contentDescription?.toString()?.takeIf { it.isNotBlank() }
+                ?: view.javaClass.simpleName
+        )
+        com.marcorx6.library.AppDiagnostics.log("INFO", "Navigation", "Root view rendered: ${view.javaClass.simpleName}")
 
         // Use one stable app-owned top bar on every Activity screen. The Android
         // status bar remains visible; the app bar receives the status-bar inset
@@ -213,7 +218,10 @@ class MainActivity : ComponentActivity() {
                         null
                     )
                 }
-                setOnClickListener { click() }
+                setOnClickListener {
+                    com.marcorx6.library.AppDiagnostics.recordAction("Top bar: $label")
+                    click()
+                }
             }
 
         row.addView(action(
@@ -228,6 +236,7 @@ class MainActivity : ComponentActivity() {
             if (dark) R.drawable.ic_action_sun else R.drawable.ic_action_moon,
             tr(if (dark) "الوضع الفاتح" else "الوضع الداكن")
         ) {
+            com.marcorx6.library.AppDiagnostics.recordAction("Toggle appearance mode")
             // Use the same preference store read by AppearancePaletteRuntimeFeature.
             appearancePreferences().edit()
                 .putBoolean("dark_mode", !isDarkMode())
@@ -564,6 +573,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         com.marcorx6.library.ui.UiDiagnosticsMonitor.install(this)
+        com.marcorx6.library.AppDiagnostics.recordAction("MainActivity onCreate")
         com.marcorx6.library.ui.UiDiagnosticsMonitor.logLifecycle(this, "onCreate")
         com.marcorx6.library.AppDiagnostics.log(
             "INFO",
