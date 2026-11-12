@@ -147,7 +147,7 @@ object AppDiagnostics {
     private fun sanitize(value: String): String {
         var result = value
         result = result.replace(
-            Regex("(?i)(access[_-]?token|refresh[_-]?token|id[_-]?token|authorization|password|passwd|api[_-]?key)\\s*[:=]\\s*[^\\s,;]+"),
+            Regex("(?i)(access[_-]?token|refresh[_-]?token|id[_-]?token|authorization|password|passwd|api[_-]?key)\\s*[\"']?\\s*[:=]\\s*[\"']?[^\\s,\"';}]+"),
             "$1=[REDACTED]"
         )
         result = result.replace(
@@ -155,13 +155,14 @@ object AppDiagnostics {
             "[EMAIL]"
         )
         result = result.replace(
-            Regex("(?i)\\b(uid|userId|accountId)\\s*[:=]\\s*[^\\s,;]+"),
+            Regex("(?i)\\b(uid|userId|accountId)\\s*[\"']?\\s*[:=]\\s*[\"']?[^\\s,\"';}]+"),
             "$1=[REDACTED]"
         )
         result = result.replace(
             Regex("(?i)([?&](?:token|key|auth|signature)=)[^&\\s]+"),
             "$1[REDACTED]"
         )
+        result = result.replace(Regex("(?i)\\bBearer\\s+[^\\s,;]+"), "Bearer [REDACTED]")
         return result
     }
 
