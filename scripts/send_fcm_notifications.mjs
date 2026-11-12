@@ -1,4 +1,5 @@
 import { JWT } from "google-auth-library";
+import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 
 const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
@@ -177,9 +178,30 @@ async function sendTargetedTestNotification(token, recipientUid) {
   const data = {
     title: "MARCO RX6 – TEST",
     body: "This is a test notification.",
-    type: "test",
+    type: "system",
     recipientUid
   };
+
+  // Persist the test in the recipient's in-app inbox. This branch runs only
+  // for an explicit UID dispatch and never reads or changes the pending queue.
+  const notificationId = randomUUID();
+  const now = new Date().toISOString();
+  const inboxUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${encodeURIComponent(recipientUid)}/notifications?documentId=${notificationId}`;
+  await googleFetch(inboxUrl, token, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      fields: {
+        type: { stringValue: "system" },
+        actorUid: { stringValue: recipientUid },
+        title: { stringValue: data.title },
+        body: { stringValue: data.body },
+        createdAt: { timestampValue: now },
+        read: { booleanValue: false },
+        pushStatus: { stringValue: "sent" }
+      }
+    })
+  });
 
   let delivered = 0;
   let invalid = 0;
