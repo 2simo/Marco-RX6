@@ -1662,7 +1662,7 @@ internal class FirebaseAccountController(
         dialogContent.addView(TextView(activity).apply {
             text = translate("جارٍ تحميل المتابعين...")
             textSize = 13f
-            setTextColor(Color.rgb(170, 178, 190))
+            setTextColor(if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110))
             setPadding(dp(8), dp(18), dp(8), dp(18))
         })
         userDocuments.loadFollowerIds(user.uid)
@@ -1672,7 +1672,7 @@ internal class FirebaseAccountController(
                 if (followerIds.isEmpty()) {
                     dialogContent.addView(TextView(activity).apply {
                         text = translate("لا يوجد متابعون حتى الآن.")
-                        setTextColor(Color.rgb(170, 178, 190))
+                        setTextColor(if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110))
                         setPadding(dp(8), dp(20), dp(8), dp(20))
                     })
                     return@addOnSuccessListener
@@ -1690,7 +1690,7 @@ internal class FirebaseAccountController(
                     if (profiles.isEmpty()) {
                         dialogContent.addView(TextView(activity).apply {
                             text = translate("لا يوجد متابعون متبادلون يمكن مراسلتهم حالياً.")
-                            setTextColor(Color.rgb(170, 178, 190))
+                            setTextColor(if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110))
                             setPadding(dp(8), dp(20), dp(8), dp(20))
                         })
                     }
@@ -1747,7 +1747,7 @@ internal class FirebaseAccountController(
                 dialogContent.removeAllViews()
                 dialogContent.addView(TextView(activity).apply {
                     text = error.localizedMessage ?: translate("تعذر تحميل المتابعين.")
-                    setTextColor(Color.rgb(210, 170, 170))
+                    setTextColor(if (dark) Color.rgb(255, 170, 180) else Color.rgb(176, 35, 55))
                     setPadding(dp(8), dp(18), dp(8), dp(18))
                 })
             }
@@ -1809,7 +1809,7 @@ internal class FirebaseAccountController(
                     val replyPreview = TextView(activity).apply {
                         visibility = View.GONE
                         textSize = 12f
-                        setTextColor(Color.rgb(198, 203, 212))
+                        setTextColor(if (dark) Color.rgb(225, 230, 237) else Color.rgb(43, 49, 59))
                         setPadding(dp(10), dp(7), dp(10), dp(7))
                         setOnClickListener { selectedReply = null; visibility = View.GONE }
                     }
@@ -1956,14 +1956,14 @@ internal class FirebaseAccountController(
                             metadata.addView(TextView(activity).apply {
                                 text = timeLabel
                                 textSize = 9f
-                                setTextColor(if (mine) Color.rgb(65, 70, 80) else Color.rgb(165, 174, 188))
+                                setTextColor(if (mine) AccentPalette.foregroundForColor(selectedAccentColor()) else if (dark) Color.rgb(165, 174, 188) else Color.rgb(91, 98, 110))
                                 gravity = Gravity.CENTER_VERTICAL
                             })
                             if (mine) metadata.addView(TextView(activity).apply {
                                 text = if (recipientRead) "  ✓✓" else "  ✓"
                                 textSize = 10f
                                 setTypeface(null, android.graphics.Typeface.BOLD)
-                                setTextColor(if (recipientRead) Color.rgb(88, 96, 108) else Color.rgb(75, 80, 90))
+                                setTextColor(AccentPalette.foregroundForColor(selectedAccentColor()))
                                 gravity = Gravity.CENTER_VERTICAL
                             })
                             bubble.addView(metadata, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(4) })
