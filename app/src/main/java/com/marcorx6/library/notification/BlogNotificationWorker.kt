@@ -117,7 +117,7 @@ open class BlogNotificationWorker(context: Context, params: WorkerParameters) : 
         val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
             .setSmallIcon(com.marcorx6.library.R.drawable.ic_notification_marco)
             .setLargeIcon(appIcon)
-            .setContentTitle(localize("A NEW GAME ON MARCO"))
+            .setContentTitle(localize("لعبة جديدة في المكتبة"))
             .setContentText(postTitle)
             .setStyle(NotificationCompat.BigTextStyle().bigText(postTitle))
             .setContentIntent(pendingIntent)
