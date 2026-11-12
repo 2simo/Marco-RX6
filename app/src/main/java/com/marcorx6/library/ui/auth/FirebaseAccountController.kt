@@ -1348,6 +1348,7 @@ internal class FirebaseAccountController(
                     "game" -> item.getString("type") == "game"
                     "follow" -> item.getString("type") == "follow"
                     "message" -> item.getString("type") == "message"
+                    "system" -> item.getString("type") == "system"
                     else -> false
                 }
             }
@@ -1356,6 +1357,7 @@ internal class FirebaseAccountController(
                     text = translate(when (selectedSection) {
                         "game" -> "لا توجد ألعاب جديدة حالياً."
                         "follow" -> "لا يوجد متابعون جدد حالياً."
+                        "system" -> "لا توجد تنبيهات عامة حالياً."
                         else -> "لا توجد رسائل جديدة حالياً."
                     })
                     textSize = 13f
@@ -1501,6 +1503,7 @@ internal class FirebaseAccountController(
         addTab("الألعاب الجديدة", "game")
         addTab("المتابعون", "follow")
         addTab("الرسائل", "message")
+        addTab("تنبيهات النظام", "system")
         page.addView(tabs)
         val scroll = ScrollView(activity).apply { addView(list) }
         page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
