@@ -198,7 +198,7 @@ internal class AppearanceSettingsController(
                     setPadding(dp(5), dp(4), dp(5), dp(4))
                     addView(swatch, LinearLayout.LayoutParams(dp(48), dp(44)))
                     addView(TextView(activity).apply {
-                        text = translate(option.label)
+                        text = AccentPalette.localizedLabel(option.id, currentLanguage())
                         textSize = 10f
                         gravity = Gravity.CENTER
                         setTextColor(if (isSelected) accentText else muted)
