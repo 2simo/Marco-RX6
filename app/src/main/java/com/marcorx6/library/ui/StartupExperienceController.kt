@@ -53,9 +53,11 @@ internal class StartupExperienceController(
             scaleType = ImageView.ScaleType.FIT_CENTER
             setBackgroundColor(Color.BLACK)
             contentDescription = "Silver wolf"
-            alpha = 0f
-            scaleX = 0.84f
-            scaleY = 0.84f
+            // Draw the artwork on the very first frame. Starting at alpha 0
+            // created a completely black pause before the intro became visible.
+            alpha = 1f
+            scaleX = 0.94f
+            scaleY = 0.94f
         }
         introContent.addView(
             artwork,
@@ -70,8 +72,8 @@ internal class StartupExperienceController(
             textAlignment = View.TEXT_ALIGNMENT_CENTER
             letterSpacing = 0.28f
             maxLines = 1
-            alpha = 0f
-            translationY = dp(16).toFloat()
+            alpha = 1f
+            translationY = 0f
             setShadowLayer(dp(14).toFloat(), 0f, dp(2).toFloat(), Color.rgb(115, 122, 134))
         }
         introContent.addView(
@@ -91,20 +93,16 @@ internal class StartupExperienceController(
         val introMotionEnabled = activity.getSharedPreferences("app_settings", Activity.MODE_PRIVATE)
             .getBoolean("animations", true)
         if (introMotionEnabled) {
-            artwork.animate().alpha(1f).scaleX(1f).scaleY(1f)
-                .setDuration(1050L)
+            // Keep the wolf visible immediately; only apply a short scale-in.
+            artwork.animate().scaleX(1f).scaleY(1f)
+                .setDuration(420L)
                 .setInterpolator(android.view.animation.DecelerateInterpolator(1.5f))
                 .start()
-            brandName.animate().alpha(1f).translationY(0f)
-                .setStartDelay(520L)
-                .setDuration(720L)
-                .setInterpolator(OvershootInterpolator(0.85f))
-                .start()
-            introPulseAnimator = ValueAnimator.ofFloat(1f, 1.025f).apply {
+            introPulseAnimator = ValueAnimator.ofFloat(1f, 1.018f).apply {
                 duration = 1500L
                 repeatCount = ValueAnimator.INFINITE
                 repeatMode = ValueAnimator.REVERSE
-                startDelay = 1050L
+                startDelay = 700L
                 addUpdateListener { pulse ->
                     if (introDialog === intro && intro.isShowing) {
                         val scale = pulse.animatedValue as Float
@@ -115,11 +113,8 @@ internal class StartupExperienceController(
                 start()
             }
         } else {
-            artwork.alpha = 1f
             artwork.scaleX = 1f
             artwork.scaleY = 1f
-            brandName.alpha = 1f
-            brandName.translationY = 0f
         }
         intro.window?.let { window ->
             WindowCompat.setDecorFitsSystemWindows(window, false)
