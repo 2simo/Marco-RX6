@@ -85,7 +85,7 @@ internal class StartupExperienceController(
         if (!isActivityUsable() || dialog?.isShowing == true) return
         animator?.cancel()
         completion?.let(handler::removeCallbacks)
-        val dark = isDarkMode()
+        val silver = Color.rgb(190, 196, 207)
         val splash = Dialog(activity, android.R.style.Theme_Material_NoActionBar)
         dialog = splash
         val content = FrameLayout(activity).apply {
@@ -102,26 +102,25 @@ internal class StartupExperienceController(
             setImageResource(com.marcorx6.library.R.drawable.marco_splash)
             scaleType = ImageView.ScaleType.FIT_CENTER
             contentDescription = "MARCO RX6"
-            // Keep the complete portrait artwork visible without a circular frame,
-            // clipping, padding, or image distortion.
+            // Preserve the circular artwork itself; remove only the outer frame.
             setBackgroundColor(Color.BLACK)
             alpha = 0f
             scaleX = 0.96f
             scaleY = 0.96f
         }
-        center.addView(logo, LinearLayout.LayoutParams(dp(168), dp(300)).apply {
-            bottomMargin = dp(18)
+        center.addView(logo, LinearLayout.LayoutParams(dp(230), dp(230)).apply {
+            bottomMargin = dp(22)
         })
-        center.addView(makeText("MARCO", 25f, if (dark) Color.WHITE else Color.rgb(25, 29, 36), true).apply {
+        center.addView(makeText("MARCO", 25f, Color.WHITE, true).apply {
             gravity = Gravity.CENTER
             letterSpacing = 0.16f
         })
-        center.addView(makeText("GAME LIBRARY", 10f, red(), true).apply {
+        center.addView(makeText("GAME LIBRARY", 10f, silver, true).apply {
             gravity = Gravity.CENTER
             letterSpacing = 0.28f
             setPadding(0, dp(9), 0, 0)
         })
-        val loading = makeText(translate("جارٍ تجهيز عالم الألعاب..."), 11f, if (dark) Color.rgb(170, 176, 186) else Color.rgb(91, 98, 110), false).apply {
+        val loading = makeText(translate("جارٍ تجهيز عالم الألعاب..."), 11f, silver, false).apply {
             gravity = Gravity.CENTER
             setPadding(0, dp(34), 0, 0)
         }
@@ -129,7 +128,7 @@ internal class StartupExperienceController(
         val progress = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
             max = 100
             this.progress = 1
-            progressTintList = android.content.res.ColorStateList.valueOf(red())
+            progressTintList = android.content.res.ColorStateList.valueOf(silver)
             progressBackgroundTintList = android.content.res.ColorStateList.valueOf(if (dark) Color.rgb(57, 61, 70) else Color.rgb(210, 216, 225))
             progressDrawable = progressDrawable.mutate().apply {
                 if (this is android.graphics.drawable.LayerDrawable) {
@@ -139,7 +138,7 @@ internal class StartupExperienceController(
             }
         }
         center.addView(progress, LinearLayout.LayoutParams(dp(238), dp(7)).apply { topMargin = dp(18) })
-        val percent = makeText("1%", 12f, red(), true).apply {
+        val percent = makeText("1%", 12f, silver, true).apply {
             gravity = Gravity.CENTER
             setPadding(0, dp(9), 0, 0)
         }
@@ -155,7 +154,7 @@ internal class StartupExperienceController(
             WindowCompat.setDecorFitsSystemWindows(window, false)
             window.statusBarColor = Color.TRANSPARENT
             window.navigationBarColor = Color.TRANSPARENT
-            SystemBarPolicy.apply(window, darkMode = dark)
+            SystemBarPolicy.apply(window, darkMode = true)
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
                 window.isStatusBarContrastEnforced = false
                 window.isNavigationBarContrastEnforced = false
