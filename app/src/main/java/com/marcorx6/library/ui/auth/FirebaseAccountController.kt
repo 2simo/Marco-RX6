@@ -736,7 +736,7 @@ internal class FirebaseAccountController(
             page.addView(TextView(activity).apply {
                 text = translate("من 3 إلى 20 حرفاً: أحرف إنجليزية وأرقام وشرطة سفلية فقط. لا يمكن تكرار الاسم.")
                 textSize = 10f
-                setTextColor(Color.rgb(145, 153, 166))
+                setTextColor(if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110))
                 setPadding(dp(4), 0, dp(4), dp(12))
             })
 
