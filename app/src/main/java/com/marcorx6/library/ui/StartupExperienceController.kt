@@ -90,8 +90,7 @@ internal class StartupExperienceController(
         dialog = splash
         val content = FrameLayout(activity).apply {
             setBackground(GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                if (dark) intArrayOf(Color.rgb(7, 8, 11), Color.rgb(15, 17, 22), Color.rgb(4, 5, 8))
-                else intArrayOf(Color.rgb(250, 251, 253), Color.rgb(232, 236, 242), Color.rgb(245, 247, 250))))
+                intArrayOf(Color.rgb(3, 4, 6), Color.rgb(13, 15, 19), Color.BLACK)))
         }
         val center = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
@@ -129,11 +128,11 @@ internal class StartupExperienceController(
             max = 100
             this.progress = 1
             progressTintList = android.content.res.ColorStateList.valueOf(silver)
-            progressBackgroundTintList = android.content.res.ColorStateList.valueOf(if (dark) Color.rgb(57, 61, 70) else Color.rgb(210, 216, 225))
+            progressBackgroundTintList = android.content.res.ColorStateList.valueOf(Color.rgb(48, 52, 60))
             progressDrawable = progressDrawable.mutate().apply {
                 if (this is android.graphics.drawable.LayerDrawable) {
                     findDrawableByLayerId(android.R.id.background)?.let { it.setTint(if (dark) Color.rgb(57, 61, 70) else Color.rgb(210, 216, 225)) }
-                    findDrawableByLayerId(android.R.id.progress)?.let { it.setTint(red()) }
+                    findDrawableByLayerId(android.R.id.progress)?.let { it.setTint(silver) }
                 }
             }
         }
