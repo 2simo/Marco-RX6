@@ -88,6 +88,7 @@ internal class StartupExperienceController(
         animator?.cancel()
         completion?.let(handler::removeCallbacks)
         val silver = Color.rgb(190, 196, 207)
+        val electricBlue = Color.rgb(72, 156, 255)
         // Reuse the intro window so the Activity/library is never exposed between
         // the dragon intro and the loading splash.
         val splash = existingWindow ?: Dialog(activity, android.R.style.Theme_Material_NoActionBar)
@@ -111,27 +112,50 @@ internal class StartupExperienceController(
         val footer = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            setPadding(dp(42), dp(8), dp(42), dp(22))
+            setPadding(dp(30), dp(10), dp(30), dp(24))
             setBackgroundColor(Color.TRANSPARENT)
         }
+        val signature = makeText("MARCO RX6  /  SYSTEM STARTUP", 8f, silver, true).apply {
+            gravity = Gravity.START
+            letterSpacing = 0.18f
+            alpha = 0.72f
+        }
+        footer.addView(signature, LinearLayout.LayoutParams(-1, -2).apply {
+            bottomMargin = dp(9)
+        })
+        val statusRow = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val status = makeText("تهيئة واجهة التطبيق", 11f, silver, true).apply {
+            gravity = Gravity.CENTER_VERTICAL or Gravity.START
+            maxLines = 1
+            alpha = 0.96f
+        }
+        statusRow.addView(status, LinearLayout.LayoutParams(0, -2, 1f))
+        val percent = makeText("1%", 10f, electricBlue, true).apply {
+            gravity = Gravity.CENTER_VERTICAL or Gravity.END
+            letterSpacing = 0.04f
+        }
+        statusRow.addView(percent, LinearLayout.LayoutParams(-2, -2).apply {
+            marginStart = dp(12)
+        })
+        footer.addView(statusRow, LinearLayout.LayoutParams(-1, -2).apply {
+            bottomMargin = dp(9)
+        })
         val progress = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
             max = 100
             this.progress = 1
-            progressTintList = android.content.res.ColorStateList.valueOf(silver)
+            progressTintList = android.content.res.ColorStateList.valueOf(electricBlue)
             progressBackgroundTintList = android.content.res.ColorStateList.valueOf(Color.rgb(48, 52, 60))
             progressDrawable = progressDrawable.mutate().apply {
                 if (this is android.graphics.drawable.LayerDrawable) {
                     findDrawableByLayerId(android.R.id.background)?.let { it.setTint(Color.rgb(48, 52, 60)) }
-                    findDrawableByLayerId(android.R.id.progress)?.let { it.setTint(silver) }
+                    findDrawableByLayerId(android.R.id.progress)?.let { it.setTint(electricBlue) }
                 }
             }
         }
         footer.addView(progress, LinearLayout.LayoutParams(-1, dp(3)))
-        val percent = makeText("1%", 9f, silver, true).apply {
-            gravity = Gravity.CENTER
-            setPadding(0, dp(5), 0, 0)
-        }
-        footer.addView(percent)
         content.addView(
             footer,
             FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL)
@@ -170,6 +194,20 @@ internal class StartupExperienceController(
                     val value = valueAnimator.animatedValue as Int
                     progress.progress = value
                     percent.text = "$value%"
+                    val message = when {
+                        value < 18 -> "تهيئة واجهة التطبيق"
+                        value < 36 -> "تجهيز مكتبتك"
+                        value < 54 -> "تحميل عناصر البداية"
+                        value < 72 -> "ضبط المظهر والتفضيلات"
+                        value < 90 -> "إتمام التجهيزات"
+                        else -> "لحظات وننطلق"
+                    }
+                    if (status.text.toString() != message) {
+                        status.animate().alpha(0f).setDuration(110L).withEndAction {
+                            status.text = message
+                            status.animate().alpha(0.96f).setDuration(180L).start()
+                        }.start()
+                    }
                 }
             }
             start()
