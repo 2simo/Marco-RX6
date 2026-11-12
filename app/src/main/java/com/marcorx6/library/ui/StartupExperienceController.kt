@@ -68,10 +68,9 @@ internal class StartupExperienceController(
         }
         introCompletion = Runnable {
             if (isActivityUsable() && introDialog === intro && intro.isShowing) {
-                intro.dismiss()
                 introDialog = null
                 introCompletion = null
-                showLoading()
+                showLoading(intro)
             }
         }.also { handler.postDelayed(it, 1700L) }
         intro.setOnDismissListener {
@@ -81,35 +80,36 @@ internal class StartupExperienceController(
         }
     }
 
-    private fun showLoading() {
-        if (!isActivityUsable() || dialog?.isShowing == true) return
+    private fun showLoading(existingWindow: Dialog? = null) {
+        if (!isActivityUsable() || (dialog?.isShowing == true && dialog !== existingWindow)) return
         animator?.cancel()
         completion?.let(handler::removeCallbacks)
         val silver = Color.rgb(190, 196, 207)
-        val splash = Dialog(activity, android.R.style.Theme_Material_NoActionBar)
+        // Reuse the intro window so the Activity/library is never exposed between
+        // the dragon intro and the loading splash.
+        val splash = existingWindow ?: Dialog(activity, android.R.style.Theme_Material_NoActionBar)
         dialog = splash
         val content = FrameLayout(activity).apply {
             setBackground(GradientDrawable(GradientDrawable.Orientation.TL_BR,
                 intArrayOf(Color.rgb(3, 4, 6), Color.rgb(13, 15, 19), Color.BLACK)))
         }
+        val logo = ImageView(activity).apply {
+            setImageResource(com.marcorx6.library.R.drawable.marco_splash)
+            // Let the complete splash artwork use the full available screen area.
+            // FIT_CENTER preserves the artwork without stretching or cropping it.
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            contentDescription = "MARCO RX6"
+            setBackgroundColor(Color.BLACK)
+            alpha = 0f
+        }
+        content.addView(logo, FrameLayout.LayoutParams(-1, -1, Gravity.CENTER))
         val center = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             setPadding(dp(30), dp(24), dp(30), dp(24))
         }
-        val logo = ImageView(activity).apply {
-            setImageResource(com.marcorx6.library.R.drawable.marco_splash)
-            scaleType = ImageView.ScaleType.FIT_CENTER
-            contentDescription = "MARCO RX6"
-            // Preserve the circular artwork itself; remove only the outer frame.
-            setBackgroundColor(Color.BLACK)
-            alpha = 0f
-            scaleX = 0.96f
-            scaleY = 0.96f
-        }
-        center.addView(logo, LinearLayout.LayoutParams(dp(230), dp(230)).apply {
-            bottomMargin = dp(22)
-        })
+        // Keep the brand and loading information in front of the full-screen artwork.
+        center.setBackgroundColor(Color.TRANSPARENT)
         center.addView(makeText("MARCO", 25f, Color.WHITE, true).apply {
             gravity = Gravity.CENTER
             letterSpacing = 0.16f
@@ -170,12 +170,10 @@ internal class StartupExperienceController(
         val motionEnabled = activity.getSharedPreferences("app_settings", Activity.MODE_PRIVATE)
             .getBoolean("animations", true)
         if (motionEnabled) {
-            logo.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(700L)
+            logo.animate().alpha(1f).setDuration(700L)
                 .setInterpolator(OvershootInterpolator(1.08f)).start()
         } else {
             logo.alpha = 1f
-            logo.scaleX = 1f
-            logo.scaleY = 1f
         }
         // Keep numeric loading progress active: it reports startup work rather than
         // decorative motion and remains useful when animations are disabled.
