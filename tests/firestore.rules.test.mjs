@@ -639,6 +639,7 @@ describe("Private notification inbox rules", () => {
       actorUid: "game-user",
       gameName: "Example Game",
       platform: "PS2",
+      coverUrl: "https://example.com/cover.jpg",
       title: "لعبة جديدة في المكتبة",
       body: "Example Game • PS2",
       createdAt: serverTimestamp(),
