@@ -35,6 +35,7 @@ internal class AppearanceSettingsController(
     private val diagnosticsExportInProgress = AtomicBoolean(false)
 
     fun show() {
+        com.marcorx6.library.AppDiagnostics.setScreen("Settings")
         fun dp(value: Int) = (value * activity.resources.displayMetrics.density).toInt()
         val dark = preferences.getBoolean("dark_mode", true)
         val selectedAccentId = preferences.getString(AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID)
@@ -187,6 +188,7 @@ internal class AppearanceSettingsController(
                     minimumHeight = dp(44)
                     setOnClickListener {
                         if (preferences.getString(AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID) != option.id) {
+                            com.marcorx6.library.AppDiagnostics.recordAction("Change primary color to ${option.id}")
                             preferences.edit().putString(AccentPalette.PREFERENCE_KEY, option.id).apply()
                             // Rebuild this live settings page immediately. setContentView routes
                             // through MainActivity.showRootScreen, which skins the whole Activity
@@ -303,6 +305,7 @@ internal class AppearanceSettingsController(
             translate(if (dark) "الوضع الليلي مفعّل — اضغط للتبديل إلى الوضع النهاري"
             else "الوضع النهاري مفعّل — اضغط للتبديل إلى الوضع الليلي")
         ) {
+            com.marcorx6.library.AppDiagnostics.recordAction("Toggle dark or light mode")
             preferences.edit().putBoolean("dark_mode", !dark).apply()
             recreateActivity()
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
