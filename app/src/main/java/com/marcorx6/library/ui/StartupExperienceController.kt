@@ -142,6 +142,8 @@ internal class StartupExperienceController(
             }
         }.also { handler.postDelayed(it, 2900L) }
         intro.setOnDismissListener {
+            introPulseAnimator?.cancel()
+            introPulseAnimator = null
             introCompletion?.let(handler::removeCallbacks)
             introCompletion = null
             if (introDialog === intro) introDialog = null
@@ -315,6 +317,8 @@ internal class StartupExperienceController(
     fun dismiss() {
         introCompletion?.let(handler::removeCallbacks)
         introCompletion = null
+        introPulseAnimator?.cancel()
+        introPulseAnimator = null
         introDialog?.let { if (it.isShowing) it.dismiss() }
         introDialog = null
         animator?.cancel()
