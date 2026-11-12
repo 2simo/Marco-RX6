@@ -68,6 +68,14 @@ internal class FirebaseNotificationRepository(
         return batch.commit()
     }
 
+    /** Deletes one notification, verifying that it belongs to the signed-in user's inbox. */
+    fun deleteOne(uid: String, notification: DocumentSnapshot): Task<Void> {
+        if (uid.isBlank() || notification.reference.parent.parent?.id != uid) {
+            return Tasks.forException(IllegalArgumentException("إشعار غير صالح"))
+        }
+        return notification.reference.delete()
+    }
+
     /** Deletes every notification in the signed-in user's inbox, in safe Firestore batches. */
     fun deleteAll(uid: String): Task<Void> {
         if (uid.isBlank()) {
