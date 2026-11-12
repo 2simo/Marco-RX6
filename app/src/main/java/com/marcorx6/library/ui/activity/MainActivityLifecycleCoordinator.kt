@@ -14,7 +14,7 @@ internal class MainActivityLifecycleCoordinator(
     private val loadGames: () -> Unit,
     private val restoreAdminSession: () -> Unit,
     private val createInterface: () -> Unit,
-    private val showStartupExperience: () -> Unit,
+    private val showStartupExperience: (onStartupFinished: () -> Unit) -> Unit,
     private val setupCompleted: () -> Boolean,
     private val notificationsEnabled: () -> Boolean,
     private val scheduleNotifications: () -> Unit,
@@ -37,20 +37,20 @@ internal class MainActivityLifecycleCoordinator(
         createNotificationChannel()
         loadGames()
         restoreAdminSession()
-        // Put the splash on screen before composing the full library view. The launch
-        // window already uses the same dark background, so neither the system launch
-        // window nor the Activity's first layout is exposed as a blank intermediate page.
-        showStartupExperience()
-        createInterface()
+        // Keep the Activity library uncomposed while intro/loading are visible.
+        // The startup controller invokes this continuation only after the splash ends.
+        showStartupExperience {
+            createInterface()
 
-        // Background prompts and sync stay away from the full-screen first-run setup.
-        // They resume on the next Activity creation after setup has been completed.
-        if (setupCompleted()) {
-            if (notificationsEnabled()) {
-                scheduleNotifications()
-                requestNotificationPermission()
+            // Background prompts and sync stay away from the full-screen first-run setup.
+            // They resume on the next Activity creation after setup has been completed.
+            if (setupCompleted()) {
+                if (notificationsEnabled()) {
+                    scheduleNotifications()
+                    requestNotificationPermission()
+                }
+                syncFromBlog()
             }
-            syncFromBlog()
         }
     }
 
