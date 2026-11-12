@@ -155,7 +155,7 @@ internal class DownloadConfirmationPanel(
             textSize = 10f
             setTypeface(null, Typeface.BOLD)
             gravity = Gravity.CENTER
-            setTextColor(if (dark) Color.rgb(22, 25, 31) else Color.WHITE)
+            setTextColor(AccentPalette.foregroundForColor(silver))
             this.background = GradientDrawable().apply {
                 setColor(silver)
                 cornerRadius = dp(12).toFloat()
