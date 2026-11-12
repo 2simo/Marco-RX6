@@ -1439,6 +1439,48 @@ internal class FirebaseAccountController(
                         setPadding(0, dp(5), 0, 0)
                     })
                     addView(textColumn, LinearLayout.LayoutParams(0, -2, 1f))
+                    val deleteButton = ImageView(activity).apply {
+                        setImageResource(com.marcorx6.library.R.drawable.ic_notification_delete)
+                        imageTintList = android.content.res.ColorStateList.valueOf(
+                            if (dark) Color.rgb(255, 145, 145) else Color.rgb(178, 55, 55)
+                        )
+                        contentDescription = translate("حذف هذا الإشعار")
+                        scaleType = ImageView.ScaleType.CENTER_INSIDE
+                        setPadding(dp(9), dp(9), dp(9), dp(9))
+                        background = GradientDrawable().apply {
+                            shape = GradientDrawable.OVAL
+                            setColor(if (dark) Color.rgb(55, 27, 30) else Color.rgb(255, 235, 235))
+                            setStroke(dp(1), if (dark) Color.rgb(110, 55, 60) else Color.rgb(235, 190, 190))
+                        }
+                        isClickable = true
+                        isFocusable = true
+                    }
+                    deleteButton.setOnClickListener {
+                        val confirmSingleDelete = AlertDialog.Builder(activity)
+                            .setTitle(translate("حذف هذا الإشعار؟"))
+                            .setMessage(translate("سيتم حذف هذا الإشعار فقط. لا يمكن التراجع عن هذه العملية."))
+                            .setNegativeButton(translate("إلغاء"), null)
+                            .setPositiveButton(translate("حذف")) { _, _ ->
+                                deleteButton.isEnabled = false
+                                notifications.deleteOne(user.uid, item)
+                                    .addOnSuccessListener {
+                                        allItems = allItems.filterNot { existing -> existing.id == item.id }
+                                        renderItems()
+                                        toast(translate("تم حذف الإشعار."))
+                                    }
+                                    .addOnFailureListener { error ->
+                                        deleteButton.isEnabled = true
+                                        AppDiagnostics.log("ERROR", "Notifications", "Delete notification failed", error)
+                                        toast(translate("تعذر حذف الإشعار. تحقق من الاتصال."))
+                                    }
+                            }
+                            .create()
+                        confirmSingleDelete.show()
+                        styleDialog(confirmSingleDelete)
+                    }
+                    addView(deleteButton, LinearLayout.LayoutParams(dp(40), dp(40)).apply {
+                        marginStart = dp(8)
+                    })
                     isClickable = true
                     isFocusable = true
                     setOnClickListener {
