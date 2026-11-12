@@ -68,6 +68,30 @@ internal class FirebaseNotificationRepository(
         return batch.commit()
     }
 
+    /** Deletes every notification in the signed-in user's inbox, in safe Firestore batches. */
+    fun deleteAll(uid: String): Task<Void> {
+        if (uid.isBlank()) {
+            return Tasks.forException(IllegalArgumentException("معرّف الحساب غير صالح"))
+        }
+        return firestore.collection("users").document(uid)
+            .collection("notifications")
+            .get()
+            .continueWithTask { queryTask ->
+                if (!queryTask.isSuccessful) {
+                    return@continueWithTask Tasks.forException(
+                        queryTask.exception ?: IllegalStateException("تعذر تحميل الإشعارات")
+                    )
+                }
+                val documents = queryTask.result?.documents.orEmpty()
+                val commits = documents.chunked(400).map { chunk ->
+                    firestore.batch().also { batch ->
+                        chunk.forEach { document -> batch.delete(document.reference) }
+                    }.commit()
+                }
+                Tasks.whenAll(commits)
+            }
+    }
+
     fun markRead(uid: String, notification: DocumentSnapshot): Task<Void> {
         if (uid.isBlank() || notification.reference.parent.parent?.id != uid) {
             return Tasks.forException(IllegalArgumentException("إشعار غير صالح"))
