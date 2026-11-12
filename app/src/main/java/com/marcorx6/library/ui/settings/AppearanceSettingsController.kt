@@ -13,6 +13,7 @@ import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
 import android.widget.LinearLayout
 import android.widget.TextView
+import java.util.concurrent.atomic.AtomicBoolean
 
 internal class AppearanceSettingsController(
     private val activity: Activity,
@@ -31,6 +32,8 @@ internal class AppearanceSettingsController(
     private val onBack: () -> Unit,
     private val translate: (String) -> String
 ) {
+    private val diagnosticsExportInProgress = AtomicBoolean(false)
+
     fun show() {
         fun dp(value: Int) = (value * activity.resources.displayMetrics.density).toInt()
         val dark = preferences.getBoolean("dark_mode", true)
@@ -394,22 +397,55 @@ internal class AppearanceSettingsController(
             translate("تصدير سجل التشخيص"),
             translate("احفظ سجل الأعطال والأحداث محلياً وشاركه عند الحاجة؛ لا يتم إرساله تلقائياً")
         ) {
-            runCatching {
-                val exportFile = com.marcorx6.library.AppDiagnostics.createExport(activity)
-                val uri = androidx.core.content.FileProvider.getUriForFile(
-                    activity,
-                    "${activity.packageName}.files",
-                    exportFile
-                )
-                val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                    type = "application/zip"
-                    putExtra(Intent.EXTRA_STREAM, uri)
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                }
-                activity.startActivity(Intent.createChooser(shareIntent, translate("مشاركة سجل التشخيص")))
-            }.onFailure {
-                Toast.makeText(activity, translate("تعذر إنشاء سجل التشخيص"), Toast.LENGTH_LONG).show()
+            if (!diagnosticsExportInProgress.compareAndSet(false, true)) {
+                Toast.makeText(activity, translate("يتم تجهيز سجل التشخيص بالفعل"), Toast.LENGTH_SHORT).show()
+                return@settingRow
             }
+            com.marcorx6.library.AppDiagnostics.recordAction("Export diagnostic log")
+            Toast.makeText(activity, translate("جارٍ تجهيز سجل التشخيص…"), Toast.LENGTH_SHORT).show()
+            Thread({
+                val result = runCatching {
+                    com.marcorx6.library.AppDiagnostics.createExport(activity.applicationContext)
+                }
+                activity.runOnUiThread {
+                    diagnosticsExportInProgress.set(false)
+                    if (activity.isFinishing || activity.isDestroyed) return@runOnUiThread
+                    result.onSuccess { exportFile ->
+                        runCatching {
+                            val uri = androidx.core.content.FileProvider.getUriForFile(
+                                activity,
+                                "${activity.packageName}.files",
+                                exportFile
+                            )
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "application/zip"
+                                putExtra(Intent.EXTRA_STREAM, uri)
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            activity.startActivity(
+                                Intent.createChooser(shareIntent, translate("مشاركة سجل التشخيص"))
+                            )
+                            com.marcorx6.library.AppDiagnostics.log(
+                                "INFO", "Diagnostics", "Diagnostic share chooser opened"
+                            )
+                        }.onFailure { error ->
+                            com.marcorx6.library.AppDiagnostics.log(
+                                "ERROR", "Diagnostics", "Unable to share diagnostic archive", error
+                            )
+                            Toast.makeText(
+                                activity, translate("تعذر مشاركة سجل التشخيص"), Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }.onFailure { error ->
+                        com.marcorx6.library.AppDiagnostics.log(
+                            "ERROR", "Diagnostics", "Unable to create diagnostic archive", error
+                        )
+                        Toast.makeText(
+                            activity, translate("تعذر إنشاء سجل التشخيص"), Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            }, "marco-diagnostic-export").start()
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
 
         root.addView(TextView(activity).apply {
