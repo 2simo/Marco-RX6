@@ -87,8 +87,7 @@ class MainActivity : ComponentActivity() {
         // updates during scrolling/resizing, contributing to visible flicker.
         LanguageTranslator.translateViewTree(view, pageLanguage)
         com.marcorx6.library.AppDiagnostics.setScreen(
-            (view.tag as? String)?.takeIf { it.isNotBlank() }
-                ?: view.contentDescription?.toString()?.takeIf { it.isNotBlank() }
+            (view.tag as? String)?.takeIf { it.startsWith("marco_screen:") }
                 ?: view.javaClass.simpleName
         )
         com.marcorx6.library.AppDiagnostics.log("INFO", "Navigation", "Root view rendered: ${view.javaClass.simpleName}")
