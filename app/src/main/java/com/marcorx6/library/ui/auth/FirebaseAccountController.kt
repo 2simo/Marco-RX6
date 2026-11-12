@@ -1,5 +1,7 @@
 package com.marcorx6.library.ui.auth
 
+import com.marcorx6.library.AppDiagnostics
+
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
@@ -113,6 +115,8 @@ internal class FirebaseAccountController(
     fun openMessagesFromLibrary() = showInbox()
 
     fun show() {
+        AppDiagnostics.setScreen("Account")
+        AppDiagnostics.recordAction("Open account page")
         clearAccountListeners()
         returnToProfileEditorAfterPhotoPick = false
         // Social profile surfaces and controls follow the same selected app palette as every other page.
@@ -1295,6 +1299,8 @@ internal class FirebaseAccountController(
     }
 
     private fun showNotifications() {
+        AppDiagnostics.setScreen("Notifications")
+        AppDiagnostics.recordAction("Open notifications")
         val user = authRepository.currentUser
         if (user == null || user.isAnonymous) {
             toast("سجّل الدخول لمتابعة إشعارات حسابك.")
@@ -1513,6 +1519,8 @@ internal class FirebaseAccountController(
     }
 
     private fun showInbox() {
+        AppDiagnostics.setScreen("Messages inbox")
+        AppDiagnostics.recordAction("Open messages inbox")
         val user = authRepository.currentUser
         if (user == null || user.isAnonymous) {
             toast("سجّل الدخول لاستخدام الرسائل الخاصة.")
@@ -1740,6 +1748,8 @@ internal class FirebaseAccountController(
     }
 
     private fun openConversation(otherUid: String) {
+        AppDiagnostics.setScreen("Conversation")
+        AppDiagnostics.recordAction("Open conversation")
         val user = authRepository.currentUser ?: return
         if (user.isAnonymous) return
         val dark = isDarkMode()
@@ -2766,6 +2776,7 @@ internal class FirebaseAccountController(
     }
 
     private fun showAccountPage(page: LinearLayout) {
+        AppDiagnostics.log("DEBUG", "AccountUI", "Rendering account-owned page root=${page.javaClass.simpleName}")
         val dark = isDarkMode()
         val scroll = ScrollView(activity).apply {
             isFillViewport = true
