@@ -287,4 +287,12 @@ class LanguageTranslatorTest {
         assertEquals("No se pudo cargar la lista (403)", LanguageTranslator.translate("تعذر تحميل القائمة (403)", "es"))
     }
 
+    @Test
+    fun translatesBlackAndSilverPaletteName() {
+        assertEquals("Black & Silver", LanguageTranslator.translate("أسود فضي", "en"))
+        assertEquals("Noir et argent", LanguageTranslator.translate("أسود فضي", "fr"))
+        assertEquals("Negro y plata", LanguageTranslator.translate("أسود فضي", "es"))
+        assertEquals("أسود فضي", LanguageTranslator.translate("أسود فضي", "ar"))
+    }
+
 }
