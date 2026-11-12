@@ -325,4 +325,21 @@ class LanguageTranslatorTest {
         assertEquals("أسود فضي", LanguageTranslator.translate("أسود فضي", "ar"))
     }
 
+    @Test
+    fun translatesRemainingBrowserAndGoogleAccountStatusMessages() {
+        assertEquals("Tab", LanguageTranslator.translate("تبويب", "en"))
+        assertEquals("Onglet", LanguageTranslator.translate("تبويب", "fr"))
+        assertEquals("Pestaña", LanguageTranslator.translate("تبويب", "es"))
+
+        val refresh = "تعذر تحديث معلومات اللعبة من المصدر؛ تحقق من الاتصال بالإنترنت"
+        assertEquals("Could not refresh the game information from its source; check your internet connection", LanguageTranslator.translate(refresh, "en"))
+        assertEquals("Impossible d’actualiser les informations du jeu depuis sa source ; vérifiez votre connexion Internet", LanguageTranslator.translate(refresh, "fr"))
+        assertEquals("No se pudo actualizar la información del juego desde su fuente; comprueba tu conexión a Internet", LanguageTranslator.translate(refresh, "es"))
+
+        val connected = "تم ربط حساب Google؛ جارٍ تحميل مدونة MARCO والتحقق من صلاحيات النشر…"
+        assertEquals("Google account connected; loading the MARCO blog and checking publishing permissions…", LanguageTranslator.translate(connected, "en"))
+        assertEquals("Compte Google connecté ; chargement du blog MARCO et vérification des autorisations de publication…", LanguageTranslator.translate(connected, "fr"))
+        assertEquals("Cuenta de Google conectada; cargando el blog MARCO y comprobando los permisos de publicación…", LanguageTranslator.translate(connected, "es"))
+    }
+
 }
