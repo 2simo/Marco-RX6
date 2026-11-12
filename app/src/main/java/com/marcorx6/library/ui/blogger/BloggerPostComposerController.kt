@@ -282,7 +282,7 @@ internal class BloggerPostComposerController(
             addField(row, label)
             addField(row, url)
             val remove = makeAction("إزالة هذا الرابط").apply {
-                setTextColor(android.graphics.Color.rgb(255, 130, 145))
+                setTextColor(if (isNight) android.graphics.Color.rgb(255, 150, 165) else android.graphics.Color.rgb(176, 35, 55))
                 setOnClickListener {
                     linkRows.removeAll { it.row === row }
                     linksContainer.removeView(row)
