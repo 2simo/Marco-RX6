@@ -964,6 +964,9 @@ internal object LanguageTranslator {
             "ملف مباشر" to listOf("Direct file", "Fichier direct", "Archivo directo"),
             "توقف محرك الصفحة. أغلق هذه النافذة ثم أعد فتح صفحة التحميل." to listOf("The page engine stopped. Close this window, then reopen the download page.", "Le moteur de la page s’est arrêté. Fermez cette fenêtre, puis rouvrez la page de téléchargement.", "El motor de la página se detuvo. Cierra esta ventana y vuelve a abrir la página de descargas."),
             "غيّر اللون الأساسي لواجهات التطبيق والبطاقات والأزرار والأيقونات والعناصر التفاعلية" to listOf("Change the primary color of app screens, cards, buttons, icons, and interactive elements", "Changez la couleur principale des écrans, cartes, boutons, icônes et éléments interactifs", "Cambia el color principal de las pantallas, tarjetas, botones, iconos y elementos interactivos"),
+            "تبويب" to listOf("Tab", "Onglet", "Pestaña"),
+            "تعذر تحديث معلومات اللعبة من المصدر؛ تحقق من الاتصال بالإنترنت" to listOf("Could not refresh the game information from its source; check your internet connection", "Impossible d’actualiser les informations du jeu depuis sa source ; vérifiez votre connexion Internet", "No se pudo actualizar la información del juego desde su fuente; comprueba tu conexión a Internet"),
+            "تم ربط حساب Google؛ جارٍ تحميل مدونة MARCO والتحقق من صلاحيات النشر…" to listOf("Google account connected; loading the MARCO blog and checking publishing permissions…", "Compte Google connecté ; chargement du blog MARCO et vérification des autorisations de publication…", "Cuenta de Google conectada; cargando el blog MARCO y comprobando los permisos de publicación…"),
             "التنزيل عبر Wi-Fi فقط" to listOf("Download over Wi-Fi only", "Télécharger uniquement via Wi-Fi", "Descargar solo por Wi-Fi"),
         )
 
