@@ -916,6 +916,50 @@ internal object LanguageTranslator {
             "حجم غير معروف" to listOf("Unknown size", "Taille inconnue", "Tamaño desconocido"),
             "تصدير سجل التشخيص" to listOf("Export diagnostic log", "Exporter le journal de diagnostic", "Exportar el registro de diagnóstico"),
             "احفظ سجل الأعطال والأحداث محلياً وشاركه عند الحاجة؛ لا يتم إرساله تلقائياً" to listOf("Save the crash and event log locally and share it when needed; it is not sent automatically.", "Enregistrez localement le journal des erreurs et des événements et partagez-le si nécessaire ; il n’est pas envoyé automatiquement.", "Guarda localmente el registro de errores y eventos y compártelo cuando sea necesario; no se envía automáticamente."),
+            "تعذر تحميل تقييماتك الآن." to listOf("Could not load your ratings right now.", "Impossible de charger vos évaluations pour le moment.", "No se pudieron cargar tus valoraciones ahora."),
+            "لا توجد ألعاب جديدة حالياً." to listOf("No new games right now.", "Aucun nouveau jeu pour le moment.", "No hay juegos nuevos por ahora."),
+            "لا يوجد متابعون جدد حالياً." to listOf("No new followers right now.", "Aucun nouvel abonné pour le moment.", "No hay nuevos seguidores por ahora."),
+            "لا توجد رسائل جديدة حالياً." to listOf("No new messages right now.", "Aucun nouveau message pour le moment.", "No hay mensajes nuevos por ahora."),
+            "إشعار جديد" to listOf("New notification", "Nouvelle notification", "Nueva notificación"),
+            "الألعاب الجديدة" to listOf("New games", "Nouveaux jeux", "Juegos nuevos"),
+            "تعذر تحميل الإشعارات. تحقق من الاتصال." to listOf("Could not load notifications. Check your connection.", "Impossible de charger les notifications. Vérifiez votre connexion.", "No se pudieron cargar las notificaciones. Comprueba tu conexión."),
+            "تعذر فتح ملف المستخدم." to listOf("Could not open the user profile.", "Impossible d’ouvrir le profil utilisateur.", "No se pudo abrir el perfil del usuario."),
+            "تعذر تهيئة المحادثة." to listOf("Could not initialize the conversation.", "Impossible d’initialiser la conversation.", "No se pudo iniciar la conversación."),
+            "تعذر التحقق من صلاحية المراسلة." to listOf("Could not verify messaging permissions.", "Impossible de vérifier les autorisations de messagerie.", "No se pudieron verificar los permisos de mensajería."),
+            "لا يوجد متابعون بعد." to listOf("No followers yet.", "Aucun abonné pour le moment.", "Aún no hay seguidores."),
+            "لا تتابع أي حساب حالياً." to listOf("You are not following any accounts yet.", "Vous ne suivez encore aucun compte.", "Todavía no sigues ninguna cuenta."),
+            "تعذر تحميل إعدادات الملف" to listOf("Could not load profile settings", "Impossible de charger les paramètres du profil", "No se pudieron cargar los ajustes del perfil"),
+            "الصورة كبيرة جداً للملف العام؛ اختر صورة أصغر." to listOf("The image is too large for a public profile; choose a smaller image.", "L’image est trop volumineuse pour un profil public ; choisissez une image plus petite.", "La imagen es demasiado grande para un perfil público; elige una imagen más pequeña."),
+            "لغة المحتوى" to listOf("Content language", "Langue du contenu", "Idioma del contenido"),
+            "شارة لغة المحتوى" to listOf("Content language badge", "Badge de langue du contenu", "Insignia del idioma del contenido"),
+            "تمت إزالة الموقع من المفضلة" to listOf("Website removed from favorites", "Site retiré des favoris", "Sitio eliminado de favoritos"),
+            "تم حفظ الموقع في المفضلة" to listOf("Website saved to favorites", "Site ajouté aux favoris", "Sitio guardado en favoritos"),
+            "لا توجد مواقع محفوظة في المفضلة" to listOf("No websites saved to favorites", "Aucun site enregistré dans les favoris", "No hay sitios guardados en favoritos"),
+            "مسح المفضلة" to listOf("Clear favorites", "Effacer les favoris", "Borrar favoritos"),
+            "تم مسح المواقع المحفوظة" to listOf("Saved websites cleared", "Sites enregistrés supprimés", "Se borraron los sitios guardados"),
+            "الخصوصية" to listOf("Privacy", "Confidentialité", "Privacidad"),
+            "سيتم مسح سجل التصفح وملفات تعريف الارتباط وبيانات المواقع المخزنة. لن تُحذف الملفات التي نزّلتها." to listOf("Your browsing history, cookies, and stored website data will be cleared. Downloaded files will not be deleted.", "Votre historique de navigation, vos cookies et les données des sites enregistrées seront effacés. Les fichiers téléchargés ne seront pas supprimés.", "Se borrarán el historial de navegación, las cookies y los datos guardados de los sitios. No se eliminarán los archivos descargados."),
+            "مسح البيانات" to listOf("Clear data", "Effacer les données", "Borrar datos"),
+            "تم مسح بيانات التصفح" to listOf("Browsing data cleared", "Données de navigation effacées", "Datos de navegación borrados"),
+            "لا يوجد سجل تصفح بعد" to listOf("No browsing history yet", "Aucun historique de navigation pour le moment", "Aún no hay historial de navegación"),
+            "سجل التصفح" to listOf("Browsing history", "Historique de navigation", "Historial de navegación"),
+            "مسح السجل" to listOf("Clear history", "Effacer l’historique", "Borrar historial"),
+            "تم مسح سجل التصفح" to listOf("Browsing history cleared", "Historique de navigation effacé", "Se borró el historial de navegación"),
+            "التبويبات المفتوحة" to listOf("Open tabs", "Onglets ouverts", "Pestañas abiertas"),
+            "الحد الأقصى 8 تبويبات" to listOf("Up to 8 tabs", "Jusqu’à 8 onglets", "Hasta 8 pestañas"),
+            "أدخل رابط الموقع" to listOf("Enter a website address", "Saisissez l’adresse d’un site", "Introduce la dirección de un sitio web"),
+            "فتح تبويب جديد" to listOf("Open a new tab", "Ouvrir un nouvel onglet", "Abrir una pestaña nueva"),
+            "الرابط غير صالح أو غير آمن" to listOf("The link is invalid or unsafe", "Le lien est invalide ou dangereux", "El enlace no es válido o no es seguro"),
+            "إغلاق التبويب الحالي" to listOf("Close current tab", "Fermer l’onglet actuel", "Cerrar la pestaña actual"),
+            "يجب إبقاء تبويب واحد على الأقل" to listOf("At least one tab must remain open", "Au moins un onglet doit rester ouvert", "Debe quedar abierta al menos una pestaña"),
+            "أدخل رابطاً أو عبارة للبحث" to listOf("Enter a URL or search term", "Saisissez une URL ou un terme de recherche", "Introduce una URL o un término de búsqueda"),
+            "تفعيل حجب الإعلانات والمتتبعات" to listOf("Enable ad and tracker blocking", "Activer le blocage des publicités et des traceurs", "Activar el bloqueo de anuncios y rastreadores"),
+            "مواقع مسموح بها، افصل بينها بفاصلة" to listOf("Allowed websites, separated by commas", "Sites autorisés, séparés par des virgules", "Sitios permitidos, separados por comas"),
+            "استثناء نطاقات المواقع من الحجب" to listOf("Exclude website domains from blocking", "Exclure des domaines du blocage", "Excluir dominios del bloqueo"),
+            "إعدادات حجب الإعلانات" to listOf("Ad-blocking settings", "Paramètres de blocage des publicités", "Ajustes del bloqueo de anuncios"),
+            "ملف مباشر" to listOf("Direct file", "Fichier direct", "Archivo directo"),
+            "توقف محرك الصفحة. أغلق هذه النافذة ثم أعد فتح صفحة التحميل." to listOf("The page engine stopped. Close this window, then reopen the download page.", "Le moteur de la page s’est arrêté. Fermez cette fenêtre, puis rouvrez la page de téléchargement.", "El motor de la página se detuvo. Cierra esta ventana y vuelve a abrir la página de descargas."),
+            "غيّر اللون الأساسي لواجهات التطبيق والبطاقات والأزرار والأيقونات والعناصر التفاعلية" to listOf("Change the primary color of app screens, cards, buttons, icons, and interactive elements", "Changez la couleur principale des écrans, cartes, boutons, icônes et éléments interactifs", "Cambia el color principal de las pantallas, tarjetas, botones, iconos y elementos interactivos"),
             "التنزيل عبر Wi-Fi فقط" to listOf("Download over Wi-Fi only", "Télécharger uniquement via Wi-Fi", "Descargar solo por Wi-Fi"),
         )
 
@@ -972,6 +1016,43 @@ internal object LanguageTranslator {
                 else -> "تعذر تحميل بيانات الحسابات"
             }
             return "$prefix ($code)"
+        }
+        Regex("^تعذر تحميل القائمة \\((.*)\\)$").matchEntire(ar)?.let { match ->
+            val code = match.groupValues[1]
+            val prefix = when (lang) {
+                "en" -> "Could not load the list"
+                "fr" -> "Impossible de charger la liste"
+                "es" -> "No se pudo cargar la lista"
+                else -> "تعذر تحميل القائمة"
+            }
+            return "$prefix ($code)"
+        }
+        Regex("^تبويب (\\d+)$").matchEntire(ar)?.let { match ->
+            val number = match.groupValues[1]
+            return when (lang) {
+                "en" -> "Tab $number"
+                "fr" -> "Onglet $number"
+                "es" -> "Pestaña $number"
+                else -> ar
+            }
+        }
+        Regex("^التبويب (\\d+)$").matchEntire(ar)?.let { match ->
+            val number = match.groupValues[1]
+            return when (lang) {
+                "en" -> "Tab $number"
+                "fr" -> "Onglet $number"
+                "es" -> "Pestaña $number"
+                else -> ar
+            }
+        }
+        Regex("^عدد الإعلانات المحجوبة: (\\d+)$").matchEntire(ar)?.let { match ->
+            val count = match.groupValues[1]
+            return when (lang) {
+                "en" -> "Ads blocked: $count"
+                "fr" -> "Publicités bloquées : $count"
+                "es" -> "Anuncios bloqueados: $count"
+                else -> ar
+            }
         }
         Regex("^خطوة (\\d+)$").matchEntire(ar)?.let { match ->
             val prefix = localized("خطوة")
