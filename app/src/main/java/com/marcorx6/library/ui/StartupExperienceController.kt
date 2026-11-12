@@ -34,8 +34,54 @@ internal class StartupExperienceController(
     private var animator: ValueAnimator? = null
     private var completion: Runnable? = null
     private var dialog: Dialog? = null
+    private var introDialog: Dialog? = null
+    private var introCompletion: Runnable? = null
 
     fun show() {
+        if (!isActivityUsable() || dialog?.isShowing == true || introDialog?.isShowing == true) return
+        val intro = Dialog(activity, android.R.style.Theme_Material_NoActionBar)
+        introDialog = intro
+        val artwork = ImageView(activity).apply {
+            setImageResource(com.marcorx6.library.R.drawable.marco_splash)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            setBackgroundColor(Color.BLACK)
+            contentDescription = "MARCO RX6"
+        }
+        intro.setContentView(artwork)
+        intro.setCancelable(false)
+        intro.setCanceledOnTouchOutside(false)
+        intro.show()
+        intro.window?.setBackgroundDrawableResource(android.R.color.black)
+        intro.window?.setLayout(-1, -1)
+        intro.window?.let { window ->
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+            window.statusBarColor = Color.BLACK
+            window.navigationBarColor = Color.BLACK
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                window.isStatusBarContrastEnforced = false
+                window.isNavigationBarContrastEnforced = false
+            }
+            WindowInsetsControllerCompat(window, window.decorView).apply {
+                hide(WindowInsetsCompat.Type.systemBars())
+                systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        }
+        introCompletion = Runnable {
+            if (isActivityUsable() && introDialog === intro && intro.isShowing) {
+                intro.dismiss()
+                introDialog = null
+                introCompletion = null
+                showLoading()
+            }
+        }.also { handler.postDelayed(it, 1700L) }
+        intro.setOnDismissListener {
+            introCompletion?.let(handler::removeCallbacks)
+            introCompletion = null
+            if (introDialog === intro) introDialog = null
+        }
+    }
+
+    private fun showLoading() {
         if (!isActivityUsable() || dialog?.isShowing == true) return
         animator?.cancel()
         completion?.let(handler::removeCallbacks)
@@ -185,6 +231,10 @@ internal class StartupExperienceController(
     }
 
     fun dismiss() {
+        introCompletion?.let(handler::removeCallbacks)
+        introCompletion = null
+        introDialog?.let { if (it.isShowing) it.dismiss() }
+        introDialog = null
         animator?.cancel()
         animator = null
         completion?.let(handler::removeCallbacks)
