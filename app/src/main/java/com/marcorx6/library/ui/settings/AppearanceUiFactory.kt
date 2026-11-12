@@ -1,5 +1,7 @@
 package com.marcorx6.library.ui
 
+import com.marcorx6.library.AppDiagnostics
+
 import android.app.Activity
 import android.app.AlertDialog
 import android.graphics.Color
@@ -522,7 +524,29 @@ internal class AppearanceUiFactory(
             }
         }
         if (view is ViewGroup) {
-            for (i in 0 until view.childCount) applyUnifiedSkin(view.getChildAt(i))
+            // Snapshot the child count before recursion. If a child fails while being
+            // rethemed, record the exact parent/child position and rethrow the original
+            // exception; never hide a broken view by silently skipping it.
+            val childCount = view.childCount
+            for (index in 0 until childCount) {
+                val child = view.getChildAt(index) ?: continue
+                try {
+                    applyUnifiedSkin(child)
+                } catch (error: Exception) {
+                    val childId = runCatching {
+                        if (child.id == View.NO_ID) "no-id"
+                        else child.resources.getResourceEntryName(child.id)
+                    }.getOrDefault("id-${child.id}")
+                    AppDiagnostics.log(
+                        "ERROR",
+                        "AppearanceSkin",
+                        "Skin traversal failed parent=${view.javaClass.simpleName} " +
+                            "childIndex=$index child=${child.javaClass.simpleName} childId=$childId",
+                        error
+                    )
+                    throw error
+                }
+            }
         }
     }
 
