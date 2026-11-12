@@ -2591,7 +2591,10 @@ internal class FirebaseAccountController(
                 null,
                 android.graphics.drawable.ColorDrawable(Color.WHITE)
             )
-            setOnClickListener { run() }
+            setOnClickListener {
+                AppDiagnostics.recordAction("Account action: $title")
+                run()
+            }
         }
         card.addView(TextView(activity).apply {
             text = title
