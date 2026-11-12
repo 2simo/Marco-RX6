@@ -24,6 +24,24 @@ internal object AccentPalette {
         Option("pink", "وردي", Color.rgb(232, 93, 158))
     )
 
+    /** Stable palette labels: keep these localized independently of the generic UI dictionary. */
+    fun localizedLabel(id: String, language: String): String {
+        val labels = when (id) {
+            "silver" -> listOf("فضي", "Silver", "Argent", "Plateado")
+            "black_silver" -> listOf("أسود فضي", "Black & Silver", "Noir et argent", "Negro y plata")
+            "blue" -> listOf("أزرق", "Blue", "Bleu", "Azul")
+            "purple" -> listOf("بنفسجي", "Purple", "Violet", "Morado")
+            "red" -> listOf("أحمر", "Red", "Rouge", "Rojo")
+            "green" -> listOf("أخضر", "Green", "Vert", "Verde")
+            "gold" -> listOf("ذهبي", "Gold", "Or", "Dorado")
+            "cyan" -> listOf("سماوي", "Cyan", "Cyan", "Cian")
+            "pink" -> listOf("وردي", "Pink", "Rose", "Rosa")
+            else -> listOf("فضي", "Silver", "Argent", "Plateado")
+        }
+        val index = when (language) { "en" -> 1; "fr" -> 2; "es" -> 3; else -> 0 }
+        return labels[index]
+    }
+
     fun color(id: String = DEFAULT_ID): Int =
         options.firstOrNull { it.id == id }?.color ?: options.first { it.id == DEFAULT_ID }.color
 
