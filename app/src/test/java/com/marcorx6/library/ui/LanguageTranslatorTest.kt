@@ -1,9 +1,18 @@
 package com.marcorx6.library.ui
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LanguageTranslatorTest {
+    @Test
+    fun everyTranslationEntryContainsEnglishFrenchAndSpanishVariants() {
+        assertTrue(
+            "Incomplete translation keys: ${LanguageTranslator.incompleteTranslationKeys()}",
+            LanguageTranslator.incompleteTranslationKeys().isEmpty()
+        )
+    }
+
     @Test
     fun translatesStaticLabelsIntoAllSupportedLanguages() {
         assertEquals("Downloads", LanguageTranslator.translate("التنزيلات", "en"))
