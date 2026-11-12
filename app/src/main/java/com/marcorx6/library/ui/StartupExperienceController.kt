@@ -109,7 +109,7 @@ internal class StartupExperienceController(
             scaleX = 0.96f
             scaleY = 0.96f
         }
-        center.addView(logo, LinearLayout.LayoutParams(dp(174), dp(280)).apply {
+        center.addView(logo, LinearLayout.LayoutParams(dp(168), dp(300)).apply {
             bottomMargin = dp(18)
         })
         center.addView(makeText("MARCO", 25f, if (dark) Color.WHITE else Color.rgb(25, 29, 36), true).apply {
