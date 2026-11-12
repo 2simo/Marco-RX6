@@ -4,12 +4,11 @@ on:
   schedule:
     - cron: "*/5 * * * *"
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - "scripts/send_fcm_notifications.mjs"
-      - ".github/workflows/send-fcm-notifications.yml"
+    inputs:
+      recipient_uid:
+        description: "Firebase UID that should receive the test notification"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -60,7 +59,9 @@ jobs:
       - name: Install Google authentication library
         run: npm install --no-save --no-package-lock "google-auth-library@^10.0.0"
 
-      - name: Send pending FCM notifications
+      - name: Send pending FCM notifications or one targeted test
+        env:
+          FCM_TEST_RECIPIENT_UID: ${{ inputs.recipient_uid }}
         run: node scripts/send_fcm_notifications.mjs
 
       - name: Remove temporary credentials
