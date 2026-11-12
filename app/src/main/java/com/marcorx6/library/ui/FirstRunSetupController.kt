@@ -203,7 +203,7 @@ internal class FirstRunSetupController(
                     AccentPalette.options.forEach { option ->
                         val selected = accentKey == option.id
                         val card = viewFactory.optionCard(
-                            tr(option.label),
+                            AccentPalette.localizedLabel(option.id, languageCode),
                             selected,
                             tr("اللون الرئيسي"),
                             darkMode,
