@@ -29,6 +29,19 @@ class LanguageTranslatorTest {
     }
 
     @Test
+    fun translatesDiagnosticExportFeedbackInAllSupportedLanguages() {
+        val preparing = "جارٍ تجهيز سجل التشخيص…"
+        assertEquals("Preparing diagnostic log…", LanguageTranslator.translate(preparing, "en"))
+        assertEquals("Préparation du journal de diagnostic…", LanguageTranslator.translate(preparing, "fr"))
+        assertEquals("Preparando el registro de diagnóstico…", LanguageTranslator.translate(preparing, "es"))
+
+        val sharingError = "تعذر مشاركة سجل التشخيص"
+        assertEquals("Could not share the diagnostic log", LanguageTranslator.translate(sharingError, "en"))
+        assertEquals("Impossible de partager le journal de diagnostic", LanguageTranslator.translate(sharingError, "fr"))
+        assertEquals("No se pudo compartir el registro de diagnóstico", LanguageTranslator.translate(sharingError, "es"))
+    }
+
+    @Test
     fun translatesFormalArabicEmptyState() {
         assertEquals("No downloads yet.", LanguageTranslator.translate("لا توجد تنزيلات حالياً.", "en"))
         assertEquals("Aucun téléchargement pour le moment.", LanguageTranslator.translate("لا توجد تنزيلات حالياً.", "fr"))
