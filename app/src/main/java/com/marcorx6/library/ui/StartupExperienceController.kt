@@ -153,7 +153,7 @@ internal class StartupExperienceController(
         animator?.cancel()
         completion?.let(handler::removeCallbacks)
         val silver = Color.rgb(190, 196, 207)
-        val electricBlue = Color.rgb(72, 156, 255)
+        val electricBlue = silver
         // Reuse the intro window so the Activity/library is never exposed between
         // the dragon intro and the loading splash.
         val splash = existingWindow ?: Dialog(activity, android.R.style.Theme_Material_NoActionBar)
