@@ -37,16 +37,22 @@ internal class DownloadMiniPanelDialog(
         val surface = if (dark) Color.rgb(25, 28, 34) else Color.WHITE
         val heading = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
         val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
-        val accent = if (dark) Color.rgb(205, 212, 222) else Color.rgb(105, 113, 126)
+        val appearance = AppearancePreferencesStore.appearance(activity)
+        val selectedAccentId = appearance.getString(
+            AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID
+        ) ?: AccentPalette.DEFAULT_ID
+        val accent = AccentPalette.color(selectedAccentId)
+        val accentText = AccentPalette.readableAccentText(selectedAccentId, dark)
 
         val dialog = Dialog(activity)
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(17), dp(15), dp(17), dp(12))
             this.background = GradientDrawable().apply {
-                setColor(background)
+                setColor(AccentPalette.surface(background, accent, if (dark) 0.05f else 0.035f))
                 cornerRadii = floatArrayOf(dp(22).toFloat(), dp(22).toFloat(), dp(22).toFloat(), dp(22).toFloat(), 0f, 0f, 0f, 0f)
-                setStroke(dp(1), if (dark) Color.rgb(70, 77, 89) else Color.rgb(205, 211, 220))
+                setStroke(dp(1), if (dark) AccentPalette.surface(Color.rgb(70, 77, 89), accent, 0.42f)
+                    else AccentPalette.surface(Color.rgb(205, 211, 220), accent, 0.36f))
             }
         }
         val header = LinearLayout(activity).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
@@ -66,12 +72,13 @@ internal class DownloadMiniPanelDialog(
         header.addView(TextView(activity).apply {
             text = translate("إغلاق")
             textSize = 12f
-            setTextColor(accent)
+            setTextColor(accentText)
             gravity = Gravity.CENTER
             setPadding(dp(13), dp(9), dp(13), dp(9))
             this.background = GradientDrawable().apply {
                 setColor(surface); cornerRadius = dp(12).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(70, 77, 89) else Color.rgb(205, 211, 220))
+                setStroke(dp(1), if (dark) AccentPalette.surface(Color.rgb(70, 77, 89), accent, 0.42f)
+                    else AccentPalette.surface(Color.rgb(205, 211, 220), accent, 0.36f))
             }
             setOnClickListener { dialog.dismiss() }
         })
@@ -87,11 +94,11 @@ internal class DownloadMiniPanelDialog(
             text = translate("متابعة التصفح")
             textSize = 13f
             setTypeface(null, Typeface.BOLD)
-            setTextColor(if (dark) Color.rgb(20, 23, 29) else Color.WHITE)
+            setTextColor(AccentPalette.foreground(selectedAccentId))
             gravity = Gravity.CENTER
             setPadding(dp(14), dp(12), dp(14), dp(12))
             this.background = GradientDrawable().apply {
-                setColor(if (dark) Color.rgb(205, 212, 222) else Color.rgb(105, 113, 126))
+                setColor(accent)
                 cornerRadius = dp(14).toFloat()
             }
             setOnClickListener { dialog.dismiss() }
@@ -126,11 +133,12 @@ internal class DownloadMiniPanelDialog(
             text = label
             textSize = 10f
             gravity = Gravity.CENTER
-            setTextColor(accent)
+            setTextColor(accentText)
             setPadding(dp(10), dp(7), dp(10), dp(7))
             this.background = GradientDrawable().apply {
                 setColor(surface); cornerRadius = dp(9).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(70, 77, 89) else Color.rgb(205, 211, 220))
+                setStroke(dp(1), if (dark) AccentPalette.surface(Color.rgb(70, 77, 89), accent, 0.42f)
+                    else AccentPalette.surface(Color.rgb(205, 211, 220), accent, 0.36f))
             }
             setOnClickListener { onClick() }
         }
@@ -140,20 +148,24 @@ internal class DownloadMiniPanelDialog(
                 orientation = LinearLayout.VERTICAL
                 setPadding(dp(12), dp(10), dp(12), dp(10))
                 this.background = GradientDrawable().apply {
-                    setColor(surface); cornerRadius = dp(14).toFloat()
-                    setStroke(dp(1), if (dark) Color.rgb(70, 77, 89) else Color.rgb(205, 211, 220))
+                    setColor(AccentPalette.surface(surface, accent, if (dark) 0.12f else 0.07f))
+                    cornerRadius = dp(14).toFloat()
+                    setStroke(dp(1), if (dark)
+                        AccentPalette.surface(Color.rgb(130, 138, 151), accent, 0.42f)
+                    else AccentPalette.surface(Color.rgb(160, 168, 181), accent, 0.36f))
                 }
             }
             val nameView = TextView(activity).apply {
                 text = name; textSize = 12f; setTypeface(null, Typeface.BOLD); setTextColor(heading)
                 maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END
             }
-            val statusView = TextView(activity).apply { textSize = 10f; setTextColor(accent); setPadding(0, dp(3), 0, 0) }
+            val statusView = TextView(activity).apply { textSize = 10f; setTextColor(accentText); setPadding(0, dp(3), 0, 0) }
             val detailsView = TextView(activity).apply { textSize = 10f; setTextColor(muted); setPadding(0, dp(3), 0, 0) }
             val bar = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
                 max = 100
                 progressTintList = android.content.res.ColorStateList.valueOf(accent)
-                progressBackgroundTintList = android.content.res.ColorStateList.valueOf(if (dark) Color.rgb(70, 77, 89) else Color.rgb(205, 211, 220))
+                progressBackgroundTintList = android.content.res.ColorStateList.valueOf(if (dark) AccentPalette.surface(Color.rgb(70, 77, 89), accent, 0.42f)
+                    else AccentPalette.surface(Color.rgb(205, 211, 220), accent, 0.36f))
             }
             val actions = LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL

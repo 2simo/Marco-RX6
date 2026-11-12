@@ -27,7 +27,8 @@ internal class StartupExperienceController(
     private val showFirstRunSetup: () -> Unit,
     private val showProfile: () -> Unit,
     private val translate: (String) -> String,
-    private val isDarkMode: () -> Boolean
+    private val isDarkMode: () -> Boolean,
+    private val red: () -> Int
 ) {
     private val handler = Handler(Looper.getMainLooper())
     private var animator: ValueAnimator? = null
@@ -55,7 +56,7 @@ internal class StartupExperienceController(
             background = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
                 setColor(if (dark) Color.rgb(25, 28, 34) else Color.WHITE)
-                setStroke(dp(3), Color.rgb(190, 198, 210))
+                setStroke(dp(3), red())
             }
             elevation = dp(18).toFloat()
         }
@@ -79,7 +80,7 @@ internal class StartupExperienceController(
             gravity = Gravity.CENTER
             letterSpacing = 0.16f
         })
-        center.addView(makeText("GAME LIBRARY", 10f, Color.rgb(190, 198, 210), true).apply {
+        center.addView(makeText("GAME LIBRARY", 10f, red(), true).apply {
             gravity = Gravity.CENTER
             letterSpacing = 0.28f
             setPadding(0, dp(9), 0, 0)
@@ -92,17 +93,17 @@ internal class StartupExperienceController(
         val progress = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
             max = 100
             this.progress = 1
-            progressTintList = android.content.res.ColorStateList.valueOf(Color.rgb(190, 198, 210))
+            progressTintList = android.content.res.ColorStateList.valueOf(red())
             progressBackgroundTintList = android.content.res.ColorStateList.valueOf(if (dark) Color.rgb(57, 61, 70) else Color.rgb(210, 216, 225))
             progressDrawable = progressDrawable.mutate().apply {
                 if (this is android.graphics.drawable.LayerDrawable) {
                     findDrawableByLayerId(android.R.id.background)?.let { it.setTint(if (dark) Color.rgb(57, 61, 70) else Color.rgb(210, 216, 225)) }
-                    findDrawableByLayerId(android.R.id.progress)?.let { it.setTint(Color.rgb(190, 198, 210)) }
+                    findDrawableByLayerId(android.R.id.progress)?.let { it.setTint(red()) }
                 }
             }
         }
         center.addView(progress, LinearLayout.LayoutParams(dp(238), dp(7)).apply { topMargin = dp(18) })
-        val percent = makeText("1%", 12f, if (dark) Color.rgb(190, 198, 210) else Color.rgb(65, 73, 86), true).apply {
+        val percent = makeText("1%", 12f, red(), true).apply {
             gravity = Gravity.CENTER
             setPadding(0, dp(9), 0, 0)
         }
@@ -166,7 +167,7 @@ internal class StartupExperienceController(
                     showFirstRunSetup()
                 } else if (!settings.getBoolean("community_channels_prompted", true)) {
                     settings.edit().putBoolean("community_channels_prompted", true).apply()
-                    CommunityChannelsController(activity, dp, makeText, translate, isDarkMode).show()
+                    CommunityChannelsController(activity, dp, makeText, translate, isDarkMode, red).show()
                 } else if (!settings.getBoolean("profile_prompted", false)) {
                     settings.edit().putBoolean("profile_prompted", true).apply()
                     showProfile()

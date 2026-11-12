@@ -126,15 +126,28 @@ internal class GameLibraryRenderer(
             chip.background = GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
                 if (active) intArrayOf(red, red)
-                else if (isDarkMode()) intArrayOf(Color.argb(205, 35, 38, 45), Color.argb(188, 15, 17, 22))
-                else intArrayOf(Color.argb(228, 255, 255, 255), Color.argb(210, 222, 226, 232))
+                else intArrayOf(
+                    AccentPalette.surface(
+                        if (isDarkMode()) Color.rgb(35, 38, 45) else Color.rgb(255, 255, 255),
+                        red,
+                        if (isDarkMode()) 0.24f else 0.13f
+                    ),
+                    AccentPalette.surface(
+                        if (isDarkMode()) Color.rgb(15, 17, 22) else Color.rgb(222, 226, 232),
+                        red,
+                        if (isDarkMode()) 0.20f else 0.17f
+                    )
+                )
             ).apply {
                 cornerRadius = dp(18).toFloat()
                 setStroke(
                     dp(1),
                     if (active) red
-                    else if (isDarkMode()) Color.argb(145, 130, 138, 151)
-                    else Color.argb(155, 160, 168, 181)
+                    else AccentPalette.surface(
+                        if (isDarkMode()) Color.rgb(130, 138, 151) else Color.rgb(160, 168, 181),
+                        red,
+                        if (isDarkMode()) 0.48f else 0.42f
+                    )
                 )
             }
             chip.setTextColor(if (active) accentForeground() else gray)
@@ -207,9 +220,13 @@ internal class GameLibraryRenderer(
                 gravity = Gravity.CENTER
                 setPadding(dp(10), dp(5), dp(10), dp(5))
                 background = GradientDrawable().apply {
-                    setColor(if (isDarkMode()) Color.argb(105, 35, 38, 45) else Color.argb(115, 222, 226, 232))
+                    setColor(if (isDarkMode())
+                        AccentPalette.surface(Color.rgb(35, 38, 45), red, 0.16f)
+                    else AccentPalette.surface(Color.rgb(222, 226, 232), red, 0.09f))
                     cornerRadius = dp(12).toFloat()
-                    setStroke(dp(1), if (isDarkMode()) Color.argb(120, 130, 138, 151) else Color.argb(130, 160, 168, 181))
+                    setStroke(dp(1), if (isDarkMode())
+                        AccentPalette.surface(Color.rgb(130, 138, 151), red, 0.36f)
+                    else AccentPalette.surface(Color.rgb(160, 168, 181), red, 0.30f))
                 }
             }
             if (selected == "ALL") {
@@ -223,9 +240,13 @@ internal class GameLibraryRenderer(
                     setTextColor(if (isDarkMode()) Color.rgb(225, 228, 234) else Color.rgb(43, 47, 55))
                     setPadding(dp(10), dp(6), dp(10), dp(6))
                     background = GradientDrawable().apply {
-                        setColor(if (isDarkMode()) Color.argb(105, 35, 38, 45) else Color.argb(115, 222, 226, 232))
+                        setColor(if (isDarkMode())
+                            AccentPalette.surface(Color.rgb(35, 38, 45), red, 0.16f)
+                        else AccentPalette.surface(Color.rgb(222, 226, 232), red, 0.09f))
                         cornerRadius = dp(11).toFloat()
-                        setStroke(dp(1), if (isDarkMode()) Color.argb(145, 130, 138, 151) else Color.argb(155, 160, 168, 181))
+                        setStroke(dp(1), if (isDarkMode())
+                            AccentPalette.surface(Color.rgb(130, 138, 151), red, 0.40f)
+                        else AccentPalette.surface(Color.rgb(160, 168, 181), red, 0.34f))
                     }
                     isClickable = true
                     isFocusable = true
@@ -268,20 +289,24 @@ internal class GameLibraryRenderer(
                     orientation = LinearLayout.VERTICAL
                     val surface = GradientDrawable(
                         GradientDrawable.Orientation.TL_BR,
-                        if (isDarkMode()) intArrayOf(Color.argb(232, 35, 38, 45), Color.argb(220, 15, 17, 22))
-                        else intArrayOf(Color.argb(245, 250, 251, 253), Color.argb(235, 213, 219, 227))
+                        if (isDarkMode()) intArrayOf(
+                            AccentPalette.surface(Color.rgb(35, 38, 45), red, 0.13f),
+                            AccentPalette.surface(Color.rgb(15, 17, 22), red, 0.10f)
+                        ) else intArrayOf(
+                            AccentPalette.surface(Color.rgb(250, 251, 253), red, 0.07f),
+                            AccentPalette.surface(Color.rgb(238, 241, 246), red, 0.10f)
+                        )
                     ).apply {
                         cornerRadius = dp(18).toFloat()
                         setStroke(
                             dp(1),
-                            if (isDarkMode()) Color.argb(175, 130, 138, 151)
-                            else Color.argb(205, 133, 143, 157)
+                            if (isDarkMode()) AccentPalette.surface(Color.rgb(130, 138, 151), red, 0.38f)
+                            else AccentPalette.surface(Color.rgb(160, 168, 181), red, 0.34f)
                         )
                     }
                     background = android.graphics.drawable.RippleDrawable(
                         android.content.res.ColorStateList.valueOf(
-                            if (isDarkMode()) Color.argb(86, 190, 198, 210)
-                            else Color.argb(62, 140, 148, 160)
+                            Color.argb(if (isDarkMode()) 86 else 62, Color.red(red), Color.green(red), Color.blue(red))
                         ),
                         surface,
                         GradientDrawable().apply {
@@ -314,14 +339,14 @@ internal class GameLibraryRenderer(
                     text = game.platform
                     importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
                     textSize = 9f
-                    setTextColor(Color.rgb(20, 23, 29))
+                    setTextColor(accentForeground())
                     typeface = android.graphics.Typeface.create(
                         "sans-serif-medium", android.graphics.Typeface.BOLD
                     )
                     gravity = Gravity.CENTER
                     setPadding(dp(8), dp(4), dp(8), dp(4))
                     background = GradientDrawable().apply {
-                        setColor(Color.rgb(190, 198, 210))
+                        setColor(red)
                         cornerRadius = dp(9).toFloat()
                     }
                 }
@@ -341,15 +366,19 @@ internal class GameLibraryRenderer(
                         text = languageLabel
                         importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
                         textSize = 9f
-                        setTextColor(if (isDarkMode()) Color.WHITE else Color.rgb(34, 39, 47))
+                        setTextColor(accentForeground())
                         typeface = android.graphics.Typeface.create(
                             "sans-serif-medium", android.graphics.Typeface.BOLD
                         )
                         gravity = Gravity.CENTER
                         setPadding(dp(8), dp(4), dp(8), dp(4))
-                        background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                            if (isDarkMode()) intArrayOf(Color.rgb(43, 47, 55), Color.rgb(25, 28, 34))
-                            else intArrayOf(Color.rgb(250, 251, 253), Color.rgb(205, 212, 222))).apply {
+                        background = GradientDrawable(
+                            GradientDrawable.Orientation.TL_BR,
+                            intArrayOf(
+                                red,
+                                Color.rgb((Color.red(red) * 0.72f).toInt(), (Color.green(red) * 0.72f).toInt(), (Color.blue(red) * 0.72f).toInt())
+                            )
+                        ).apply {
                             cornerRadius = dp(9).toFloat()
                             setStroke(dp(1), if (isDarkMode()) Color.argb(210, 145, 153, 166)
                                 else Color.rgb(132, 143, 158))
@@ -366,12 +395,12 @@ internal class GameLibraryRenderer(
                 if (game.isFavorite) {
                     val favoriteBadge = ImageView(activity).apply {
                         setImageResource(com.marcorx6.library.R.drawable.ic_nav_favorites)
-                        imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(20, 23, 29))
+                        imageTintList = android.content.res.ColorStateList.valueOf(accentForeground())
                         scaleType = ImageView.ScaleType.CENTER_INSIDE
                         importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
                         setPadding(dp(6), dp(6), dp(6), dp(6))
                         background = GradientDrawable().apply {
-                            setColor(Color.rgb(190, 198, 210))
+                            setColor(red)
                             cornerRadius = dp(17).toFloat()
                         }
                     }
@@ -392,12 +421,15 @@ internal class GameLibraryRenderer(
                     image.scaleType = ImageView.ScaleType.CENTER_INSIDE
                 }
                 imageFrame.background = GradientDrawable().apply {
-                    setColor(if (isDarkMode()) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247))
+                    setColor(
+                        if (isDarkMode()) AccentPalette.surface(Color.rgb(8, 9, 12), red, 0.08f)
+                        else AccentPalette.surface(Color.rgb(242, 244, 247), red, 0.05f)
+                    )
                     cornerRadius = dp(13).toFloat()
                     setStroke(
                         dp(1),
-                        if (isDarkMode()) Color.argb(125, 130, 138, 151)
-                        else Color.argb(135, 160, 168, 181)
+                        if (isDarkMode()) AccentPalette.surface(Color.rgb(130, 138, 151), red, 0.32f)
+                        else AccentPalette.surface(Color.rgb(160, 168, 181), red, 0.28f)
                     )
                 }
                 card.addView(imageFrame, LinearLayout.LayoutParams(-1, dp(if (gridMode) 208 else 164)))
@@ -448,7 +480,7 @@ internal class GameLibraryRenderer(
                         com.marcorx6.library.R.drawable.ic_engagement_rating,
                         tr("التقييمات"),
                         ratingValue,
-                        Color.rgb(190, 198, 210)
+                        red
                     ),
                     LinearLayout.LayoutParams(0, -2, 1f)
                 )
@@ -457,7 +489,7 @@ internal class GameLibraryRenderer(
                         com.marcorx6.library.R.drawable.ic_engagement_views,
                         tr("المشاهدات"),
                         viewsValue,
-                        Color.rgb(190, 198, 210)
+                        red
                     ),
                     LinearLayout.LayoutParams(0, -2, 1f)
                 )

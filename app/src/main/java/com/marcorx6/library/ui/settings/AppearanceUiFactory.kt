@@ -1,5 +1,7 @@
 package com.marcorx6.library.ui
 
+import com.marcorx6.library.AppDiagnostics
+
 import android.app.Activity
 import android.app.AlertDialog
 import android.graphics.Color
@@ -20,6 +22,7 @@ import android.widget.TextView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import java.util.WeakHashMap
 
 /**
  * Context-bound appearance and formatting helpers extracted from MainActivity.
@@ -36,13 +39,113 @@ internal class AppearanceUiFactory(
     private val red: () -> Int,
     private val white: () -> Int,
     private val gray: () -> Int,
-    private val accentForeground: () -> Int
+    private val accentForeground: () -> Int,
+    private val selectedAccentId: () -> String
 ) {
+
+    // Cached once: applyUnifiedSkin traverses large view trees and these exact
+    // legacy tokens are checked for every text, icon, gradient and outline.
+    private val lightLegacyAccentTokens = setOf(
+        Color.rgb(190, 198, 210),
+        Color.rgb(205, 211, 220),
+        Color.rgb(205, 212, 222),
+        Color.rgb(210, 216, 225),
+        Color.rgb(220, 224, 231)
+    )
+    private val darkLegacyAccentTokens = setOf(
+        Color.rgb(105, 113, 126),
+        Color.rgb(104, 113, 126),
+        Color.rgb(105, 116, 132),
+        Color.rgb(75, 83, 96),
+        Color.rgb(65, 72, 84),
+        Color.rgb(65, 73, 86)
+    )
+
+    private val paletteAccentTokens = AccentPalette.options.map { it.color and 0x00FFFFFF }.toSet()
+    private val paletteDarkAccentTokens = AccentPalette.options.map { option ->
+        Color.rgb(
+            (Color.red(option.color) * 0.72f).toInt(),
+            (Color.green(option.color) * 0.72f).toInt(),
+            (Color.blue(option.color) * 0.72f).toInt()
+        ) and 0x00FFFFFF
+    }.toSet()
+
+    // Surfaces produced by AccentPalette.surface() are deliberately tinted and
+    // therefore are not grayscale. Remember every supported source blend so an
+    // already-open screen can move from its previous accent to the next one.
+    private val accentSurfaceTokens: Map<Int, Pair<Int, Float>> = run {
+        val bases = listOf(
+            Color.rgb(8, 9, 12) to 0.20f,
+            Color.rgb(245, 247, 250) to 0.10f,
+            Color.rgb(25, 28, 34) to 0.30f,
+            Color.rgb(224, 229, 237) to 0.20f,
+            Color.rgb(35, 38, 45) to 0.28f,
+            Color.rgb(15, 17, 22) to 0.22f,
+            Color.WHITE to 0.16f,
+            Color.rgb(68, 76, 91) to 0.24f,
+            Color.rgb(30, 35, 45) to 0.18f,
+            Color.rgb(12, 15, 21) to 0.12f,
+            Color.rgb(250, 251, 253) to 0.10f,
+            Color.rgb(220, 225, 232) to 0.14f,
+            Color.rgb(185, 193, 204) to 0.16f
+        )
+        AccentPalette.options.flatMap { option ->
+            bases.map { (base, amount) ->
+                (AccentPalette.surface(base, option.color, amount, option.id) and 0x00FFFFFF) to (base to amount)
+            }
+        }.toMap()
+    }
+
+    // Keep the unthemed source values. Without these snapshots, the first palette
+    // pass permanently turns a neutral surface into a saturated color; the next
+    // pass then mistakes that previous accent for branded artwork and leaves it.
+    // Weak keys let detached RecyclerView/dialog rows be collected normally.
+    private val originalBackgrounds = WeakHashMap<View, android.graphics.drawable.Drawable.ConstantState>()
+    private val originalTextColors = WeakHashMap<TextView, android.content.res.ColorStateList>()
+    private val originalImageTints = WeakHashMap<ImageView, android.content.res.ColorStateList>()
+    private val originalCompoundTints = WeakHashMap<TextView, android.content.res.ColorStateList>()
+
+    // Accent-surface inference is intentionally conservative and can require several
+    // candidate checks. Cache both matches and misses so repeated legacy colors do not
+    // repeat that work during every full-screen skin pass.
+    private val recoveredAccentSurfaceCache = LinkedHashMap<Pair<Int, String>, Int?>()
+
+    private fun restoreOriginalStyle(view: View) {
+        if (view !is EditText && view.background != null) {
+            val saved = originalBackgrounds[view]
+            if (saved == null) {
+                view.background.constantState?.let { originalBackgrounds[view] = it }
+            } else {
+                view.background = saved.newDrawable(activity.resources).mutate()
+            }
+        }
+        if (view is TextView) {
+            val savedText = originalTextColors[view]
+            if (savedText == null) originalTextColors[view] = view.textColors
+            else view.setTextColor(savedText)
+            if (android.os.Build.VERSION.SDK_INT >= 23) {
+                val tint = view.compoundDrawableTintList
+                if (tint != null) {
+                    val savedTint = originalCompoundTints[view]
+                    if (savedTint == null) originalCompoundTints[view] = tint
+                    else view.compoundDrawableTintList = savedTint
+                }
+            }
+        }
+        if (view is ImageView) {
+            val tint = view.imageTintList
+            if (tint != null) {
+                val savedTint = originalImageTints[view]
+                if (savedTint == null) originalImageTints[view] = tint
+                else view.imageTintList = savedTint
+            }
+        }
+    }
 
     private fun glassRipple(): android.graphics.drawable.Drawable =
         android.graphics.drawable.RippleDrawable(
             android.content.res.ColorStateList.valueOf(
-                if (isDarkMode()) Color.argb(78, 190, 198, 210) else Color.argb(58, 145, 153, 165)
+                Color.argb(if (isDarkMode()) 78 else 58, Color.red(red()), Color.green(red()), Color.blue(red()))
             ),
             null,
             android.graphics.drawable.ColorDrawable(Color.WHITE)
@@ -58,14 +161,22 @@ internal class AppearanceUiFactory(
             base?.alpha = if (view.tag == "marco_primary_action") 224 else if (isDarkMode()) 198 else 210
             if (base != null) view.background = base
         }
-        if (android.os.Build.VERSION.SDK_INT >= 23 && view.foreground == null) {
-            view.foreground = glassRipple()
+        if (android.os.Build.VERSION.SDK_INT >= 23) {
+            val accentRipple = android.content.res.ColorStateList.valueOf(
+                Color.argb(if (isDarkMode()) 78 else 58, Color.red(red()), Color.green(red()), Color.blue(red()))
+            )
+            val existingForeground = view.foreground
+            if (existingForeground is android.graphics.drawable.RippleDrawable) {
+                existingForeground.setColor(accentRipple)
+            } else if (existingForeground == null) {
+                view.foreground = glassRipple()
+            }
         } else if (view.background != null && view.background !is android.graphics.drawable.RippleDrawable &&
             view.foreground == null) {
             val base = view.background.constantState?.newDrawable()?.mutate() ?: view.background.mutate()
             view.background = android.graphics.drawable.RippleDrawable(
                 android.content.res.ColorStateList.valueOf(
-                    if (isDarkMode()) Color.argb(78, 190, 198, 210) else Color.argb(58, 145, 153, 165)
+                    Color.argb(if (isDarkMode()) 78 else 58, Color.red(red()), Color.green(red()), Color.blue(red()))
                 ),
                 base,
                 android.graphics.drawable.ColorDrawable(Color.WHITE)
@@ -74,15 +185,25 @@ internal class AppearanceUiFactory(
     }
 
     fun stylePrimaryButton(button: Button, primary: Boolean = false) {
+        val blackSilver = selectedAccentId() == "black_silver"
+        val primaryStops = if (blackSilver) {
+            intArrayOf(Color.rgb(43, 47, 55), Color.rgb(8, 9, 12))
+        } else {
+            intArrayOf(
+                Color.argb(238, Color.red(red()), Color.green(red()), Color.blue(red())),
+                Color.argb(220, (Color.red(red()) * 0.95f).toInt(), (Color.green(red()) * 0.95f).toInt(), (Color.blue(red()) * 0.95f).toInt())
+            )
+        }
         button.background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-            if (primary) intArrayOf(Color.argb(238, 220, 224, 231), Color.argb(220, 150, 160, 174))
+            if (primary) primaryStops
             else if (isDarkMode()) intArrayOf(Color.argb(205, 34, 37, 44), Color.argb(190, 15, 17, 22))
             else intArrayOf(Color.argb(218, 255, 255, 255), Color.argb(205, 225, 228, 234))).apply {
             cornerRadius = dp(16).toFloat()
-            setStroke(dp(1), if (primary) Color.argb(190, 150, 160, 174)
+            setStroke(dp(1), if (primary) Color.argb(220, Color.red(red()), Color.green(red()), Color.blue(red()))
                 else if (isDarkMode()) Color.argb(165, 130, 138, 151) else Color.argb(175, 160, 168, 181))
         }
-        button.setTextColor(if (primary) accentForeground() else white())
+        button.setTextColor(if (primary && blackSilver) Color.rgb(225, 231, 240)
+            else if (primary) accentForeground() else white())
         button.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
         button.textSize = 13.5f
         button.isAllCaps = false
@@ -98,84 +219,247 @@ internal class AppearanceUiFactory(
      * Recolors only neutral grayscale surfaces. Accent-colored controls, artwork,
      * and custom illustrations are intentionally left untouched.
      */
+    /**
+     * Legacy pages contain several historical shades of MARCO silver for primary
+     * actions (including separate light/dark variants). Resolve those exact tokens
+     * centrally so older screens inherit the selected accent without recoloring
+     * ordinary neutral text, borders, or black/silver surfaces.
+     */
+    private fun recoverAccentSurface(color: Int): Int? {
+        val activeId = selectedAccentId()
+        val cacheKey = color to activeId
+        synchronized(recoveredAccentSurfaceCache) {
+            if (recoveredAccentSurfaceCache.containsKey(cacheKey)) {
+                return recoveredAccentSurfaceCache[cacheKey]
+            }
+        }
+
+        val observedRed = Color.red(color)
+        val observedGreen = Color.green(color)
+        val observedBlue = Color.blue(color)
+        var recovered: Int? = null
+        optionLoop@ for (option in AccentPalette.options) {
+            if (option.id == "black_silver" || option.id == activeId) continue
+            for (step in 5..100) {
+                val amount = step * 0.005f
+                val remainder = 1f - amount
+                val baseRed = ((observedRed - Color.red(option.color) * amount) / remainder).toInt()
+                val baseGreen = ((observedGreen - Color.green(option.color) * amount) / remainder).toInt()
+                val baseBlue = ((observedBlue - Color.blue(option.color) * amount) / remainder).toInt()
+                if (baseRed !in 0..255 || baseGreen !in 0..255 || baseBlue !in 0..255) continue
+                val base = Color.rgb(baseRed, baseGreen, baseBlue)
+                val hsv = FloatArray(3)
+                Color.colorToHSV(base, hsv)
+                if (hsv[1] > 0.24f) continue
+                val expected = AccentPalette.surface(base, option.color, amount, option.id)
+                if (kotlin.math.abs(Color.red(expected) - observedRed) <= 1 &&
+                    kotlin.math.abs(Color.green(expected) - observedGreen) <= 1 &&
+                    kotlin.math.abs(Color.blue(expected) - observedBlue) <= 1
+                ) {
+                    val replacement = AccentPalette.surface(base, red(), amount, activeId)
+                    recovered = Color.argb(
+                        Color.alpha(color),
+                        Color.red(replacement),
+                        Color.green(replacement),
+                        Color.blue(replacement)
+                    )
+                    break@optionLoop
+                }
+            }
+        }
+        synchronized(recoveredAccentSurfaceCache) {
+            if (recoveredAccentSurfaceCache.size >= 256) {
+                val oldest = recoveredAccentSurfaceCache.keys.iterator()
+                if (oldest.hasNext()) {
+                    oldest.next()
+                    oldest.remove()
+                }
+            }
+            recoveredAccentSurfaceCache[cacheKey] = recovered
+        }
+        return recovered
+    }
+
+    private fun legacyAccentReplacement(color: Int, includeSurfaceBlend: Boolean = true): Int? {
+        val rgb = color and 0x00FFFFFF
+        val previousSurface = if (includeSurfaceBlend) accentSurfaceTokens[rgb] else null
+        if (previousSurface != null) {
+            val replacement = AccentPalette.surface(previousSurface.first, red(), previousSurface.second, selectedAccentId())
+            return Color.argb(Color.alpha(color), Color.red(replacement), Color.green(replacement), Color.blue(replacement))
+        }
+        if (includeSurfaceBlend) recoverAccentSurface(color)?.let { return it }
+        val isDarkAccent = rgb in darkLegacyAccentTokens || rgb in paletteDarkAccentTokens
+        val isAccent = isDarkAccent || rgb in lightLegacyAccentTokens || rgb in paletteAccentTokens
+        if (!isAccent) return null
+        val accent = red()
+        val factor = if (isDarkAccent) 0.72f else 1f
+        return Color.argb(
+            Color.alpha(color),
+            (Color.red(accent) * factor).toInt().coerceIn(0, 255),
+            (Color.green(accent) * factor).toInt().coerceIn(0, 255),
+            (Color.blue(accent) * factor).toInt().coerceIn(0, 255)
+        )
+    }
+
     private fun themedNeutralColor(color: Int, background: Boolean): Int? {
+        legacyAccentReplacement(color, includeSurfaceBlend = background)?.let { return it }
         val hsv = FloatArray(3)
         Color.colorToHSV(color, hsv)
-        // Include blue-tinted charcoal/silver neutrals used by legacy account and message cards,
-        // while leaving genuinely colored accents and artwork untouched.
+        // Keep photographs, game artwork and intentionally colored illustrations intact.
+        // Neutral surfaces, however, must all inherit a visible tint from the selected
+        // accent instead of only changing the few legacy silver tokens we knew in advance.
         if (hsv[1] > 0.32f) return null
         val value = hsv[2]
         val replacement = if (background) {
-            if (isDarkMode()) {
+            val amount = if (isDarkMode()) {
                 when {
-                    value >= 0.88f -> panel()
-                    value <= 0.10f -> bg()
-                    value <= 0.25f -> panel()
-                    else -> return null
+                    value <= 0.10f -> 0.22f
+                    value >= 0.88f -> 0.15f
+                    else -> 0.20f
                 }
             } else {
                 when {
-                    value <= 0.07f -> bg()
-                    value <= 0.90f -> panel()
-                    value >= 0.97f -> Color.WHITE
-                    else -> return null
+                    value <= 0.08f -> 0.13f
+                    value >= 0.90f -> 0.10f
+                    else -> 0.15f
                 }
             }
+            AccentPalette.surface(color, red(), amount, selectedAccentId())
         } else {
-            if (isDarkMode()) {
-                // Replace legacy dark-gray labels too, not only near-black text.
-                // This is important for views created before the current palette.
-                when {
-                    value <= 0.55f -> white()
-                    else -> return null
-                }
+            // Neutral text must follow the surface mode, not the selected accent.
+            // Black & Silver uses readable silver on black and charcoal on light;
+            // other palettes use the same semantic contrast rule so changing accent
+            // never leaves legacy neutral labels washed out or nearly invisible.
+            val foreground = if (isDarkMode()) {
+                if (selectedAccentId() == "black_silver") Color.rgb(218, 225, 235)
+                else Color.rgb(245, 247, 250)
             } else {
-                // Silver/white labels from old dark-only screens become readable
-                // charcoal labels on the light surface.
-                when {
-                    value >= 0.45f -> white()
-                    else -> return null
-                }
+                Color.rgb(25, 29, 36)
             }
+            if (background) return null
+            foreground
         }
         return Color.argb(Color.alpha(color), Color.red(replacement),
             Color.green(replacement), Color.blue(replacement))
     }
 
-    private fun rethemeBackground(drawable: android.graphics.drawable.Drawable?) {
+    private fun rethemeBackground(drawable: android.graphics.drawable.Drawable?): Boolean {
         when (drawable) {
             is android.graphics.drawable.ColorDrawable -> {
+                val accent = legacyAccentReplacement(drawable.color)
+                if (accent != null) {
+                    drawable.setColor(accent)
+                    return true
+                }
                 themedNeutralColor(drawable.color, true)?.let(drawable::setColor)
             }
             is GradientDrawable -> {
                 if (android.os.Build.VERSION.SDK_INT >= 29) {
-                    // Modern Android exposes gradient stops; retint neutral legacy
-                    // black/white gradients as well as single-colour card fills.
+                    // Resolve known legacy accent stops before neutral surface colors.
                     val stops = drawable.colors
                     if (stops != null) {
+                        var containsAccent = false
                         val themed = stops.map { color ->
-                            themedNeutralColor(color, true) ?: color
+                            val accent = legacyAccentReplacement(color)
+                            if (accent != null) {
+                                containsAccent = true
+                                accent
+                            } else themedNeutralColor(color, true) ?: color
                         }.toIntArray()
                         if (!stops.contentEquals(themed)) drawable.colors = themed
+                        return containsAccent
                     } else {
-                        // Most account/message cards use a solid GradientDrawable,
-                        // whose colors array is null even on current Android.
                         drawable.color?.defaultColor?.let { current ->
+                            val accent = legacyAccentReplacement(current)
+                            if (accent != null) {
+                                drawable.setColor(accent)
+                                return true
+                            }
                             themedNeutralColor(current, true)?.let(drawable::setColor)
                         }
                     }
                 } else if (android.os.Build.VERSION.SDK_INT >= 24) {
                     val current = drawable.color?.defaultColor
-                    if (current != null) themedNeutralColor(current, true)?.let(drawable::setColor)
+                    if (current != null) {
+                        val accent = legacyAccentReplacement(current)
+                        if (accent != null) {
+                            drawable.setColor(accent)
+                            return true
+                        }
+                        themedNeutralColor(current, true)?.let(drawable::setColor)
+                    }
                 }
             }
             is android.graphics.drawable.RippleDrawable -> {
-                if (drawable.numberOfLayers > 0) rethemeBackground(drawable.getDrawable(0))
+                var changed = false
+                for (index in 0 until drawable.numberOfLayers) {
+                    if (rethemeBackground(drawable.getDrawable(index))) changed = true
+                }
+                return changed
+            }
+            is android.graphics.drawable.StateListDrawable -> {
+                // Enumerating every state is only exposed by the public API from
+                // Android 10. Retheme the active child using the API-1 accessor;
+                // never reflect into hidden framework state on older devices.
+                return rethemeBackground(drawable.current)
+            }
+            is android.graphics.drawable.LayerDrawable -> {
+                var changed = false
+                for (index in 0 until drawable.numberOfLayers) {
+                    if (rethemeBackground(drawable.getDrawable(index))) changed = true
+                }
+                return changed
+            }
+            is android.graphics.drawable.InsetDrawable -> {
+                return rethemeBackground(drawable.drawable)
+            }
+            is android.graphics.drawable.ScaleDrawable -> {
+                return rethemeBackground(drawable.drawable)
+            }
+            is android.graphics.drawable.ClipDrawable -> {
+                return rethemeBackground(drawable.drawable)
             }
         }
+        return false
+    }
+
+    private fun foregroundForBackground(drawable: android.graphics.drawable.Drawable?): Int {
+        val colors = when (drawable) {
+            is android.graphics.drawable.ColorDrawable -> listOf(drawable.color)
+            is GradientDrawable -> if (android.os.Build.VERSION.SDK_INT >= 29) {
+                drawable.colors?.toList() ?: drawable.color?.let { listOf(it.defaultColor) }
+            } else drawable.color?.let { listOf(it.defaultColor) }
+            is android.graphics.drawable.RippleDrawable -> {
+                if (drawable.numberOfLayers > 0) {
+                    val layer = drawable.getDrawable(0)
+                    when (layer) {
+                        is android.graphics.drawable.ColorDrawable -> listOf(layer.color)
+                        is GradientDrawable -> if (android.os.Build.VERSION.SDK_INT >= 29) layer.colors?.toList() else layer.color?.let { listOf(it.defaultColor) }
+                        else -> null
+                    }
+                } else null
+            }
+            else -> null
+        }.orEmpty()
+        if (colors.isEmpty()) return accentForeground()
+        val average = Color.rgb(
+            colors.map { Color.red(it) }.average().toInt(),
+            colors.map { Color.green(it) }.average().toInt(),
+            colors.map { Color.blue(it) }.average().toInt()
+        )
+        return AccentPalette.foregroundForColor(average)
     }
 
     fun applyUnifiedSkin(view: View) {
+        // Palette swatches and the shared top bar are authored from explicit palette
+        // values. Do not reinterpret their saturated colors as legacy silver tokens.
+        // The top bar owns its children too, so skipping its subtree preserves its
+        // already-correct icon tints and accent surfaces during a global skin pass.
+        if (view.tag == "marco_palette_swatch" || view.tag == "marco_primary_topbar" ||
+            view.tag == "marco_preserve_contrast") return
+        // Always start from the original drawable/tint/text values so a second,
+        // third or later color selection replaces the previous palette cleanly.
+        restoreOriginalStyle(view)
         installGlassInteraction(view)
         // Re-theme old hard-coded black/white text and neutral card fills on every
         // newly rendered page. This catches legacy screens that do not use palette
@@ -189,11 +473,27 @@ internal class AppearanceUiFactory(
                 }
             }
         }
+        if (view is TextView && android.os.Build.VERSION.SDK_INT >= 23) {
+            // Search, publish and navigation actions frequently tint compound icons
+            // through TextView rather than using a standalone ImageView.
+            view.compoundDrawableTintList?.defaultColor?.let { current ->
+                themedNeutralColor(current, false)?.let { replacement ->
+                    view.compoundDrawableTintList = android.content.res.ColorStateList.valueOf(replacement)
+                }
+            }
+        }
         if (view !is Button && view !is EditText && view !is CheckBox && view !is RadioButton) {
             if (view is TextView) {
                 themedNeutralColor(view.currentTextColor, false)?.let(view::setTextColor)
             }
-            rethemeBackground(view.background)
+            val hasAccentSurface = rethemeBackground(view.background)
+            // Resolve text against the actual themed surface. A tinted neutral card
+            // is not the same as an accent-filled button; using accentForeground()
+            // for both made light accent colors turn card labels nearly black in
+            // dark mode. The actual drawable is now the source of truth.
+            if (hasAccentSurface && view is TextView && view !is EditText) {
+                view.setTextColor(foregroundForBackground(view.background))
+            }
         }
         if (view is TextView && view !is EditText) {
             val compoundIcons = view.compoundDrawablesRelative
@@ -221,19 +521,32 @@ internal class AppearanceUiFactory(
             // CompoundButton subclasses Button, so handle them first to avoid
             // applying the generic button background to checkboxes and radio buttons.
             is CheckBox -> {
-                view.setTextColor(white())
+                view.setTextColor(if (isDarkMode()) Color.rgb(245, 247, 250) else Color.rgb(25, 29, 36))
                 view.buttonTintList = android.content.res.ColorStateList.valueOf(red())
                 view.minHeight = dp(48)
             }
             is RadioButton -> {
-                view.setTextColor(white())
+                view.setTextColor(if (isDarkMode()) Color.rgb(245, 247, 250) else Color.rgb(25, 29, 36))
                 view.buttonTintList = android.content.res.ColorStateList.valueOf(red())
                 view.minHeight = dp(48)
             }
-            is Button -> stylePrimaryButton(view, view.tag == "marco_primary_action")
+            is Button -> {
+                val legacyPrimary = rethemeBackground(view.background)
+                stylePrimaryButton(view, view.tag == "marco_primary_action" || legacyPrimary)
+            }
+            is android.widget.RatingBar -> {
+                view.progressTintList = android.content.res.ColorStateList.valueOf(red())
+                view.secondaryProgressTintList = android.content.res.ColorStateList.valueOf(
+                    Color.argb(95, Color.red(red()), Color.green(red()), Color.blue(red()))
+                )
+            }
             is SeekBar -> {
                 view.progressTintList = android.content.res.ColorStateList.valueOf(red())
                 view.thumbTintList = android.content.res.ColorStateList.valueOf(red())
+            }
+            is android.widget.ProgressBar -> {
+                view.progressTintList = android.content.res.ColorStateList.valueOf(red())
+                view.indeterminateTintList = android.content.res.ColorStateList.valueOf(red())
             }
             is Spinner -> {
                 view.backgroundTintList = android.content.res.ColorStateList.valueOf(gray())
@@ -241,16 +554,48 @@ internal class AppearanceUiFactory(
             }
         }
         if (view is ViewGroup) {
-            for (i in 0 until view.childCount) applyUnifiedSkin(view.getChildAt(i))
+            // Snapshot the child count before recursion. If a child fails while being
+            // rethemed, record the exact parent/child position and rethrow the original
+            // exception; never hide a broken view by silently skipping it.
+            val childCount = view.childCount
+            for (index in 0 until childCount) {
+                val child = view.getChildAt(index) ?: continue
+                try {
+                    applyUnifiedSkin(child)
+                } catch (error: Exception) {
+                    val childId = runCatching {
+                        if (child.id == View.NO_ID) "no-id"
+                        else child.resources.getResourceEntryName(child.id)
+                    }.getOrDefault("id-${child.id}")
+                    AppDiagnostics.log(
+                        "ERROR",
+                        "AppearanceSkin",
+                        "Skin traversal failed parent=${view.javaClass.simpleName} " +
+                            "childIndex=$index child=${child.javaClass.simpleName} childId=$childId",
+                        error
+                    )
+                    throw error
+                }
+            }
         }
     }
 
     fun styleAlertDialog(dialog: AlertDialog) {
         dialog.window?.setBackgroundDrawable(GradientDrawable(GradientDrawable.Orientation.TL_BR,
-            if (isDarkMode()) intArrayOf(Color.rgb(25, 28, 34), Color.rgb(8, 9, 12))
-            else intArrayOf(Color.WHITE, Color.rgb(242, 244, 247))).apply {
+            if (isDarkMode()) intArrayOf(
+                AccentPalette.surface(Color.rgb(25, 28, 34), red(), 0.22f, selectedAccentId()),
+                AccentPalette.surface(Color.rgb(8, 9, 12), red(), 0.16f, selectedAccentId())
+            ) else intArrayOf(
+                AccentPalette.surface(Color.WHITE, red(), 0.10f, selectedAccentId()),
+                AccentPalette.surface(Color.rgb(242, 244, 247), red(), 0.14f, selectedAccentId())
+            )).apply {
             cornerRadius = dp(24).toFloat()
-            setStroke(dp(1), if (isDarkMode()) Color.rgb(130, 138, 151) else Color.rgb(211, 215, 222))
+            setStroke(dp(1), AccentPalette.surface(
+                if (isDarkMode()) Color.rgb(130, 138, 151) else Color.rgb(180, 188, 200),
+                red(),
+                0.48f,
+                selectedAccentId()
+            ))
         })
         dialog.window?.let { window ->
             // Dialogs are separate Windows: apply the same immersive/IME policy
@@ -324,12 +669,23 @@ internal class AppearanceUiFactory(
     private fun inputBackground(): android.graphics.drawable.StateListDrawable =
         android.graphics.drawable.StateListDrawable().apply {
             val fill = if (isDarkMode()) {
-                intArrayOf(Color.rgb(35, 38, 45), Color.rgb(15, 17, 22))
+                intArrayOf(
+                    AccentPalette.surface(Color.rgb(35, 38, 45), red(), 0.24f, selectedAccentId()),
+                    AccentPalette.surface(Color.rgb(15, 17, 22), red(), 0.19f, selectedAccentId())
+                )
             } else {
-                intArrayOf(Color.WHITE, Color.rgb(225, 228, 234))
+                intArrayOf(
+                    AccentPalette.surface(Color.WHITE, red(), 0.13f, selectedAccentId()),
+                    AccentPalette.surface(Color.rgb(225, 228, 234), red(), 0.17f, selectedAccentId())
+                )
             }
-            val normalStroke = if (isDarkMode()) Color.rgb(130, 138, 151) else Color.rgb(160, 168, 181)
-            val focusedStroke = Color.rgb(190, 198, 210)
+            val normalStroke = AccentPalette.surface(
+                if (isDarkMode()) Color.rgb(130, 138, 151) else Color.rgb(160, 168, 181),
+                red(),
+                0.48f,
+                selectedAccentId()
+            )
+            val focusedStroke = red()
             addState(intArrayOf(android.R.attr.state_focused), GradientDrawable(
                 GradientDrawable.Orientation.TL_BR, fill
             ).apply {
@@ -345,12 +701,25 @@ internal class AppearanceUiFactory(
         }
 
     private fun styleInput(input: EditText) {
+        // Input foregrounds are semantic colors, never derived from the selected
+        // accent. This keeps typed text readable even when the accent is very light
+        // (silver/yellow/pink) or very dark, in both app appearance modes.
+        val inputForeground = if (isDarkMode()) Color.rgb(245, 247, 250)
+            else Color.rgb(25, 29, 36)
+        val inputHint = if (isDarkMode()) Color.rgb(178, 184, 194)
+            else Color.rgb(91, 98, 110)
         input.background = inputBackground()
         input.setPadding(dp(14), dp(12), dp(14), dp(12))
         input.minHeight = dp(54)
         input.textSize = 14f
-        input.setTextColor(white())
-        input.setHintTextColor(gray())
+        input.setTextColor(android.content.res.ColorStateList.valueOf(inputForeground))
+        input.setHintTextColor(android.content.res.ColorStateList.valueOf(inputHint))
+        input.highlightColor = Color.argb(
+            76, Color.red(red()), Color.green(red()), Color.blue(red())
+        )
+        if (android.os.Build.VERSION.SDK_INT >= 29) {
+            input.textCursorDrawable?.setTint(red())
+        }
         input.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
     }
 

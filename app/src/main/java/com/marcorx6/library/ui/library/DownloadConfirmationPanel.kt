@@ -44,13 +44,28 @@ internal class DownloadConfirmationPanel(
         fun dp(value: Int): Int =
             (value * activity.resources.displayMetrics.density).toInt()
 
-        val background = if (dark) Color.rgb(13, 15, 19) else Color.rgb(247, 248, 250)
-        val surface = if (dark) Color.rgb(27, 30, 36) else Color.WHITE
-        val raised = if (dark) Color.rgb(36, 40, 47) else Color.rgb(239, 242, 246)
-        val silver = if (dark) Color.rgb(207, 214, 224) else Color.rgb(91, 101, 116)
+        val appearance = AppearancePreferencesStore.appearance(activity)
+        val selectedAccentId = appearance.getString(
+            AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID
+        ) ?: AccentPalette.DEFAULT_ID
+        val silver = AccentPalette.color(selectedAccentId)
+        val accentText = if (selectedAccentId == "black_silver") {
+            if (dark) Color.rgb(218, 225, 235) else Color.rgb(43, 49, 59)
+        } else silver
+        val background = AccentPalette.surface(
+            if (dark) Color.rgb(13, 15, 19) else Color.rgb(247, 248, 250), silver, 0.045f
+        )
+        val surface = AccentPalette.surface(
+            if (dark) Color.rgb(27, 30, 36) else Color.WHITE, silver, if (dark) 0.10f else 0.055f
+        )
+        val raised = AccentPalette.surface(
+            if (dark) Color.rgb(36, 40, 47) else Color.rgb(239, 242, 246), silver, if (dark) 0.13f else 0.075f
+        )
         val heading = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
         val muted = if (dark) Color.rgb(157, 166, 179) else Color.rgb(103, 111, 124)
-        val border = if (dark) Color.rgb(69, 77, 90) else Color.rgb(211, 216, 224)
+        val border = if (dark)
+            AccentPalette.surface(Color.rgb(69, 77, 90), silver, 0.40f)
+        else AccentPalette.surface(Color.rgb(211, 216, 224), silver, 0.34f)
 
         fun shape(fill: Int, stroke: Int = border, radius: Int = 15) =
             GradientDrawable().apply {
@@ -140,7 +155,7 @@ internal class DownloadConfirmationPanel(
             textSize = 10f
             setTypeface(null, Typeface.BOLD)
             gravity = Gravity.CENTER
-            setTextColor(if (dark) Color.rgb(22, 25, 31) else Color.WHITE)
+            setTextColor(AccentPalette.foregroundForColor(silver))
             this.background = GradientDrawable().apply {
                 setColor(silver)
                 cornerRadius = dp(12).toFloat()
@@ -258,7 +273,7 @@ internal class DownloadConfirmationPanel(
             text = translate("إلغاء")
             textSize = 12f
             gravity = Gravity.CENTER
-            setTextColor(silver)
+            setTextColor(accentText)
             this.background = shape(surface)
             isClickable = true
             isFocusable = true
@@ -272,10 +287,10 @@ internal class DownloadConfirmationPanel(
             textSize = 13f
             setTypeface(null, Typeface.BOLD)
             gravity = Gravity.CENTER
-            setTextColor(if (dark) Color.rgb(19, 22, 28) else Color.WHITE)
+            setTextColor(AccentPalette.foregroundForColor(silver))
             setCompoundDrawablesRelativeWithIntrinsicBounds(com.marcorx6.library.R.drawable.ic_action_download, 0, 0, 0)
             compoundDrawablePadding = dp(7)
-            compoundDrawableTintList = android.content.res.ColorStateList.valueOf(if (dark) Color.rgb(19, 22, 28) else Color.WHITE)
+            compoundDrawableTintList = android.content.res.ColorStateList.valueOf(AccentPalette.foregroundForColor(silver))
             this.background = GradientDrawable().apply {
                 setColor(silver)
                 cornerRadius = dp(15).toFloat()

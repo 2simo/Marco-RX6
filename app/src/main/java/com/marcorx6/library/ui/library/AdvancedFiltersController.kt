@@ -29,13 +29,13 @@ internal class AdvancedFiltersController(
             orientation = LinearLayout.VERTICAL
             setPadding(dp(20), dp(8), dp(20), dp(4))
         }
-        box.addView(makeText(translate("نوع اللعبة"), 12f, android.graphics.Color.rgb(190, 198, 210), true))
+        box.addView(makeText(translate("نوع اللعبة"), 12f, red, true))
         val genreSpinner = Spinner(activity).apply {
             adapter = ArrayAdapter(activity, android.R.layout.simple_spinner_dropdown_item, genreValues)
             setSelection(genreValues.indexOf(selectedGenre.takeIf { it.isNotBlank() } ?: translate("كل الأنواع")).coerceAtLeast(0))
         }
         box.addView(genreSpinner)
-        box.addView(makeText(translate("سنة الإصدار"), 12f, android.graphics.Color.rgb(190, 198, 210), true).apply { setPadding(0, dp(12), 0, 0) })
+        box.addView(makeText(translate("سنة الإصدار"), 12f, red, true).apply { setPadding(0, dp(12), 0, 0) })
         val yearSpinner = Spinner(activity).apply {
             adapter = ArrayAdapter(activity, android.R.layout.simple_spinner_dropdown_item, yearValues)
             setSelection(yearValues.indexOf(selectedYear.takeIf { it.isNotBlank() } ?: translate("كل السنوات")).coerceAtLeast(0))

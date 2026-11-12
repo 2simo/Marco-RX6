@@ -28,6 +28,7 @@ internal object UiDiagnosticsMonitor {
             installedWindows[window] = true
         }
 
+        if (owner != "AlertDialog") AppDiagnostics.setScreen(owner)
         val decor = window.decorView
         AppDiagnostics.log(
             "INFO",

@@ -17,6 +17,7 @@ internal class GameDetailsIdentityViewFactory(
     private val dp: (Int) -> Int,
     private val makeText: (String, Float, Int, Boolean) -> TextView,
     private val isDarkMode: () -> Boolean,
+    private val red: () -> Int,
     private val loadCover: (ImageView, String, String) -> Unit,
     private val loadDownloads: (Game, (Long) -> Unit) -> Unit,
     private val translate: (String) -> String,
@@ -53,11 +54,18 @@ internal class GameDetailsIdentityViewFactory(
             setPadding(dp(12), dp(12), dp(12), dp(12))
             background = GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
-                if (dark) intArrayOf(Color.rgb(25, 28, 34), Color.rgb(8, 9, 12))
-                else intArrayOf(Color.WHITE, Color.rgb(242, 244, 247))
+                if (dark) intArrayOf(
+                    AccentPalette.surface(Color.rgb(25, 28, 34), red(), 0.13f),
+                    AccentPalette.surface(Color.rgb(8, 9, 12), red(), 0.10f)
+                ) else intArrayOf(
+                    AccentPalette.surface(Color.WHITE, red(), 0.07f),
+                    AccentPalette.surface(Color.rgb(242, 244, 247), red(), 0.10f)
+                )
             ).apply {
                 cornerRadius = dp(22).toFloat()
-                setStroke(dp(1), if (dark) Color.argb(170, 130, 138, 151) else Color.rgb(160, 168, 181))
+                setStroke(dp(1), if (dark)
+                    AccentPalette.surface(Color.rgb(130, 138, 151), red(), 0.38f)
+                else AccentPalette.surface(Color.rgb(160, 168, 181), red(), 0.32f))
             }
             elevation = dp(3).toFloat()
         }
@@ -118,9 +126,13 @@ internal class GameDetailsIdentityViewFactory(
             gravity = android.view.Gravity.CENTER_VERTICAL
             setPadding(dp(10), dp(7), dp(11), dp(7))
             background = GradientDrawable().apply {
-                setColor(if (dark) Color.rgb(35, 38, 45) else Color.rgb(232, 234, 238))
+                setColor(if (dark)
+                    AccentPalette.surface(Color.rgb(35, 38, 45), red(), 0.16f)
+                else AccentPalette.surface(Color.rgb(232, 234, 238), red(), 0.10f))
                 cornerRadius = dp(13).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(105, 113, 126) else Color.rgb(190, 198, 210))
+                setStroke(dp(1), if (dark)
+                    AccentPalette.surface(Color.rgb(105, 113, 126), red(), 0.34f)
+                else AccentPalette.surface(Color.rgb(190, 198, 210), red(), 0.30f))
             }
             contentDescription = translate("عدد التنزيلات")
         }
@@ -160,9 +172,11 @@ internal class GameDetailsIdentityViewFactory(
                 orientation = LinearLayout.VERTICAL
                 setPadding(dp(13), dp(12), dp(13), dp(12))
                 background = GradientDrawable().apply {
-                    setColor(cardColor)
+                    setColor(AccentPalette.surface(cardColor, red(), if (dark) 0.10f else 0.07f))
                     cornerRadius = dp(18).toFloat()
-                    setStroke(dp(1), if (dark) Color.rgb(75, 80, 90) else Color.rgb(211, 215, 222))
+                    setStroke(dp(1), if (dark)
+                        AccentPalette.surface(Color.rgb(75, 80, 90), red(), 0.34f)
+                    else AccentPalette.surface(Color.rgb(211, 215, 222), red(), 0.30f))
                 }
                 elevation = dp(2).toFloat()
             }

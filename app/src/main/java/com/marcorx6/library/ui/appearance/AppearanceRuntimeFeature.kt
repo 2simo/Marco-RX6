@@ -24,6 +24,7 @@ internal class AppearanceRuntimeFeature(
     private val white: () -> Int,
     private val gray: () -> Int,
     private val accentForeground: () -> Int,
+    private val accentId: () -> String,
     private val showNotifications: () -> Unit,
     private val launchDownloadFolderPicker: () -> Unit,
     private val downloadFolderName: () -> String,
@@ -43,7 +44,8 @@ internal class AppearanceRuntimeFeature(
             red = red,
             white = white,
             gray = gray,
-            accentForeground = accentForeground
+            accentForeground = accentForeground,
+            accentId = accentId
         )
     }
 

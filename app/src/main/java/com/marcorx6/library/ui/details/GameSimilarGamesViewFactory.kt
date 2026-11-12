@@ -21,6 +21,7 @@ internal class GameSimilarGamesViewFactory(
     private val makeText: (String, Float, Int, Boolean) -> TextView,
     private val isDarkMode: () -> Boolean,
     private val white: () -> Int,
+    private val red: () -> Int,
     private val translate: (String) -> String,
     private val loadCover: (ImageView, String, String) -> Unit
 ) {
@@ -39,7 +40,7 @@ internal class GameSimilarGamesViewFactory(
             makeText(
                 translate("اكتشف المزيد  •  قد يعجبك أيضاً"),
                 12f,
-                if (dark) Color.rgb(190, 198, 210) else Color.rgb(130, 138, 151),
+                red(),
                 true
             ).apply { setPadding(0, 0, 0, dp(9)) }
         )
@@ -50,11 +51,18 @@ internal class GameSimilarGamesViewFactory(
                 setPadding(dp(7), dp(7), dp(7), dp(8))
                 background = GradientDrawable(
                     GradientDrawable.Orientation.TOP_BOTTOM,
-                    if (dark) intArrayOf(Color.rgb(35, 38, 45), Color.rgb(15, 17, 22))
-                    else intArrayOf(Color.WHITE, Color.rgb(242, 244, 247))
+                    if (dark) intArrayOf(
+                        AccentPalette.surface(Color.rgb(35, 38, 45), red(), 0.13f),
+                        AccentPalette.surface(Color.rgb(15, 17, 22), red(), 0.10f)
+                    ) else intArrayOf(
+                        AccentPalette.surface(Color.WHITE, red(), 0.07f),
+                        AccentPalette.surface(Color.rgb(242, 244, 247), red(), 0.10f)
+                    )
                 ).apply {
                     cornerRadius = dp(14).toFloat()
-                    setStroke(dp(1), if (dark) Color.argb(145, 130, 138, 151) else Color.rgb(160, 168, 181))
+                    setStroke(dp(1), if (dark)
+                        AccentPalette.surface(Color.rgb(130, 138, 151), red(), 0.38f)
+                    else AccentPalette.surface(Color.rgb(160, 168, 181), red(), 0.32f))
                 }
                 isClickable = true
                 isFocusable = true
@@ -89,16 +97,16 @@ internal class GameSimilarGamesViewFactory(
                 val languageBadge = TextView(activity).apply {
                     text = languageLabel
                     textSize = 8.5f
-                    setTextColor(Color.WHITE)
+                    setTextColor(AccentPalette.foregroundForColor(red()))
                     typeface = android.graphics.Typeface.create(
                         "sans-serif-medium", android.graphics.Typeface.BOLD
                     )
                     gravity = Gravity.CENTER
                     setPadding(dp(7), dp(4), dp(7), dp(4))
                     background = GradientDrawable().apply {
-                        setColor(Color.argb(224, 35, 38, 45))
+                        setColor(red())
                         cornerRadius = dp(8).toFloat()
-                        setStroke(dp(1), Color.argb(210, 145, 153, 166))
+                        setStroke(dp(1), red())
                     }
                 }
                 coverFrame.addView(

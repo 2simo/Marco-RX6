@@ -22,11 +22,11 @@ internal class MainLibraryRuntimeFeature(
     private val translate: (String) -> String,
     private val rounded: (Int, Int) -> android.graphics.drawable.GradientDrawable,
     private val createText: (String, Float, Int, Boolean) -> android.widget.TextView,
-    private val bg: Int,
-    private val panel: Int,
-    private val red: Int,
-    private val white: Int,
-    private val gray: Int,
+    private var bg: Int,
+    private var panel: Int,
+    private var red: Int,
+    private var white: Int,
+    private var gray: Int,
     private val adminSession: () -> Boolean,
     private val accentForeground: () -> Int,
     private val loadCover: (android.widget.ImageView, String, String) -> Unit,
@@ -137,6 +137,16 @@ internal class MainLibraryRuntimeFeature(
             ?.takeIf { it in listOf("PS2", "PS3", "PS4") } ?: "ALL"
     }
 
+    /** Update cached constructor colors without rebuilding or navigating away from the active screen. */
+    fun refreshPalette(bg: Int, panel: Int, red: Int, white: Int, gray: Int) {
+        this.bg = bg
+        this.panel = panel
+        this.red = red
+        this.white = white
+        this.gray = gray
+        mainLibraryFeature.refreshPalette(bg, panel, red, white, gray)
+    }
+
     fun create() = mainLibraryFeature.create()
     fun dispose() = mainLibraryFeature.dispose()
     fun renderGames() {
@@ -144,6 +154,7 @@ internal class MainLibraryRuntimeFeature(
         // category sections, before the list/filter/count views are attached.
         // Skip that early request; create() performs the real render after wiring them.
         if (!viewState.isReadyForRendering()) return
+        mainLibraryFeature.updateAdminAction()
         gameLibraryFeature.render()
     }
     fun showAdvancedFilters() = advancedFiltersFeature.show()

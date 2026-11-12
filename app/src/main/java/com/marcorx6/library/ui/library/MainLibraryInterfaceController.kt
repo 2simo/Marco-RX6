@@ -32,11 +32,11 @@ internal class MainLibraryInterfaceController(
     private val rounded: (Int, Int) -> GradientDrawable,
     private val createText: (String, Float, Int, Boolean) -> TextView,
     private val games: () -> List<com.marcorx6.library.data.Game>,
-    private val bg: Int,
-    private val panel: Int,
-    private val red: Int,
-    private val white: Int,
-    private val gray: Int,
+    private var bg: Int,
+    private var panel: Int,
+    private var red: Int,
+    private var white: Int,
+    private var gray: Int,
     private val adminSession: () -> Boolean,
     private val getSelected: () -> String,
     private val setSelected: (String) -> Unit,
@@ -65,6 +65,7 @@ internal class MainLibraryInterfaceController(
     private lateinit var filters: LinearLayout
     private lateinit var countText: TextView
     private lateinit var gameList: LinearLayout
+    private var publishAction: TextView? = null
     private var selected: String
         get() = getSelected()
         set(value) = setSelected(value)
@@ -73,7 +74,26 @@ internal class MainLibraryInterfaceController(
         set(value) = setSortMode(value)
     private var activeDockTab: String = "HOME"
 
+    fun updatePalette(bg: Int, panel: Int, red: Int, white: Int, gray: Int) {
+        this.bg = bg
+        this.panel = panel
+        this.red = red
+        this.white = white
+        this.gray = gray
+    }
+
     private fun isDarkMode(): Boolean = darkMode()
+
+    /** Reflect asynchronous Blogger permission changes without rebuilding the active screen. */
+    fun updateAdminAction() {
+        publishAction?.visibility = if (adminSession()) View.VISIBLE else View.GONE
+    }
+
+    private fun accentShade(): Int = Color.rgb(
+        (Color.red(red) * 0.95f).toInt(),
+        (Color.green(red) * 0.95f).toInt(),
+        (Color.blue(red) * 0.95f).toInt()
+    )
 
     private fun makeText(value: String, size: Float, color: Int, bold: Boolean = false): TextView =
         createText(value, size, color, bold)
@@ -97,7 +117,7 @@ internal class MainLibraryInterfaceController(
 
     private fun showSmartSearch() {
         val ink = bg
-        val accent = Color.rgb(190, 198, 210)
+        val accent = red
         val searchBaseTop = dp(18)
         val searchBaseBottom = dp(18)
         val root = LinearLayout(context).apply {
@@ -155,6 +175,8 @@ internal class MainLibraryInterfaceController(
                     gravity = Gravity.CENTER
                     setPadding(dp(12), dp(48), dp(12), dp(48))
                 })
+                // Empty-state views are created after the search screen's first skin pass.
+                applyUnifiedSkin(results)
                 return
             }
             matches.forEach { game ->
@@ -194,16 +216,14 @@ internal class MainLibraryInterfaceController(
                     val languageBadge = TextView(context).apply {
                         text = languageLabel
                         textSize = 8f
-                        setTextColor(if (isDarkMode()) Color.WHITE else Color.rgb(34, 39, 47))
+                        setTextColor(AccentPalette.foregroundForColor(red))
                         typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
                         gravity = Gravity.CENTER
                         setPadding(dp(6), dp(3), dp(6), dp(3))
                         background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                            if (isDarkMode()) intArrayOf(Color.rgb(43, 47, 55), Color.rgb(25, 28, 34))
-                            else intArrayOf(Color.rgb(250, 251, 253), Color.rgb(205, 212, 222))).apply {
+                            intArrayOf(red, accentShade())).apply {
                             cornerRadius = dp(7).toFloat()
-                            setStroke(dp(1), if (isDarkMode()) Color.argb(210, 145, 153, 166)
-                                else Color.rgb(132, 143, 158))
+                            setStroke(dp(1), red)
                         }
                     }
                     coverFrame.addView(
@@ -228,6 +248,9 @@ internal class MainLibraryInterfaceController(
                 })
                 card.addView(details, LinearLayout.LayoutParams(0, -2, 1f))
                 slot.addView(card, FrameLayout.LayoutParams(-1, -2))
+                // Search cards are built lazily after the initial screen skin pass.
+                // Apply the selected palette now, without tinting the game's cover artwork.
+                applyUnifiedSkin(card)
                 }
                 runWhenVisible(slot) { buildCard() }
                 results.addView(slot, LinearLayout.LayoutParams(-1, -2).apply {
@@ -543,8 +566,8 @@ internal class MainLibraryInterfaceController(
             }
 
             popularByPlatform.forEachIndexed { index, game ->
-                // A layered shell gives the featured cover a real raised-card silhouette:
-                // metallic face, blue edge, and a visible lower extrusion beneath it.
+                // A layered shell gives the featured cover a raised-card silhouette.
+                // Its metallic edge follows the selected app accent; cover artwork stays untouched.
                 val card = FrameLayout(context).apply {
                     clipChildren = false
                     clipToPadding = false
@@ -554,8 +577,7 @@ internal class MainLibraryInterfaceController(
                 }
                 val cardExtrusion = View(context).apply {
                     background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                        if (isDarkMode()) intArrayOf(Color.rgb(38, 91, 158), Color.rgb(17, 43, 78))
-                        else intArrayOf(Color.rgb(125, 136, 151), Color.rgb(65, 73, 85))).apply {
+                        intArrayOf(accentShade(), red)).apply {
                         cornerRadius = dp(21).toFloat()
                     }
                 }
@@ -568,13 +590,20 @@ internal class MainLibraryInterfaceController(
                     setPadding(dp(5), dp(5), dp(5), dp(9))
                     background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
                         if (isDarkMode()) {
-                            intArrayOf(Color.rgb(68, 76, 91), Color.rgb(30, 35, 45), Color.rgb(12, 15, 21))
+                            intArrayOf(
+                                AccentPalette.surface(Color.rgb(68, 76, 91), red, 0.24f),
+                                AccentPalette.surface(Color.rgb(30, 35, 45), red, 0.18f),
+                                AccentPalette.surface(Color.rgb(12, 15, 21), red, 0.12f)
+                            )
                         } else {
-                            intArrayOf(Color.rgb(250, 251, 253), Color.rgb(220, 225, 232), Color.rgb(185, 193, 204))
+                            intArrayOf(
+                                AccentPalette.surface(Color.rgb(250, 251, 253), red, 0.10f),
+                                AccentPalette.surface(Color.rgb(220, 225, 232), red, 0.14f),
+                                AccentPalette.surface(Color.rgb(185, 193, 204), red, 0.16f)
+                            )
                         }).apply {
                         cornerRadius = dp(20).toFloat()
-                        setStroke(dp(1), if (isDarkMode()) Color.argb(235, 100, 158, 230)
-                            else Color.argb(220, 112, 123, 139))
+                        setStroke(dp(1), red)
                     }
                     elevation = dp(12).toFloat()
                 }
@@ -602,16 +631,18 @@ internal class MainLibraryInterfaceController(
                     val languageBadge = TextView(context).apply {
                         text = languageLabel
                         textSize = 11f
-                        setTextColor(if (isDarkMode()) Color.WHITE else Color.rgb(34, 39, 47))
+                        // Keep the language label readable against every selected
+                        // primary accent, including light and saturated palettes.
+                        setTextColor(AccentPalette.foregroundForColor(red))
                         typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
                         gravity = Gravity.CENTER
                         setPadding(dp(12), dp(7), dp(12), dp(7))
-                        background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                            if (isDarkMode()) intArrayOf(Color.rgb(43, 47, 55), Color.rgb(25, 28, 34))
-                            else intArrayOf(Color.rgb(250, 251, 253), Color.rgb(205, 212, 222))).apply {
+                        background = GradientDrawable(
+                            GradientDrawable.Orientation.TL_BR,
+                            intArrayOf(red, accentShade())
+                        ).apply {
                             cornerRadius = dp(10).toFloat()
-                            setStroke(dp(1), if (isDarkMode()) Color.argb(225, 165, 175, 190)
-                                else Color.rgb(132, 143, 158))
+                            setStroke(dp(1), red)
                         }
                         elevation = dp(5).toFloat()
                     }
@@ -723,19 +754,30 @@ internal class MainLibraryInterfaceController(
                 minimumHeight = dp(48)
                 contentDescription = text.toString()
                 setPadding(dp(14), dp(9), dp(14), dp(9))
+                val chipBaseStart = if (isDarkMode()) Color.rgb(35, 38, 45) else Color.rgb(255, 255, 255)
+                val chipBaseEnd = if (isDarkMode()) Color.rgb(15, 17, 22) else Color.rgb(222, 226, 232)
                 background = GradientDrawable(
                     GradientDrawable.Orientation.LEFT_RIGHT,
-                    if (isDarkMode()) intArrayOf(Color.argb(210, 35, 38, 45), Color.argb(192, 15, 17, 22))
-                    else intArrayOf(Color.argb(228, 255, 255, 255), Color.argb(211, 222, 226, 232))
+                    intArrayOf(
+                        AccentPalette.surface(chipBaseStart, red, if (isDarkMode()) 0.24f else 0.13f),
+                        AccentPalette.surface(chipBaseEnd, red, if (isDarkMode()) 0.20f else 0.17f)
+                    )
                 ).apply {
                     cornerRadius = dp(18).toFloat()
-                    setStroke(dp(1), if (isDarkMode()) Color.argb(145, 130, 138, 151) else Color.argb(155, 160, 168, 181))
+                    setStroke(
+                        dp(1),
+                        AccentPalette.surface(
+                            if (isDarkMode()) Color.rgb(130, 138, 151) else Color.rgb(160, 168, 181),
+                            red,
+                            if (isDarkMode()) 0.48f else 0.42f
+                        )
+                    )
                 }
                 setTextColor(muted)
                 isClickable = true
                 isFocusable = true
                 if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                    android.content.res.ColorStateList.valueOf(Color.argb(75, 190, 198, 210)),
+                    android.content.res.ColorStateList.valueOf(Color.argb(75, Color.red(red), Color.green(red), Color.blue(red))),
                     null,
                     GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(18).toFloat() }
                 )
@@ -773,7 +815,7 @@ internal class MainLibraryInterfaceController(
             isClickable = true
             isFocusable = true
             if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                android.content.res.ColorStateList.valueOf(Color.argb(78, 190, 198, 210)),
+                android.content.res.ColorStateList.valueOf(Color.argb(78, Color.red(red), Color.green(red), Color.blue(red))),
                 null,
                 GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(13).toFloat() }
             )
@@ -808,7 +850,7 @@ internal class MainLibraryInterfaceController(
             isClickable = true
             isFocusable = true
             if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                android.content.res.ColorStateList.valueOf(Color.argb(78, 190, 198, 210)),
+                android.content.res.ColorStateList.valueOf(Color.argb(78, Color.red(red), Color.green(red), Color.blue(red))),
                 null,
                 GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(13).toFloat() }
             )
@@ -834,35 +876,35 @@ internal class MainLibraryInterfaceController(
 
         root.addView(gameList, LinearLayout.LayoutParams(-1, -2))
 
-        if (adminSession()) {
-            val publish = TextView(context).apply {
-                text = tr("نشر")
-                setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.ic_action_add, 0, 0, 0)
-                compoundDrawablePadding = dp(7)
-                if (android.os.Build.VERSION.SDK_INT >= 23) compoundDrawableTintList =
-                    android.content.res.ColorStateList.valueOf(Color.WHITE)
-                textSize = 11f
-                setTextColor(Color.rgb(20, 23, 29))
-                typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
-                gravity = Gravity.CENTER
-                background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-                    intArrayOf(Color.rgb(190, 198, 210), Color.rgb(105, 113, 126))).apply {
-                    cornerRadius = dp(15).toFloat()
-                    setStroke(dp(1), Color.argb(190, 210, 216, 225))
-                }
-                isClickable = true
-                isFocusable = true
-                if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                    android.content.res.ColorStateList.valueOf(Color.argb(100, 145, 190, 255)),
-                    null,
-                    GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(15).toFloat() }
-                )
-                setPadding(dp(18), dp(13), dp(18), dp(13))
-                elevation = dp(3).toFloat()
-                setOnClickListener { showGameDialog() }
+        val publish = TextView(context).apply {
+            text = tr("نشر")
+            setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.ic_action_add, 0, 0, 0)
+            compoundDrawablePadding = dp(7)
+            if (android.os.Build.VERSION.SDK_INT >= 23) compoundDrawableTintList =
+                android.content.res.ColorStateList.valueOf(AccentPalette.foregroundForColor(red))
+            textSize = 11f
+            setTextColor(AccentPalette.foregroundForColor(red))
+            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+            gravity = Gravity.CENTER
+            background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(red, accentShade())).apply {
+                cornerRadius = dp(15).toFloat()
+                setStroke(dp(1), Color.argb(190, Color.red(red), Color.green(red), Color.blue(red)))
             }
-            root.addView(publish, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(9) })
+            isClickable = true
+            isFocusable = true
+            if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
+                android.content.res.ColorStateList.valueOf(Color.argb(100, Color.red(red), Color.green(red), Color.blue(red))),
+                null,
+                GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(15).toFloat() }
+            )
+            setPadding(dp(18), dp(13), dp(18), dp(13))
+            elevation = dp(3).toFloat()
+            setOnClickListener { showGameDialog() }
+            visibility = if (adminSession()) View.VISIBLE else View.GONE
         }
+        publishAction = publish
+        root.addView(publish, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(9) })
 
         applyTypography(root)
         val pageScroll = ScrollView(context).apply {
@@ -886,7 +928,7 @@ internal class MainLibraryInterfaceController(
                 cornerRadius = dp(23).toFloat()
                 setStroke(dp(1), Color.rgb(130, 138, 151))
             } else GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.argb(245, 245, 247, 250), Color.argb(230, 215, 220, 228), Color.argb(220, 190, 198, 210))).apply {
+                intArrayOf(Color.argb(245, 245, 247, 250), Color.argb(230, 215, 220, 228), Color.argb(220, Color.red(red), Color.green(red), Color.blue(red)))).apply {
                 cornerRadius = dp(23).toFloat()
                 setStroke(dp(1), Color.rgb(160, 168, 181))
             }
@@ -905,18 +947,18 @@ internal class MainLibraryInterfaceController(
                 item.background = GradientDrawable(
                     GradientDrawable.Orientation.TL_BR,
                     if (active) {
-                        if (isDarkMode()) intArrayOf(Color.rgb(190, 198, 210), Color.rgb(105, 113, 126))
-                        else intArrayOf(Color.rgb(190, 198, 210), Color.rgb(105, 113, 126))
+                        if (isDarkMode()) intArrayOf(red, accentShade())
+                        else intArrayOf(red, accentShade())
                     } else {
                         if (isDarkMode()) intArrayOf(Color.argb(70, 34, 37, 44), Color.argb(45, 15, 17, 22))
                         else intArrayOf(Color.argb(75, 255, 255, 255), Color.argb(45, 222, 226, 232))
                     }
                 ).apply {
                     cornerRadius = dp(16).toFloat()
-                    setStroke(dp(1), if (active) Color.argb(185, 145, 153, 166)
+                    setStroke(dp(1), if (active) Color.argb(185, Color.red(red), Color.green(red), Color.blue(red))
                     else Color.TRANSPARENT)
                 }
-                val iconTint = if (active) Color.WHITE
+                val iconTint = if (active) AccentPalette.foregroundForColor(red)
                     else if (isDarkMode()) Color.rgb(225, 228, 234) else Color.rgb(91, 98, 110)
                 (item.getChildAt(0) as? ImageView)?.imageTintList =
                     android.content.res.ColorStateList.valueOf(iconTint)
@@ -936,7 +978,7 @@ internal class MainLibraryInterfaceController(
                 isClickable = true
                 isFocusable = true
                 if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                    android.content.res.ColorStateList.valueOf(Color.argb(88, 190, 198, 210)),
+                    android.content.res.ColorStateList.valueOf(Color.argb(88, Color.red(red), Color.green(red), Color.blue(red))),
                     null,
                     GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(15).toFloat() }
                 )

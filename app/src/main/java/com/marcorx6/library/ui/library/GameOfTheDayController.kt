@@ -68,7 +68,7 @@ internal class GameOfTheDayController(
             setPadding(0, dp(12), 0, dp(5))
         })
         val platformLabel = game.platform + if (game.genre.isNotBlank()) " • ${game.genre}" else ""
-        val genreView = makeText(platformLabel, 11f, android.graphics.Color.rgb(190, 198, 210), true)
+        val genreView = makeText(platformLabel, 11f, red(), true)
         box.addView(genreView)
         val summary = game.description.ifBlank {
             translate("اكتشف تفاصيل هذه اللعبة وروابطها داخل مكتبة MARCO.")

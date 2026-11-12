@@ -98,16 +98,28 @@ internal class DownloadUiController(
     fun showDownloadManager() {
         fun dp(value: Int): Int = (value * activity.resources.displayMetrics.density).toInt()
         val dark = isDarkMode()
-        val background = if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247)
-        val surface = if (dark) Color.rgb(25, 28, 34) else Color.WHITE
-        val primary = Color.rgb(205, 212, 222)
+        val appearance = AppearancePreferencesStore.appearance(activity)
+        val selectedAccentId = appearance.getString(
+            AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID
+        ) ?: AccentPalette.DEFAULT_ID
+        val primary = AccentPalette.color(selectedAccentId)
+        val accentText = AccentPalette.readableAccentText(selectedAccentId, dark)
+        val primaryForeground = AccentPalette.foreground(selectedAccentId)
+        val background = AccentPalette.surface(
+            if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247),
+            primary, if (dark) 0.22f else 0.12f
+        )
+        val surface = AccentPalette.surface(
+            if (dark) Color.rgb(25, 28, 34) else Color.WHITE,
+            primary, if (dark) 0.16f else 0.075f
+        )
         val heading = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
         val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
         fun addGlassTouch(view: View) {
             if (android.os.Build.VERSION.SDK_INT >= 23) {
                 view.foreground = android.graphics.drawable.RippleDrawable(
                     android.content.res.ColorStateList.valueOf(
-                        if (dark) Color.argb(82, 205, 212, 222) else Color.argb(55, 140, 148, 160)
+                        if (dark) Color.argb(82, Color.red(primary), Color.green(primary), Color.blue(primary)) else Color.argb(55, Color.red(primary), Color.green(primary), Color.blue(primary))
                     ),
                     null,
                     android.graphics.drawable.ColorDrawable(Color.WHITE)
@@ -128,7 +140,7 @@ internal class DownloadUiController(
             text = "MARCO  /  ${translate("التنزيلات").uppercase()}"
             textSize = 9f
             letterSpacing = 0.12f
-            setTextColor(primary)
+            setTextColor(accentText)
         })
         titleBox.addView(TextView(activity).apply {
             text = translate("التنزيلات")
@@ -142,13 +154,13 @@ internal class DownloadUiController(
             text = "×${downloadRepository.maxConcurrentDownloads()}"
             textSize = 12f
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(primary)
+            setTextColor(accentText)
             gravity = Gravity.CENTER
             setPadding(dp(12), dp(10), dp(12), dp(10))
             this.background = GradientDrawable().apply {
                 setColor(surface)
                 cornerRadius = dp(12).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(78, 85, 98) else Color.rgb(210, 216, 225))
+                setStroke(dp(1), if (dark) AccentPalette.surface(Color.rgb(78, 85, 98), primary, 0.42f) else AccentPalette.surface(Color.rgb(210, 216, 225), primary, 0.38f))
             }
             setOnClickListener {
                 val options = arrayOf("1", "2", "3", "4", "5")
@@ -173,13 +185,13 @@ internal class DownloadUiController(
             text = "${downloadRepository.maxSegmentConnections()}×"
             textSize = 11f
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(primary)
+            setTextColor(accentText)
             gravity = Gravity.CENTER
             setPadding(dp(10), dp(10), dp(10), dp(10))
             this.background = GradientDrawable().apply {
                 setColor(surface)
                 cornerRadius = dp(12).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(78, 85, 98) else Color.rgb(210, 216, 225))
+                setStroke(dp(1), if (dark) AccentPalette.surface(Color.rgb(78, 85, 98), primary, 0.42f) else AccentPalette.surface(Color.rgb(210, 216, 225), primary, 0.38f))
             }
             contentDescription = translate("عدد الاتصالات لكل ملف")
             setOnClickListener {
@@ -206,13 +218,13 @@ internal class DownloadUiController(
             text = if (downloadRepository.wifiOnlyDownloads()) "Wi-Fi" else "ALL"
             textSize = 10f
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(primary)
+            setTextColor(accentText)
             gravity = Gravity.CENTER
             setPadding(dp(10), dp(10), dp(10), dp(10))
             this.background = GradientDrawable().apply {
                 setColor(surface)
                 cornerRadius = dp(12).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(78, 85, 98) else Color.rgb(210, 216, 225))
+                setStroke(dp(1), if (dark) AccentPalette.surface(Color.rgb(78, 85, 98), primary, 0.42f) else AccentPalette.surface(Color.rgb(210, 216, 225), primary, 0.38f))
             }
             contentDescription = translate("التنزيل عبر Wi-Fi فقط")
             setOnClickListener {
@@ -258,7 +270,7 @@ internal class DownloadUiController(
                 selectedFilter = key
                 filterButtons.forEach { (filterKey, button) ->
                     val active = filterKey == selectedFilter
-                    button.setTextColor(if (active) Color.rgb(20, 23, 29) else primary)
+                    button.setTextColor(if (active) primaryForeground else accentText)
                     (button.background as? GradientDrawable)?.setColor(
                         if (active) primary else surface
                     )
@@ -268,9 +280,9 @@ internal class DownloadUiController(
             this.background = GradientDrawable().apply {
                 cornerRadius = dp(13).toFloat()
                 setColor(surface)
-                setStroke(dp(1), if (dark) Color.rgb(78, 85, 98) else Color.rgb(210, 216, 225))
+                setStroke(dp(1), if (dark) AccentPalette.surface(Color.rgb(78, 85, 98), primary, 0.42f) else AccentPalette.surface(Color.rgb(210, 216, 225), primary, 0.38f))
             }
-            setTextColor(primary)
+            setTextColor(accentText)
         }
         val filterRow = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -284,7 +296,7 @@ internal class DownloadUiController(
             })
         }
         filterButtons["all"]?.apply {
-            setTextColor(Color.rgb(20, 23, 29))
+            setTextColor(primaryForeground)
             (background as? GradientDrawable)?.setColor(primary)
         }
         val bulkRow = LinearLayout(activity).apply {
@@ -297,11 +309,11 @@ internal class DownloadUiController(
             textSize = 11f
             gravity = Gravity.CENTER
             setPadding(dp(12), dp(10), dp(12), dp(10))
-            setTextColor(primary)
+            setTextColor(accentText)
             this.background = GradientDrawable().apply {
                 setColor(surface)
                 cornerRadius = dp(12).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(78, 85, 98) else Color.rgb(210, 216, 225))
+                setStroke(dp(1), if (dark) AccentPalette.surface(Color.rgb(78, 85, 98), primary, 0.42f) else AccentPalette.surface(Color.rgb(210, 216, 225), primary, 0.38f))
             }
             isClickable = true
             isFocusable = true
@@ -351,12 +363,12 @@ internal class DownloadUiController(
             textSize = 11f
             setTypeface(null, android.graphics.Typeface.BOLD)
             gravity = Gravity.CENTER
-            setTextColor(primary)
+            setTextColor(accentText)
             setPadding(dp(14), dp(9), dp(14), dp(9))
             this.background = GradientDrawable().apply {
                 setColor(surface)
                 cornerRadius = dp(12).toFloat()
-                setStroke(dp(1), if (dark) Color.rgb(78, 85, 98) else Color.rgb(210, 216, 225))
+                setStroke(dp(1), if (dark) AccentPalette.surface(Color.rgb(78, 85, 98), primary, 0.42f) else AccentPalette.surface(Color.rgb(210, 216, 225), primary, 0.38f))
             }
             setOnClickListener {
                 val values = longArrayOf(0L, 256L * 1024L, 512L * 1024L, 1024L * 1024L, 2L * 1024L * 1024L, 5L * 1024L * 1024L)
@@ -411,10 +423,18 @@ internal class DownloadUiController(
             setPadding(dp(24), dp(42), dp(24), dp(42))
             this.background = GradientDrawable().apply {
                 setColors(if (dark)
-                    intArrayOf(Color.argb(220, 35, 38, 45), Color.argb(208, 15, 17, 22))
-                else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(218, 222, 226, 232)))
+                    intArrayOf(
+                        AccentPalette.surface(Color.rgb(35, 38, 45), primary, 0.15f),
+                        AccentPalette.surface(Color.rgb(15, 17, 22), primary, 0.11f)
+                    )
+                else intArrayOf(
+                    AccentPalette.surface(Color.WHITE, primary, 0.08f),
+                    AccentPalette.surface(Color.rgb(222, 226, 232), primary, 0.11f)
+                ))
                 cornerRadius = dp(22).toFloat()
-                setStroke(dp(1), if (dark) Color.argb(165, 130, 138, 151) else Color.argb(175, 160, 168, 181))
+                setStroke(dp(1), if (dark)
+                    AccentPalette.surface(Color.rgb(130, 138, 151), primary, 0.40f)
+                else AccentPalette.surface(Color.rgb(160, 168, 181), primary, 0.34f))
             }
             addView(android.widget.ImageView(activity).apply {
                 setImageResource(com.marcorx6.library.R.drawable.ic_action_download)
@@ -531,9 +551,9 @@ internal class DownloadUiController(
             TextView(activity).apply {
                 text = label; textSize = 11f; gravity = Gravity.CENTER
                 minimumHeight = dp(42); setPadding(dp(13), dp(9), dp(13), dp(9))
-                setTextColor(if (filled) Color.rgb(20, 23, 29) else primary)
+                setTextColor(if (filled) primaryForeground else accentText)
                 this.background = GradientDrawable().apply {
-                    setColor(if (filled) Color.argb(225, 205, 212, 222)
+                    setColor(if (filled) Color.argb(225, Color.red(primary), Color.green(primary), Color.blue(primary))
                         else if (dark) Color.argb(190, 35, 38, 45) else Color.WHITE)
                     cornerRadius = dp(12).toFloat(); setStroke(dp(1), primary)
                 }
@@ -703,10 +723,18 @@ internal class DownloadUiController(
                 setPadding(dp(15), dp(14), dp(15), dp(14))
                 this.background = GradientDrawable().apply {
                     setColors(if (dark)
-                        intArrayOf(Color.argb(221, 35, 38, 45), Color.argb(209, 15, 17, 22))
-                    else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(218, 222, 226, 232)))
+                        intArrayOf(
+                            AccentPalette.surface(Color.rgb(35, 38, 45), primary, 0.16f),
+                            AccentPalette.surface(Color.rgb(15, 17, 22), primary, 0.12f)
+                        )
+                    else intArrayOf(
+                        AccentPalette.surface(Color.WHITE, primary, 0.08f),
+                        AccentPalette.surface(Color.rgb(222, 226, 232), primary, 0.12f)
+                    ))
                     cornerRadius = dp(17).toFloat()
-                    setStroke(dp(1), if (dark) Color.argb(165, 130, 138, 151) else Color.argb(175, 160, 168, 181))
+                    setStroke(dp(1), if (dark)
+                        AccentPalette.surface(Color.rgb(130, 138, 151), primary, 0.42f)
+                    else AccentPalette.surface(Color.rgb(160, 168, 181), primary, 0.36f))
                 }
             }
             val titleView = TextView(activity).apply {
@@ -720,7 +748,8 @@ internal class DownloadUiController(
                 max = 100
                 progressTintList = android.content.res.ColorStateList.valueOf(primary)
                 progressBackgroundTintList = android.content.res.ColorStateList.valueOf(
-                    if (dark) Color.argb(90, 130, 138, 151) else Color.argb(70, 160, 168, 181))
+                    if (dark) AccentPalette.surface(Color.rgb(130, 138, 151), primary, 0.28f)
+                    else AccentPalette.surface(Color.rgb(160, 168, 181), primary, 0.24f))
             }
             val actions = LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL

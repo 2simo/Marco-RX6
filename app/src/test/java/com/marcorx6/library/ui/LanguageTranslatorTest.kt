@@ -1,14 +1,44 @@
 package com.marcorx6.library.ui
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LanguageTranslatorTest {
+    @Test
+    fun everyTranslationEntryContainsEnglishFrenchAndSpanishVariants() {
+        assertTrue(
+            "Incomplete translation keys: ${LanguageTranslator.incompleteTranslationKeys()}",
+            LanguageTranslator.incompleteTranslationKeys().isEmpty()
+        )
+    }
+
     @Test
     fun translatesStaticLabelsIntoAllSupportedLanguages() {
         assertEquals("Downloads", LanguageTranslator.translate("التنزيلات", "en"))
         assertEquals("Téléchargements", LanguageTranslator.translate("التنزيلات", "fr"))
         assertEquals("Descargas", LanguageTranslator.translate("التنزيلات", "es"))
+    }
+
+    @Test
+    fun translatesBrandNameInAllSupportedLanguagesWithoutIndexOverflow() {
+        assertEquals("MARCO RX6", LanguageTranslator.translate("MARCO RX6", "en"))
+        assertEquals("MARCO RX6", LanguageTranslator.translate("MARCO RX6", "fr"))
+        assertEquals("MARCO RX6", LanguageTranslator.translate("MARCO RX6", "es"))
+        assertEquals("MARCO RX6", LanguageTranslator.translate("MARCO RX6", "ar"))
+    }
+
+    @Test
+    fun translatesDiagnosticExportFeedbackInAllSupportedLanguages() {
+        val preparing = "جارٍ تجهيز سجل التشخيص…"
+        assertEquals("Preparing diagnostic log…", LanguageTranslator.translate(preparing, "en"))
+        assertEquals("Préparation du journal de diagnostic…", LanguageTranslator.translate(preparing, "fr"))
+        assertEquals("Preparando el registro de diagnóstico…", LanguageTranslator.translate(preparing, "es"))
+
+        val sharingError = "تعذر مشاركة سجل التشخيص"
+        assertEquals("Could not share the diagnostic log", LanguageTranslator.translate(sharingError, "en"))
+        assertEquals("Impossible de partager le journal de diagnostic", LanguageTranslator.translate(sharingError, "fr"))
+        assertEquals("No se pudo compartir el registro de diagnóstico", LanguageTranslator.translate(sharingError, "es"))
     }
 
     @Test
@@ -255,6 +285,61 @@ class LanguageTranslatorTest {
             assertEquals(expected[1], LanguageTranslator.translate(source, "fr"))
             assertEquals(expected[2], LanguageTranslator.translate(source, "es"))
         }
+    }
+
+    @Test
+    fun translatesPreviouslyUntranslatedAccountNotificationAndBrowserLabels() {
+        val cases = listOf(
+            "لا توجد رسائل جديدة حالياً." to listOf("No new messages right now.", "Aucun nouveau message pour le moment.", "No hay mensajes nuevos por ahora."),
+            "تعذر تحميل الإشعارات. تحقق من الاتصال." to listOf("Could not load notifications. Check your connection.", "Impossible de charger les notifications. Vérifiez votre connexion.", "No se pudieron cargar las notificaciones. Comprueba tu conexión."),
+            "لا يوجد متابعون بعد." to listOf("No followers yet.", "Aucun abonné pour le moment.", "Aún no hay seguidores."),
+            "لغة المحتوى" to listOf("Content language", "Langue du contenu", "Idioma del contenido"),
+            "مسح البيانات" to listOf("Clear data", "Effacer les données", "Borrar datos"),
+            "التبويبات المفتوحة" to listOf("Open tabs", "Onglets ouverts", "Pestañas abiertas"),
+            "أدخل رابطاً أو عبارة للبحث" to listOf("Enter a URL or search term", "Saisissez une URL ou un terme de recherche", "Introduce una URL o un término de búsqueda"),
+            "إعدادات حجب الإعلانات" to listOf("Ad-blocking settings", "Paramètres de blocage des publicités", "Ajustes del bloqueo de anuncios")
+        )
+        cases.forEach { (source, expected) ->
+            assertEquals(expected[0], LanguageTranslator.translate(source, "en"))
+            assertEquals(expected[1], LanguageTranslator.translate(source, "fr"))
+            assertEquals(expected[2], LanguageTranslator.translate(source, "es"))
+            assertEquals(source, LanguageTranslator.translate(source, "ar"))
+        }
+    }
+
+    @Test
+    fun translatesDynamicBrowserAndAdBlockLabels() {
+        assertEquals("Tab 3", LanguageTranslator.translate("تبويب 3", "en"))
+        assertEquals("Onglet 4", LanguageTranslator.translate("التبويب 4", "fr"))
+        assertEquals("Pestaña 5", LanguageTranslator.translate("تبويب 5", "es"))
+        assertEquals("Ads blocked: 12", LanguageTranslator.translate("عدد الإعلانات المحجوبة: 12", "en"))
+        assertEquals("Publicités bloquées : 8", LanguageTranslator.translate("عدد الإعلانات المحجوبة: 8", "fr"))
+        assertEquals("No se pudo cargar la lista (403)", LanguageTranslator.translate("تعذر تحميل القائمة (403)", "es"))
+    }
+
+    @Test
+    fun translatesBlackAndSilverPaletteName() {
+        assertEquals("Black & Silver", LanguageTranslator.translate("أسود فضي", "en"))
+        assertEquals("Noir et argent", LanguageTranslator.translate("أسود فضي", "fr"))
+        assertEquals("Negro y plata", LanguageTranslator.translate("أسود فضي", "es"))
+        assertEquals("أسود فضي", LanguageTranslator.translate("أسود فضي", "ar"))
+    }
+
+    @Test
+    fun translatesRemainingBrowserAndGoogleAccountStatusMessages() {
+        assertEquals("Tab", LanguageTranslator.translate("تبويب", "en"))
+        assertEquals("Onglet", LanguageTranslator.translate("تبويب", "fr"))
+        assertEquals("Pestaña", LanguageTranslator.translate("تبويب", "es"))
+
+        val refresh = "تعذر تحديث معلومات اللعبة من المصدر؛ تحقق من الاتصال بالإنترنت"
+        assertEquals("Could not refresh the game information from its source; check your internet connection", LanguageTranslator.translate(refresh, "en"))
+        assertEquals("Impossible d’actualiser les informations du jeu depuis sa source ; vérifiez votre connexion Internet", LanguageTranslator.translate(refresh, "fr"))
+        assertEquals("No se pudo actualizar la información del juego desde su fuente; comprueba tu conexión a Internet", LanguageTranslator.translate(refresh, "es"))
+
+        val connected = "تم ربط حساب Google؛ جارٍ تحميل مدونة MARCO والتحقق من صلاحيات النشر…"
+        assertEquals("Google account connected; loading the MARCO blog and checking publishing permissions…", LanguageTranslator.translate(connected, "en"))
+        assertEquals("Compte Google connecté ; chargement du blog MARCO et vérification des autorisations de publication…", LanguageTranslator.translate(connected, "fr"))
+        assertEquals("Cuenta de Google conectada; cargando el blog MARCO y comprobando los permisos de publicación…", LanguageTranslator.translate(connected, "es"))
     }
 
 }

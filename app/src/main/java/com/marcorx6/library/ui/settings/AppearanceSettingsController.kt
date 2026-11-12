@@ -13,6 +13,7 @@ import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
 import android.widget.LinearLayout
 import android.widget.TextView
+import java.util.concurrent.atomic.AtomicBoolean
 
 internal class AppearanceSettingsController(
     private val activity: Activity,
@@ -31,18 +32,27 @@ internal class AppearanceSettingsController(
     private val onBack: () -> Unit,
     private val translate: (String) -> String
 ) {
+    private val diagnosticsExportInProgress = AtomicBoolean(false)
+
     fun show() {
+        com.marcorx6.library.AppDiagnostics.setScreen("Settings")
         fun dp(value: Int) = (value * activity.resources.displayMetrics.density).toInt()
         val dark = preferences.getBoolean("dark_mode", true)
-        val bg = if (dark) Color.rgb(8, 9, 12) else Color.rgb(242, 244, 247)
-        val silverAccent = Color.rgb(190, 198, 210)
+        val selectedAccentId = preferences.getString(AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID)
+            ?.takeIf { id -> AccentPalette.options.any { it.id == id } } ?: AccentPalette.DEFAULT_ID
+        val silverAccent = AccentPalette.color(selectedAccentId)
+        val accentText = AccentPalette.readableAccentText(selectedAccentId, dark)
+        val bg = if (dark) AccentPalette.surface(Color.rgb(8, 9, 12), silverAccent, 0.20f, selectedAccentId)
+            else AccentPalette.surface(Color.rgb(245, 247, 250), silverAccent, 0.10f, selectedAccentId)
+        val panelSurface = if (dark) AccentPalette.surface(Color.rgb(25, 28, 34), silverAccent, 0.30f, selectedAccentId)
+            else AccentPalette.surface(Color.rgb(224, 229, 237), silverAccent, 0.20f, selectedAccentId)
         val ink = if (dark) Color.WHITE else Color.rgb(25, 29, 36)
         val muted = if (dark) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
         fun addGlassTouch(view: View) {
             if (android.os.Build.VERSION.SDK_INT >= 23) {
                 view.foreground = android.graphics.drawable.RippleDrawable(
                     android.content.res.ColorStateList.valueOf(
-                        if (dark) Color.argb(72, 190, 198, 210) else Color.argb(55, 130, 138, 151)
+                        Color.argb(if (dark) 72 else 55, Color.red(silverAccent), Color.green(silverAccent), Color.blue(silverAccent))
                     ),
                     null,
                     android.graphics.drawable.ColorDrawable(Color.WHITE)
@@ -54,7 +64,7 @@ internal class AppearanceSettingsController(
             textSize = 10f
             letterSpacing = 0.10f
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(silverAccent)
+            setTextColor(accentText)
             setPadding(dp(3), dp(18), dp(3), dp(8))
         }
         val root = LinearLayout(activity).apply {
@@ -74,7 +84,7 @@ internal class AppearanceSettingsController(
             text = translate("MARCO  /  PERSONALIZATION")
             textSize = 9f
             letterSpacing = 0.12f
-            setTextColor(silverAccent)
+            setTextColor(accentText)
         })
         heading.addView(TextView(activity).apply {
             text = translate("الإعدادات والمظهر")
@@ -86,7 +96,7 @@ internal class AppearanceSettingsController(
         header.addView(heading, LinearLayout.LayoutParams(0, -2, 1f))
         header.addView(android.widget.ImageView(activity).apply {
             setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
-            imageTintList = android.content.res.ColorStateList.valueOf(silverAccent)
+            imageTintList = android.content.res.ColorStateList.valueOf(accentText)
             scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
             contentDescription = translate("رجوع")
             minimumWidth = dp(48)
@@ -106,34 +116,109 @@ internal class AppearanceSettingsController(
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(16), dp(16), dp(16))
             background = GradientDrawable().apply {
-                setColors(if (dark) intArrayOf(Color.argb(225, 35, 38, 45), Color.argb(215, 15, 17, 22)) else intArrayOf(Color.argb(232, 255, 255, 255), Color.argb(216, 222, 226, 232)))
+                setColors(if (selectedAccentId == "black_silver") intArrayOf(
+                    Color.rgb(7, 8, 11),
+                    Color.rgb(52, 61, 74),
+                    Color.rgb(90, 100, 115)
+                ) else if (dark) intArrayOf(
+                    AccentPalette.surface(Color.rgb(35, 38, 45), silverAccent, 0.28f, selectedAccentId),
+                    AccentPalette.surface(Color.rgb(15, 17, 22), silverAccent, 0.22f, selectedAccentId)
+                ) else intArrayOf(
+                    AccentPalette.surface(Color.WHITE, silverAccent, 0.16f, selectedAccentId),
+                    panelSurface
+                ))
                 cornerRadius = dp(20).toFloat()
-                setStroke(dp(1), if (dark) Color.argb(165, 130, 138, 151) else Color.argb(175, 160, 168, 181))
+                setStroke(dp(1), Color.argb(175, Color.red(silverAccent), Color.green(silverAccent), Color.blue(silverAccent)))
             }
         }
+        val paletteCardInk = if (selectedAccentId == "black_silver") Color.WHITE else ink
+        val paletteCardMuted = if (selectedAccentId == "black_silver") Color.rgb(225, 230, 239) else muted
         colorCard.addView(TextView(activity).apply {
             text = translate("اللون الرئيسي")
             textSize = 16f
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(ink)
+            setTextColor(paletteCardInk)
         })
         colorCard.addView(TextView(activity).apply {
-            text = translate("فضي معدني  •  مع الأسود الفحمي")
+            text = translate("غيّر اللون الأساسي لواجهات التطبيق والبطاقات والأزرار والأيقونات والعناصر التفاعلية")
             textSize = 12f
-            setTextColor(muted)
+            setTextColor(paletteCardMuted)
             setPadding(0, dp(8), 0, dp(12))
         })
         colorCard.addView(TextView(activity).apply {
-            text = translate("●   فضي")
-            textSize = 14f
-            setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(Color.rgb(20, 23, 29))
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(15), dp(14), dp(15), dp(14))
-            background = GradientDrawable().apply {
-                setColor(silverAccent); cornerRadius = dp(14).toFloat()
-            }
+            text = translate("اختر اللون الأساسي للتطبيق")
+            textSize = 12f
+            setTextColor(paletteCardMuted)
+            setPadding(0, dp(8), 0, dp(12))
         })
+        val paletteRows = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+        AccentPalette.options.chunked(4).forEach { rowOptions ->
+            val paletteRow = LinearLayout(activity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER
+            }
+            rowOptions.forEach { option ->
+                val isSelected = option.id == selectedAccentId
+                val swatch = TextView(activity).apply {
+                    // Preserve each option's own preview color during global theming.
+                    tag = "marco_palette_swatch"
+                    text = if (isSelected) "✓" else ""
+                    textSize = 19f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    gravity = Gravity.CENTER
+                    setTextColor(if (option.id == "black_silver") Color.rgb(235, 239, 245) else AccentPalette.foreground(option.id))
+                    contentDescription = translate(option.label)
+                    background = GradientDrawable(
+                        GradientDrawable.Orientation.TL_BR,
+                        if (option.id == "black_silver") intArrayOf(
+                            Color.rgb(7, 8, 11),
+                            Color.rgb(52, 61, 74),
+                            Color.rgb(90, 100, 115)
+                        ) else intArrayOf(option.color, option.color)
+                    ).apply {
+                        cornerRadius = dp(15).toFloat()
+                        setStroke(dp(if (isSelected) 3 else 1),
+                            if (isSelected) AccentPalette.foreground(option.id)
+                            else if (dark) Color.argb(110, 190, 198, 210) else Color.argb(130, 105, 113, 126))
+                    }
+                    isClickable = true
+                    isFocusable = true
+                    minimumHeight = dp(44)
+                    setOnClickListener {
+                        if (preferences.getString(AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID) != option.id) {
+                            com.marcorx6.library.AppDiagnostics.recordAction("Change primary color to ${option.id}")
+                            preferences.edit().putString(AccentPalette.PREFERENCE_KEY, option.id).apply()
+                            // Rebuild this live settings page immediately. setContentView routes
+                            // through MainActivity.showRootScreen, which skins the whole Activity
+                            // tree using the newly saved palette; no app restart is needed.
+                            show()
+                        }
+                    }
+                }
+                val item = LinearLayout(activity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    gravity = Gravity.CENTER
+                    setPadding(dp(5), dp(4), dp(5), dp(4))
+                    addView(swatch, LinearLayout.LayoutParams(dp(48), dp(44)))
+                    addView(TextView(activity).apply {
+                        text = AccentPalette.localizedLabel(option.id, currentLanguage())
+                        textSize = 10f
+                        gravity = Gravity.CENTER
+                        setTextColor(if (isSelected) accentText else muted)
+                        setPadding(0, dp(5), 0, 0)
+                        maxLines = 1
+                    }, LinearLayout.LayoutParams(-1, -2))
+                }
+                paletteRow.addView(item, LinearLayout.LayoutParams(0, -2, 1f))
+            }
+            repeat(4 - rowOptions.size) {
+                paletteRow.addView(View(activity), LinearLayout.LayoutParams(0, dp(1), 1f))
+            }
+            paletteRows.addView(paletteRow, LinearLayout.LayoutParams(-1, -2))
+        }
+        colorCard.addView(paletteRows, LinearLayout.LayoutParams(-1, -2))
         root.addView(colorCard, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
         val animations = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
@@ -160,10 +245,10 @@ internal class AppearanceSettingsController(
             }
             textSize = 13f
             gravity = Gravity.CENTER
-            setTextColor(if (preferences.getBoolean("animations", true)) Color.rgb(20, 23, 29) else silverAccent)
+            setTextColor(if (preferences.getBoolean("animations", true)) AccentPalette.foreground(selectedAccentId) else accentText)
             setPadding(dp(14), dp(13), dp(14), dp(13))
             background = GradientDrawable().apply {
-                setColor(if (preferences.getBoolean("animations", true)) Color.argb(218, 190, 198, 210) else if (dark) Color.argb(190, 25, 28, 34) else Color.argb(210, 255, 255, 255))
+                setColor(if (preferences.getBoolean("animations", true)) Color.argb(218, Color.red(silverAccent), Color.green(silverAccent), Color.blue(silverAccent)) else if (dark) Color.argb(190, 25, 28, 34) else Color.argb(210, 255, 255, 255))
                 cornerRadius = dp(14).toFloat()
                 if (!preferences.getBoolean("animations", true)) setStroke(dp(1), silverAccent)
             }
@@ -175,9 +260,9 @@ internal class AppearanceSettingsController(
                 text = translate(if (enabled) "الحركات مفعّلة  ✓" else "الحركات متوقفة").replace("✓", "").trim()
                 setCompoundDrawablesRelativeWithIntrinsicBounds(if (enabled) com.marcorx6.library.R.drawable.ic_action_check else 0, 0, 0, 0)
                 contentDescription = translate(if (enabled) "إيقاف حركات وانتقالات الواجهة" else "تفعيل حركات وانتقالات الواجهة")
-                setTextColor(if (enabled) Color.rgb(20, 23, 29) else silverAccent)
+                setTextColor(if (enabled) AccentPalette.foreground(selectedAccentId) else accentText)
                 background = GradientDrawable().apply {
-                    setColor(if (enabled) Color.argb(218, 190, 198, 210) else if (dark) Color.argb(190, 25, 28, 34) else Color.argb(210, 255, 255, 255))
+                    setColor(if (enabled) Color.argb(218, Color.red(silverAccent), Color.green(silverAccent), Color.blue(silverAccent)) else if (dark) Color.argb(190, 25, 28, 34) else Color.argb(210, 255, 255, 255))
                     cornerRadius = dp(14).toFloat()
                     if (!enabled) setStroke(dp(1), silverAccent)
                 }
@@ -220,6 +305,7 @@ internal class AppearanceSettingsController(
             translate(if (dark) "الوضع الليلي مفعّل — اضغط للتبديل إلى الوضع النهاري"
             else "الوضع النهاري مفعّل — اضغط للتبديل إلى الوضع الليلي")
         ) {
+            com.marcorx6.library.AppDiagnostics.recordAction("Toggle dark or light mode")
             preferences.edit().putBoolean("dark_mode", !dark).apply()
             recreateActivity()
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
@@ -314,26 +400,59 @@ internal class AppearanceSettingsController(
             translate("تصدير سجل التشخيص"),
             translate("احفظ سجل الأعطال والأحداث محلياً وشاركه عند الحاجة؛ لا يتم إرساله تلقائياً")
         ) {
-            runCatching {
-                val exportFile = com.marcorx6.library.AppDiagnostics.createExport(activity)
-                val uri = androidx.core.content.FileProvider.getUriForFile(
-                    activity,
-                    "${activity.packageName}.files",
-                    exportFile
-                )
-                val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                    type = "application/zip"
-                    putExtra(Intent.EXTRA_STREAM, uri)
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                }
-                activity.startActivity(Intent.createChooser(shareIntent, translate("مشاركة سجل التشخيص")))
-            }.onFailure {
-                Toast.makeText(activity, translate("تعذر إنشاء سجل التشخيص"), Toast.LENGTH_LONG).show()
+            if (!diagnosticsExportInProgress.compareAndSet(false, true)) {
+                Toast.makeText(activity, translate("يتم تجهيز سجل التشخيص بالفعل"), Toast.LENGTH_SHORT).show()
+                return@settingRow
             }
+            com.marcorx6.library.AppDiagnostics.recordAction("Export diagnostic log")
+            Toast.makeText(activity, translate("جارٍ تجهيز سجل التشخيص…"), Toast.LENGTH_SHORT).show()
+            Thread({
+                val result = runCatching {
+                    com.marcorx6.library.AppDiagnostics.createExport(activity.applicationContext)
+                }
+                activity.runOnUiThread {
+                    diagnosticsExportInProgress.set(false)
+                    if (activity.isFinishing || activity.isDestroyed) return@runOnUiThread
+                    result.onSuccess { exportFile ->
+                        runCatching {
+                            val uri = androidx.core.content.FileProvider.getUriForFile(
+                                activity,
+                                "${activity.packageName}.files",
+                                exportFile
+                            )
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "application/zip"
+                                putExtra(Intent.EXTRA_STREAM, uri)
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            activity.startActivity(
+                                Intent.createChooser(shareIntent, translate("مشاركة سجل التشخيص"))
+                            )
+                            com.marcorx6.library.AppDiagnostics.log(
+                                "INFO", "Diagnostics", "Diagnostic share chooser opened"
+                            )
+                        }.onFailure { error ->
+                            com.marcorx6.library.AppDiagnostics.log(
+                                "ERROR", "Diagnostics", "Unable to share diagnostic archive", error
+                            )
+                            Toast.makeText(
+                                activity, translate("تعذر مشاركة سجل التشخيص"), Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }.onFailure { error ->
+                        com.marcorx6.library.AppDiagnostics.log(
+                            "ERROR", "Diagnostics", "Unable to create diagnostic archive", error
+                        )
+                        Toast.makeText(
+                            activity, translate("تعذر إنشاء سجل التشخيص"), Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            }, "marco-diagnostic-export").start()
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
 
         root.addView(TextView(activity).apply {
-            text = "MARCO  •  BLACK / BLACK / SILVER EXPERIENCE"
+            text = "MARCO  •  BLACK / SILVER EXPERIENCE"
             textSize = 9f
             gravity = Gravity.CENTER
             setTextColor(muted)

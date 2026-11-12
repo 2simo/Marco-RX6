@@ -14,13 +14,28 @@ internal class AppearancePaletteRuntimeFeature(context: Context) {
 
     fun preferences(): SharedPreferences = appearancePreferences
     fun isDarkMode(): Boolean = AppearancePreferencesStore.isDarkMode(appearancePreferences)
-    fun accentColor(): Int =
-        AccentPalette.color()
 
+    fun accentId(): String =
+        appearancePreferences.getString(AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID)
+            ?: AccentPalette.DEFAULT_ID
+
+    fun accentColor(): Int = AccentPalette.color(accentId())
+
+    // Both appearance modes retain MARCO's restrained surfaces, but each surface
+    // receives a visible tint from the selected primary color. These are computed
+    // getters so a palette change is reflected as soon as the screen is rebuilt.
     val bg: Int
-        get() = if (isDarkMode()) Color.rgb(8, 9, 12) else Color.rgb(235, 239, 244)
+        get() {
+            val accent = accentColor()
+            return if (isDarkMode()) AccentPalette.surface(Color.rgb(8, 9, 12), accent, 0.20f, accentId())
+            else AccentPalette.surface(Color.rgb(245, 247, 250), accent, 0.10f, accentId())
+        }
     val panel: Int
-        get() = if (isDarkMode()) Color.rgb(25, 28, 34) else Color.rgb(213, 219, 227)
+        get() {
+            val accent = accentColor()
+            return if (isDarkMode()) AccentPalette.surface(Color.rgb(25, 28, 34), accent, 0.30f, accentId())
+            else AccentPalette.surface(Color.rgb(224, 229, 237), accent, 0.20f, accentId())
+        }
     val red: Int
         get() = accentColor()
     val white: Int
@@ -28,5 +43,5 @@ internal class AppearancePaletteRuntimeFeature(context: Context) {
     val gray: Int
         get() = if (isDarkMode()) Color.rgb(178, 184, 194) else Color.rgb(91, 98, 110)
 
-    fun accentForeground(): Int = AccentPalette.foreground()
+    fun accentForeground(): Int = AccentPalette.foreground(accentId())
 }

@@ -42,8 +42,14 @@ internal class FirstRunSetupController(
             ?.takeIf { it in listOf("PS2", "PS3", "PS4") } ?: "PS3"
         var languageCode = currentLanguage()
         var darkMode = isDarkMode()
-        var accentKey = appearance.getString("accent", "silver")
-            ?.takeIf { it == "silver" } ?: "silver"
+        var accentKey = appearance.getString(AccentPalette.PREFERENCE_KEY, AccentPalette.DEFAULT_ID)
+            ?.takeIf { key -> AccentPalette.options.any { it.id == key } } ?: AccentPalette.DEFAULT_ID
+        fun accentShade(color: Int): Int = Color.rgb(
+            (Color.red(color) * 0.72f).toInt(),
+            (Color.green(color) * 0.72f).toInt(),
+            (Color.blue(color) * 0.72f).toInt()
+        )
+        var activeAccent = AccentPalette.color(accentKey)
         var notificationsEnabled = isNotificationsEnabled()
 
         val steps = listOf(
@@ -54,8 +60,15 @@ internal class FirstRunSetupController(
         dialog.setOnDismissListener { if (getSetupDialog() === dialog) setSetupDialog(null) }
         fun setupBackground(dark: Boolean) = GradientDrawable(
             GradientDrawable.Orientation.TL_BR,
-            if (dark) intArrayOf(Color.rgb(7, 8, 11), Color.rgb(16, 18, 23), Color.rgb(5, 6, 9))
-            else intArrayOf(Color.rgb(250, 251, 253), Color.rgb(232, 236, 242), Color.rgb(245, 247, 250))
+            if (dark) intArrayOf(
+                AccentPalette.surface(Color.rgb(7, 8, 11), activeAccent, 0.22f),
+                AccentPalette.surface(Color.rgb(16, 18, 23), activeAccent, 0.18f),
+                AccentPalette.surface(Color.rgb(5, 6, 9), activeAccent, 0.16f)
+            ) else intArrayOf(
+                AccentPalette.surface(Color.rgb(250, 251, 253), activeAccent, 0.12f),
+                AccentPalette.surface(Color.rgb(232, 236, 242), activeAccent, 0.14f),
+                AccentPalette.surface(Color.rgb(245, 247, 250), activeAccent, 0.10f)
+            )
         ).apply { cornerRadius = dp(24).toFloat() }
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
@@ -67,7 +80,7 @@ internal class FirstRunSetupController(
             gravity = Gravity.CENTER_VERTICAL
         }
         val brand = makeText("MARCO", 13f, Color.WHITE, true).apply { letterSpacing = 0.12f }
-        val stepCount = makeText("1 / ${steps.size}", 11f, Color.rgb(190, 198, 210), true)
+        val stepCount = makeText("1 / ${steps.size}", 11f, activeAccent, true)
         top.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
         top.addView(stepCount)
         root.addView(top)
@@ -78,7 +91,7 @@ internal class FirstRunSetupController(
         }
         val progressFill = View(activity).apply {
             background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(Color.rgb(190, 198, 210), Color.rgb(137, 145, 158))).apply {
+                intArrayOf(activeAccent, accentShade(activeAccent))).apply {
                 cornerRadius = dp(8).toFloat()
             }
         }
@@ -95,6 +108,9 @@ internal class FirstRunSetupController(
             gravity = Gravity.CENTER_VERTICAL
         }
         lateinit var renderStep: (Int, Boolean) -> Unit
+        // Keep the palette list at the user's current scroll position when its cards are rebuilt.
+        var colorScrollPosition = 0
+        var colorScrollView: ScrollView? = null
         val back = Button(activity).apply { setOnClickListener { renderStep(step - 1, true) } }
         val next = Button(activity).apply { tag = "marco_primary_action" }
         footer.addView(back, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(8) })
@@ -105,6 +121,7 @@ internal class FirstRunSetupController(
 
         renderStep = { target: Int, animate: Boolean ->
             step = target.coerceIn(0, steps.lastIndex)
+            activeAccent = AccentPalette.color(accentKey)
             val tr: (String) -> String = { value -> LanguageTranslator.translate(value, languageCode) }
             root.background = setupBackground(darkMode)
             progressTrack.background = rounded(if (darkMode) Color.rgb(57, 61, 70) else Color.rgb(210, 216, 225), 8)
@@ -112,8 +129,13 @@ internal class FirstRunSetupController(
             dialog.window?.let { SystemBarPolicy.apply(it, darkMode = darkMode) }
             back.setTextColor(if (darkMode) Color.rgb(225, 230, 237) else Color.rgb(35, 41, 51))
             back.background = rounded(if (darkMode) Color.rgb(35, 39, 46) else Color.WHITE, 14)
-            next.setTextColor(Color.rgb(20, 23, 29))
-            next.background = rounded(Color.rgb(190, 198, 210), 14)
+            next.setTextColor(AccentPalette.foreground(accentKey))
+            next.background = rounded(activeAccent, 14)
+            progressFill.background = GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(activeAccent, accentShade(activeAccent))
+            ).apply { cornerRadius = dp(8).toFloat() }
+            stepCount.setTextColor(AccentPalette.readableAccentText(accentKey, darkMode))
             stepCount.text = "${step + 1} / ${steps.size}"
             progressTrack.post {
                 val params = progressFill.layoutParams as FrameLayout.LayoutParams
@@ -131,7 +153,7 @@ internal class FirstRunSetupController(
                 gravity = Gravity.TOP
                 setPadding(0, dp(8), 0, dp(8))
             }
-            page.addView(makeText(tr("خطوة ${step + 1}"), 10f, Color.rgb(190, 198, 210), true))
+            page.addView(makeText(tr("خطوة ${step + 1}"), 10f, activeAccent, true))
             page.addView(makeText(tr(steps[step]), 27f, if (darkMode) Color.WHITE else Color.rgb(25, 29, 36), true).apply {
                 setPadding(0, dp(8), 0, dp(8))
             })
@@ -150,7 +172,7 @@ internal class FirstRunSetupController(
 
             val choices = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
             fun addChoice(label: String, detail: String = "", selectedNow: Boolean, action: () -> Unit) {
-                val card = viewFactory.optionCard(label, selectedNow, detail, darkMode)
+                val card = viewFactory.optionCard(label, selectedNow, detail, darkMode, activeAccent, AccentPalette.foreground(accentKey))
                 choices.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(11) })
                 card.setOnClickListener {
                     action()
@@ -181,13 +203,32 @@ internal class FirstRunSetupController(
                 2 -> listOf(true to "الوضع الليلي", false to "الوضع النهاري")
                     .forEach { (dark, label) -> addChoice(tr(label), "", darkMode == dark) { darkMode = dark } }
                 3 -> {
-                    val card = viewFactory.optionCard(tr("فضي"), true, tr("اللون الرسمي المعتمد في MARCO"), darkMode)
-                    val dot = View(activity).apply {
-                        background = rounded(Color.rgb(190, 198, 210), 20)
+                    AccentPalette.options.forEach { option ->
+                        val selected = accentKey == option.id
+                        val card = viewFactory.optionCard(
+                            AccentPalette.localizedLabel(option.id, languageCode),
+                            selected,
+                            tr("اللون الرئيسي"),
+                            darkMode,
+                            option.color,
+                            AccentPalette.foreground(option.id)
+                        )
+                        val dot = View(activity).apply {
+                            background = rounded(option.color, 20)
+                        }
+                        card.addView(dot, LinearLayout.LayoutParams(dp(28), dp(28)).apply {
+                            topMargin = dp(9)
+                        })
+                        card.setOnClickListener {
+                            colorScrollPosition = colorScrollView?.scrollY ?: colorScrollPosition
+                            accentKey = option.id
+                            renderStep(step, false)
+                        }
+                        choices.addView(card, LinearLayout.LayoutParams(-1, -2).apply {
+                            bottomMargin = dp(9)
+                        })
+                        if (animate && motionEnabled) viewFactory.animateIn(card)
                     }
-                    card.addView(dot, LinearLayout.LayoutParams(dp(24), dp(24)).apply { topMargin = dp(9) })
-                    choices.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(9) })
-                    if (animate && motionEnabled) viewFactory.animateIn(card)
                 }
                 4 -> {
                     addChoice(tr("تفعيل الإشعارات"), tr("تنبيه عند وصول مقال جديد"), notificationsEnabled) { notificationsEnabled = true }
@@ -198,7 +239,9 @@ internal class FirstRunSetupController(
                         tr("اختيار مجلد التنزيلات"),
                         true,
                         tr("اختر مجلداً لحفظ التنزيلات فيه."),
-                        darkMode
+                        darkMode,
+                        activeAccent,
+                        AccentPalette.foreground(accentKey)
                     )
                     folderCard.setOnClickListener { launchDownloadFolderPicker() }
                     choices.addView(folderCard, LinearLayout.LayoutParams(-1, -2).apply {
@@ -215,7 +258,14 @@ internal class FirstRunSetupController(
                     }, LinearLayout.LayoutParams(-1, -2))
                 }
                 6 -> {
-                    val readyCard = viewFactory.optionCard(tr("مكتبتك جاهزة!"), true, tr("تم حفظ المنصة واللغة والمظهر واللون والإشعارات ومكان التنزيلات.") + "\n" + tr("المجلد الحالي:") + " " + downloadFolderName(), darkMode)
+                    val readyCard = viewFactory.optionCard(
+                        tr("مكتبتك جاهزة!"),
+                        true,
+                        tr("تم حفظ المنصة واللغة والمظهر واللون والإشعارات ومكان التنزيلات.") + "\n" + tr("المجلد الحالي:") + " " + downloadFolderName(),
+                        darkMode,
+                        activeAccent,
+                        AccentPalette.foreground(accentKey)
+                    )
                     choices.addView(readyCard, LinearLayout.LayoutParams(-1, -2))
                     if (animate && motionEnabled) viewFactory.animateIn(readyCard)
                 }
@@ -226,6 +276,13 @@ internal class FirstRunSetupController(
                 addView(choices)
             }
             page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
+            if (step == 3) {
+                colorScrollView = scroll
+                scroll.post { scroll.scrollTo(0, colorScrollPosition) }
+            } else {
+                colorScrollView = null
+                colorScrollPosition = 0
+            }
             content.addView(page, FrameLayout.LayoutParams(-1, -1))
             // This setup has a temporary, not-yet-saved theme selection.
             // Do not run the global skin pass, which reads the previously saved theme.
@@ -263,7 +320,8 @@ internal class FirstRunSetupController(
                             dp = dp,
                             makeText = makeText,
                             translate = { value -> LanguageTranslator.translate(value, languageCode) },
-                            isDarkMode = isDarkMode
+                            isDarkMode = isDarkMode,
+                            red = { AccentPalette.color(accentKey) }
                         ).show {
                             settings.edit().putBoolean("community_channels_prompted", true).apply()
                             recreateActivity()
@@ -277,6 +335,9 @@ internal class FirstRunSetupController(
         dialog.setCancelable(false)
         dialog.setCanceledOnTouchOutside(false)
         dialog.show()
+        // The onboarding dialog is a separate Window, so explicitly skin its
+        // complete content tree with the same selected palette as app screens.
+        applyUnifiedSkin(root)
         dialog.window?.let { window ->
             window.setBackgroundDrawableResource(android.R.color.transparent)
             window.setLayout(-1, -1)

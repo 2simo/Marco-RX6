@@ -86,7 +86,11 @@ class MainActivity : ComponentActivity() {
         // repeatedly traversed the entire view tree and could trigger needless text
         // updates during scrolling/resizing, contributing to visible flicker.
         LanguageTranslator.translateViewTree(view, pageLanguage)
-        com.marcorx6.library.AppDiagnostics.log("INFO", "Navigation", "Opened screen: ${view.javaClass.simpleName}")
+        com.marcorx6.library.AppDiagnostics.setScreen(
+            (view.tag as? String)?.takeIf { it.startsWith("marco_screen:") }
+                ?: view.javaClass.simpleName
+        )
+        com.marcorx6.library.AppDiagnostics.log("INFO", "Navigation", "Root view rendered: ${view.javaClass.simpleName}")
 
         // Use one stable app-owned top bar on every Activity screen. The Android
         // status bar remains visible; the app bar receives the status-bar inset
@@ -98,15 +102,37 @@ class MainActivity : ComponentActivity() {
                 else android.graphics.Color.rgb(245, 247, 250))
         }
         screenHost.addView(createApplicationTopBar())
-        screenHost.addView(view, LinearLayout.LayoutParams(
+
+        // The shared app bar is the single owner of the status-bar/cutout inset.
+        // Several legacy pages also install their own system-bar listeners; without
+        // isolating the content subtree they apply the same top inset a second time,
+        // exposing the host's dark backing surface as a temporary black gap.
+        val pageHost = android.widget.FrameLayout(this).apply {
+            clipToPadding = false
+            clipChildren = false
+            addView(view, android.widget.FrameLayout.LayoutParams(-1, -1))
+        }
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(pageHost) { _, insets ->
+            val withoutTopBars = androidx.core.view.WindowInsetsCompat.Builder(insets)
+                .setInsets(
+                    androidx.core.view.WindowInsetsCompat.Type.statusBars() or
+                        androidx.core.view.WindowInsetsCompat.Type.displayCutout(),
+                    androidx.core.graphics.Insets.NONE
+                )
+                .build()
+            withoutTopBars
+        }
+        screenHost.addView(pageHost, LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
         ))
         setContentView(screenHost)
         androidx.core.view.ViewCompat.requestApplyInsets(screenHost)
         com.marcorx6.library.ui.KeyboardLayoutController.install(this, view)
         activityServicesRuntimeFeature.applySystemBarAppearance()
-        applyMotionPreferences(view)
-        applyUnifiedSkin(view)
+        applyMotionPreferences(screenHost)
+        // Skin the actual Activity content root, not only the page body. This
+        // includes the shared app bar and every screen child in one pass.
+        applyUnifiedSkin(screenHost)
         if (animationsEnabled) {
             view.animate().cancel()
             view.animate()
@@ -120,18 +146,35 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * The top bar is intentionally excluded from generic skin traversal because it
+     * owns explicit palette colors. Rebuild it when the palette changes so it never
+     * keeps the previous accent while the rest of the page updates live.
+     */
+    private fun refreshApplicationTopBar() {
+        val current = window.decorView.findViewWithTag<View>("marco_primary_topbar") ?: return
+        val parent = current.parent as? android.view.ViewGroup ?: return
+        val index = parent.indexOfChild(current)
+        if (index < 0) return
+        val layoutParams = current.layoutParams
+        parent.removeViewAt(index)
+        parent.addView(createApplicationTopBar(), index, layoutParams)
+    }
+
     private fun createApplicationTopBar(): View {
         val dark = isDarkMode()
-        val surface = if (dark) android.graphics.Color.rgb(8, 9, 12)
+        val surfaceBase = if (dark) android.graphics.Color.rgb(8, 9, 12)
             else android.graphics.Color.rgb(245, 247, 250)
+        // The top bar is a visible primary-brand surface, not a neutral strip.
+        val surface = com.marcorx6.library.ui.AccentPalette.surface(surfaceBase, red, 0.32f)
         val foreground = if (dark) android.graphics.Color.rgb(238, 241, 246)
             else android.graphics.Color.rgb(25, 29, 36)
-        val silver = if (dark) android.graphics.Color.rgb(190, 198, 210)
-            else android.graphics.Color.rgb(105, 113, 126)
+        val silver = red
         val stroke = if (dark) android.graphics.Color.rgb(105, 113, 126)
             else android.graphics.Color.rgb(174, 181, 191)
 
         val topBar = LinearLayout(this).apply {
+            tag = "marco_primary_topbar"
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(surface)
             layoutParams = LinearLayout.LayoutParams(-1, -2)
@@ -160,10 +203,12 @@ class MainActivity : ComponentActivity() {
                 scaleType = ImageView.ScaleType.CENTER_INSIDE
                 imageTintList = android.content.res.ColorStateList.valueOf(silver)
                 background = android.graphics.drawable.GradientDrawable().apply {
-                    setColor(if (dark) android.graphics.Color.rgb(25, 28, 34)
-                        else android.graphics.Color.rgb(232, 235, 240))
+                    val actionBase = if (dark) android.graphics.Color.rgb(25, 28, 34)
+                        else android.graphics.Color.rgb(232, 235, 240)
+                    setColor(com.marcorx6.library.ui.AccentPalette.surface(actionBase, red, 0.30f))
                     cornerRadius = dp(13).toFloat()
-                    setStroke(dp(1), stroke)
+                    setStroke(dp(1), android.graphics.Color.argb(190,
+                        android.graphics.Color.red(red), android.graphics.Color.green(red), android.graphics.Color.blue(red)))
                 }
                 contentDescription = label
                 isClickable = true
@@ -174,18 +219,23 @@ class MainActivity : ComponentActivity() {
                 if (android.os.Build.VERSION.SDK_INT >= 23) {
                     background = android.graphics.drawable.RippleDrawable(
                         android.content.res.ColorStateList.valueOf(
-                            android.graphics.Color.argb(65, 150, 160, 175)
+                            android.graphics.Color.argb(72, android.graphics.Color.red(red),
+                            android.graphics.Color.green(red), android.graphics.Color.blue(red))
                         ),
                         android.graphics.drawable.GradientDrawable().apply {
-                            setColor(if (dark) android.graphics.Color.rgb(25, 28, 34)
-                                else android.graphics.Color.rgb(232, 235, 240))
+                            val actionBase = if (dark) android.graphics.Color.rgb(25, 28, 34)
+                                else android.graphics.Color.rgb(232, 235, 240)
+                            setColor(com.marcorx6.library.ui.AccentPalette.surface(actionBase, red, 0.30f))
                             cornerRadius = dp(13).toFloat()
                             setStroke(dp(1), stroke)
                         },
                         null
                     )
                 }
-                setOnClickListener { click() }
+                setOnClickListener {
+                    com.marcorx6.library.AppDiagnostics.recordAction("Top bar: $label")
+                    click()
+                }
             }
 
         row.addView(action(
@@ -200,6 +250,7 @@ class MainActivity : ComponentActivity() {
             if (dark) R.drawable.ic_action_sun else R.drawable.ic_action_moon,
             tr(if (dark) "الوضع الفاتح" else "الوضع الداكن")
         ) {
+            com.marcorx6.library.AppDiagnostics.recordAction("Toggle appearance mode")
             // Use the same preference store read by AppearancePaletteRuntimeFeature.
             appearancePreferences().edit()
                 .putBoolean("dark_mode", !isDarkMode())
@@ -208,7 +259,8 @@ class MainActivity : ComponentActivity() {
         }, LinearLayout.LayoutParams(dp(36), dp(36)).apply { marginStart = dp(6) })
 
         topBar.addView(row)
-        topBar.addView(View(this).apply { setBackgroundColor(stroke) },
+        // The separator is a primary brand line, not a fixed neutral gray.
+        topBar.addView(View(this).apply { setBackgroundColor(red) },
             LinearLayout.LayoutParams(-1, dp(1)))
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(topBar) { target, insets ->
             val statusTop = insets.getInsets(
@@ -297,6 +349,27 @@ class MainActivity : ComponentActivity() {
     }
 
     private val appearancePaletteFeature: AppearancePaletteRuntimeFeature by lazy { AppearancePaletteRuntimeFeature(this) }
+
+    // A palette selection can happen while a page, RecyclerView or dialog is
+    // already alive. Re-skin the current window immediately instead of waiting
+    // for navigation or an Activity restart.
+    private val appearancePreferenceListener =
+        android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == com.marcorx6.library.ui.AccentPalette.PREFERENCE_KEY || key == "dark_mode") {
+                window.decorView.post {
+                    if (!isFinishing && !isDestroyed) {
+                        refreshApplicationTopBar()
+                        applyUnifiedSkin(window.decorView)
+                        // Main-library renderers keep cached palette values for fast list updates.
+                        // Refresh those values too, so the next card/filter render uses the new accent.
+                        if (libraryRuntimeFeatureDelegate.isInitialized()) {
+                            libraryRuntimeFeature.refreshPalette(bg, panel, red, white, gray)
+                        }
+                        activityServicesRuntimeFeature.applySystemBarAppearance()
+                    }
+                }
+            }
+        }
 
     private fun appearancePreferences() = appearancePaletteFeature.preferences()
     private fun isDarkMode() = appearancePaletteFeature.isDarkMode()
@@ -448,20 +521,19 @@ class MainActivity : ComponentActivity() {
             googleAccountRuntimeFeature.handleSignInResult(
                 data = data,
                 onSuccess = {
+                    // Blogger/Drive OAuth is intentionally a separate Google session
+                    // from the optional Firebase MARCO profile. Do not reject a valid
+                    // Blogger owner account just because its email differs from Firebase.
                     googleAccountRuntimeFeature.isAdminSession = false
-                    val firebaseEmail = firebaseAuthRepository.currentUser?.email?.trim()?.lowercase()
-                    val bloggerEmail = googleAccountRuntimeFeature.currentAccount()?.email?.trim()?.lowercase()
-                    if (firebaseEmail.isNullOrBlank() || bloggerEmail.isNullOrBlank() || firebaseEmail != bloggerEmail) {
-                        googleAccountRuntimeFeature.signOut {
-                            googleAccountRuntimeFeature.isAdminSession = false
-                            createInterface()
-                            Toast.makeText(this, tr("حساب Google المختار مختلف عن حساب MARCO. سجّل بنفس البريد الإلكتروني."), Toast.LENGTH_LONG).show()
-                        }
-                    } else {
-                        createInterface()
-                        bloggerRuntimeFeature.refreshAccess()
-                        Toast.makeText(this, tr("تم ربط نفس حساب Google؛ جارٍ التحقق من صلاحيات Blogger…"), Toast.LENGTH_LONG).show()
-                    }
+                    createInterface()
+                    Toast.makeText(
+                        this,
+                        tr("تم ربط حساب Google؛ جارٍ تحميل مدونة MARCO والتحقق من صلاحيات النشر…"),
+                        Toast.LENGTH_LONG
+                    ).show()
+                    // Resolve the active blog ID before checking write access. This also
+                    // handles fresh installs where no Blogger blog ID has been cached yet.
+                    bloggerRuntimeFeature.sync(showResult = false)
                 },
                 onFailure = { message ->
                     googleAccountRuntimeFeature.isAdminSession = false
@@ -516,6 +588,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         com.marcorx6.library.ui.UiDiagnosticsMonitor.install(this)
+        com.marcorx6.library.AppDiagnostics.recordAction("MainActivity onCreate")
         com.marcorx6.library.ui.UiDiagnosticsMonitor.logLifecycle(this, "onCreate")
         com.marcorx6.library.AppDiagnostics.log(
             "INFO",
@@ -533,6 +606,7 @@ class MainActivity : ComponentActivity() {
             FirebaseAppCheck.getInstance().installAppCheckProviderFactory(it)
         }
         onBackPressedDispatcher.addCallback(this, secondaryScreenBackCallback)
+        appearancePreferences().registerOnSharedPreferenceChangeListener(appearancePreferenceListener)
         firebaseSessionCoordinator.start()
         lifecycleCoordinator.onCreate()
     }
@@ -574,6 +648,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         com.marcorx6.library.ui.UiDiagnosticsMonitor.logLifecycle(this, "onDestroy")
+        appearancePreferences().unregisterOnSharedPreferenceChangeListener(appearancePreferenceListener)
         lifecycleCoordinator.onDestroy()
         firebaseSessionCoordinator.stop()
         super.onDestroy()
@@ -592,6 +667,7 @@ class MainActivity : ComponentActivity() {
             white = { white },
             gray = { gray },
             accentForeground = ::accentForeground,
+            accentId = appearancePaletteFeature::accentId,
             showNotifications = activityServicesRuntimeFeature::showNotificationSettings,
             launchDownloadFolderPicker = activityResultRuntimeFeature::launchDownloadFolderPicker,
             downloadFolderName = downloadStoragePreferences::displayName,
@@ -637,7 +713,7 @@ class MainActivity : ComponentActivity() {
     private fun fontScale(): Float = appearanceRuntimeFeature.fontScale()
     private fun fontFamilyName(): String = appearanceRuntimeFeature.fontFamilyName()
 
-    private val libraryRuntimeFeature: MainLibraryRuntimeFeature by lazy {
+    private val libraryRuntimeFeatureDelegate = lazy {
         MainLibraryRuntimeFeature(
             activity = this,
             context = this,
@@ -681,8 +757,7 @@ class MainActivity : ComponentActivity() {
             },
         )
     }
-
-
+    private val libraryRuntimeFeature: MainLibraryRuntimeFeature by libraryRuntimeFeatureDelegate
 
     private fun showFirstRunSetup() = userExperienceRuntimeFeature.showFirstRunSetup()
     private fun showStartupExperience() = userExperienceRuntimeFeature.showStartupExperience()

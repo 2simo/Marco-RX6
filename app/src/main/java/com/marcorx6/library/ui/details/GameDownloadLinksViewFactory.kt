@@ -64,18 +64,18 @@ internal class GameDownloadLinksViewFactory(
                 compoundDrawablePadding = dp(8)
                 contentDescription = label
                 textSize = 14f
-                setTextColor(Color.rgb(20, 23, 29))
+                setTextColor(com.marcorx6.library.ui.AccentPalette.foregroundForColor(red()))
                 gravity = Gravity.CENTER
                 setTypeface(null, Typeface.BOLD)
                 background = GradientDrawable(
                     GradientDrawable.Orientation.TL_BR,
-                    intArrayOf(Color.rgb(190, 198, 210), Color.rgb(105, 113, 126))
+                    intArrayOf(red(), Color.rgb((Color.red(red()) * 0.95f).toInt(), (Color.green(red()) * 0.95f).toInt(), (Color.blue(red()) * 0.95f).toInt()))
                 ).apply {
                     cornerRadius = dp(13).toFloat()
-                    setStroke(dp(1), Color.argb(145, 210, 216, 225))
+                    setStroke(dp(1), Color.argb(145, Color.red(red()), Color.green(red()), Color.blue(red())))
                 }
                 if (android.os.Build.VERSION.SDK_INT >= 23) foreground = android.graphics.drawable.RippleDrawable(
-                    android.content.res.ColorStateList.valueOf(Color.argb(100, 145, 190, 255)),
+                    android.content.res.ColorStateList.valueOf(Color.argb(100, Color.red(red()), Color.green(red()), Color.blue(red()))),
                     null,
                     GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dp(13).toFloat() }
                 )
