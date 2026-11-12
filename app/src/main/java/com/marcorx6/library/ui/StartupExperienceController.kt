@@ -42,7 +42,7 @@ internal class StartupExperienceController(
         val intro = Dialog(activity, android.R.style.Theme_Material_NoActionBar)
         introDialog = intro
         val artwork = ImageView(activity).apply {
-            setImageResource(com.marcorx6.library.R.drawable.marco_splash)
+            setImageResource(com.marcorx6.library.R.drawable.marco_dragon_intro)
             scaleType = ImageView.ScaleType.FIT_CENTER
             setBackgroundColor(Color.BLACK)
             contentDescription = "MARCO RX6"
@@ -99,7 +99,7 @@ internal class StartupExperienceController(
             setPadding(dp(30), dp(24), dp(30), dp(24))
         }
         val logo = ImageView(activity).apply {
-            setImageResource(com.marcorx6.library.R.drawable.marco_dragon_intro)
+            setImageResource(com.marcorx6.library.R.drawable.marco_splash)
             scaleType = ImageView.ScaleType.FIT_CENTER
             contentDescription = "MARCO RX6"
             // Keep the complete portrait artwork visible without a circular frame,
