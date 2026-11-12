@@ -37,8 +37,11 @@ internal class StartupExperienceController(
     private var introDialog: Dialog? = null
     private var introCompletion: Runnable? = null
 
-    fun show() {
-        if (!isActivityUsable() || dialog?.isShowing == true || introDialog?.isShowing == true) return
+    fun show(onStartupFinished: () -> Unit) {
+        if (!isActivityUsable() || dialog?.isShowing == true || introDialog?.isShowing == true) {
+            onStartupFinished()
+            return
+        }
         val intro = Dialog(activity, android.R.style.Theme_Material_NoActionBar)
         introDialog = intro
         val artwork = ImageView(activity).apply {
@@ -194,6 +197,9 @@ internal class StartupExperienceController(
                 animator = null
                 splash.dismiss()
                 dialog = null
+                // The Activity library is composed only after the complete startup
+                // sequence. This prevents it from appearing behind/between splash windows.
+                onStartupFinished()
                 val settings = activity.getSharedPreferences("app_settings", Activity.MODE_PRIVATE)
                 if (!settings.getBoolean("setup_completed", false)) {
                     showFirstRunSetup()
