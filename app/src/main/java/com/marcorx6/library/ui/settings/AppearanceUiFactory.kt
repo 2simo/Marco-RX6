@@ -398,15 +398,10 @@ internal class AppearanceUiFactory(
                 return changed
             }
             is android.graphics.drawable.StateListDrawable -> {
-                var changed = false
-                // getStateCount() is only public from API 29. getStateDrawable()
-                // is available on the app's full minSdk range; stop at the first
-                // missing index and cap the walk defensively.
-                for (index in 0 until 32) {
-                    val child = runCatching { drawable.getStateDrawable(index) }.getOrNull() ?: break
-                    if (rethemeBackground(child)) changed = true
-                }
-                return changed
+                // Enumerating every state is only exposed by the public API from
+                // Android 10. Retheme the active child using the API-1 accessor;
+                // never reflect into hidden framework state on older devices.
+                return rethemeBackground(drawable.current)
             }
             is android.graphics.drawable.LayerDrawable -> {
                 var changed = false
