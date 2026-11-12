@@ -98,30 +98,20 @@ internal class StartupExperienceController(
             gravity = Gravity.CENTER
             setPadding(dp(30), dp(24), dp(30), dp(24))
         }
-        val logoHalo = FrameLayout(activity).apply {
-            background = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setColor(if (dark) Color.rgb(25, 28, 34) else Color.WHITE)
-                setStroke(dp(3), red())
-            }
-            elevation = dp(18).toFloat()
-        }
         val logo = ImageView(activity).apply {
             setImageResource(com.marcorx6.library.R.drawable.marco_dragon_intro)
             scaleType = ImageView.ScaleType.FIT_CENTER
-            contentDescription = "MARCO"
-            background = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setColor(Color.rgb(8, 9, 12))
-            }
-            clipToOutline = true
-            setPadding(dp(7), dp(7), dp(7), dp(7))
+            contentDescription = "MARCO RX6"
+            // Keep the complete portrait artwork visible without a circular frame,
+            // clipping, padding, or image distortion.
+            setBackgroundColor(Color.BLACK)
             alpha = 0f
-            scaleX = 0.92f
-            scaleY = 0.92f
+            scaleX = 0.96f
+            scaleY = 0.96f
         }
-        logoHalo.addView(logo, FrameLayout.LayoutParams(-1, -1))
-        center.addView(logoHalo, LinearLayout.LayoutParams(dp(230), dp(230)).apply { bottomMargin = dp(25) })
+        center.addView(logo, LinearLayout.LayoutParams(dp(174), dp(280)).apply {
+            bottomMargin = dp(18)
+        })
         center.addView(makeText("MARCO", 25f, if (dark) Color.WHITE else Color.rgb(25, 29, 36), true).apply {
             gravity = Gravity.CENTER
             letterSpacing = 0.16f
