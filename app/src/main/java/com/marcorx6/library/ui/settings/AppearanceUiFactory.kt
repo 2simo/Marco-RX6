@@ -399,8 +399,12 @@ internal class AppearanceUiFactory(
             }
             is android.graphics.drawable.StateListDrawable -> {
                 var changed = false
-                for (index in 0 until drawable.stateCount) {
-                    if (rethemeBackground(drawable.getStateDrawable(index))) changed = true
+                // getStateCount() is only public from API 29. getStateDrawable()
+                // is available on the app's full minSdk range; stop at the first
+                // missing index and cap the walk defensively.
+                for (index in 0 until 32) {
+                    val child = runCatching { drawable.getStateDrawable(index) }.getOrNull() ?: break
+                    if (rethemeBackground(child)) changed = true
                 }
                 return changed
             }
