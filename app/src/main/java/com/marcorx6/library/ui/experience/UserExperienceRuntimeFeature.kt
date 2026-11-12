@@ -148,7 +148,8 @@ internal class UserExperienceRuntimeFeature(
 
     fun showProfile() = profileFeature.show()
     fun showFirstRunSetup() = firstRunSetupFeature.show()
-    fun showStartupExperience() = startupExperienceController.show()
+    fun showStartupExperience(onStartupFinished: () -> Unit) =
+        startupExperienceController.show(onStartupFinished)
 
     fun dismiss() {
         if (startupExperienceControllerDelegate.isInitialized()) {
