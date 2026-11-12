@@ -108,6 +108,9 @@ internal class FirstRunSetupController(
             gravity = Gravity.CENTER_VERTICAL
         }
         lateinit var renderStep: (Int, Boolean) -> Unit
+        // Keep the palette list at the user's current scroll position when its cards are rebuilt.
+        var colorScrollPosition = 0
+        var colorScrollView: ScrollView? = null
         val back = Button(activity).apply { setOnClickListener { renderStep(step - 1, true) } }
         val next = Button(activity).apply { tag = "marco_primary_action" }
         footer.addView(back, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = dp(8) })
@@ -217,6 +220,7 @@ internal class FirstRunSetupController(
                             topMargin = dp(9)
                         })
                         card.setOnClickListener {
+                            colorScrollPosition = colorScrollView?.scrollY ?: colorScrollPosition
                             accentKey = option.id
                             renderStep(step, false)
                         }
@@ -272,6 +276,13 @@ internal class FirstRunSetupController(
                 addView(choices)
             }
             page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
+            if (step == 3) {
+                colorScrollView = scroll
+                scroll.post { scroll.scrollTo(0, colorScrollPosition) }
+            } else {
+                colorScrollView = null
+                colorScrollPosition = 0
+            }
             content.addView(page, FrameLayout.LayoutParams(-1, -1))
             // This setup has a temporary, not-yet-saved theme selection.
             // Do not run the global skin pass, which reads the previously saved theme.
