@@ -964,6 +964,10 @@ internal object LanguageTranslator {
             "التنزيل عبر Wi-Fi فقط" to listOf("Download over Wi-Fi only", "Télécharger uniquement via Wi-Fi", "Descargar solo por Wi-Fi"),
         )
 
+    /** Returns keys whose catalog entries do not cover all three non-Arabic languages. */
+    internal fun incompleteTranslationKeys(): List<String> =
+        translations.filterValues { it.size != 3 }.keys.toList()
+
     fun translate(ar: String, lang: String): String {
         if (lang == "ar") return ar
         val index = when (lang) { "en" -> 0; "fr" -> 1; "es" -> 2; else -> return ar }
