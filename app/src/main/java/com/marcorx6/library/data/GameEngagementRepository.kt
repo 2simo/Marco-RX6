@@ -1,6 +1,7 @@
 package com.marcorx6.library.data
 
 import android.util.Log
+import com.marcorx6.library.AppDiagnostics
 
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
@@ -161,11 +162,14 @@ internal class GameEngagementRepository(
         val downloadsTask = root.collection("downloads").count()
             .get(com.google.firebase.firestore.AggregateSource.SERVER)
 
-        Tasks.whenAllSuccess<Any>(viewsTask, ratingsTask, downloadsTask)
-            .addOnSuccessListener { results ->
-                val views = results[0] as AggregateQuerySnapshot
-                val ratings = results[1] as QuerySnapshot
-                val downloads = results[2] as AggregateQuerySnapshot
+        // Keep each typed Task as the source of its own result. Indexing the
+        // whenAllSuccess result list made this path vulnerable to an
+        // ArrayIndexOutOfBoundsException when the aggregate contained fewer entries.
+        Tasks.whenAll(viewsTask, ratingsTask, downloadsTask)
+            .addOnSuccessListener {
+                val views: AggregateQuerySnapshot = viewsTask.result
+                val ratings: QuerySnapshot = ratingsTask.result
+                val downloads: AggregateQuerySnapshot = downloadsTask.result
                 val values = ratings.documents.mapNotNull { document ->
                     document.getLong("rating")?.takeIf { it in 1L..5L }
                 }
@@ -185,9 +189,15 @@ internal class GameEngagementRepository(
                     }
                     pendingSummaryCallbacks.remove(id).orEmpty()
                 }
+                AppDiagnostics.log(
+                    "DEBUG",
+                    "GameEngagement",
+                    "Engagement summary loaded views=${summary.views} ratings=${summary.ratingCount} downloads=${summary.downloads}"
+                )
                 callbacks.forEach { it.success(summary) }
             }
             .addOnFailureListener { error ->
+                AppDiagnostics.log("WARN", "GameEngagement", "Engagement summary request failed", error)
                 val callbacks = synchronized(summaryLock) {
                     pendingSummaryCallbacks.remove(id).orEmpty()
                 }
