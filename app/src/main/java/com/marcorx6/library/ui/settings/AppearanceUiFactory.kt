@@ -108,7 +108,7 @@ internal class AppearanceUiFactory(
     // Accent-surface inference is intentionally conservative and can require several
     // candidate checks. Cache both matches and misses so repeated legacy colors do not
     // repeat that work during every full-screen skin pass.
-    private val recoveredAccentSurfaceCache = LinkedHashMap<Int, Int?>()
+    private val recoveredAccentSurfaceCache = LinkedHashMap<Pair<Int, String>, Int?>()
 
     private fun restoreOriginalStyle(view: View) {
         if (view !is EditText && view.background != null) {
@@ -226,7 +226,8 @@ internal class AppearanceUiFactory(
      * ordinary neutral text, borders, or black/silver surfaces.
      */
     private fun recoverAccentSurface(color: Int): Int? {
-        val cacheKey = color and 0x00FFFFFF
+        val activeId = selectedAccentId()
+        val cacheKey = (color and 0x00FFFFFF) to activeId
         synchronized(recoveredAccentSurfaceCache) {
             if (recoveredAccentSurfaceCache.containsKey(cacheKey)) {
                 return recoveredAccentSurfaceCache[cacheKey]
@@ -236,7 +237,6 @@ internal class AppearanceUiFactory(
         val observedRed = Color.red(color)
         val observedGreen = Color.green(color)
         val observedBlue = Color.blue(color)
-        val activeId = selectedAccentId()
         var recovered: Int? = null
         optionLoop@ for (option in AccentPalette.options) {
             if (option.id == "black_silver" || option.id == activeId) continue
