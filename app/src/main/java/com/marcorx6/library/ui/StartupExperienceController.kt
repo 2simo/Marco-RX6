@@ -131,7 +131,7 @@ internal class StartupExperienceController(
             progressBackgroundTintList = android.content.res.ColorStateList.valueOf(Color.rgb(48, 52, 60))
             progressDrawable = progressDrawable.mutate().apply {
                 if (this is android.graphics.drawable.LayerDrawable) {
-                    findDrawableByLayerId(android.R.id.background)?.let { it.setTint(if (dark) Color.rgb(57, 61, 70) else Color.rgb(210, 216, 225)) }
+                    findDrawableByLayerId(android.R.id.background)?.let { it.setTint(Color.rgb(48, 52, 60)) }
                     findDrawableByLayerId(android.R.id.progress)?.let { it.setTint(silver) }
                 }
             }
