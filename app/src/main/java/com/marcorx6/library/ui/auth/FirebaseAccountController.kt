@@ -1337,46 +1337,6 @@ internal class FirebaseAccountController(
                 onBack()
             }
         }, LinearLayout.LayoutParams(dp(44), dp(44)))
-        val clearButton = TextView(activity).apply {
-            text = translate("مسح الكل")
-            textSize = 12f
-            gravity = Gravity.CENTER
-            setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(if (dark) Color.rgb(255, 190, 190) else Color.rgb(170, 45, 45))
-            setPadding(dp(12), dp(9), dp(12), dp(9))
-            background = GradientDrawable().apply {
-                cornerRadius = dp(12).toFloat()
-                setColor(if (dark) Color.rgb(55, 27, 30) else Color.rgb(255, 235, 235))
-                setStroke(dp(1), if (dark) Color.rgb(110, 55, 60) else Color.rgb(235, 190, 190))
-            }
-            isEnabled = false
-            setOnClickListener {
-                val confirm = AlertDialog.Builder(activity)
-                    .setTitle(translate("مسح جميع الإشعارات؟"))
-                    .setMessage(translate("سيتم حذف جميع إشعارات حسابك من كل الأقسام. لا يمكن التراجع عن هذه العملية."))
-                    .setNegativeButton(translate("إلغاء"), null)
-                    .setPositiveButton(translate("مسح الكل")) { _, _ ->
-                        isEnabled = false
-                        notifications.deleteAll(user.uid)
-                            .addOnSuccessListener {
-                                allItems = emptyList()
-                                renderItems()
-                                toast(translate("تم مسح جميع الإشعارات."))
-                            }
-                            .addOnFailureListener { error ->
-                                isEnabled = allItems.isNotEmpty()
-                                AppDiagnostics.log("ERROR", "Notifications", "Delete all notifications failed", error)
-                                toast(translate("تعذر مسح الإشعارات. تحقق من الاتصال."))
-                            }
-                    }
-                    .create()
-                confirm.show()
-                styleDialog(confirm)
-            }
-        }
-        header.addView(clearButton, LinearLayout.LayoutParams(-2, dp(40)).apply {
-            marginEnd = dp(8)
-        })
         page.addView(header)
         val list = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
         var selectedSection = "game"
@@ -1500,6 +1460,46 @@ internal class FirebaseAccountController(
                 list.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(9) })
             }
         }
+        val clearButton = TextView(activity).apply {
+            text = translate("مسح الكل")
+            textSize = 12f
+            gravity = Gravity.CENTER
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(if (dark) Color.rgb(255, 190, 190) else Color.rgb(170, 45, 45))
+            setPadding(dp(12), dp(9), dp(12), dp(9))
+            background = GradientDrawable().apply {
+                cornerRadius = dp(12).toFloat()
+                setColor(if (dark) Color.rgb(55, 27, 30) else Color.rgb(255, 235, 235))
+                setStroke(dp(1), if (dark) Color.rgb(110, 55, 60) else Color.rgb(235, 190, 190))
+            }
+            isEnabled = false
+            setOnClickListener {
+                val confirm = AlertDialog.Builder(activity)
+                    .setTitle(translate("مسح جميع الإشعارات؟"))
+                    .setMessage(translate("سيتم حذف جميع إشعارات حسابك من كل الأقسام. لا يمكن التراجع عن هذه العملية."))
+                    .setNegativeButton(translate("إلغاء"), null)
+                    .setPositiveButton(translate("مسح الكل")) { _, _ ->
+                        isEnabled = false
+                        notifications.deleteAll(user.uid)
+                            .addOnSuccessListener {
+                                allItems = emptyList()
+                                renderItems()
+                                toast(translate("تم مسح جميع الإشعارات."))
+                            }
+                            .addOnFailureListener { error ->
+                                isEnabled = allItems.isNotEmpty()
+                                AppDiagnostics.log("ERROR", "Notifications", "Delete all notifications failed", error)
+                                toast(translate("تعذر مسح الإشعارات. تحقق من الاتصال."))
+                            }
+                    }
+                    .create()
+                confirm.show()
+                styleDialog(confirm)
+            }
+        }
+        header.addView(clearButton, LinearLayout.LayoutParams(-2, dp(40)).apply {
+            marginEnd = dp(8)
+        })
         val tabs = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
