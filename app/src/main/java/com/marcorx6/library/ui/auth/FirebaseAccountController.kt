@@ -1371,8 +1371,8 @@ internal class FirebaseAccountController(
                 val type = item.getString("type").orEmpty()
                 val actorUid = item.getString("actorUid").orEmpty()
                 val unread = item.getBoolean("read") != true
-                val title = item.getString("title") ?: "إشعار جديد"
-                val body = item.getString("body").orEmpty()
+                val title = translate(item.getString("title") ?: "إشعار جديد")
+                val body = translate(item.getString("body").orEmpty())
                 // Older notification documents may not contain coverUrl. Resolve the
                 // current library game so its local cover or latest URL can still render.
                 val gameName = item.getString("gameName").orEmpty()
@@ -1578,15 +1578,22 @@ internal class FirebaseAccountController(
                 }
                 tag = key
             }
-            tabs.addView(tab, LinearLayout.LayoutParams(0, -2, 1f).apply {
-                marginEnd = dp(5)
+            tab.minWidth = dp(82)
+            tabs.addView(tab, LinearLayout.LayoutParams(-2, -2).apply {
+                marginEnd = dp(7)
             })
         }
         addTab("الألعاب الجديدة", "game")
         addTab("المتابعون", "follow")
         addTab("الرسائل", "message")
         addTab("تنبيهات النظام", "system")
-        page.addView(tabs)
+        val tabScroller = android.widget.HorizontalScrollView(activity).apply {
+            isHorizontalScrollBarEnabled = false
+            clipToPadding = false
+            setPadding(0, 0, 0, dp(2))
+            addView(tabs, android.widget.HorizontalScrollView.LayoutParams(-2, -2))
+        }
+        page.addView(tabScroller, LinearLayout.LayoutParams(-1, -2))
         val scroll = ScrollView(activity).apply { addView(list) }
         page.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
         showAccountPage(page)
