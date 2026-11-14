@@ -134,7 +134,6 @@ internal class MainLibraryInterfaceController(
         val titleBlock = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
         titleBlock.addView(makeText(tr("MARCO  /  البحث الذكي"), 9f, accent, true))
         titleBlock.addView(makeText(tr("البحث الذكي"), 24f, white, true))
-        header.addView(titleBlock, LinearLayout.LayoutParams(0, -2, 1f))
         val back = TextView(context).apply {
             text = tr("رجوع")
             textSize = 12f
@@ -145,6 +144,7 @@ internal class MainLibraryInterfaceController(
             setOnClickListener { create() }
         }
         header.addView(back)
+        header.addView(titleBlock, LinearLayout.LayoutParams(0, -2, 1f))
         root.addView(header, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(18) })
 
         val searchBox = EditText(context).apply {
