@@ -123,7 +123,8 @@ internal class FirebaseAccountController(
         val dark = isDarkMode()
         val page = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            layoutDirection = activity.resources.configuration.layoutDirection
+            textDirection = View.TEXT_DIRECTION_LOCALE
             setPadding(dp(20), dp(18), dp(20), dp(30))
             setBackgroundColor(if (dark) Color.rgb(7, 8, 10) else Color.rgb(246, 248, 251))
         }
