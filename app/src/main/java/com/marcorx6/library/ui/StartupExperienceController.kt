@@ -9,7 +9,6 @@ import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
 import android.view.View
-import android.view.Window
 import android.view.animation.OvershootInterpolator
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -34,117 +33,13 @@ internal class StartupExperienceController(
     private var animator: ValueAnimator? = null
     private var completion: Runnable? = null
     private var dialog: Dialog? = null
-    private var introDialog: Dialog? = null
-    private var introCompletion: Runnable? = null
-    private var introPulseAnimator: ValueAnimator? = null
-
     fun show(onStartupFinished: () -> Unit) {
-        if (!isActivityUsable() || dialog?.isShowing == true || introDialog?.isShowing == true) {
+        if (!isActivityUsable() || dialog?.isShowing == true) {
             onStartupFinished()
             return
         }
-        val intro = Dialog(activity, android.R.style.Theme_Material_NoActionBar)
-        introDialog = intro
-        val introContent = FrameLayout(activity).apply {
-            setBackgroundColor(Color.BLACK)
-        }
-        val artwork = ImageView(activity).apply {
-            setImageResource(com.marcorx6.library.R.drawable.marco_silver_wolf_intro)
-            scaleType = ImageView.ScaleType.FIT_CENTER
-            setBackgroundColor(Color.BLACK)
-            contentDescription = "Silver wolf"
-            // Draw the artwork on the very first frame. Starting at alpha 0
-            // created a completely black pause before the intro became visible.
-            alpha = 1f
-            scaleX = 0.94f
-            scaleY = 0.94f
-        }
-        introContent.addView(
-            artwork,
-            FrameLayout.LayoutParams(-1, -1).apply {
-                leftMargin = dp(12)
-                rightMargin = dp(12)
-                bottomMargin = dp(66)
-            }
-        )
-        val brandName = makeText("MARCO", 30f, Color.rgb(218, 222, 230), true).apply {
-            gravity = Gravity.CENTER
-            textAlignment = View.TEXT_ALIGNMENT_CENTER
-            letterSpacing = 0.28f
-            maxLines = 1
-            alpha = 1f
-            translationY = 0f
-            setShadowLayer(dp(14).toFloat(), 0f, dp(2).toFloat(), Color.rgb(115, 122, 134))
-        }
-        introContent.addView(
-            brandName,
-            FrameLayout.LayoutParams(-1, dp(62), Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
-                leftMargin = dp(24)
-                rightMargin = dp(24)
-                bottomMargin = dp(28)
-            }
-        )
-        intro.setContentView(introContent)
-        intro.setCancelable(false)
-        intro.setCanceledOnTouchOutside(false)
-        intro.show()
-        intro.window?.setBackgroundDrawableResource(android.R.color.black)
-        intro.window?.setLayout(-1, -1)
-        val introMotionEnabled = activity.getSharedPreferences("app_settings", Activity.MODE_PRIVATE)
-            .getBoolean("animations", true)
-        if (introMotionEnabled) {
-            // Keep the wolf visible immediately; only apply a short scale-in.
-            artwork.animate().scaleX(1f).scaleY(1f)
-                .setDuration(420L)
-                .setInterpolator(android.view.animation.DecelerateInterpolator(1.5f))
-                .start()
-            introPulseAnimator = ValueAnimator.ofFloat(1f, 1.018f).apply {
-                duration = 1500L
-                repeatCount = ValueAnimator.INFINITE
-                repeatMode = ValueAnimator.REVERSE
-                startDelay = 700L
-                addUpdateListener { pulse ->
-                    if (introDialog === intro && intro.isShowing) {
-                        val scale = pulse.animatedValue as Float
-                        artwork.scaleX = scale
-                        artwork.scaleY = scale
-                    }
-                }
-                start()
-            }
-        } else {
-            artwork.scaleX = 1f
-            artwork.scaleY = 1f
-        }
-        intro.window?.let { window ->
-            WindowCompat.setDecorFitsSystemWindows(window, false)
-            window.statusBarColor = Color.BLACK
-            window.navigationBarColor = Color.BLACK
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                window.isStatusBarContrastEnforced = false
-                window.isNavigationBarContrastEnforced = false
-            }
-            WindowInsetsControllerCompat(window, window.decorView).apply {
-                hide(WindowInsetsCompat.Type.systemBars())
-                systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            }
-        }
-        introCompletion = Runnable {
-            if (isActivityUsable() && introDialog === intro && intro.isShowing) {
-                introPulseAnimator?.cancel()
-                introPulseAnimator = null
-                introDialog = null
-                introCompletion = null
-                showLoading(intro, onStartupFinished)
-            }
-        }.also { handler.postDelayed(it, 2900L) }
-        intro.setOnDismissListener {
-            introPulseAnimator?.cancel()
-            introPulseAnimator = null
-            introCompletion?.let(handler::removeCallbacks)
-            introCompletion = null
-            if (introDialog === intro) introDialog = null
-        }
+        // Open directly on the splash screen; the legacy wolf intro is retired.
+        showLoading(onStartupFinished = onStartupFinished)
     }
 
     private fun showLoading(existingWindow: Dialog? = null, onStartupFinished: () -> Unit) {
@@ -153,8 +48,7 @@ internal class StartupExperienceController(
         completion?.let(handler::removeCallbacks)
         val silver = Color.rgb(190, 196, 207)
         val electricBlue = silver
-        // Reuse the intro window so the Activity/library is never exposed between
-        // the dragon intro and the loading splash.
+        // The splash screen is the first app-owned screen shown at launch.
         val splash = existingWindow ?: Dialog(activity, android.R.style.Theme_Material_NoActionBar)
         dialog = splash
         val content = FrameLayout(activity).apply {
@@ -256,7 +150,7 @@ internal class StartupExperienceController(
         // Keep numeric loading progress active: it reports startup work rather than
         // decorative motion and remains useful when animations are disabled.
         animator = ValueAnimator.ofInt(1, 100).apply {
-            duration = 4500L
+            duration = 6500L
             addUpdateListener { valueAnimator ->
                 if (isActivityUsable() && dialog === splash && splash.isShowing) {
                     val value = valueAnimator.animatedValue as Int
@@ -301,7 +195,7 @@ internal class StartupExperienceController(
                 }
             }
             completion = null
-        }.also { handler.postDelayed(it, 4600L) }
+        }.also { handler.postDelayed(it, 6600L) }
         splash.setOnDismissListener {
             animator?.cancel()
             animator = null
@@ -312,12 +206,6 @@ internal class StartupExperienceController(
     }
 
     fun dismiss() {
-        introCompletion?.let(handler::removeCallbacks)
-        introCompletion = null
-        introPulseAnimator?.cancel()
-        introPulseAnimator = null
-        introDialog?.let { if (it.isShowing) it.dismiss() }
-        introDialog = null
         animator?.cancel()
         animator = null
         completion?.let(handler::removeCallbacks)
