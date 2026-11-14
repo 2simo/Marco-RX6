@@ -19,7 +19,7 @@ internal class GameDetailsTopBarFactory(
         val topBar = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = android.view.Gravity.CENTER_VERTICAL
-            layoutDirection = android.view.View.LAYOUT_DIRECTION_LTR
+            layoutDirection = activity.resources.configuration.layoutDirection
             setPadding(0, 0, 0, 0)
             background = android.graphics.drawable.ColorDrawable(Color.TRANSPARENT)
         }
