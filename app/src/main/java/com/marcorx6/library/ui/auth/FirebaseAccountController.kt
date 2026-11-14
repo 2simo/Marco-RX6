@@ -1598,7 +1598,7 @@ internal class FirebaseAccountController(
             isHorizontalScrollBarEnabled = false
             clipToPadding = false
             setPadding(0, 0, 0, dp(2))
-            addView(tabs, android.widget.HorizontalScrollView.LayoutParams(-2, -2))
+            addView(tabs, android.view.ViewGroup.LayoutParams(-2, -2))
         }
         page.addView(tabScroller, LinearLayout.LayoutParams(-1, -2))
         val scroll = ScrollView(activity).apply { addView(list) }
