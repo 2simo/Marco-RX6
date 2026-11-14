@@ -60,6 +60,8 @@ internal class StorageSettingsController(
 
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
+            layoutDirection = activity.resources.configuration.layoutDirection
+            textDirection = View.TEXT_DIRECTION_LOCALE
             setPadding(dp(20), dp(16), dp(20), dp(22))
             setBackgroundColor(bg)
         }
@@ -80,7 +82,6 @@ internal class StorageSettingsController(
             setTypeface(null, Typeface.BOLD)
             setTextColor(ink)
         })
-        header.addView(heading, LinearLayout.LayoutParams(0, -2, 1f))
         header.addView(android.widget.ImageView(activity).apply {
             setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
             imageTintList = android.content.res.ColorStateList.valueOf(accentText)
@@ -90,6 +91,7 @@ internal class StorageSettingsController(
             isFocusable = true
             setOnClickListener { onBack() }
         }, LinearLayout.LayoutParams(dp(48), dp(48)))
+        header.addView(heading, LinearLayout.LayoutParams(0, -2, 1f))
         root.addView(header)
         root.addView(TextView(activity).apply {
             text = translate("مساحة التطبيق والملفات المؤقتة")
