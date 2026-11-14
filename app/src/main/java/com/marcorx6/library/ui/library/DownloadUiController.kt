@@ -128,6 +128,8 @@ internal class DownloadUiController(
         }
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
+            layoutDirection = activity.resources.configuration.layoutDirection
+            textDirection = View.TEXT_DIRECTION_LOCALE
             setBackgroundColor(background)
             setPadding(dp(18), dp(18), dp(18), dp(12))
         }
@@ -135,6 +137,20 @@ internal class DownloadUiController(
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
+        val backButton = android.widget.ImageView(activity).apply {
+            setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
+            imageTintList = android.content.res.ColorStateList.valueOf(primary)
+            scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
+            setPadding(dp(13), dp(13), dp(13), dp(13))
+            minimumWidth = dp(48)
+            minimumHeight = dp(48)
+            contentDescription = translate("رجوع")
+            isClickable = true
+            isFocusable = true
+            addGlassTouch(this)
+            setOnClickListener { onBack() }
+        }
+        header.addView(backButton, LinearLayout.LayoutParams(dp(48), dp(48)))
         val titleBox = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
         titleBox.addView(TextView(activity).apply {
             text = "MARCO  /  ${translate("التنزيلات").uppercase()}"
@@ -235,19 +251,7 @@ internal class DownloadUiController(
             }
         }
         header.addView(wifiOnlyButton, LinearLayout.LayoutParams(-2, dp(44)).apply { marginEnd = dp(7) })
-        header.addView(android.widget.ImageView(activity).apply {
-            setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
-            imageTintList = android.content.res.ColorStateList.valueOf(primary)
-            scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
-            setPadding(dp(13), dp(13), dp(13), dp(13))
-            minimumWidth = dp(48)
-            minimumHeight = dp(48)
-            contentDescription = translate("رجوع")
-            isClickable = true
-            isFocusable = true
-            addGlassTouch(this)
-            setOnClickListener { onBack() }
-        }, LinearLayout.LayoutParams(dp(48), dp(48)))
+        // Back is already the first header item; keep the remaining actions after the title.
         root.addView(header)
         root.addView(TextView(activity).apply {
             text = translate("تابع حالة ملفات الألعاب التي أضفتها إلى التنزيلات")
