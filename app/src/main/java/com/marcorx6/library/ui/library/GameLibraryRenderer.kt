@@ -541,7 +541,10 @@ internal class GameLibraryRenderer(
             } else {
                 // In the ALL library view, each game card participates in a subtle
                 // 3D cover-flow as its position changes inside the horizontal rail.
-                if (selected == "ALL") {
+                val motionEnabled = activity.getSharedPreferences(
+                    "app_settings", Activity.MODE_PRIVATE
+                ).getBoolean("animations", true)
+                if (selected == "ALL" && motionEnabled) {
                     horizontal.clipChildren = false
                     horizontal.clipToPadding = false
                     carousel.clipChildren = false
