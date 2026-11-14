@@ -71,10 +71,11 @@ class MainActivity : ComponentActivity() {
         val animationsEnabled = getSharedPreferences("app_settings", MODE_PRIVATE)
             .getBoolean("animations", true)
         if (animationsEnabled) {
+            // Keep navigation motion to compositor-friendly alpha/translation.
+            // Scaling a full library tree (many cards and cover images) adds GPU work
+            // and can soften text during the transition without improving usability.
             view.alpha = 0f
-            view.translationY = dp(12).toFloat()
-            view.scaleX = 0.995f
-            view.scaleY = 0.995f
+            view.translationY = dp(8).toFloat()
         }
         // Apply one direction policy to every full-screen page. This prevents mixed
         // RTL/LTR roots from reversing tab order or pushing icons into adjacent labels.
@@ -138,10 +139,8 @@ class MainActivity : ComponentActivity() {
             view.animate()
                 .alpha(1f)
                 .translationY(0f)
-                .scaleX(1f)
-                .scaleY(1f)
-                .setDuration(240L)
-                .setInterpolator(android.view.animation.DecelerateInterpolator(1.35f))
+                .setDuration(190L)
+                .setInterpolator(android.view.animation.DecelerateInterpolator(1.2f))
                 .start()
         }
     }
