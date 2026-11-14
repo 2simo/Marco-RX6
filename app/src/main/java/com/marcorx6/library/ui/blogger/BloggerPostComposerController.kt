@@ -323,6 +323,8 @@ internal class BloggerPostComposerController(
         val baseBottom = dp(12)
         val page = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
+            layoutDirection = activity.resources.configuration.layoutDirection
+            textDirection = View.TEXT_DIRECTION_LOCALE
             setPadding(dp(14), baseTop, dp(14), baseBottom)
             setBackgroundColor(studioSurface(bg(), if (isNight) 0.08f else 0.06f))
         }
@@ -348,17 +350,12 @@ internal class BloggerPostComposerController(
             gravity = Gravity.CENTER_VERTICAL
             setPadding(0, dp(10), 0, 0)
         }
-        val closeButton = makeAction("إغلاق").apply {
-            setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.ic_menu_revert, 0, 0, 0)
-            setOnClickListener { onBack() }
-        }
         val previewButton = makeAction("معاينة").apply {
             setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.ic_menu_view, 0, 0, 0)
         }
         val publishButton = makeAction(if (existing == null) "نشر المقال" else "حفظ التعديلات", primary = true).apply {
             setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.ic_menu_save, 0, 0, 0)
         }
-        actions.addView(closeButton, LinearLayout.LayoutParams(0, dp(52), 1f).apply { marginEnd = dp(6) })
         actions.addView(previewButton, LinearLayout.LayoutParams(0, dp(52), 1f).apply { marginEnd = dp(6) })
         actions.addView(publishButton, LinearLayout.LayoutParams(0, dp(52), 1.25f))
         page.addView(actions, LinearLayout.LayoutParams(-1, -2))
