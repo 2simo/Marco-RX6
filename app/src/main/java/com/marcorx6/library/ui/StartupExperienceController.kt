@@ -175,26 +175,40 @@ internal class StartupExperienceController(
             start()
         }
         completion = Runnable {
+            completion = null
             if (isActivityUsable() && dialog === splash && splash.isShowing) {
                 animator?.cancel()
                 animator = null
-                splash.dismiss()
-                dialog = null
-                // The Activity library is composed only after the complete startup
-                // sequence. This prevents it from appearing behind/between splash windows.
-                onStartupFinished()
-                val settings = activity.getSharedPreferences("app_settings", Activity.MODE_PRIVATE)
-                if (!settings.getBoolean("setup_completed", false)) {
-                    showFirstRunSetup()
-                } else if (!settings.getBoolean("community_channels_prompted", true)) {
-                    settings.edit().putBoolean("community_channels_prompted", true).apply()
-                    CommunityChannelsController(activity, dp, makeText, translate, isDarkMode, red).show()
-                } else if (!settings.getBoolean("profile_prompted", false)) {
-                    settings.edit().putBoolean("profile_prompted", true).apply()
-                    showProfile()
+                // Fade the splash window away before composing the library. The
+                // Activity window already carries the same launch artwork, so this
+                // overlap avoids both a black frame and a hard dialog-to-page cut.
+                val finishStartup = Runnable {
+                    if (isActivityUsable() && dialog === splash && splash.isShowing) {
+                        splash.dismiss()
+                        dialog = null
+                        onStartupFinished()
+                        val settings = activity.getSharedPreferences("app_settings", Activity.MODE_PRIVATE)
+                        if (!settings.getBoolean("setup_completed", false)) {
+                            showFirstRunSetup()
+                        } else if (!settings.getBoolean("community_channels_prompted", true)) {
+                            settings.edit().putBoolean("community_channels_prompted", true).apply()
+                            CommunityChannelsController(activity, dp, makeText, translate, isDarkMode, red).show()
+                        } else if (!settings.getBoolean("profile_prompted", false)) {
+                            settings.edit().putBoolean("profile_prompted", true).apply()
+                            showProfile()
+                        }
+                    }
+                }
+                val decor = splash.window?.decorView
+                if (decor != null) {
+                    decor.animate().cancel()
+                    decor.animate().alpha(0f).setDuration(280L).withEndAction {
+                        finishStartup.run()
+                    }.start()
+                } else {
+                    finishStartup.run()
                 }
             }
-            completion = null
         }.also { handler.postDelayed(it, 6600L) }
         splash.setOnDismissListener {
             animator?.cancel()
