@@ -93,7 +93,6 @@ internal class AppearanceSettingsController(
             setTextColor(ink)
             setPadding(0, dp(5), 0, 0)
         })
-        header.addView(heading, LinearLayout.LayoutParams(0, -2, 1f))
         header.addView(android.widget.ImageView(activity).apply {
             setImageResource(com.marcorx6.library.R.drawable.ic_action_back)
             imageTintList = android.content.res.ColorStateList.valueOf(accentText)
@@ -104,6 +103,7 @@ internal class AppearanceSettingsController(
             addGlassTouch(this)
             setOnClickListener { onBack() }
         }, LinearLayout.LayoutParams(dp(48), dp(48)))
+        header.addView(heading, LinearLayout.LayoutParams(0, -2, 1f))
         root.addView(header)
         root.addView(TextView(activity).apply {
             text = translate("خصص تجربة MARCO بالطريقة التي تناسبك")
