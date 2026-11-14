@@ -926,6 +926,8 @@ internal object LanguageTranslator {
             "لا توجد رسائل جديدة حالياً." to listOf("No new messages right now.", "Aucun nouveau message pour le moment.", "No hay mensajes nuevos por ahora."),
             "إشعار جديد" to listOf("New notification", "Nouvelle notification", "Nueva notificación"),
             "لعبة جديدة في المكتبة" to listOf("New game in the library", "Nouveau jeu dans la bibliothèque", "Nuevo juego en la biblioteca"),
+            "تنبيهات النظام" to listOf("System alerts", "Alertes système", "Alertas del sistema"),
+            "لا توجد تنبيهات عامة حالياً." to listOf("No system alerts right now.", "Aucune alerte système pour le moment.", "No hay alertas del sistema por ahora."),
             "حذف هذا الإشعار" to listOf("Delete this notification", "Supprimer cette notification", "Eliminar esta notificación"),
             "حذف هذا الإشعار؟" to listOf("Delete this notification?", "Supprimer cette notification ?", "¿Eliminar esta notificación?"),
             "سيتم حذف هذا الإشعار فقط. لا يمكن التراجع عن هذه العملية." to listOf("Only this notification will be deleted. This cannot be undone.", "Seule cette notification sera supprimée. Cette action est irréversible.", "Solo se eliminará esta notificación. Esta acción no se puede deshacer."),
