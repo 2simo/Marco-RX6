@@ -318,6 +318,21 @@ class LanguageTranslatorTest {
     }
 
     @Test
+    fun translatesSystemAlertsAndNewGameNotificationLabels() {
+        val cases = listOf(
+            "تنبيهات النظام" to listOf("System alerts", "Alertes système", "Alertas del sistema"),
+            "لعبة جديدة في المكتبة" to listOf("New game in the library", "Nouveau jeu dans la bibliothèque", "Nuevo juego en la biblioteca"),
+            "لا توجد تنبيهات عامة حالياً." to listOf("No system alerts right now.", "Aucune alerte système pour le moment.", "No hay alertas del sistema por ahora.")
+        )
+        cases.forEach { (source, expected) ->
+            assertEquals(expected[0], LanguageTranslator.translate(source, "en"))
+            assertEquals(expected[1], LanguageTranslator.translate(source, "fr"))
+            assertEquals(expected[2], LanguageTranslator.translate(source, "es"))
+            assertEquals(source, LanguageTranslator.translate(source, "ar"))
+        }
+    }
+
+    @Test
     fun translatesBlackAndSilverPaletteName() {
         assertEquals("Black & Silver", LanguageTranslator.translate("أسود فضي", "en"))
         assertEquals("Noir et argent", LanguageTranslator.translate("أسود فضي", "fr"))
