@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <gradient
-        android:angle="315"
-        android:startColor="#07080B"
-        android:centerColor="#0F1116"
-        android:endColor="#040508"
-        android:type="linear" />
-</shape>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Match the first Activity frame to the artwork used by the in-app splash.
+         This prevents Android's launch window from flashing a plain black frame. -->
+    <item>
+        <bitmap
+            android:src="@drawable/marco_splash"
+            android:gravity="fill" />
+    </item>
+</layer-list>
