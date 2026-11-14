@@ -1539,9 +1539,16 @@ internal class FirebaseAccountController(
                 styleDialog(confirm)
             }
         }
-        header.addView(clearButton, LinearLayout.LayoutParams(-2, dp(40)).apply {
-            marginEnd = dp(8)
-        })
+        // Keep the destructive action on its own row so it never competes
+        // with the notifications title or the back button on narrow screens.
+        val clearActionRow = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.END
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            setPadding(0, dp(6), 0, dp(2))
+            addView(clearButton, LinearLayout.LayoutParams(-2, dp(40)))
+        }
+        page.addView(clearActionRow, LinearLayout.LayoutParams(-1, -2))
         val tabs = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
